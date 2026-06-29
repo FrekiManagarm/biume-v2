@@ -1,0 +1,26 @@
+{
+  "extends": "@biume/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "collections/*": ["./.source/*"],
+      "@biume/ui/*": ["../../packages/ui/src/*"],
+    },
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "source.config.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".source/**/*.ts",
+    ".next/types/**/*.ts",
+  ],
+  "exclude": ["node_modules"],
+}

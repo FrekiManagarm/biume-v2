@@ -1,0 +1,65 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "ui": "tui",
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "inputs": ["$TURBO_DEFAULT$", ".env*"],
+            "outputs": ["dist/**", ".next/**", ".vercel/output/**"],
+            "env": [
+                "DATABASE_URL",
+                "BETTER_AUTH_URL",
+                "BETTER_AUTH_SECRET",
+                "APP_URL",
+                "CORS_ORIGIN",
+                "GOOGLE_CLIENT_ID",
+                "GOOGLE_CLIENT_SECRET",
+                "ENCRYPTION_KEY",
+                "RESEND_API_KEY",
+                "STRIPE_SECRET_KEY",
+                "STRIPE_CLIENT_ID",
+                "STRIPE_WEBHOOK_SECRET",
+                "VITE_POSTHOG_HOST",
+                "VITE_POSTHOG_KEY",
+                "OPENAI_API_KEY",
+                "NITRO_PRESET",
+                "CRON_SECRET",
+                "NODE_ENV",
+                "VERCEL",
+                "TRIGGER_PROJECT_ID",
+                "TRIGGER_SECRET_KEY",
+                "AUTUMN_PROD_SECRET_KEY",
+                "AUTUMN_SECRET_KEY"
+            ]
+        },
+        "lint": {
+            "dependsOn": ["^lint"]
+        },
+        "check-types": {
+            "dependsOn": ["^check-types"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true,
+            "env": [
+                "GOOGLE_CLIENT_ID",
+                "GOOGLE_CLIENT_SECRET",
+                "OPENAI_API_KEY"
+            ]
+        },
+        "db:push": {
+            "cache": false
+        },
+        "db:generate": {
+            "cache": false
+        },
+        "db:migrate": {
+            "cache": false,
+            "persistent": true
+        },
+        "db:studio": {
+            "cache": false,
+            "persistent": true
+        }
+    }
+}
