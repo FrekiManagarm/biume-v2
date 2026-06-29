@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Moon, Sun, SunMoon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@biume/ui/components/button";
 import {
@@ -16,29 +14,15 @@ import {
   TooltipTrigger,
 } from "@biume/ui/components/tooltip";
 import { cn } from "@biume/ui/lib/utils";
-import { useEffect, useState } from "react";
+
+const themes = [
+  { value: "light", label: "Clair" },
+  { value: "dark", label: "Sombre" },
+  { value: "system", label: "Systeme" },
+] as const;
 
 export function ModeToggle() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-9 w-9 rounded-full"
-      >
-        <SunMoon className="h-[1.2rem] w-[1.2rem] text-foreground/70" />
-      </Button>
-    );
-  }
-
-  const isDark = resolvedTheme === "dark";
+  const { setTheme, theme } = useTheme();
 
   return (
     <Tooltip>
@@ -50,41 +34,10 @@ export function ModeToggle() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-9 w-9 rounded-full overflow-hidden"
+                  className="relative size-9 overflow-hidden rounded-full"
+                  aria-label="Changer de theme"
                 >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Sun
-                      className={cn(
-                        "absolute h-[1.2rem] w-[1.2rem] transition-all duration-500",
-                        isDark
-                          ? "opacity-0 rotate-90 scale-0"
-                          : "opacity-100 rotate-0 scale-100",
-                      )}
-                    />
-                    <Moon
-                      className={cn(
-                        "absolute h-[1.2rem] w-[1.2rem] transition-all duration-500",
-                        isDark
-                          ? "opacity-100 rotate-0 scale-100"
-                          : "opacity-0 -rotate-90 scale-0",
-                      )}
-                    />
-                  </div>
-
-                  {/* Indique visuellement le thème actif */}
-                  <motion.div
-                    className={cn(
-                      "absolute inset-0 rounded-full opacity-10",
-                      isDark ? "bg-primary" : "bg-amber-400",
-                    )}
-                    initial={false}
-                    animate={{
-                      scale: [0.8, 1.1, 1],
-                      opacity: [0, 0.15, 0.1],
-                    }}
-                    transition={{ duration: 0.5 }}
-                    key={isDark ? "dark" : "light"}
-                  />
+                  <ThemeIcon />
                 </Button>
               }
             />
@@ -92,48 +45,58 @@ export function ModeToggle() {
         />
 
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => setTheme("light")}
-            className="flex items-center gap-2"
-          >
-            <Sun className="h-4 w-4" />
-            <span>Clair</span>
-            {resolvedTheme === "light" && (
-              <motion.div
-                layoutId="themeIndicator"
-                className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+          {themes.map((item) => (
+            <DropdownMenuItem
+              key={item.value}
+              onClick={() => setTheme(item.value)}
+              className="flex items-center gap-2"
+            >
+              <ThemeDot active={theme === item.value} />
+              <span>{item.label}</span>
+              <span
+                className={cn(
+                  "ml-auto size-1.5 rounded-full bg-primary transition-opacity",
+                  theme === item.value ? "opacity-100" : "opacity-0",
+                )}
               />
-            )}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setTheme("dark")}
-            className="flex items-center gap-2"
-          >
-            <Moon className="h-4 w-4" />
-            <span>Sombre</span>
-            {resolvedTheme === "dark" && (
-              <motion.div
-                layoutId="themeIndicator"
-                className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-              />
-            )}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setTheme("system")}
-            className="flex items-center gap-2"
-          >
-            <SunMoon className="h-4 w-4" />
-            <span>Système</span>
-            {resolvedTheme !== "dark" && resolvedTheme !== "light" && (
-              <motion.div
-                layoutId="themeIndicator"
-                className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-              />
-            )}
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <TooltipContent side="bottom">Changer de thème</TooltipContent>
+      <TooltipContent side="bottom">Changer de theme</TooltipContent>
     </Tooltip>
+  );
+}
+
+function ThemeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[1.125rem] text-foreground/72" fill="none" aria-hidden="true">
+      <path
+        d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="3.8" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function ThemeDot({ active }: { active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-4 items-center justify-center rounded-full border",
+        active ? "border-primary bg-primary/10" : "border-border",
+      )}
+      aria-hidden="true"
+    >
+      <span
+        className={cn(
+          "size-1.5 rounded-full bg-primary transition-opacity",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </span>
   );
 }

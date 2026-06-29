@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 404 402" role="img" aria-labelledby="title desc">
+  <title id="title">Biume logo</title>
+  <desc id="desc">Rounded gradient square with a white animal paw mark.</desc>
+  <defs>
+    <linearGradient id="biume-gradient" x1="42" y1="34" x2="340" y2="355" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8e82e8"/>
+      <stop offset="0.48" stop-color="#62a8c8"/>
+      <stop offset="1" stop-color="#28c978"/>
+    </linearGradient>
+  </defs>
+  <path
+    fill="url(#biume-gradient)"
+    d="M0 124C0 55.5 55.5 0 124 0h156c68.5 0 124 55.5 124 124v154c0 68.5-55.5 124-124 124H124C55.5 402 0 346.5 0 278V124Z"
+  />
+  <g fill="#fff">
+    <circle cx="194" cy="133" r="24"/>
+    <circle cx="252" cy="166" r="25"/>
+    <circle cx="269" cy="233" r="25"/>
+    <path d="M111 214c0-22.1 17.9-40 40-40h30c25.4 0 46 20.6 46 46v19c0 29.3-23.7 53-53 53-19.8 0-36.6-13.1-42.2-31.1-2.3-7.3-8.1-13.2-15.4-15.6C101 240.4 111 214 111 214Z"/>
+  </g>
+</svg>

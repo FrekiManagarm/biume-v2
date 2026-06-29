@@ -1,147 +1,216 @@
-"use client";
-
-import { motion } from "framer-motion";
-import {
-  BrainCircuit,
-  FileText,
-  Users,
-  CalendarCheck,
-  Sparkles,
-} from "lucide-react";
-import { cn } from "@biume/ui/lib/utils";
-
-const features = [
+const workflowSteps = [
   {
-    id: "ai",
+    number: "01",
+    label: "IA",
     title: "Intelligence Artificielle",
-    description:
-      "L'IA analyse vos observations en temps réel, reformule vos comptes-rendus en langage professionnel et suggère des plans de traitement basés sur l'historique.",
-    icon: BrainCircuit,
-    gradient: "from-violet-500/10 to-purple-500/10",
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    span: "md:col-span-2",
+    body: "L'IA analyse vos observations en temps réel, reformule vos comptes-rendus en langage professionnel et suggère des plans de traitement basés sur l'historique.",
   },
   {
-    id: "reports",
+    number: "02",
+    label: "PDF",
     title: "Rapports Automatisés",
-    description:
-      "Générez des rapports PDF impeccables en un clic. Personnalisez vos modèles, ajoutez votre logo et laissez Biume gérer la mise en page.",
-    icon: FileText,
-    gradient: "from-blue-500/10 to-cyan-500/10",
-    iconBg: "bg-blue-500/10",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    span: "",
+    body: "Générez des rapports PDF impeccables en un clic. Personnalisez vos modèles, ajoutez votre logo et laissez Biume gérer la mise en page.",
   },
   {
-    id: "management",
+    number: "03",
+    label: "Suivi",
     title: "Suivi Patient 360°",
-    description:
-      "Accédez à l'historique complet de chaque animal : consultations, courbes de poids, documents et échanges avec les propriétaires.",
-    icon: Users,
-    gradient: "from-orange-500/10 to-amber-500/10",
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-600 dark:text-orange-400",
-    span: "",
+    body: "Accédez à l'historique complet de chaque animal : consultations, courbes de poids, documents et échanges avec les propriétaires.",
   },
-  {
-    id: "agenda",
-    title: "Agenda & Tournées",
-    description:
-      "Synchronisez votre agenda et calculez intelligemment vos itinéraires pour réduire vos temps de trajet et frais kilométriques.",
-    icon: CalendarCheck,
-    gradient: "from-emerald-500/10 to-green-500/10",
-    iconBg: "bg-emerald-500/10",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    span: "md:col-span-2",
-  },
-];
+] as const;
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.1 },
-  },
-};
+const featureRows = [
+  ["report.writer", "compte rendu complet", "18 min"],
+  ["client.version", "vulgarisation prete", "1 clic"],
+  ["patient.timeline", "historique consolide", "42 fiches"],
+  ["followup.reminder", "suivi conseille", "48 h"],
+] as const;
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" as const },
-  },
-};
+const signals = [
+  ["Diagnostic", "T12-L1 et bassin droit"],
+  ["Conseil", "Repos relatif, 48 heures"],
+  ["Document", "PDF signe, logo cabinet"],
+  ["Client", "Resume simple envoye"],
+] as const;
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-24 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-primary/3 rounded-full blur-[160px]" />
-      </div>
+    <>
+      <section
+        id="console"
+        className="px-4 py-8 md:px-6 md:py-14"
+      >
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_34px_100px_-76px_rgba(20,18,28,0.5)] lg:grid-cols-[0.82fr_1.18fr]">
+          <div className="border-b border-border p-6 md:p-9 lg:border-b-0 lg:border-r">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Plateforme tout-en-un
+            </p>
+            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
+              Conçu pour votre{" "}
+              <span className="text-primary">
+                tranquillité d&apos;esprit
+              </span>
+            </h2>
+            <p className="mt-5 max-w-[58ch] text-base leading-7 text-muted-foreground">
+              Libérez-vous des tâches administratives et concentrez-vous sur ce
+              qui compte vraiment : le soin des animaux.
+            </p>
 
-      <div className="container mx-auto px-4 md:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16 max-w-2xl mx-auto"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/6 text-primary text-xs font-medium mb-6">
-            <Sparkles className="w-3 h-3" />
-            Plateforme tout-en-un
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              {[
+                ["4.7/5", "clarte client"],
+                ["6", "seances / jour"],
+                ["3", "versions de rapport"],
+                ["0", "copier-coller inutile"],
+              ].map(([value, label]) => (
+                <div key={label} className="border-t border-border pt-3">
+                  <p className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+                    {value}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-muted-foreground">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-5">
-            Conçu pour votre{" "}
-            <span className="text-primary">tranquillité d&apos;esprit</span>
-          </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Libérez-vous des tâches administratives et concentrez-vous sur ce
-            qui compte vraiment : le soin des animaux.
-          </p>
-        </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto"
-        >
-          {features.map((feature) => (
-            <motion.div
-              key={feature.id}
-              variants={cardVariants}
-              className={cn(
-                "group relative rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm p-7 md:p-8 transition-all duration-300 hover:border-border/60 hover:shadow-lg hover:shadow-black/2 dark:hover:shadow-black/10 hover:-translate-y-0.5",
-                feature.span,
-              )}
-            >
-              <div
-                className={cn(
-                  "absolute inset-0 rounded-2xl bg-linear-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10",
-                  feature.gradient,
-                )}
-              />
-
-              <div
-                className={cn(
-                  "w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105",
-                  feature.iconBg,
-                )}
-              >
-                <feature.icon className={cn("w-5 h-5", feature.iconColor)} />
+          <div className="relative bg-muted/35 p-4 md:p-8">
+            <GridLines />
+            <div className="relative mx-auto max-w-2xl rounded-[1.7rem] border border-border bg-background p-4 shadow-[0_26px_80px_-62px_rgba(20,18,28,0.46)] md:p-5">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Patient timeline
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+                    Dossier Oslo
+                  </h3>
+                </div>
+                <span className="rounded-full bg-secondary/12 px-3 py-1 text-xs font-semibold text-secondary">
+                  complet
+                </span>
               </div>
 
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
+              <div className="mt-5 grid gap-3 md:grid-cols-[0.78fr_1.22fr]">
+                <div className="space-y-3">
+                  {signals.map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-[1.15rem] border border-primary/10 bg-card/85 p-3"
+                    >
+                      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        {label}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-foreground">
+                        {value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-[1.35rem] bg-foreground p-4 text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-primary/15">
+                  <div className="flex items-center justify-between">
+                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-background/45">
+                      Actions automatiques
+                    </p>
+                    <span className="rounded-full bg-primary/25 px-2.5 py-1 text-[10px] font-semibold text-background">
+                      3 pretes
+                    </span>
+                  </div>
+                  <div className="mt-5 divide-y divide-background/10">
+                    {featureRows.map(([event, label, value], index) => (
+                      <div
+                        key={event}
+                        className="grid grid-cols-[1fr_auto] gap-3 py-3 first:pt-0 last:pb-0"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-mono text-xs font-semibold text-background/80">
+                            {event}
+                          </p>
+                          <p className="mt-1 text-xs text-background/45">
+                            {label}
+                          </p>
+                        </div>
+                        <span
+                          className={
+                            index < 2
+                              ? "rounded-full bg-secondary/20 px-2.5 py-1 text-xs font-semibold text-background"
+                              : "rounded-full bg-background/10 px-2.5 py-1 text-xs font-semibold text-background/60"
+                          }
+                        >
+                          {value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="workflow" className="px-4 py-8 md:px-6 md:py-14">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-end">
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
+                Fonctionnalités
               </p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
+              <h2 className="mt-4 text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
+                Libérez votre temps pour{" "}
+                <span className="text-secondary">
+                  l&apos;essentiel
+                </span>
+              </h2>
+            </div>
+            <p className="max-w-[62ch] text-base leading-7 text-muted-foreground lg:justify-self-end">
+              Une application santé animale qui s&apos;adapte à votre pratique
+              et libère votre temps pour l&apos;essentiel.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr_1.25fr]">
+            {workflowSteps.map((step, index) => (
+              <article
+                key={step.number}
+                className={
+                  index === 1
+                    ? "rounded-[1.7rem] border border-primary/25 bg-primary/12 p-6 shadow-[0_28px_80px_-66px_rgba(124,102,238,0.6)] md:p-7 lg:mt-14"
+                    : index === 2
+                      ? "rounded-[1.7rem] border border-secondary/25 bg-secondary/10 p-6 md:p-7"
+                      : "rounded-[1.7rem] border border-primary/15 bg-card p-6 md:p-7"
+                }
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className="font-mono text-sm font-semibold text-muted-foreground">
+                    {step.number}
+                  </span>
+                  <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    {step.label}
+                  </span>
+                </div>
+                <h3 className="mt-7 text-2xl font-semibold leading-tight tracking-tight text-foreground">
+                  {step.title}
+                </h3>
+                <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                  {step.body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function GridLines() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(20,18,28,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[52px_52px]"
+      aria-hidden="true"
+    />
   );
 }

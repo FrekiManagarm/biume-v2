@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
+      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
           <HeroSection />
           <FeaturesSection />

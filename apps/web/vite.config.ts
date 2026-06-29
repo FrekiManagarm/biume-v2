@@ -12,7 +12,10 @@ const config = defineConfig({
     port: 3001,
     strictPort: true,
   },
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    dedupe: ["react", "react-dom"],
+  },
   plugins: [
     devtools(),
     nitro({ rollupConfig: { external: [/^@sentry\//] } }),

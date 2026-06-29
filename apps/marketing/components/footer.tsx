@@ -1,48 +1,52 @@
-import { PawPrint } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const productLinks = [
-  { href: "/#features", label: "Fonctionnalités" },
+  { href: "/#console", label: "Produit" },
+  { href: "/#workflow", label: "Methode" },
   { href: "/#pricing", label: "Tarifs" },
   {
     href: "https://cal.com/mathieu-chambaud-biume",
-    label: "Réserver une démo",
+    label: "Demo",
   },
-  { href: "/blog", label: "Blog" },
 ];
 
 const legalLinks = [
-  { href: "/privacy", label: "Confidentialité" },
+  { href: "/privacy", label: "Confidentialite" },
   { href: "/cgu", label: "CGU" },
   { href: "/contact", label: "Contact" },
 ];
 
 const LandingFooter = () => {
   return (
-    <footer className="border-t border-border/30 bg-muted/3 py-16 md:py-20">
-      <div className="container px-4 mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 mb-14">
-          <div className="md:col-span-5 space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-                <PawPrint className="w-4 h-4 fill-white text-white" />
-              </div>
-              <span className="font-bold text-lg">Biume</span>
+    <footer className="px-4 py-10 md:px-6 md:py-14">
+      <div className="mx-auto max-w-7xl border-t border-border pt-8">
+        <div className="grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-5">
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+              <Image
+                src="/brand/biume-logo.svg"
+                alt=""
+                width={32}
+                height={32}
+                className="size-8"
+              />
+              Biume
             </Link>
-            <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-              La solution complète pour les thérapeutes animaliers. Gagnez du
-              temps sur vos rapports et concentrez-vous sur le soin.
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+              La plateforme de rapports et de suivi client pour les therapeutes
+              animaliers.
             </p>
           </div>
 
-          <div className="md:col-span-3 md:col-start-7">
-            <h4 className="font-semibold text-sm mb-4">Produit</h4>
-            <ul className="space-y-2.5">
+          <div className="md:col-span-3 md:col-start-8">
+            <h4 className="text-sm font-semibold">Produit</h4>
+            <ul className="mt-4 space-y-2.5">
               {productLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     {...(link.href.startsWith("http")
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
@@ -55,13 +59,13 @@ const LandingFooter = () => {
           </div>
 
           <div className="md:col-span-2">
-            <h4 className="font-semibold text-sm mb-4">Légal</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-sm font-semibold">Legal</h4>
+            <ul className="mt-4 space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
                   </Link>
@@ -71,13 +75,11 @@ const LandingFooter = () => {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Biume. Tous droits réservés.
-          </p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
-            Hébergé en France (RGPD)
+        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <p>© {new Date().getFullYear()} Biume. Tous droits reserves.</p>
+          <div className="flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-secondary/70" />
+            <span>Heberge en France, conforme RGPD</span>
           </div>
         </div>
       </div>

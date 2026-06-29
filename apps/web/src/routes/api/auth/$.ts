@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { auth } from "@biume/auth";
+
+async function handleAuthRequest(request: Request) {
+  const { auth } = await import("@biume/auth");
+  return auth.handler(request);
+}
 
 export const Route = createFileRoute("/api/auth/$")({
   server: {
     handlers: {
-      GET: ({ request }) => auth.handler(request),
-      POST: ({ request }) => auth.handler(request),
+      GET: ({ request }) => handleAuthRequest(request),
+      POST: ({ request }) => handleAuthRequest(request),
     },
   },
 });

@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { getContext } from "#/integrations/tanstack-query/root-provider";
+import { AutumnProvider } from "autumn-js/react";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -47,28 +48,30 @@ function RootDocument() {
 
   return (
     <QueryClientProvider client={queryClient.queryClient}>
-      <html lang="en">
-        <head>
-          <HeadContent />
-        </head>
-        <body>
-          <Outlet />
+      <AutumnProvider>
+        <html lang="en">
+          <head>
+            <HeadContent />
+          </head>
+          <body>
+            <Outlet />
 
-          <TanStackDevtools
-            config={{
-              position: "bottom-right",
-            }}
-            plugins={[
-              {
-                name: "Tanstack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              TanStackQueryDevtools,
-            ]}
-          />
-          <Scripts />
-        </body>
-      </html>
+            <TanStackDevtools
+              config={{
+                position: "bottom-right",
+              }}
+              plugins={[
+                {
+                  name: "Tanstack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                TanStackQueryDevtools,
+              ]}
+            />
+            <Scripts />
+          </body>
+        </html>
+      </AutumnProvider>
     </QueryClientProvider>
   );
 }
