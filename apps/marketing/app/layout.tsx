@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { rootMetadata } from "../lib/metadata";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,11 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Biume - Rapports intelligents pour therapeutes animaliers",
-  description:
-    "Biume aide les therapeutes animaliers a creer des rapports professionnels, suivre leurs patients et expliquer leurs soins aux proprietaires.",
-};
+export const metadata: Metadata = rootMetadata;
 
 export default function RootLayout({
   children,

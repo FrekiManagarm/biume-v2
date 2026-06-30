@@ -1,0 +1,133 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Biume accueil" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: Biume
+      - navigation [ref=e6]:
+        - link "Produit" [ref=e7] [cursor=pointer]:
+          - /url: /#console
+        - link "Méthode" [ref=e8] [cursor=pointer]:
+          - /url: /#workflow
+        - link "Tarifs" [ref=e9] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=e10]:
+        - link "Connexion" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:3001/signin
+        - link "Essai gratuit" [ref=e12] [cursor=pointer]:
+          - /url: http://localhost:3001/signup
+          - text: Essai gratuit
+          - img [ref=e13]
+  - generic [ref=e15]:
+    - main [ref=e16]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Conditions
+          - heading "Conditions generales d'utilisation" [level=1] [ref=e27]
+          - paragraph [ref=e28]: "Les CGU cadrent l'utilisation de Biume: creation de compte, usage professionnel, responsabilites et limites du service. Cette version presente les grands principes avant publication des conditions completes."
+          - generic [ref=e29]:
+            - link "Commencer gratuitement" [ref=e30] [cursor=pointer]:
+              - /url: http://localhost:3001/signup
+              - text: Commencer gratuitement
+              - img [ref=e31]
+            - link "Retour a l'accueil" [ref=e33] [cursor=pointer]:
+              - /url: /
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - paragraph [ref=e36]: 15 j
+              - paragraph [ref=e37]: essai gratuit
+            - generic [ref=e38]:
+              - paragraph [ref=e39]: "1"
+              - paragraph [ref=e40]: compte professionnel
+            - generic [ref=e41]:
+              - paragraph [ref=e42]: PDF
+              - paragraph [ref=e43]: rapports exportes
+        - generic [ref=e46]:
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - paragraph [ref=e50]: Biume
+              - heading "Un cadre simple" [level=2] [ref=e51]
+              - paragraph [ref=e52]: Pour utiliser Biume avec les bons reperes
+            - generic [ref=e53]: cadre
+          - generic [ref=e54]:
+            - img "Professionnel utilisant Biume pour preparer un rapport" [ref=e56]
+            - generic [ref=e58]:
+              - paragraph [ref=e59]: Points cles
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - paragraph [ref=e62]: Acces
+                  - paragraph [ref=e63]: Le compte donne acces aux outils de redaction et de suivi.
+                - generic [ref=e64]:
+                  - paragraph [ref=e65]: Usage
+                  - paragraph [ref=e66]: Biume accompagne le travail documentaire du professionnel.
+                - generic [ref=e67]:
+                  - paragraph [ref=e68]: Limite
+                  - paragraph [ref=e69]: Les decisions de soin restent sous la responsabilite du praticien.
+              - paragraph [ref=e71]: Meme exigence produit, meme clarte pour chaque page.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - article [ref=e75]:
+            - paragraph [ref=e76]: Compte
+            - heading "Chaque utilisateur gere son espace professionnel." [level=2] [ref=e77]
+            - paragraph [ref=e78]: L'acces a Biume repose sur un compte personnel ou professionnel. L'utilisateur est responsable des informations renseignees, de la confidentialite de ses acces et de l'usage effectue depuis son espace.
+          - article [ref=e79]:
+            - paragraph [ref=e80]: Service
+            - heading "Biume assiste la redaction, sans remplacer l'expertise." [level=2] [ref=e81]
+            - paragraph [ref=e82]: Les suggestions, reformulations et generations de rapports servent de support de travail. Elles doivent etre relues, ajustees et validees par le professionnel avant tout partage.
+          - article [ref=e83]:
+            - paragraph [ref=e84]: Documents
+            - heading "Les contenus generes doivent rester exacts et loyaux." [level=2] [ref=e85]
+            - paragraph [ref=e86]: Les rapports, notes et documents exportes depuis Biume doivent correspondre aux observations du praticien. L'utilisateur reste responsable de leur diffusion et de leur conservation hors plateforme.
+        - complementary [ref=e87]:
+          - paragraph [ref=e88]: A retenir
+          - heading "Un outil de productivite, pas une autorite medicale." [level=2] [ref=e89]
+          - paragraph [ref=e90]: Les conditions completes preciseront les abonnements, disponibilites, limitations, responsabilites et modalites de resiliation.
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - generic [ref=e93]: "01"
+              - paragraph [ref=e94]: Verifier chaque rapport avant de le transmettre.
+            - generic [ref=e95]:
+              - generic [ref=e96]: "02"
+              - paragraph [ref=e97]: Utiliser Biume dans un cadre professionnel legitime.
+            - generic [ref=e98]:
+              - generic [ref=e99]: "03"
+              - paragraph [ref=e100]: Respecter les donnees des clients et des animaux suivis.
+    - contentinfo [ref=e101]:
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - generic [ref=e104]:
+            - link "Biume" [ref=e105] [cursor=pointer]:
+              - /url: /
+            - paragraph [ref=e106]: La plateforme de rapports et de suivi client pour les therapeutes animaliers.
+          - generic [ref=e107]:
+            - heading "Produit" [level=4] [ref=e108]
+            - list [ref=e109]:
+              - listitem [ref=e110]:
+                - link "Produit" [ref=e111] [cursor=pointer]:
+                  - /url: /#console
+              - listitem [ref=e112]:
+                - link "Methode" [ref=e113] [cursor=pointer]:
+                  - /url: /#workflow
+              - listitem [ref=e114]:
+                - link "Tarifs" [ref=e115] [cursor=pointer]:
+                  - /url: /#pricing
+              - listitem [ref=e116]:
+                - link "Demo" [ref=e117] [cursor=pointer]:
+                  - /url: https://cal.com/mathieu-chambaud-biume
+          - generic [ref=e118]:
+            - heading "Legal" [level=4] [ref=e119]
+            - list [ref=e120]:
+              - listitem [ref=e121]:
+                - link "Confidentialite" [ref=e122] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e123]:
+                - link "CGU" [ref=e124] [cursor=pointer]:
+                  - /url: /cgu
+              - listitem [ref=e125]:
+                - link "Contact" [ref=e126] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=e127]:
+          - paragraph [ref=e128]: © 2026 Biume. Tous droits reserves.
+          - generic [ref=e131]: Heberge en France, conforme RGPD
+  - button "Open Next.js Dev Tools" [ref=e137] [cursor=pointer]:
+    - img [ref=e138]

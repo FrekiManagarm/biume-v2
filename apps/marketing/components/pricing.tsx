@@ -34,10 +34,10 @@ const billingOptions: Record<
 
 const included = [
   "Assistant IA pour rapports",
-  "PDF personnalises avec votre identite",
+  "Compte rendu propriétaire validé par vous",
   "Patients, clients et documents illimites",
-  "Vulgarisation proprietaire",
-  "Agenda et suivi de seance",
+  "Timeline animal et évolution",
+  "Relances J+7 et J+30",
   "Support prioritaire pendant l'essai",
 ] as const;
 
@@ -53,14 +53,14 @@ export function PricingSection() {
             Tarifs
           </p>
           <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-            Un tarif unique,{" "}
+            Un tarif simple,{" "}
             <span className="text-foreground">
-              tout inclus
+              lié à la valeur du suivi
             </span>
           </h2>
           <p className="mt-5 max-w-[58ch] text-base leading-7 text-muted-foreground">
-            Accédez à toutes les fonctionnalités sans limite. Sans frais
-            cachés. Annulable à tout moment.
+            Un seul rendez-vous repris grâce à un suivi clair peut rembourser
+            Biume. Essayez toutes les fonctionnalités sans carte bancaire.
           </p>
 
           <div className="mt-8 grid max-w-xl grid-cols-3 divide-x divide-border border-y border-border py-4">
@@ -146,7 +146,7 @@ export function PricingSection() {
             <div className="mt-8 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
                 <p className="text-sm font-semibold">
-                  Commencez avec vos vrais dossiers.
+                  Commencez avec une vraie séance.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Vous pourrez annuler avant la fin de l&apos;essai.

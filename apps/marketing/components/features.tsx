@@ -1,29 +1,29 @@
 const workflowSteps = [
   {
     number: "01",
-    label: "IA",
-    title: "Intelligence Artificielle",
-    body: "L'IA analyse vos observations en temps réel, reformule vos comptes-rendus en langage professionnel et suggère des plans de traitement basés sur l'historique.",
+    label: "Séance",
+    title: "Résumé propriétaire",
+    body: "Transformez vos points observés en compte rendu propriétaire clair, relu et validé par vous avant tout partage.",
   },
   {
     number: "02",
-    label: "PDF",
-    title: "Rapports Automatisés",
-    body: "Générez des rapports PDF impeccables en un clic. Personnalisez vos modèles, ajoutez votre logo et laissez Biume gérer la mise en page.",
+    label: "Timeline",
+    title: "Évolution visible",
+    body: "Conservez l'historique de chaque animal: confort, mobilité, zones suivies, retours propriétaire et documents utiles.",
   },
   {
     number: "03",
-    label: "Suivi",
-    title: "Suivi Patient 360°",
-    body: "Accédez à l'historique complet de chaque animal : consultations, courbes de poids, documents et échanges avec les propriétaires.",
+    label: "Relance",
+    title: "Suivi post-séance",
+    body: "Préparez les messages J+7 et J+30 pour recueillir un retour, rappeler les points à surveiller et proposer la prochaine étape.",
   },
 ] as const;
 
 const featureRows = [
-  ["report.writer", "compte rendu complet", "18 min"],
-  ["client.version", "vulgarisation prete", "1 clic"],
-  ["patient.timeline", "historique consolide", "42 fiches"],
-  ["followup.reminder", "suivi conseille", "48 h"],
+  ["session.summary", "résumé propriétaire", "1 clic"],
+  ["followup.j7", "relance de suivi", "J+7"],
+  ["animal.timeline", "timeline animal", "42 fiches"],
+  ["owner.reply", "retour propriétaire", "J+30"],
 ] as const;
 
 const signals = [
@@ -43,25 +43,26 @@ export function FeaturesSection() {
         <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_34px_100px_-76px_rgba(20,18,28,0.5)] lg:grid-cols-[0.82fr_1.18fr]">
           <div className="border-b border-border p-6 md:p-9 lg:border-b-0 lg:border-r">
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Plateforme tout-en-un
+              Suivi propriétaire
             </p>
             <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-              Conçu pour votre{" "}
+              Conçu pour rendre la séance{" "}
               <span className="text-primary">
-                tranquillité d&apos;esprit
+                plus mémorable
               </span>
             </h2>
             <p className="mt-5 max-w-[58ch] text-base leading-7 text-muted-foreground">
-              Libérez-vous des tâches administratives et concentrez-vous sur ce
-              qui compte vraiment : le soin des animaux.
+              Ne laissez pas la valeur de votre travail disparaître après le
+              rendez-vous. Biume aide le propriétaire à comprendre, suivre et
+              revenir au bon moment.
             </p>
 
             <div className="mt-8 grid grid-cols-2 gap-3">
               {[
-                ["4.7/5", "clarte client"],
-                ["6", "seances / jour"],
-                ["3", "versions de rapport"],
-                ["0", "copier-coller inutile"],
+                ["1", "résumé clair"],
+                ["J+7", "retour simple"],
+                ["J+30", "prochaine étape"],
+                ["0", "diagnostic IA"],
               ].map(([value, label]) => (
                 <div key={label} className="border-t border-border pt-3">
                   <p className="font-mono text-2xl font-semibold tracking-tight text-foreground">
@@ -159,15 +160,16 @@ export function FeaturesSection() {
                 Fonctionnalités
               </p>
               <h2 className="mt-4 text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-                Libérez votre temps pour{" "}
+                Le suivi post-séance devient{" "}
                 <span className="text-secondary">
-                  l&apos;essentiel
+                  votre avantage
                 </span>
               </h2>
             </div>
             <p className="max-w-[62ch] text-base leading-7 text-muted-foreground lg:justify-self-end">
-              Une application santé animale qui s&apos;adapte à votre pratique
-              et libère votre temps pour l&apos;essentiel.
+              Pour les ostéopathes animaliers et praticiens manuels, la
+              différenciation se joue aussi après la séance: clarté,
+              continuité et confiance propriétaire.
             </p>
           </div>
 

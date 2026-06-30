@@ -3,9 +3,9 @@ import Image from "next/image";
 import { webAppPath } from "../lib/web-app-url";
 
 const navLinks = [
-  { href: "/#console", label: "Produit" },
-  { href: "/#workflow", label: "Méthode" },
-  { href: "/#pricing", label: "Tarifs" },
+  { href: "/logiciel-osteopathe-animalier", label: "Produit" },
+  { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu" },
+  { href: "/tarifs", label: "Tarifs" },
 ];
 
 function BiumeMark({ className = "size-7" }: { className?: string }) {

@@ -2,9 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 
 const productLinks = [
-  { href: "/#console", label: "Produit" },
-  { href: "/#workflow", label: "Methode" },
-  { href: "/#pricing", label: "Tarifs" },
+  { href: "/logiciel-osteopathe-animalier", label: "Logiciel ostéopathe animalier" },
+  { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu propriétaire" },
+  { href: "/modele-compte-rendu-osteopathe-animalier", label: "Modèle de compte rendu" },
+  { href: "/suivi-post-seance-animal", label: "Suivi post-séance" },
+  { href: "/tarifs", label: "Tarifs" },
+  { href: "/comparatifs", label: "Comparatifs" },
+  { href: "/alternatives/animalib", label: "Alternative Animalib" },
+  { href: "/alternatives/mytour", label: "Alternative MyTour" },
+  { href: "/comparatifs/neovoice-vs-biume", label: "NeoVoice vs Biume" },
   {
     href: "https://cal.com/mathieu-chambaud-biume",
     label: "Demo",
@@ -34,8 +40,8 @@ const LandingFooter = () => {
               Biume
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
-              La plateforme de rapports et de suivi client pour les therapeutes
-              animaliers.
+              Le suivi post-séance et les comptes rendus propriétaire pour les
+              ostéopathes animaliers.
             </p>
           </div>
 

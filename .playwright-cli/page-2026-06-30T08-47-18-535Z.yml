@@ -1,0 +1,135 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Biume accueil" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: Biume
+      - navigation [ref=e6]:
+        - link "Produit" [ref=e7] [cursor=pointer]:
+          - /url: /logiciel-osteopathe-animalier
+        - link "Compte rendu" [ref=e8] [cursor=pointer]:
+          - /url: /compte-rendu-osteopathe-animalier
+        - link "Tarifs" [ref=e9] [cursor=pointer]:
+          - /url: /tarifs
+      - generic [ref=e10]:
+        - link "Connexion" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:3001/signin
+        - link "Essai gratuit" [ref=e12] [cursor=pointer]:
+          - /url: http://localhost:3001/signup
+          - text: Essai gratuit
+          - img [ref=e13]
+  - generic [ref=e15]:
+    - main [ref=e16]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Tarif logiciel ostéopathe animalier
+          - heading "Un prix simple pour rendre votre suivi plus professionnel" [level=1] [ref=e27]
+          - paragraph [ref=e28]: "Biume propose un tarif clair pour les praticiens manuels de santé animale: 15 jours d'essai sans carte, toutes les fonctions incluses, et une valeur mesurée sur le suivi propriétaire."
+          - generic [ref=e29]:
+            - link "Essayer 15 jours gratuitement" [ref=e30] [cursor=pointer]:
+              - /url: http://localhost:3001/signup
+            - link "Voir une demo" [ref=e31] [cursor=pointer]:
+              - /url: https://cal.com/mathieu-chambaud-biume
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - paragraph [ref=e34]: 15 jours
+              - paragraph [ref=e35]: essai gratuit
+            - generic [ref=e36]:
+              - paragraph [ref=e37]: "0"
+              - paragraph [ref=e38]: sans carte
+            - generic [ref=e39]:
+              - paragraph [ref=e40]: "1"
+              - paragraph [ref=e41]: rendez-vous repris
+        - complementary [ref=e42]:
+          - paragraph [ref=e43]: Valeur
+          - heading "Un seul rendez-vous repris peut rembourser Biume." [level=2] [ref=e44]
+          - paragraph [ref=e45]: Biume ne se positionne pas comme une alternative gratuite à la facturation ou au planning. L'outil aide à rendre chaque séance plus mémorable, plus suivie et plus facile à prolonger quand c'est pertinent.
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: "01"
+              - paragraph [ref=e49]: 24,99 € par mois avec facturation annuelle.
+            - generic [ref=e50]:
+              - generic [ref=e51]: "02"
+              - paragraph [ref=e52]: 29,99 € par mois en mensuel, annulable.
+            - generic [ref=e53]:
+              - generic [ref=e54]: "03"
+              - paragraph [ref=e55]: Essai gratuit de 15 jours, sans carte bancaire.
+      - generic [ref=e57]:
+        - article [ref=e58]:
+          - paragraph [ref=e59]: Inclus
+          - heading "Toutes les fonctions utiles au suivi post-séance." [level=2] [ref=e60]
+          - paragraph [ref=e61]: Le tarif inclut les comptes rendus, résumés propriétaire, PDF personnalisés, dossiers animaux, documents, relances de suivi et support pendant l'essai.
+        - article [ref=e62]:
+          - paragraph [ref=e63]: ROI
+          - heading "Le prix doit être comparé au suivi récupéré, pas à un outil gratuit." [level=2] [ref=e64]
+          - paragraph [ref=e65]: Si une relance claire aide un propriétaire à revenir au bon moment, Biume peut rapidement devenir rentable. L'objectif est de renforcer la relation et la continuité du suivi.
+        - article [ref=e66]:
+          - paragraph [ref=e67]: Simplicité
+          - heading "Pas de palier complexe au démarrage." [level=2] [ref=e68]
+          - paragraph [ref=e69]: Un tarif unique évite les arbitrages inutiles. Vous testez le flux complet avec vos vrais dossiers et vous décidez avant la fin de l'essai.
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - paragraph [ref=e73]: FAQ
+          - heading "Questions fréquentes" [level=2] [ref=e74]
+          - paragraph [ref=e75]: Des réponses simples pour décider si Biume correspond à votre pratique.
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - heading "Combien coûte Biume ?" [level=3] [ref=e78]
+            - paragraph [ref=e79]: Biume coûte 24,99 € par mois en annuel ou 29,99 € par mois en mensuel. L'essai dure 15 jours et ne demande pas de carte bancaire.
+          - generic [ref=e80]:
+            - heading "Pourquoi payer si j'ai déjà un outil gratuit ?" [level=3] [ref=e81]
+            - paragraph [ref=e82]: Les outils gratuits couvrent souvent l'administratif. Biume se concentre sur le compte rendu propriétaire, le suivi post-séance et les relances utiles.
+          - generic [ref=e83]:
+            - heading "Puis-je annuler ?" [level=3] [ref=e84]
+            - paragraph [ref=e85]: Oui. Le mensuel est annulable à tout moment, et vous pouvez tester Biume avant de payer grâce à l'essai gratuit.
+      - generic [ref=e87]:
+        - paragraph [ref=e88]: Continuer
+        - generic [ref=e89]:
+          - link "Voir le logiciel" [ref=e90] [cursor=pointer]:
+            - /url: /logiciel-osteopathe-animalier
+          - link "Compte rendu propriétaire" [ref=e91] [cursor=pointer]:
+            - /url: /compte-rendu-osteopathe-animalier
+          - link "Comparer les outils" [ref=e92] [cursor=pointer]:
+            - /url: /comparatifs
+    - contentinfo [ref=e93]:
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - link "Biume" [ref=e97] [cursor=pointer]:
+              - /url: /
+            - paragraph [ref=e98]: Le suivi post-séance et les comptes rendus propriétaire pour les ostéopathes animaliers.
+          - generic [ref=e99]:
+            - heading "Produit" [level=4] [ref=e100]
+            - list [ref=e101]:
+              - listitem [ref=e102]:
+                - link "Logiciel ostéopathe animalier" [ref=e103] [cursor=pointer]:
+                  - /url: /logiciel-osteopathe-animalier
+              - listitem [ref=e104]:
+                - link "Compte rendu propriétaire" [ref=e105] [cursor=pointer]:
+                  - /url: /compte-rendu-osteopathe-animalier
+              - listitem [ref=e106]:
+                - link "Tarifs" [ref=e107] [cursor=pointer]:
+                  - /url: /tarifs
+              - listitem [ref=e108]:
+                - link "Comparatifs" [ref=e109] [cursor=pointer]:
+                  - /url: /comparatifs
+              - listitem [ref=e110]:
+                - link "Demo" [ref=e111] [cursor=pointer]:
+                  - /url: https://cal.com/mathieu-chambaud-biume
+          - generic [ref=e112]:
+            - heading "Legal" [level=4] [ref=e113]
+            - list [ref=e114]:
+              - listitem [ref=e115]:
+                - link "Confidentialite" [ref=e116] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e117]:
+                - link "CGU" [ref=e118] [cursor=pointer]:
+                  - /url: /cgu
+              - listitem [ref=e119]:
+                - link "Contact" [ref=e120] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=e121]:
+          - paragraph [ref=e122]: © 2026 Biume. Tous droits reserves.
+          - generic [ref=e125]: Heberge en France, conforme RGPD
+  - button "Open Next.js Dev Tools" [ref=e131] [cursor=pointer]:
+    - img [ref=e132]

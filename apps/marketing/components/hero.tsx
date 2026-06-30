@@ -2,8 +2,8 @@ import Link from "next/link";
 import { webAppPath } from "../lib/web-app-url";
 
 const proofStats = [
-  ["2 h", "gagnees par jour"],
-  ["100%", "conforme RGPD"],
+  ["J+7", "retour proprietaire"],
+  ["1", "timeline animal"],
   ["15 j", "essai gratuit"],
 ] as const;
 
@@ -23,20 +23,21 @@ export function HeroSection() {
             <span className="relative flex size-2.5 rounded-full bg-secondary">
               <span className="absolute inset-0 rounded-full bg-secondary/45 landing-pulse" />
             </span>
-            L&apos;IA au service de la santé animale
+            Suivi post-séance pour praticiens animaliers
           </div>
 
           <h1 className="landing-reveal landing-reveal-2 mt-7 max-w-2xl text-4xl font-semibold leading-none tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-            Vos rapports,{" "}
+            Transformez chaque séance en{" "}
             <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-              simplifiés par l&apos;IA
+              suivi propriétaire clair
             </span>
           </h1>
 
           <p className="landing-reveal landing-reveal-3 mt-6 max-w-[60ch] text-base leading-7 text-muted-foreground md:text-lg">
-            Biume génère des comptes rendus professionnels, analyse
-            l&apos;historique de vos patients et vulgarise vos diagnostics pour
-            que vous puissiez vous concentrer sur le soin.
+            Biume aide les ostéopathes animaliers et praticiens manuels de
+            santé animale à envoyer des résumés propriétaire, suivre
+            l&apos;évolution et relancer au bon moment, sans remplacer leur
+            expertise.
           </p>
 
           <div className="landing-reveal landing-reveal-4 mt-8 flex flex-col gap-3 sm:flex-row">
@@ -93,17 +94,17 @@ function AppMockup() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Rapport de seance
+                Résumé de séance
               </p>
               <h2 className="mt-1 text-2xl font-semibold tracking-tight">
                 Naya
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Berger australien · suivi locomoteur
+                Berger australien · suivi post-séance
               </p>
             </div>
             <div className="hidden rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary sm:block">
-              pret a partager
+              validé par le praticien
             </div>
           </div>
         </div>
@@ -133,7 +134,7 @@ function AppMockup() {
           <div className="p-5">
             <div className="border-b border-border pb-4">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary">
-                Synthese professionnelle
+                Points observés
               </p>
               <p className="mt-2 text-sm font-semibold leading-6 text-foreground">
                 Restriction thoraco-lombaire avec compensation du bassin droit.
@@ -146,7 +147,7 @@ function AppMockup() {
 
             <div className="py-4">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Version proprietaire
+                Version propriétaire
               </p>
               <div className="mt-3 rounded-[1.2rem] bg-foreground p-4 text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                 <p className="text-sm font-medium leading-6">
@@ -159,7 +160,7 @@ function AppMockup() {
 
             <div className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-[1.1rem] border border-secondary/20 bg-secondary/8 px-4 py-3">
               <p className="text-sm font-semibold text-foreground">
-                Rapport pret apres validation
+                Résumé propriétaire prêt
               </p>
               <span className="rounded-full bg-secondary/15 px-3 py-1 text-xs font-semibold text-secondary">
                 PDF

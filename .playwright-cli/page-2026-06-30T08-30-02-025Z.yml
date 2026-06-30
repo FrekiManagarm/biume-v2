@@ -1,0 +1,133 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Biume accueil" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: Biume
+      - navigation [ref=e6]:
+        - link "Produit" [ref=e7] [cursor=pointer]:
+          - /url: /#console
+        - link "Méthode" [ref=e8] [cursor=pointer]:
+          - /url: /#workflow
+        - link "Tarifs" [ref=e9] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=e10]:
+        - link "Connexion" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:3001/signin
+        - link "Essai gratuit" [ref=e12] [cursor=pointer]:
+          - /url: http://localhost:3001/signup
+          - text: Essai gratuit
+          - img [ref=e13]
+  - generic [ref=e15]:
+    - main [ref=e16]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: A propos de Biume
+          - heading "Biume aide les therapeutes animaliers a gagner du temps sur leurs rapports." [level=1] [ref=e27]
+          - paragraph [ref=e28]: Nous construisons un outil calme, precis et utile pour transformer les notes de consultation en rapports clairs, professionnels et faciles a transmettre aux proprietaires.
+          - generic [ref=e29]:
+            - link "Commencer gratuitement" [ref=e30] [cursor=pointer]:
+              - /url: http://localhost:3001/signup
+              - text: Commencer gratuitement
+              - img [ref=e31]
+            - link "Retour a l'accueil" [ref=e33] [cursor=pointer]:
+              - /url: /
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - paragraph [ref=e36]: 2 h
+              - paragraph [ref=e37]: economisees par jour
+            - generic [ref=e38]:
+              - paragraph [ref=e39]: "1"
+              - paragraph [ref=e40]: dossier patient clair
+            - generic [ref=e41]:
+              - paragraph [ref=e42]: "0"
+              - paragraph [ref=e43]: copier-coller inutile
+        - generic [ref=e46]:
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - paragraph [ref=e50]: Biume
+              - heading "Une pratique plus lisible" [level=2] [ref=e51]
+              - paragraph [ref=e52]: Pour les praticiens, les animaux et leurs proprietaires
+            - generic [ref=e53]: mission
+          - generic [ref=e54]:
+            - img "Espace de travail calme dedie au suivi de soins animaliers" [ref=e56]
+            - generic [ref=e58]:
+              - paragraph [ref=e59]: Points cles
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - paragraph [ref=e62]: Origine
+                  - paragraph [ref=e63]: "Une frustration simple: trop de temps passe apres les seances."
+                - generic [ref=e64]:
+                  - paragraph [ref=e65]: Mission
+                  - paragraph [ref=e66]: Rendre chaque compte rendu plus rapide, plus clair et plus utile.
+                - generic [ref=e67]:
+                  - paragraph [ref=e68]: Approche
+                  - paragraph [ref=e69]: De l'IA encadree par le regard du praticien, jamais l'inverse.
+              - paragraph [ref=e71]: Meme exigence produit, meme clarte pour chaque page.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - article [ref=e75]:
+            - paragraph [ref=e76]: Pourquoi
+            - heading "La qualite du soin ne devrait pas se perdre dans l'administratif." [level=2] [ref=e77]
+            - paragraph [ref=e78]: Les therapeutes animaliers jonglent entre l'observation, le suivi, la pedagogie et la relation client. Biume existe pour absorber la partie repetable du travail documentaire sans appauvrir la finesse du diagnostic.
+          - article [ref=e79]:
+            - paragraph [ref=e80]: Produit
+            - heading "Des rapports qui restent humains." [level=2] [ref=e81]
+            - paragraph [ref=e82]: L'application structure les notes, propose des formulations professionnelles et prepare une version comprehensible pour le proprietaire. Le praticien garde toujours la validation finale.
+          - article [ref=e83]:
+            - paragraph [ref=e84]: Exigence
+            - heading "Un outil concu pour la confiance." [level=2] [ref=e85]
+            - paragraph [ref=e86]: "Chaque page, chaque rapport et chaque automatisation doivent servir la clarte: donnees rangees, vocabulaire precis, interface lisible et respect des informations sensibles."
+        - complementary [ref=e87]:
+          - paragraph [ref=e88]: Notre ligne
+          - heading "Simple a utiliser, serieux dans le fond." [level=2] [ref=e89]
+          - paragraph [ref=e90]: Biume ne cherche pas a remplacer le praticien. Le produit met en forme, suggere et fait gagner du temps, pendant que l'expertise reste entre vos mains.
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - generic [ref=e93]: "01"
+              - paragraph [ref=e94]: Reduire la charge mentale apres chaque rendez-vous.
+            - generic [ref=e95]:
+              - generic [ref=e96]: "02"
+              - paragraph [ref=e97]: Aider les proprietaires a comprendre les soins recommandes.
+            - generic [ref=e98]:
+              - generic [ref=e99]: "03"
+              - paragraph [ref=e100]: Conserver un historique exploitable pour chaque animal.
+    - contentinfo [ref=e101]:
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - generic [ref=e104]:
+            - link "Biume" [ref=e105] [cursor=pointer]:
+              - /url: /
+            - paragraph [ref=e106]: La plateforme de rapports et de suivi client pour les therapeutes animaliers.
+          - generic [ref=e107]:
+            - heading "Produit" [level=4] [ref=e108]
+            - list [ref=e109]:
+              - listitem [ref=e110]:
+                - link "Produit" [ref=e111] [cursor=pointer]:
+                  - /url: /#console
+              - listitem [ref=e112]:
+                - link "Methode" [ref=e113] [cursor=pointer]:
+                  - /url: /#workflow
+              - listitem [ref=e114]:
+                - link "Tarifs" [ref=e115] [cursor=pointer]:
+                  - /url: /#pricing
+              - listitem [ref=e116]:
+                - link "Demo" [ref=e117] [cursor=pointer]:
+                  - /url: https://cal.com/mathieu-chambaud-biume
+          - generic [ref=e118]:
+            - heading "Legal" [level=4] [ref=e119]
+            - list [ref=e120]:
+              - listitem [ref=e121]:
+                - link "Confidentialite" [ref=e122] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e123]:
+                - link "CGU" [ref=e124] [cursor=pointer]:
+                  - /url: /cgu
+              - listitem [ref=e125]:
+                - link "Contact" [ref=e126] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=e127]:
+          - paragraph [ref=e128]: © 2026 Biume. Tous droits reserves.
+          - generic [ref=e131]: Heberge en France, conforme RGPD
+  - button "Open Next.js Dev Tools" [ref=e137] [cursor=pointer]:
+    - img [ref=e138]

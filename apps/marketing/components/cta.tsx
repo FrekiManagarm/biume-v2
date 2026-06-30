@@ -8,14 +8,14 @@ const faqItems = [
       "Biume propose une trame et des formulations. Vous gardez la validation finale avant tout envoi.",
   },
   {
-    question: "Puis-je garder mon vocabulaire metier ?",
+    question: "Mes clients liront-ils le compte rendu ?",
     answer:
-      "Oui. Les termes professionnels restent dans votre rapport, avec une version claire pour les proprietaires.",
+      "Biume privilégie un résumé propriétaire court, clair et actionnable plutôt qu'un long rapport technique.",
   },
   {
-    question: "Est-ce adapte aux tournees ?",
+    question: "Est-ce compatible avec mon outil actuel ?",
     answer:
-      "Oui. Les dossiers, notes et documents restent accessibles entre deux seances, avec un suivi centralise.",
+      "Oui. Gardez votre agenda ou votre facturation; Biume se concentre sur le suivi post-séance.",
   },
 ] as const;
 
@@ -29,14 +29,14 @@ export function CTASection() {
               Prêt à démarrer ?
             </p>
             <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-none tracking-tight md:text-6xl">
-              Transformez votre activité{" "}
+              Faites voir la valeur de chaque séance{" "}
               <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-                dès aujourd&apos;hui
+                après le rendez-vous
               </span>
             </h2>
             <p className="mt-5 max-w-[62ch] text-base leading-7 text-background/62">
-              Testez toutes les fonctionnalités pendant 15 jours, sans carte
-              bancaire. Notre équipe vous accompagne à chaque étape.
+              Testez les résumés propriétaire, la timeline animal et les
+              relances de suivi pendant 15 jours, sans carte bancaire.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -62,7 +62,7 @@ export function CTASection() {
               Lancez-vous sans risque
             </p>
             <h3 className="mt-4 text-2xl font-semibold tracking-tight">
-              Rejoignez les professionnels qui font confiance à Biume.
+              Un outil pensé pour les praticiens manuels de santé animale.
             </h3>
             <div className="mt-5 divide-y divide-border">
               {faqItems.map((item) => (
