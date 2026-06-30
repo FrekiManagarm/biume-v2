@@ -2,9 +2,9 @@ import Link from "next/link";
 import { webAppPath } from "../lib/web-app-url";
 
 const proofStats = [
-  ["J+7", "retour proprietaire"],
-  ["1", "timeline animal"],
+  ["4.9/5", "note moyenne"],
   ["15 j", "essai gratuit"],
+  ["0 CB", "sans carte bancaire"],
 ] as const;
 
 const carePoints = [
@@ -23,21 +23,20 @@ export function HeroSection() {
             <span className="relative flex size-2.5 rounded-full bg-secondary">
               <span className="absolute inset-0 rounded-full bg-secondary/45 landing-pulse" />
             </span>
-            Suivi post-séance pour praticiens animaliers
+            L&apos;IA au service de la santé animale
           </div>
 
           <h1 className="landing-reveal landing-reveal-2 mt-7 max-w-2xl text-4xl font-semibold leading-none tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-            Transformez chaque séance en{" "}
+            Vos rapports,{" "}
             <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-              suivi propriétaire clair
+              simplifiés par l&apos;IA
             </span>
           </h1>
 
           <p className="landing-reveal landing-reveal-3 mt-6 max-w-[60ch] text-base leading-7 text-muted-foreground md:text-lg">
-            Biume aide les ostéopathes animaliers et praticiens manuels de
-            santé animale à envoyer des résumés propriétaire, suivre
-            l&apos;évolution et relancer au bon moment, sans remplacer leur
-            expertise.
+            Biume génère des comptes rendus professionnels, analyse
+            l&apos;historique de vos patients et vulgarise vos diagnostics pour que
+            vous puissiez vous concentrer sur le soin.
           </p>
 
           <div className="landing-reveal landing-reveal-4 mt-8 flex flex-col gap-3 sm:flex-row">
@@ -55,7 +54,7 @@ export function HeroSection() {
               rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center rounded-full border border-border bg-card/70 px-5 py-3 text-sm font-semibold text-foreground transition-all hover:border-foreground/20 hover:bg-card active:scale-[0.98] sm:w-auto"
             >
-              Voir une demo
+              Voir la démo
             </Link>
           </div>
 
