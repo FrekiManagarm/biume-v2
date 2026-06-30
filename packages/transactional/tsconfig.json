@@ -1,0 +1,12 @@
+{
+  "extends": "@biume/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@biume/transactional/*": ["./*"],
+    },
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": ["node_modules"],
+}
