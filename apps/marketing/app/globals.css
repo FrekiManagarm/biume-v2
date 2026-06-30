@@ -24,6 +24,34 @@
   .landing-pulse {
     animation: landing-pulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   }
+
+  .hero-color-wash {
+    animation: hero-color-wash 16s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+  }
+
+  .hero-field-drift {
+    animation: hero-field-drift 9s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+  }
+
+  .hero-float-a {
+    animation: hero-float-a 7.5s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+  }
+
+  .hero-float-b {
+    animation: hero-float-b 6.8s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+  }
+
+  .hero-float-c {
+    animation: hero-float-c 8.2s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+  }
+
+  .hero-scan-line {
+    animation: hero-scan-line 5.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  .hero-marker-ring {
+    animation: hero-marker-ring 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
 }
 
 @keyframes landing-reveal {
@@ -48,9 +76,88 @@
   }
 }
 
+@keyframes hero-color-wash {
+  from {
+    opacity: 0.68;
+    transform: translate3d(-2%, -1%, 0) skewX(-4deg);
+  }
+  to {
+    opacity: 0.96;
+    transform: translate3d(3%, 2%, 0) skewX(3deg);
+  }
+}
+
+@keyframes hero-field-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-1deg);
+  }
+  to {
+    transform: translate3d(0.75rem, -0.5rem, 0) rotate(1deg);
+  }
+}
+
+@keyframes hero-float-a {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-2deg);
+  }
+  to {
+    transform: translate3d(0.25rem, -0.7rem, 0) rotate(-1deg);
+  }
+}
+
+@keyframes hero-float-b {
+  from {
+    transform: translate3d(0, 0, 0) rotate(3deg);
+  }
+  to {
+    transform: translate3d(-0.45rem, 0.55rem, 0) rotate(1.5deg);
+  }
+}
+
+@keyframes hero-float-c {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+  }
+  to {
+    transform: translate3d(0.65rem, -0.35rem, 0) rotate(-2deg);
+  }
+}
+
+@keyframes hero-scan-line {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8rem, 0);
+  }
+  18%,
+  62% {
+    opacity: 0.58;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 34rem, 0);
+  }
+}
+
+@keyframes hero-marker-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(32, 184, 100, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 13px rgba(32, 184, 100, 0.02);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal,
-  .landing-pulse {
+  .landing-pulse,
+  .hero-color-wash,
+  .hero-field-drift,
+  .hero-float-a,
+  .hero-float-b,
+  .hero-float-c,
+  .hero-scan-line,
+  .hero-marker-ring {
     animation: none;
   }
 }

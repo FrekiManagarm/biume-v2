@@ -40,14 +40,18 @@ export function FeaturesSection() {
         id="console"
         className="px-4 py-8 md:px-6 md:py-14"
       >
-        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_34px_100px_-76px_rgba(20,18,28,0.5)] lg:grid-cols-[0.82fr_1.18fr]">
-          <div className="border-b border-border p-6 md:p-9 lg:border-b-0 lg:border-r">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+        <div className="relative mx-auto grid max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background shadow-[0_38px_120px_-84px_rgba(20,18,28,0.62)] lg:grid-cols-[0.82fr_1.18fr]">
+          <div
+            className="hero-color-wash pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(124,102,238,0.14),rgba(255,255,255,0)_42%,rgba(32,184,100,0.16)_72%,rgba(124,102,238,0.1))]"
+            aria-hidden="true"
+          />
+          <div className="relative border-b border-border/80 p-6 md:p-9 lg:border-b-0 lg:border-r">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
               Suivi propriétaire
             </p>
             <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
               Conçu pour rendre la séance{" "}
-              <span className="text-primary">
+              <span className="text-secondary">
                 plus mémorable
               </span>
             </h2>
@@ -76,9 +80,9 @@ export function FeaturesSection() {
             </div>
           </div>
 
-          <div className="relative bg-muted/35 p-4 md:p-8">
+          <div className="relative bg-background/42 p-4 backdrop-blur-sm md:p-8">
             <GridLines />
-            <div className="relative mx-auto max-w-2xl rounded-[1.7rem] border border-border bg-background p-4 shadow-[0_26px_80px_-62px_rgba(20,18,28,0.46)] md:p-5">
+            <div className="relative mx-auto max-w-2xl rounded-[1.7rem] border border-white/70 bg-background/86 p-4 shadow-[0_26px_80px_-62px_rgba(20,18,28,0.62)] backdrop-blur-xl md:p-5">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -98,7 +102,7 @@ export function FeaturesSection() {
                   {signals.map(([label, value]) => (
                     <div
                       key={label}
-                      className="rounded-[1.15rem] border border-primary/10 bg-card/85 p-3"
+                      className="rounded-[1.15rem] border border-white/70 bg-background/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                     >
                       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                         {label}
@@ -110,12 +114,13 @@ export function FeaturesSection() {
                   ))}
                 </div>
 
-                <div className="rounded-[1.35rem] bg-foreground p-4 text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-primary/15">
+                <div className="relative overflow-hidden rounded-[1.35rem] bg-foreground p-4 text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-white/10">
+                  <div className="hero-scan-line absolute inset-x-0 top-0 h-20 bg-linear-to-b from-transparent via-secondary/18 to-transparent" />
                   <div className="flex items-center justify-between">
                     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-background/45">
                       Actions automatiques
                     </p>
-                    <span className="rounded-full bg-primary/25 px-2.5 py-1 text-[10px] font-semibold text-background">
+                    <span className="rounded-full bg-secondary/25 px-2.5 py-1 text-[10px] font-semibold text-background">
                       3 pretes
                     </span>
                   </div>
@@ -153,8 +158,12 @@ export function FeaturesSection() {
       </section>
 
       <section id="workflow" className="px-4 py-8 md:px-6 md:py-14">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-end">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background p-6 shadow-[0_38px_120px_-84px_rgba(20,18,28,0.58)] md:p-9">
+          <div
+            className="hero-field-drift pointer-events-none absolute -right-20 top-10 size-[28rem] rounded-full bg-[radial-gradient(circle,rgba(32,184,100,0.16),rgba(124,102,238,0.14)_42%,transparent_70%)] blur-2xl"
+            aria-hidden="true"
+          />
+          <div className="relative grid gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-end">
             <div>
               <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
                 Fonctionnalités
@@ -173,16 +182,16 @@ export function FeaturesSection() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr_1.25fr]">
+          <div className="relative mt-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr_1.25fr]">
             {workflowSteps.map((step, index) => (
               <article
                 key={step.number}
                 className={
                   index === 1
-                    ? "rounded-[1.7rem] border border-primary/25 bg-primary/12 p-6 shadow-[0_28px_80px_-66px_rgba(124,102,238,0.6)] md:p-7 lg:mt-14"
+                    ? "rounded-[1.7rem] border border-secondary/25 bg-secondary/10 p-6 shadow-[0_28px_80px_-66px_rgba(20,18,28,0.5)] md:p-7 lg:mt-14"
                     : index === 2
-                      ? "rounded-[1.7rem] border border-secondary/25 bg-secondary/10 p-6 md:p-7"
-                      : "rounded-[1.7rem] border border-primary/15 bg-card p-6 md:p-7"
+                      ? "rounded-[1.7rem] border border-primary/20 bg-primary/10 p-6 md:p-7"
+                      : "rounded-[1.7rem] border border-white/70 bg-background/82 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] md:p-7"
                 }
               >
                 <div className="flex items-center justify-between gap-4">

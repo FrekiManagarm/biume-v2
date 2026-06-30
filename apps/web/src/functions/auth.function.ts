@@ -32,3 +32,16 @@ export const getOrganizations = createServerFn({ method: "GET" }).handler(
     return organizations;
   },
 );
+
+export const getCurrentOrganization = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const headers = getRequestHeaders();
+    const organization = await auth.api.getFullOrganization({ headers });
+
+    if (!organization) {
+      throw new Error("Unauthorized");
+    }
+
+    return organization;
+  },
+);

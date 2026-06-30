@@ -23,26 +23,34 @@ export function CTASection() {
   return (
     <>
       <section className="px-4 py-8 md:px-6 md:py-14">
-        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[2rem] border border-border bg-foreground p-6 text-background shadow-[0_34px_100px_-76px_rgba(20,18,28,0.66)] md:p-9">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+        <div className="relative mx-auto grid max-w-7xl gap-4 overflow-hidden rounded-[2.25rem] border border-border bg-background p-4 shadow-[0_38px_120px_-84px_rgba(20,18,28,0.66)] lg:grid-cols-[1.2fr_0.8fr]">
+          <div
+            className="hero-color-wash pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(124,102,238,0.16),rgba(255,255,255,0)_42%,rgba(32,184,100,0.18)_72%,rgba(124,102,238,0.12))]"
+            aria-hidden="true"
+          />
+          <div className="relative overflow-hidden rounded-[1.85rem] border border-white/10 bg-foreground p-6 text-background shadow-[0_34px_100px_-76px_rgba(20,18,28,0.72)] md:p-9">
+            <div
+              className="hero-scan-line absolute inset-x-0 top-0 h-24 bg-linear-to-b from-transparent via-secondary/16 to-transparent"
+              aria-hidden="true"
+            />
+            <p className="relative font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
               Prêt à démarrer ?
             </p>
-            <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-none tracking-tight md:text-6xl">
+            <h2 className="relative mt-4 max-w-3xl text-4xl font-semibold leading-none tracking-tight md:text-6xl">
               Faites voir la valeur de chaque séance{" "}
-              <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="text-secondary">
                 après le rendez-vous
               </span>
             </h2>
-            <p className="mt-5 max-w-[62ch] text-base leading-7 text-background/62">
+            <p className="relative mt-5 max-w-[62ch] text-base leading-7 text-background/62">
               Testez les résumés propriétaire, la timeline animal et les
               relances de suivi pendant 15 jours, sans carte bancaire.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="relative mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={webAppPath("/signup")}
                 prefetch={false}
-                className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_42px_-30px_rgba(124,102,238,0.75)] transition-all hover:bg-primary/88 active:scale-[0.98]"
+                className="inline-flex items-center justify-center rounded-full bg-secondary px-5 py-3 text-sm font-semibold text-secondary-foreground shadow-[0_18px_42px_-32px_rgba(32,184,100,0.48)] transition-all hover:bg-secondary/88 active:scale-[0.98]"
               >
                 Commencer gratuitement
               </Link>
@@ -57,7 +65,7 @@ export function CTASection() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-secondary/20 bg-secondary/8 p-6 md:p-8">
+          <div className="relative rounded-[1.85rem] border border-white/70 bg-background/84 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] backdrop-blur-xl md:p-8">
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
               Lancez-vous sans risque
             </p>

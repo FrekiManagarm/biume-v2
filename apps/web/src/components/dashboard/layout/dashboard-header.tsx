@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, Fragment, useState } from "react";
 import { Link, useLocation, useParams } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";

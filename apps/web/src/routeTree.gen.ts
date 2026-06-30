@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
 import { Route as DashboardOwnersRouteImport } from './routes/dashboard/owners'
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
@@ -51,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardReportsRoute = DashboardReportsRouteImport.update({
   id: '/reports',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/reports_/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports_/$id/edit': typeof DashboardReportsIdEditRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/owners'
     | '/dashboard/reports'
+    | '/dashboard/settings'
     | '/api/auth/$'
     | '/dashboard/reports/$id'
     | '/dashboard/reports/$id/edit'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/owners'
     | '/dashboard/reports'
+    | '/dashboard/settings'
     | '/api/auth/$'
     | '/dashboard/reports/$id'
     | '/dashboard/reports/$id/edit'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/owners'
     | '/dashboard/reports'
+    | '/dashboard/settings'
     | '/api/auth/$'
     | '/dashboard/reports_/$id'
     | '/dashboard/reports_/$id/edit'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/reports': {
       id: '/dashboard/reports'
@@ -285,6 +304,7 @@ interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
   DashboardOwnersRoute: typeof DashboardOwnersRoute
   DashboardReportsRoute: typeof DashboardReportsRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardReportsIdRoute: typeof DashboardReportsIdRouteWithChildren
 }
 
@@ -292,6 +312,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAgendaRoute: DashboardAgendaRoute,
   DashboardOwnersRoute: DashboardOwnersRoute,
   DashboardReportsRoute: DashboardReportsRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardReportsIdRoute: DashboardReportsIdRouteWithChildren,
 }
 

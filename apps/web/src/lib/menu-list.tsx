@@ -41,21 +41,21 @@ export function proMenuList(pathname: string): Group[] {
           active: pathname === `/dashboard`,
           icon: LayoutGrid,
         },
-        {
-          href: `/dashboard/agenda`,
-          label: "Agenda",
-          active: pathname === `/dashboard/agenda`,
-          icon: CalendarDays,
-        },
       ],
     },
     {
       groupLabel: "Gestion",
       menus: [
         {
-          href: `/dashboard/clients`,
-          label: "Clients",
-          active: pathname === `/dashboard/clients`,
+          href: `/dashboard/agenda`,
+          label: "Agenda",
+          active: pathname === `/dashboard/agenda`,
+          icon: CalendarDays,
+        },
+        {
+          href: `/dashboard/owners`,
+          label: "Propriétaires",
+          active: pathname === `/dashboard/owners`,
           icon: Contact2,
         },
         {
