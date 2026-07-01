@@ -1,7 +1,6 @@
 import {
   Contact2,
   CalendarDays,
-  LayoutGrid,
   type LucideIcon,
   NotepadText,
   PawPrint,
@@ -37,37 +36,31 @@ export function proMenuList(pathname: string): Group[] {
       menus: [
         {
           href: `/dashboard`,
-          label: "Tableau de bord",
+          label: "Agenda",
           active: pathname === `/dashboard`,
-          icon: LayoutGrid,
+          icon: CalendarDays,
         },
       ],
     },
     {
-      groupLabel: "Gestion",
+      groupLabel: "Dossiers",
       menus: [
         {
-          href: `/dashboard/agenda`,
-          label: "Agenda",
-          active: pathname === `/dashboard/agenda`,
-          icon: CalendarDays,
-        },
-        {
-          href: `/dashboard/owners`,
-          label: "Propriétaires",
-          active: pathname === `/dashboard/owners`,
-          icon: Contact2,
-        },
-        {
           href: `/dashboard/patients`,
-          label: "Patients",
+          label: "Animaux",
           active: pathname === `/dashboard/patients`,
           icon: PawPrint,
         },
+        {
+          href: `/dashboard/clients`,
+          label: "Propriétaires",
+          active: pathname === `/dashboard/clients`,
+          icon: Contact2,
+        },
       ],
     },
     {
-      groupLabel: "Services",
+      groupLabel: "Suivi",
       menus: [
         {
           href: `/dashboard/reports`,
