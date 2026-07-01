@@ -73,11 +73,13 @@ export const getDashboardAgendaDay = createServerFn({ method: "GET" })
         status: row.status,
         atHome: row.atHome,
         note: row.note,
-        reports: row.reports.map((report) => ({
-          id: report.id,
-          status: report.status,
-          updatedAt: report.updatedAt,
-        })),
+        reports: row.reports
+          .map((report) => ({
+            id: report.id,
+            status: report.status,
+            updatedAt: report.updatedAt,
+          }))
+          .sort(compareAgendaReports),
         patient: row.patient
           ? {
               id: row.patient.id,
@@ -109,4 +111,27 @@ function startOfLocalDay(date: string) {
 function endOfLocalDay(date: string) {
   const [year, month, day] = date.split("-").map(Number);
   return new Date(year, month - 1, day, 23, 59, 59, 999);
+}
+
+function compareAgendaReports(
+  left: { id: string; updatedAt: Date | string | null },
+  right: { id: string; updatedAt: Date | string | null },
+) {
+  const leftUpdatedAt = getAgendaReportUpdatedAt(left.updatedAt);
+  const rightUpdatedAt = getAgendaReportUpdatedAt(right.updatedAt);
+
+  if (leftUpdatedAt !== rightUpdatedAt) {
+    return rightUpdatedAt - leftUpdatedAt;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
+function getAgendaReportUpdatedAt(value: Date | string | null) {
+  if (value === null) return Number.NEGATIVE_INFINITY;
+
+  const date = value instanceof Date ? value : new Date(value);
+  const time = date.getTime();
+
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
 }
