@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SelectOrganizationRouteImport } from './routes/select-organization'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CreateOrganizationRouteImport } from './routes/create-organization'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
@@ -33,6 +35,11 @@ const SigninRoute = SigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SelectOrganizationRoute = SelectOrganizationRouteImport.update({
+  id: '/select-organization',
+  path: '/select-organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -46,6 +53,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateOrganizationRoute = CreateOrganizationRouteImport.update({
+  id: '/create-organization',
+  path: '/create-organization',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -91,9 +103,11 @@ const DashboardReportsIdEditRoute = DashboardReportsIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create-organization': typeof CreateOrganizationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
@@ -106,9 +120,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create-organization': typeof CreateOrganizationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
@@ -122,9 +138,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/create-organization': typeof CreateOrganizationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
@@ -139,9 +157,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/create-organization'
     | '/dashboard'
     | '/forgot-password'
     | '/reset-password'
+    | '/select-organization'
     | '/signin'
     | '/signup'
     | '/dashboard/agenda'
@@ -154,9 +174,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/create-organization'
     | '/dashboard'
     | '/forgot-password'
     | '/reset-password'
+    | '/select-organization'
     | '/signin'
     | '/signup'
     | '/dashboard/agenda'
@@ -169,9 +191,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/create-organization'
     | '/dashboard'
     | '/forgot-password'
     | '/reset-password'
+    | '/select-organization'
     | '/signin'
     | '/signup'
     | '/dashboard/agenda'
@@ -185,9 +209,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateOrganizationRoute: typeof CreateOrganizationRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SelectOrganizationRoute: typeof SelectOrganizationRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -209,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/select-organization': {
+      id: '/select-organization'
+      path: '/select-organization'
+      fullPath: '/select-organization'
+      preLoaderRoute: typeof SelectOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -228,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-organization': {
+      id: '/create-organization'
+      path: '/create-organization'
+      fullPath: '/create-organization'
+      preLoaderRoute: typeof CreateOrganizationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -322,9 +362,11 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateOrganizationRoute: CreateOrganizationRoute,
   DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SelectOrganizationRoute: SelectOrganizationRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

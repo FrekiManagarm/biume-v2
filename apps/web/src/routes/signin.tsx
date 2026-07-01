@@ -43,7 +43,7 @@ function SignIn() {
     const { error: signInError } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard/owners",
+      callbackURL: "/select-organization",
     });
 
     setIsPending(false);
@@ -53,7 +53,7 @@ function SignIn() {
       return;
     }
 
-    void navigate({ to: "/dashboard/owners" });
+    void navigate({ to: "/select-organization" });
   }
 
   async function handleGoogleSignIn() {
@@ -62,7 +62,7 @@ function SignIn() {
 
     const { error: signInError } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard/owners",
+      callbackURL: "/select-organization",
     });
 
     setIsGooglePending(false);

@@ -51,7 +51,7 @@ function SignUp() {
       name,
       email,
       password,
-      callbackURL: "/dashboard/owners",
+      callbackURL: "/select-organization",
     });
 
     setIsPending(false);
@@ -61,7 +61,7 @@ function SignUp() {
       return;
     }
 
-    void navigate({ to: "/dashboard/owners" });
+    void navigate({ to: "/select-organization" });
   }
 
   async function handleGoogleSignUp() {
@@ -70,7 +70,7 @@ function SignUp() {
 
     const { error: signUpError } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard/owners",
+      callbackURL: "/select-organization",
     });
 
     setIsGooglePending(false);
