@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -11,8 +12,8 @@ import {
   Download,
   Send,
 } from "lucide-react";
-import { Button } from "@biume/ui/components/button";
-import { Badge } from "@biume/ui/components/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@biume/ui/components/table";
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@biume/ui/components/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,8 +39,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@biume/ui/components/alert-dialog";
-import { type AdvancedReport } from "@biume/db/schema/index";
+} from "@/components/ui/alert-dialog";
+import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import { useNavigate } from "@tanstack/react-router";
 import { deleteReport } from "@/lib/api/actions/reports.action";
 import { toast } from "sonner";
@@ -135,11 +136,11 @@ export function ReportsTable({ reports }: ReportsTableProps) {
   });
 
   const handleViewReport = (reportId: string) => {
-    navigate({ to: `/dashboard/reports/${reportId}` });
+    navigate({ to: "/dashboard/reports/$id", params: { id: reportId } });
   };
 
   const handleEditReport = (reportId: string) => {
-    navigate({ to: `/dashboard/reports/${reportId}/edit` });
+    navigate({ to: "/dashboard/reports/$id/edit", params: { id: reportId } });
   };
 
   const handleDeleteReport = (report: AdvancedReport) => {
@@ -222,7 +223,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
             >
               <TableCell>
                 <div className="font-medium">{report.title}</div>
-                <div className="text-muted-foreground text-sm truncate max-w-50">
+                <div className="text-muted-foreground text-sm truncate max-w-[200px]">
                   {report.notes || "Aucune note"}
                 </div>
               </TableCell>
@@ -266,18 +267,16 @@ export function ReportsTable({ reports }: ReportsTableProps) {
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="size-4" />
-                        <span className="sr-only">Ouvrir le menu</span>
-                      </Button>
-                    }
-                  />
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="size-4" />
+                      <span className="sr-only">Ouvrir le menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem
@@ -298,37 +297,35 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                       <Edit className="size-4" />
                       Modifier
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      render={
-                        <PDFDownloadLink
-                          document={
-                            <ReportPDF
-                              report={{
-                                id: report.id,
-                                title: report.title,
-                                createdAt: report.createdAt || new Date(),
-                                patient: report.patient,
-                                organization: report.organization,
-                                anatomicalIssues: report.anatomicalIssues,
-                                recommendations: report.recommendations,
-                              }}
-                              type="advanced_report"
-                            />
-                          }
-                          fileName={`rapport-${report.id}.pdf`}
-                        >
-                          {({ loading }) => (
-                            <div
-                              className="flex items-center gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Download className="size-4" />
-                              {loading ? "Génération..." : "Télécharger le PDF"}
-                            </div>
-                          )}
-                        </PDFDownloadLink>
-                      }
-                    />
+                    <DropdownMenuItem asChild>
+                      <PDFDownloadLink
+                        document={
+                          <ReportPDF
+                            report={{
+                              id: report.id,
+                              title: report.title,
+                              createdAt: report.createdAt || new Date(),
+                              patient: report.patient,
+                              organization: report.organization,
+                              anatomicalIssues: report.anatomicalIssues,
+                              recommendations: report.recommendations,
+                            }}
+                            type="advanced_report"
+                          />
+                        }
+                        fileName={`rapport-${report.id}.pdf`}
+                      >
+                        {({ loading }) => (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Download className="size-4" />
+                            {loading ? "Génération..." : "Télécharger le PDF"}
+                          </div>
+                        )}
+                      </PDFDownloadLink>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();

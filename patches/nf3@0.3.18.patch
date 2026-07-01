@@ -1,0 +1,15 @@
+diff --git a/dist/_chunks/trace.mjs b/dist/_chunks/trace.mjs
+index f4bd23779dd4106a48ebeb74cfe7cde72eb8258a..8fe6b5b9ea969a32129241517d3577c023f533fc 100644
+--- a/dist/_chunks/trace.mjs
++++ b/dist/_chunks/trace.mjs
+@@ -3,8 +3,9 @@ import { resolveModulePath } from "./libs/exsolve.mjs";
+ import { createRequire } from "node:module";
+ import * as fsp from "node:fs/promises";
+ import { access, readFile, writeFile } from "node:fs/promises";
+-import { nodeFileTrace } from "@vercel/nft";
++import nft from "@vercel/nft";
+ import semver from "semver";
++const { nodeFileTrace } = nft;
+ var __defProp = Object.defineProperty;
+ var __exportAll = (all, no_symbols) => {
+ 	let target = {};

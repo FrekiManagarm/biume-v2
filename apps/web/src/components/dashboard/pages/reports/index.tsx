@@ -1,6 +1,7 @@
+
 import { useMemo, useState, useEffect } from "react";
-import { type AdvancedReport } from "@biume/db/schema/index";
-import { Card, CardContent } from "@biume/ui/components/card";
+import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   ReportsHeader,
   ReportsStats,
