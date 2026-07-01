@@ -64,7 +64,11 @@ export function createAuth() {
     },
     plugins: [
       tanstackStartCookies(),
-      autumn(env.AUTUMN_SECRET_KEY ? { secretKey: env.AUTUMN_SECRET_KEY } : {}),
+      autumn(
+        env.AUTUMN_SECRET_KEY
+          ? { secretKey: env.AUTUMN_SECRET_KEY, customerScope: "organization" }
+          : { customerScope: "organization" },
+      ),
       organization({
         ac: ac,
         roles: {

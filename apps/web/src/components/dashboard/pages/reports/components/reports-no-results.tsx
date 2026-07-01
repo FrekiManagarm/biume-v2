@@ -15,19 +15,19 @@ interface ReportsNoResultsProps {
 
 export function ReportsNoResults({ onResetFilters }: ReportsNoResultsProps) {
   return (
-    <Empty>
+    <Empty className="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-12">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <Search />
         </EmptyMedia>
         <EmptyTitle>Aucun résultat</EmptyTitle>
         <EmptyDescription>
-          Aucun rapport ne correspond à vos critères de recherche.
-          Essayez de modifier vos filtres.
+          Aucun rapport ne correspond à vos critères de recherche. Essayez de
+          modifier vos filtres.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button variant="outline" onClick={onResetFilters}>
+        <Button variant="outline" onClick={onResetFilters} className="h-10">
           Réinitialiser les filtres
         </Button>
       </EmptyContent>

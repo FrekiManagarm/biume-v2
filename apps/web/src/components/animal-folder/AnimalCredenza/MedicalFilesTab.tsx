@@ -15,13 +15,17 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  FileDropzone,
+  formatFileRejection,
+} from "@/components/file-dropzone";
 import type { Pet } from "@/lib/schemas";
 import {
   getMedicalDocumentsByPetId,
   createMedicalDocument,
   deleteMedicalDocument,
 } from "@/lib/api/actions/medicalDocuments.action";
-import { UploadDropzone, useUploadThing } from "@/lib/utils/uploadthing";
+import { useUploadThing } from "@/lib/utils/uploadthing";
 import {
   Dialog,
   DialogContent,
@@ -92,6 +96,8 @@ export const MedicalFilesTab = ({
       type: string;
     }>
   >([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [documentType, setDocumentType] = useState<
     "radiography" | "analysis" | "prescription" | "vaccination" | "other"
   >("other");
@@ -105,6 +111,9 @@ export const MedicalFilesTab = ({
 
   const { startUpload, isUploading } = useUploadThing(
     "medicalDocumentsUploader",
+    {
+      onUploadProgress: setUploadProgress,
+    },
   );
 
   const deleteMutation = useMutation({
@@ -129,6 +138,8 @@ export const MedicalFilesTab = ({
       toast.success("Document(s) ajouté(s) avec succès");
       setIsUploadDialogOpen(false);
       setUploadedFiles([]);
+      setSelectedFiles([]);
+      setUploadProgress(0);
       setTitle("");
       setDescription("");
       setDocumentType("other");
@@ -161,6 +172,41 @@ export const MedicalFilesTab = ({
       await Promise.all(promises);
     } catch (error) {
       console.error("Error creating documents:", error);
+    }
+  };
+
+  const handleSelectedFilesChange = async (files: File[]) => {
+    setSelectedFiles(files);
+    setUploadedFiles([]);
+    setUploadProgress(0);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    try {
+      const uploaded = await startUpload(files);
+
+      if (!uploaded) {
+        toast.error("Erreur lors de l'upload des fichiers");
+        return;
+      }
+
+      setUploadedFiles(
+        uploaded.map((file) => ({
+          url: file.ufsUrl || file.url,
+          name: file.name,
+          size: file.size.toString(),
+          type: file.type || "application/octet-stream",
+        })),
+      );
+      setUploadProgress(100);
+    } catch (error) {
+      console.error("Error uploading documents:", error);
+      setSelectedFiles([]);
+      setUploadedFiles([]);
+      setUploadProgress(0);
+      toast.error("Erreur lors de l'upload des fichiers");
     }
   };
 
@@ -263,23 +309,28 @@ export const MedicalFilesTab = ({
                 <div className="space-y-2">
                   <Label>Fichiers</Label>
                   {uploadedFiles.length === 0 ? (
-                    <UploadDropzone
-                      endpoint="medicalDocumentsUploader"
-                      onClientUploadComplete={(res) => {
-                        if (res) {
-                          setUploadedFiles(
-                            res.map((file) => ({
-                              url: file.url,
-                              name: file.name,
-                              size: file.size.toString(),
-                              type: file.type || "application/octet-stream",
-                            })),
-                          );
-                        }
+                    <FileDropzone
+                      accept={{
+                        "application/pdf": [".pdf"],
+                        "image/*": [],
+                        "video/*": [],
                       }}
-                      onUploadError={(error) => {
-                        toast.error(`Erreur d'upload: ${error.message}`);
+                      description="PDF, images ou vidéos. Les limites exactes sont appliquées par UploadThing."
+                      disabled={isUploading}
+                      files={selectedFiles}
+                      maxFiles={10}
+                      multiple
+                      onFilesChange={handleSelectedFilesChange}
+                      onRejected={(rejections) => {
+                        toast.error(
+                          rejections.map(formatFileRejection).join(" "),
+                        );
                       }}
+                      title={
+                        isUploading
+                          ? `Upload en cours (${uploadProgress}%)`
+                          : "Importer des fichiers"
+                      }
                     />
                   ) : (
                     <div className="space-y-2">
@@ -315,7 +366,11 @@ export const MedicalFilesTab = ({
                       ))}
                       <Button
                         variant="outline"
-                        onClick={() => setUploadedFiles([])}
+                        onClick={() => {
+                          setUploadedFiles([]);
+                          setSelectedFiles([]);
+                          setUploadProgress(0);
+                        }}
                         className="w-full"
                       >
                         Changer les fichiers

@@ -2,11 +2,12 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import {
   Bell,
+  CheckCircle2,
   ImageIcon,
-  KeyRound,
   Languages,
   Mail,
   Phone,
+  Settings,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -44,14 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@biume/ui/components/select";
-import { Separator } from "@biume/ui/components/separator";
 import { Switch } from "@biume/ui/components/switch";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@biume/ui/components/tabs";
 import type { User } from "@biume/db/schema/index";
 
 const userProfileSchema = z.object({
@@ -100,19 +94,6 @@ function getInitials(name?: string | null) {
   );
 }
 
-function getProfileCompletion(user: User) {
-  const values = [
-    user.name,
-    user.email,
-    user.phoneNumber,
-    user.lang,
-    user.image,
-  ];
-  const completed = values.filter(Boolean).length;
-
-  return Math.round((completed / values.length) * 100);
-}
-
 export function UserProfileDialog({
   open,
   onOpenChange,
@@ -155,117 +136,60 @@ export function UserProfileDialog({
       await mutateAsync(userProfileSchema.parse(value));
     },
   });
-  const profileCompletion = getProfileCompletion(user);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="px-6 pt-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <DialogTitle className="text-xl font-semibold tracking-tight">
-                Mon profil
-              </DialogTitle>
-              <DialogDescription className="text-sm leading-relaxed">
-                Gérez vos informations, vos préférences et vos accès sensibles.
-              </DialogDescription>
-            </div>
-            <Badge
-              variant="outline"
-              className="hidden bg-background/80 sm:flex"
-            >
-              {user.lang === "en" ? "EN" : "FR"}
-            </Badge>
-          </div>
-        </DialogHeader>
-
-        <div className="px-6 pt-5">
-          <div className="relative overflow-hidden rounded-2xl border bg-card p-4 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.45)]">
-            <div className="absolute inset-x-0 top-0 h-px bg-foreground/10" />
-            <div className="grid gap-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-              <Avatar className="size-16 rounded-2xl ring-1 ring-border">
-                <AvatarImage
-                  src={user.image || undefined}
-                  alt={user.name || "Profil"}
-                />
-                <AvatarFallback className="rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-base font-semibold tracking-tight">
-                    {user.name}
-                  </p>
-                  <Badge variant="secondary" className="bg-muted/80">
-                    {user.emailVerified ? "Email vérifié" : "Email à vérifier"}
-                  </Badge>
-                </div>
-                <p className="truncate text-sm text-muted-foreground">
-                  {user.email}
-                </p>
-              </div>
-              <div className="space-y-2 sm:w-32">
-                <div className="flex items-center justify-between text-[0.7rem] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  <span>Profil</span>
-                  <span>{profileCompletion}%</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
-                    style={{ width: `${profileCompletion}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             event.stopPropagation();
             form.handleSubmit();
           }}
-          className="px-6 pb-6 pt-5"
+          className="flex max-h-[calc(100dvh-4rem)] flex-col"
         >
-          <Tabs defaultValue="profil" className="w-full">
-            <TabsList className="grid h-10 w-full grid-cols-3 rounded-xl bg-muted/50 p-1">
-              <TabsTrigger
-                value="profil"
-                className="gap-1.5 rounded-lg font-medium transition-all active:scale-[0.98] data-[state=active]:border data-[state=active]:border-border/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-              >
-                <UserRound className="size-3.5" />
-                Profil
-              </TabsTrigger>
-              <TabsTrigger
-                value="notifications"
-                className="gap-1.5 rounded-lg font-medium transition-all active:scale-[0.98] data-[state=active]:border data-[state=active]:border-border/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-              >
-                <Bell className="size-3.5" />
-                Notifications
-              </TabsTrigger>
-              <TabsTrigger
-                value="securite"
-                className="gap-1.5 rounded-lg font-medium transition-all active:scale-[0.98] data-[state=active]:border data-[state=active]:border-border/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-              >
-                <ShieldCheck className="size-3.5" />
-                Sécurité
-              </TabsTrigger>
-            </TabsList>
+          <div className="border-b bg-muted/20 px-6 py-5">
+            <div className="flex items-start gap-4 pr-8">
+              <Avatar className="size-14 rounded-2xl ring-1 ring-border">
+                <AvatarImage
+                  src={user.image || undefined}
+                  alt={user.name || "Profil"}
+                />
+                <AvatarFallback className="rounded-2xl bg-background text-base font-semibold text-foreground">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+              <DialogHeader className="min-w-0 flex-1 gap-1 text-left">
+                <DialogTitle className="text-xl font-semibold tracking-tight">
+                  Mon profil
+                </DialogTitle>
+                <DialogDescription className="text-sm leading-relaxed">
+                  Mettez à jour vos coordonnées et vos préférences.
+                </DialogDescription>
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {user.name}
+                  </span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="truncate text-sm text-muted-foreground">
+                    {user.email}
+                  </span>
+                </div>
+              </DialogHeader>
+            </div>
+          </div>
 
-            <TabsContent value="profil" className="mt-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
+          <div className="overflow-y-auto px-6 py-5">
+            <FieldGroup className="gap-5">
+              <section className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold tracking-tight">
-                    Informations publiques
-                  </p>
+                  <h3 className="text-sm font-semibold tracking-tight">
+                    Informations
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Ces informations identifient votre compte dans Biume.
+                    Ces éléments apparaissent dans votre espace Biume.
                   </p>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <form.Field
                   name="name"
                   children={(field) => {
@@ -290,9 +214,6 @@ export function UserProfileDialog({
                           }
                           aria-invalid={isInvalid}
                         />
-                        <FieldDescription>
-                          Nom visible dans les espaces partagés.
-                        </FieldDescription>
                         {isInvalid && (
                           <FieldError
                             errors={getFieldErrors(field.state.meta.errors)}
@@ -302,87 +223,83 @@ export function UserProfileDialog({
                     );
                   }}
                 />
-                <form.Field
-                  name="phoneNumber"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <form.Field
+                    name="phoneNumber"
+                    children={(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
 
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          <Phone className="size-3.5 text-muted-foreground" />
-                          Téléphone
-                        </FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          className="h-10 bg-background/70"
-                          placeholder="Votre numéro"
-                          value={field.state.value ?? ""}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          aria-invalid={isInvalid}
-                        />
-                        <FieldDescription>
-                          Utilisé uniquement pour les notifications activées.
-                        </FieldDescription>
-                        {isInvalid && (
-                          <FieldError
-                            errors={getFieldErrors(field.state.meta.errors)}
-                          />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                <form.Field
-                  name="lang"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          <Languages className="size-3.5 text-muted-foreground" />
-                          Langue
-                        </FieldLabel>
-                        <Select
-                          value={field.state.value}
-                          onValueChange={(value) => {
-                            if (value) {
-                              field.handleChange(value);
-                            }
-                          }}
-                        >
-                          <SelectTrigger
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            <Phone className="size-3.5 text-muted-foreground" />
+                            Téléphone
+                          </FieldLabel>
+                          <Input
                             id={field.name}
+                            name={field.name}
                             className="h-10 bg-background/70"
-                            aria-invalid={isInvalid}
+                            placeholder="Votre numéro"
+                            value={field.state.value ?? ""}
                             onBlur={field.handleBlur}
-                          >
-                            <SelectValue placeholder="Choisir la langue" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="fr">Français</SelectItem>
-                            <SelectItem value="en">Anglais</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FieldDescription>
-                          Langue par défaut de votre interface.
-                        </FieldDescription>
-                        {isInvalid && (
-                          <FieldError
-                            errors={getFieldErrors(field.state.meta.errors)}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            aria-invalid={isInvalid}
                           />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
+                          {isInvalid && (
+                            <FieldError
+                              errors={getFieldErrors(field.state.meta.errors)}
+                            />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                  <form.Field
+                    name="lang"
+                    children={(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            <Languages className="size-3.5 text-muted-foreground" />
+                            Langue
+                          </FieldLabel>
+                          <Select
+                            value={field.state.value}
+                            onValueChange={(value) => {
+                              if (value) {
+                                field.handleChange(value);
+                              }
+                            }}
+                          >
+                            <SelectTrigger
+                              id={field.name}
+                              className="h-10 bg-background/70"
+                              aria-invalid={isInvalid}
+                              onBlur={field.handleBlur}
+                            >
+                              <SelectValue placeholder="Choisir la langue" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fr">Français</SelectItem>
+                              <SelectItem value="en">Anglais</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {isInvalid && (
+                            <FieldError
+                              errors={getFieldErrors(field.state.meta.errors)}
+                            />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                </div>
                 <form.Field
                   name="image"
                   children={(field) => {
@@ -393,7 +310,7 @@ export function UserProfileDialog({
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>
                           <ImageIcon className="size-3.5 text-muted-foreground" />
-                          Photo de profil (URL)
+                          Photo de profil
                         </FieldLabel>
                         <Input
                           id={field.name}
@@ -407,9 +324,6 @@ export function UserProfileDialog({
                           }
                           aria-invalid={isInvalid}
                         />
-                        <FieldDescription>
-                          URL d'image utilisée pour votre avatar.
-                        </FieldDescription>
                         {isInvalid && (
                           <FieldError
                             errors={getFieldErrors(field.state.meta.errors)}
@@ -419,20 +333,16 @@ export function UserProfileDialog({
                     );
                   }}
                 />
-              </div>
-            </TabsContent>
+              </section>
 
-            <TabsContent value="notifications" className="mt-5 space-y-4">
-              <div>
-                <p className="text-sm font-semibold tracking-tight">
-                  Préférences de notifications
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Choisissez les canaux qui méritent votre attention.
-                </p>
-              </div>
-              <div className="rounded-2xl border bg-card p-1">
-                <FieldGroup className="gap-1">
+              <section className="space-y-3 border-t pt-5">
+                <div className="flex items-center gap-2">
+                  <Bell className="size-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold tracking-tight">
+                    Notifications
+                  </h3>
+                </div>
+                <div className="divide-y rounded-xl border bg-card">
                   <form.Field
                     name="emailNotifications"
                     children={(field) => {
@@ -443,7 +353,7 @@ export function UserProfileDialog({
                         <Field
                           orientation="horizontal"
                           data-invalid={isInvalid}
-                          className="items-center justify-between rounded-xl p-3 transition-colors hover:bg-muted/45"
+                          className="items-center justify-between gap-4 p-4"
                         >
                           <FieldContent>
                             <div className="flex items-center gap-2">
@@ -484,7 +394,7 @@ export function UserProfileDialog({
                         <Field
                           orientation="horizontal"
                           data-invalid={isInvalid}
-                          className="items-center justify-between rounded-xl p-3 transition-colors hover:bg-muted/45"
+                          className="items-center justify-between gap-4 p-4"
                         >
                           <FieldContent>
                             <div className="flex items-center gap-2">
@@ -515,65 +425,52 @@ export function UserProfileDialog({
                       );
                     }}
                   />
-                </FieldGroup>
-              </div>
-            </TabsContent>
+                </div>
+              </section>
 
-            <TabsContent value="securite" className="mt-5 space-y-4">
-              <div>
-                <p className="text-sm font-semibold tracking-tight">
-                  Gestion de sécurité
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Les changements sensibles s'effectuent depuis les paramètres.
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border bg-card p-4">
-                  <div className="mb-4 flex size-9 items-center justify-center rounded-xl bg-muted">
-                    <Mail className="size-4 text-muted-foreground" />
+              <section className="border-t pt-5">
+                <div className="flex flex-col gap-3 rounded-xl border bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-background ring-1 ring-border">
+                      <ShieldCheck className="size-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium">
+                          Sécurité du compte
+                        </p>
+                        <Badge
+                          variant={user.emailVerified ? "outline" : "secondary"}
+                          className="bg-background"
+                        >
+                          {user.emailVerified && (
+                            <CheckCircle2 className="size-3" />
+                          )}
+                          {user.emailVerified ? "Email vérifié" : "À vérifier"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium">Adresse email</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Modifiez l'adresse utilisée pour vous connecter.
-                  </p>
                   <Button
                     type="button"
                     variant="outline"
-                    className="mt-4 w-full active:scale-[0.98]"
+                    className="shrink-0 active:scale-[0.98]"
                     onClick={() =>
                       window.location.assign("/dashboard/settings")
                     }
                   >
-                    Changer d&apos;email
+                    <Settings className="size-4" />
+                    Paramètres
                   </Button>
                 </div>
-                <div className="rounded-2xl border bg-card p-4">
-                  <div className="mb-4 flex size-9 items-center justify-center rounded-xl bg-muted">
-                    <KeyRound className="size-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm font-medium">Mot de passe</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Renforcez la sécurité de votre session.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-4 w-full active:scale-[0.98]"
-                    onClick={() =>
-                      window.location.assign("/dashboard/settings")
-                    }
-                  >
-                    Changer de mot de passe
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+              </section>
+            </FieldGroup>
+          </div>
 
-          <Separator className="my-5" />
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 border-t bg-background px-6 py-4">
             <Button
               type="button"
               variant="outline"

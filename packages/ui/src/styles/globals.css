@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -68,14 +71,14 @@
   --chart-3: hsl(197 37% 24%);
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
-  --sidebar: hsl(0 0% 100%);
-  --sidebar-foreground: hsl(0 0% 3.9%);
-  --sidebar-primary: hsl(251 73% 72%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(292 25% 95%);
-  --sidebar-accent-foreground: hsl(0 0% 9%);
-  --sidebar-border: hsl(0 0% 89.8%);
-  --sidebar-ring: hsl(0 0% 3.9%);
+  --sidebar: hsl(150 33% 98%);
+  --sidebar-foreground: hsl(168 44% 14%);
+  --sidebar-primary: hsl(164 56% 28%);
+  --sidebar-primary-foreground: hsl(150 40% 98%);
+  --sidebar-accent: hsl(154 34% 92%);
+  --sidebar-accent-foreground: hsl(168 44% 14%);
+  --sidebar-border: hsl(154 24% 84%);
+  --sidebar-ring: hsl(164 56% 28%);
 }
 
 .dark {
@@ -102,14 +105,14 @@
   --chart-3: hsl(30 80% 55%);
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
-  --sidebar: hsl(0 0% 13%);
-  --sidebar-foreground: hsl(0 0% 98%);
-  --sidebar-primary: hsl(251 73% 72%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(0 0% 19%);
-  --sidebar-accent-foreground: hsl(0 0% 98%);
-  --sidebar-border: hsl(0 0% 22%);
-  --sidebar-ring: hsl(0 0% 83.1%);
+  --sidebar: hsl(174 20% 9%);
+  --sidebar-foreground: hsl(150 40% 96%);
+  --sidebar-primary: hsl(160 55% 64%);
+  --sidebar-primary-foreground: hsl(174 28% 10%);
+  --sidebar-accent: hsl(172 20% 16%);
+  --sidebar-accent-foreground: hsl(150 40% 96%);
+  --sidebar-border: hsl(172 18% 20%);
+  --sidebar-ring: hsl(160 55% 64%);
 }
 
 @layer base {

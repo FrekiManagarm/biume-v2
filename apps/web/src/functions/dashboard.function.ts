@@ -91,8 +91,8 @@ export const countDraftReports = createServerFn({ method: "GET" }).handler(
 
 // Helpers de delta
 type Trend = "up" | "down";
-type MetricDelta = { value: string; trend: Trend };
-type MetricResult = { value: number; delta: MetricDelta };
+export type MetricDelta = { value: string; trend: Trend };
+export type MetricResult = { value: number; delta: MetricDelta };
 
 function toPercentDelta(current: number, previous: number): MetricDelta {
   if (previous === 0) {

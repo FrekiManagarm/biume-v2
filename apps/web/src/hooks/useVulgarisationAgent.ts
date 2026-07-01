@@ -1,9 +1,14 @@
-"use client";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 
 export function useVulgarisationAgent() {
-  const { messages, status, error, sendMessage: send, setMessages } = useChat({
+  const {
+    messages,
+    status,
+    error,
+    sendMessage: send,
+    setMessages,
+  } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/vulgarisation",
     }),
@@ -12,13 +17,16 @@ export function useVulgarisationAgent() {
   const isLoading = status === "streaming";
 
   const sendMessage = async (text: string, reportId?: string) => {
-    await send({
-      text,
-    }, {
-      body: {
-        reportId,
+    await send(
+      {
+        text,
       },
-    });
+      {
+        body: {
+          reportId,
+        },
+      },
+    );
   };
 
   const reset = () => setMessages([]);
@@ -31,6 +39,3 @@ export function useVulgarisationAgent() {
     reset,
   };
 }
-
-
-

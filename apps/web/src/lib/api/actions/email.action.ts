@@ -4,7 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
 import NewReportClientEmail from "#/emails/NewReportClientEmail";
-import { ReportPDF } from "#/components/reports-module/components/ReportPDF";
+import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
 import { resend } from "#/lib/utils/resend";
 import type { AdvancedReport } from "#/lib/schemas/advancedReport/advancedReport";
 

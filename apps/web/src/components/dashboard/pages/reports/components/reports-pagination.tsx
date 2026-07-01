@@ -16,8 +16,8 @@ export function ReportsPagination({
   }
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-muted-foreground text-sm">
+    <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-sm text-slate-500">
         Page {currentPage} sur {totalPages}
       </div>
       <div className="flex gap-2">
@@ -26,6 +26,7 @@ export function ReportsPagination({
           size="sm"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
+          className="h-9"
         >
           Précédent
         </Button>
@@ -34,6 +35,7 @@ export function ReportsPagination({
           size="sm"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
+          className="h-9"
         >
           Suivant
         </Button>

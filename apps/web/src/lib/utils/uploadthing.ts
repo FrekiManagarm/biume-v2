@@ -2,9 +2,13 @@ import {
   generateReactHelpers,
   generateUploadDropzone,
 } from "@uploadthing/react";
+import type { OurFileRouter } from "#/server/uploadthing";
 
-type OurFileRouter = Record<string, never>;
+const uploadThingOptions = {
+  url: "/api/uploadthing",
+};
 
-export const UploadDropzone = generateUploadDropzone<OurFileRouter>();
+export const UploadDropzone =
+  generateUploadDropzone<OurFileRouter>(uploadThingOptions);
 export const { uploadFiles, useUploadThing } =
-  generateReactHelpers<OurFileRouter>();
+  generateReactHelpers<OurFileRouter>(uploadThingOptions);

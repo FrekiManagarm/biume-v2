@@ -1,6 +1,5 @@
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyHeader,
@@ -18,28 +17,24 @@ interface ReportsErrorProps {
 
 export function ReportsError({ error, onRetry }: ReportsErrorProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid w-full gap-5 pb-8 text-slate-950">
       <ReportsHeader disabled />
-      <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-        <CardContent>
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <FileText />
-              </EmptyMedia>
-              <EmptyTitle>Erreur de chargement</EmptyTitle>
-              <EmptyDescription>
-                {error}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={onRetry}>
-                Réessayer
-              </Button>
-            </EmptyContent>
-          </Empty>
-        </CardContent>
-      </Card>
+      <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FileText />
+            </EmptyMedia>
+            <EmptyTitle>Erreur de chargement</EmptyTitle>
+            <EmptyDescription>{error}</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button onClick={onRetry} className="h-10">
+              Réessayer
+            </Button>
+          </EmptyContent>
+        </Empty>
+      </div>
     </div>
   );
 }

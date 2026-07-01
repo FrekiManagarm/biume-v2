@@ -17,10 +17,10 @@ import {
   type AdvancedReport,
   advancedReport,
 } from "@biume/db/schema/index";
-// import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-editor/data/horse/typesHorse";
-// import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-editor/data/horse/dataHorse";
-import { anatomicalRegions } from "#/components/dashboard/pages/reports-editor/data/dog/typesDog";
-import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-editor/data/dog/dataDog";
+// import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
+// import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
+import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
+import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
 
 export type ReportType = "simple" | "advanced";
