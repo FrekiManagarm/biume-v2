@@ -7,6 +7,15 @@ import { getReportById } from "#/lib/api/actions/reports.action";
 import { Button } from "@biume/ui/components/button";
 
 export const Route = createFileRoute("/dashboard/reports_/$id/edit")({
+  head: () => ({
+    meta: [
+      { title: "Edition du rapport | Biume" },
+      {
+        name: "description",
+        content: "Editez les observations et recommandations d'un rapport.",
+      },
+    ],
+  }),
   loader: async ({ params }) => {
     const [org, reportResult] = await Promise.all([
       getCurrentOrganization(),

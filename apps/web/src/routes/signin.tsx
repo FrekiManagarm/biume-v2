@@ -14,6 +14,15 @@ import { Button } from "#/components/ui/button";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/signin")({
+  head: () => ({
+    meta: [
+      { title: "Connexion | Biume" },
+      {
+        name: "description",
+        content: "Connectez-vous a votre espace Biume.",
+      },
+    ],
+  }),
   ssr: false,
   component: SignIn,
 });

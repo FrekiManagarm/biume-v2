@@ -7,6 +7,15 @@ import { getSidebarDefaultOpen } from "#/functions/sidebar.function";
 import type { Organization } from "@biume/db/schema/organization";
 
 export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard | Biume" },
+      {
+        name: "description",
+        content: "Suivez les operations, proprietaires et rapports dans Biume.",
+      },
+    ],
+  }),
   component: RouteComponent,
   beforeLoad: async () => {
     const [session, organizations, sidebarDefaultOpen] = await Promise.all([

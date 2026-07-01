@@ -22,6 +22,15 @@ import {
 } from "@biume/ui/components/table";
 
 export const Route = createFileRoute("/dashboard/owners")({
+  head: () => ({
+    meta: [
+      { title: "Proprietaires | Biume" },
+      {
+        name: "description",
+        content: "Pilotez les proprietaires, portefeuilles et relances.",
+      },
+    ],
+  }),
   component: RouteComponent,
 });
 

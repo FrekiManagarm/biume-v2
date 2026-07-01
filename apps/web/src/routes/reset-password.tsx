@@ -18,6 +18,15 @@ type ResetPasswordSearch = {
 };
 
 export const Route = createFileRoute("/reset-password")({
+  head: () => ({
+    meta: [
+      { title: "Nouveau mot de passe | Biume" },
+      {
+        name: "description",
+        content: "Choisissez un nouveau mot de passe pour votre compte Biume.",
+      },
+    ],
+  }),
   ssr: false,
   validateSearch: (search): ResetPasswordSearch => ({
     token: typeof search.token === "string" ? search.token : undefined,

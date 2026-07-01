@@ -8,6 +8,15 @@ import { agendaItems, owners } from "#/components/dashboard/dashboard-data";
 import { Button } from "@biume/ui/components/button";
 
 export const Route = createFileRoute("/dashboard/agenda")({
+  head: () => ({
+    meta: [
+      { title: "Agenda | Biume" },
+      {
+        name: "description",
+        content: "Coordonnez les rendez-vous, inspections et relances.",
+      },
+    ],
+  }),
   component: RouteComponent,
 });
 

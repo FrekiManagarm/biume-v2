@@ -6,6 +6,15 @@ import { getReportById } from "#/lib/api/actions/reports.action";
 import { Button } from "@biume/ui/components/button";
 
 export const Route = createFileRoute("/dashboard/reports_/$id")({
+  head: () => ({
+    meta: [
+      { title: "Detail du rapport | Biume" },
+      {
+        name: "description",
+        content: "Consultez le detail d'un rapport veterinaire.",
+      },
+    ],
+  }),
   loader: ({ params }) => getReportById({ reportId: params.id }),
   component: RouteComponent,
 });

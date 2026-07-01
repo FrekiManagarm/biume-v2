@@ -20,6 +20,15 @@ import { Button } from "#/components/ui/button";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Creation de compte | Biume" },
+      {
+        name: "description",
+        content: "Creez votre compte Biume pour gerer vos operations.",
+      },
+    ],
+  }),
   ssr: false,
   component: SignUp,
 });

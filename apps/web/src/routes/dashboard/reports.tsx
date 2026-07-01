@@ -10,6 +10,15 @@ type ReportsSearch = {
 };
 
 export const Route = createFileRoute("/dashboard/reports")({
+  head: () => ({
+    meta: [
+      { title: "Rapports | Biume" },
+      {
+        name: "description",
+        content: "Consultez, filtrez et suivez les rapports veterinaires.",
+      },
+    ],
+  }),
   validateSearch: (search: Record<string, unknown>): ReportsSearch => ({
     search: typeof search.search === "string" ? search.search : "",
     status: typeof search.status === "string" ? search.status : "tous",

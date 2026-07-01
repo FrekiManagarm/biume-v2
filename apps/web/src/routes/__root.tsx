@@ -30,7 +30,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Biume",
+      },
+      {
+        name: "description",
+        content:
+          "Biume centralise le suivi des proprietaires, rendez-vous et rapports veterinaires.",
       },
     ],
     links: [
@@ -49,7 +54,7 @@ function RootDocument() {
   return (
     <QueryClientProvider client={queryClient.queryClient}>
       <AutumnProvider>
-        <html lang="en">
+        <html lang="fr">
           <head>
             <HeadContent />
           </head>

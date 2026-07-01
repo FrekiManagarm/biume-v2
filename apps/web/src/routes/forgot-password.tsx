@@ -13,6 +13,15 @@ import {
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/forgot-password")({
+  head: () => ({
+    meta: [
+      { title: "Mot de passe oublie | Biume" },
+      {
+        name: "description",
+        content: "Recevez un lien de reinitialisation pour votre compte Biume.",
+      },
+    ],
+  }),
   ssr: false,
   component: ForgotPassword,
 });
