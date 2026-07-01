@@ -101,11 +101,18 @@ export function deriveAgendaReportStatus(
   reports: AgendaReportInput[] = [],
   appointmentStatus: AgendaAppointmentStatus,
 ): AgendaReportStatus {
-  if (reports.some((report) => report.status === "sent")) return "sent";
-  if (reports.some((report) => report.status === "finalized")) {
+  const latestReport = getLatestAgendaReport(reports);
+
+  if (!latestReport) {
+    return appointmentStatus === "COMPLETED" ? "to_create" : "none";
+  }
+
+  if (latestReport.status === "sent") return "sent";
+  if (latestReport.status === "finalized") {
     return "ready_to_send";
   }
-  if (reports.some((report) => report.status === "draft")) return "draft";
+  if (latestReport.status === "draft") return "draft";
+
   return appointmentStatus === "COMPLETED" ? "to_create" : "none";
 }
 
@@ -122,16 +129,21 @@ export function getAgendaPrimaryAction(
     return { kind: "create_report", label: "Créer le compte rendu" };
   }
   if (appointmentStatus === "CANCELLED") {
-    return { kind: "view_report", label: "Voir" };
+    return { kind: "prepare", label: "Préparer" };
   }
   return { kind: "prepare", label: "Préparer" };
 }
 
 export function buildDayAgendaModel({
   appointments,
+  selectedDate,
   now,
 }: BuildDayAgendaInput): DayAgendaModel {
+  const selectedDay = startOfDay(selectedDate);
   const normalizedAppointments = appointments
+    .filter((appointment) =>
+      isSameDay(new Date(appointment.beginAt), selectedDay),
+    )
     .map((appointment): DayAgendaAppointment => {
       const beginAt = new Date(appointment.beginAt);
       const endAt = new Date(appointment.endAt);
@@ -200,4 +212,46 @@ function formatAgendaTime(value: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function getLatestAgendaReport(reports: AgendaReportInput[]) {
+  let latestReport: AgendaReportInput | null = null;
+  let latestScore = Number.NEGATIVE_INFINITY;
+  let latestIndex = -1;
+
+  reports.forEach((report, index) => {
+    const score = getAgendaReportUpdatedAtScore(report.updatedAt);
+
+    if (
+      score > latestScore ||
+      (score === latestScore && index > latestIndex)
+    ) {
+      latestReport = report;
+      latestScore = score;
+      latestIndex = index;
+    }
+  });
+
+  return latestReport;
+}
+
+function getAgendaReportUpdatedAtScore(value: Date | string | null) {
+  if (value === null) return Number.NEGATIVE_INFINITY;
+
+  const updatedAt = value instanceof Date ? value : new Date(value);
+  const time = updatedAt.getTime();
+
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }

@@ -62,6 +62,26 @@ describe("deriveAgendaReportStatus", () => {
       ),
     ).toBe("sent");
   });
+
+  test("returns the latest report status by updatedAt", () => {
+    expect(
+      deriveAgendaReportStatus(
+        [
+          {
+            id: "report-1",
+            status: "sent",
+            updatedAt: new Date("2026-07-01T08:00:00.000Z"),
+          },
+          {
+            id: "report-2",
+            status: "draft",
+            updatedAt: new Date("2026-07-01T09:00:00.000Z"),
+          },
+        ],
+        "COMPLETED",
+      ),
+    ).toBe("draft");
+  });
 });
 
 describe("getAgendaPrimaryAction", () => {
@@ -90,6 +110,13 @@ describe("getAgendaPrimaryAction", () => {
     expect(getAgendaPrimaryAction("ready_to_send", "COMPLETED")).toMatchObject({
       kind: "send_report",
       label: "Envoyer",
+    });
+  });
+
+  test("does not imply a report for a cancelled appointment without report", () => {
+    expect(getAgendaPrimaryAction("none", "CANCELLED")).toMatchObject({
+      kind: "prepare",
+      label: "Préparer",
     });
   });
 });
@@ -138,6 +165,56 @@ describe("buildDayAgendaModel", () => {
       appointmentCount: 3,
       beforeSessionCount: 1,
       afterSessionCount: 2,
+    });
+  });
+
+  test("keeps only appointments on the selected day", () => {
+    const model = buildDayAgendaModel({
+      now: new Date(2026, 6, 1, 8, 15),
+      selectedDate: new Date(2026, 6, 1, 0, 0),
+      appointments: [
+        appointment({
+          id: "previous-day",
+          beginAt: new Date(2026, 5, 30, 17, 0),
+          endAt: new Date(2026, 5, 30, 18, 0),
+          status: "COMPLETED",
+        }),
+        appointment({
+          id: "selected-day-late",
+          beginAt: new Date(2026, 6, 1, 17, 0),
+          endAt: new Date(2026, 6, 1, 18, 0),
+          status: "COMPLETED",
+          reports: [{ id: "report-2", status: "draft", updatedAt: null }],
+        }),
+        appointment({
+          id: "selected-day-early",
+          beginAt: new Date(2026, 6, 1, 9, 0),
+          endAt: new Date(2026, 6, 1, 10, 0),
+          status: "CONFIRMED",
+        }),
+        appointment({
+          id: "next-day",
+          beginAt: new Date(2026, 6, 2, 9, 0),
+          endAt: new Date(2026, 6, 2, 10, 0),
+          status: "CONFIRMED",
+        }),
+      ],
+    });
+
+    expect(model.appointments.map((item) => item.id)).toEqual([
+      "selected-day-early",
+      "selected-day-late",
+    ]);
+    expect(model.todo.beforeSession.map((item) => item.appointmentId)).toEqual([
+      "selected-day-early",
+    ]);
+    expect(model.todo.afterSession.map((item) => item.appointmentId)).toEqual([
+      "selected-day-late",
+    ]);
+    expect(model.summary).toEqual({
+      appointmentCount: 2,
+      beforeSessionCount: 1,
+      afterSessionCount: 1,
     });
   });
 });
