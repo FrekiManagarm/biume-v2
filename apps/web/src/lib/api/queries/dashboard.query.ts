@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { getCurrentOrganization } from "#/lib/api/actions/auth.action";
-import { getTodayAppointments } from "#/lib/api/actions/appointments.action";
+import { getDashboardAgendaDay } from "#/lib/api/actions/dashboard-agenda.action";
 import {
   getClienteleBySpecies,
   getDraftReportsMetric,
@@ -12,10 +12,19 @@ import {
   getSentReportsMetric,
 } from "#/lib/api/actions/dashboard.action";
 
+function toDateSearch(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 export const dashboardOverviewQueryOptions = () =>
   queryOptions({
     queryKey: ["dashboard", "overview"] as const,
     queryFn: async () => {
+      const today = toDateSearch(new Date());
       const [
         organization,
         newClients,
@@ -25,7 +34,7 @@ export const dashboardOverviewQueryOptions = () =>
         species,
         recentActivity,
         recentReports,
-        todayAppointments,
+        agendaDay,
       ] = await Promise.all([
         getCurrentOrganization(),
         getNewClientsMetric(90),
@@ -35,11 +44,13 @@ export const dashboardOverviewQueryOptions = () =>
         getClienteleBySpecies(),
         getRecentActivity(5),
         getRecentReports(5),
-        getTodayAppointments(),
+        getDashboardAgendaDay(today),
       ]);
 
       return {
         organization,
+        selectedDate: agendaDay.selectedDate,
+        appointments: agendaDay.appointments,
         metrics: {
           newClients,
           newPatients,
@@ -49,7 +60,6 @@ export const dashboardOverviewQueryOptions = () =>
         species,
         recentActivity,
         recentReports,
-        todayAppointments,
       };
     },
   });
