@@ -1,70 +1,105 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { DayAgendaView } from "#/components/dashboard/day-agenda/day-agenda-view";
-import { dashboardAgendaDayQueryOptions } from "#/lib/api/queries/dashboard-agenda.query";
-
-type DashboardSearch = {
-  date?: string;
-};
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "#/components/ui/alert";
+import { DashboardOverviewView } from "#/components/dashboard/overview/dashboard-overview-view";
+import {
+  dashboardOverviewQueryOptions,
+  getDashboardOverviewDate,
+} from "#/lib/api/queries/dashboard.query";
+import { Skeleton } from "#/components/ui/skeleton";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
     meta: [
-      { title: "Agenda du jour | Biume" },
+      { title: "Vue d'ensemble | Biume" },
       {
         name: "description",
         content:
-          "Préparez les séances du jour et finalisez les comptes rendus propriétaires dans Biume.",
+          "Suivez vos séances du jour, comptes rendus à traiter et activité récente dans Biume.",
       },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): DashboardSearch => ({
-    date: typeof search.date === "string" ? search.date : undefined,
-  }),
-  loaderDeps: ({ search }) => ({
-    date: normalizeDateSearch(search.date),
+  loaderDeps: () => ({
+    selectedDate: getDashboardOverviewDate(),
   }),
   loader: ({ context, deps }) =>
     context.queryClient.ensureQueryData(
-      dashboardAgendaDayQueryOptions(deps.date),
+      dashboardOverviewQueryOptions(deps.selectedDate),
     ),
+  pendingComponent: DashboardOverviewPending,
+  errorComponent: DashboardOverviewError,
   component: DashboardIndexPage,
 });
 
 function DashboardIndexPage() {
-  const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/dashboard/" });
-  const selectedDateString = normalizeDateSearch(search.date);
-  const { data } = useSuspenseQuery(
-    dashboardAgendaDayQueryOptions(selectedDateString),
-  );
-
-  function updateSelectedDate(nextDate: Date) {
-    navigate({
-      search: {
-        date: toDateSearch(nextDate),
-      },
-    });
-  }
+  const data = Route.useLoaderData();
 
   return (
-    <DayAgendaView
+    <DashboardOverviewView
       appointments={data.appointments}
+      metrics={{
+        newAnimals: data.metrics.newPatients.value,
+        newOwners: data.metrics.newClients.value,
+        sentReports: data.metrics.sentReports.value,
+      }}
+      recentActivity={data.recentActivity}
+      now={new Date(data.generatedAt)}
       selectedDate={new Date(`${data.selectedDate}T00:00:00`)}
-      onDateChange={updateSelectedDate}
     />
   );
 }
 
-function normalizeDateSearch(value: string | undefined) {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  return toDateSearch(new Date());
+function DashboardOverviewPending() {
+  return (
+    <div className="grid gap-5 pb-8">
+      <header className="grid gap-2 border-b border-border pb-5 pt-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-full max-w-xl" />
+      </header>
+
+      <section className="grid gap-2 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-24 rounded-lg" />
+        ))}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <Skeleton className="h-[28rem] rounded-lg" />
+        <Skeleton className="h-[28rem] rounded-lg" />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <Skeleton className="h-64 rounded-lg" />
+        <Skeleton className="h-64 rounded-lg" />
+      </section>
+    </div>
+  );
 }
 
-function toDateSearch(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function DashboardOverviewError() {
+  return (
+    <div className="grid gap-5 pb-8">
+      <header className="border-b border-border pb-5 pt-2">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+          Activité
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+          Vue d'ensemble
+        </h1>
+      </header>
+
+      <Alert variant="destructive">
+        <AlertTitle>Impossible de charger la vue d'ensemble</AlertTitle>
+        <AlertDescription>
+          Les données de votre activité ne sont pas disponibles pour le moment.
+          Rechargez la page ou réessayez dans quelques instants.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
 }

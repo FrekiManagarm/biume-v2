@@ -45,12 +45,20 @@ const reportStatusConfig: Record<
   },
 };
 
+const cancelledStatusConfig = {
+  label: "Annulée",
+  className: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
 export function DayAgendaCard({ appointment }: DayAgendaCardProps) {
   const animalName = appointment.patient?.name ?? "Animal non renseigné";
   const species = appointment.patient?.animal?.name ?? "Espèce inconnue";
   const breed = appointment.patient?.breed;
   const ownerName = appointment.patient?.owner?.name ?? "Propriétaire inconnu";
-  const reportStatus = reportStatusConfig[appointment.reportStatus];
+  const reportStatus =
+    appointment.status === "CANCELLED"
+      ? cancelledStatusConfig
+      : reportStatusConfig[appointment.reportStatus];
 
   return (
     <article
@@ -106,16 +114,22 @@ export function DayAgendaCard({ appointment }: DayAgendaCardProps) {
       </div>
 
       <div className="flex items-center justify-start md:justify-end">
-        <Button className="h-10 w-full md:w-auto">
-          {appointment.primaryAction.label}
-          {appointment.primaryAction.kind === "send_report" ? (
-            <Send className="size-4" data-icon="inline-end" />
-          ) : appointment.primaryAction.kind === "view_report" ? (
-            <CheckCircle2 className="size-4" data-icon="inline-end" />
-          ) : (
-            <FileText className="size-4" data-icon="inline-end" />
-          )}
-        </Button>
+        {appointment.primaryAction.kind === "cancelled" ? (
+          <span className="text-sm font-medium text-slate-500">
+            {appointment.primaryAction.label}
+          </span>
+        ) : (
+          <Button className="h-10 w-full md:w-auto">
+            {appointment.primaryAction.label}
+            {appointment.primaryAction.kind === "send_report" ? (
+              <Send className="size-4" data-icon="inline-end" />
+            ) : appointment.primaryAction.kind === "view_report" ? (
+              <CheckCircle2 className="size-4" data-icon="inline-end" />
+            ) : (
+              <FileText className="size-4" data-icon="inline-end" />
+            )}
+          </Button>
+        )}
       </div>
     </article>
   );

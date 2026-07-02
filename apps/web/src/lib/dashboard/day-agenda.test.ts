@@ -115,13 +115,47 @@ describe("getAgendaPrimaryAction", () => {
 
   test("does not imply a report for a cancelled appointment without report", () => {
     expect(getAgendaPrimaryAction("none", "CANCELLED")).toMatchObject({
-      kind: "prepare",
-      label: "Préparer",
+      kind: "cancelled",
+      label: "Annulée",
     });
   });
 });
 
 describe("buildDayAgendaModel", () => {
+  test("exposes duration and report target metadata for overview actions", () => {
+    const model = buildDayAgendaModel({
+      now: new Date("2026-07-01T12:00:00.000Z"),
+      selectedDate: new Date("2026-07-01T00:00:00.000Z"),
+      appointments: [
+        appointment({
+          id: "draft-appointment",
+          beginAt: new Date("2026-07-01T13:30:00.000Z"),
+          endAt: new Date("2026-07-01T14:15:00.000Z"),
+          status: "COMPLETED",
+          reports: [
+            {
+              id: "draft-report",
+              status: "draft",
+              updatedAt: new Date("2026-07-01T11:00:00.000Z"),
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(model.appointments[0]?.durationLabel).toBe("45 min");
+    expect(model.appointments[0]?.primaryAction).toMatchObject({
+      kind: "finalize_report",
+      label: "Finaliser",
+      reportId: "draft-report",
+      appointmentId: "draft-appointment",
+    });
+    expect(model.todo.afterSession[0]?.action).toMatchObject({
+      reportId: "draft-report",
+      appointmentId: "draft-appointment",
+    });
+  });
+
   test("sorts appointments and separates before and after session actions", () => {
     const model = buildDayAgendaModel({
       now: new Date("2026-07-01T10:15:00.000Z"),

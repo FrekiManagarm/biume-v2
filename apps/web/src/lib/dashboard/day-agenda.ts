@@ -14,6 +14,7 @@ export type AgendaReportStatus =
   | "sent";
 
 export type AgendaActionKind =
+  | "cancelled"
   | "prepare"
   | "create_report"
   | "finalize_report"
@@ -58,11 +59,14 @@ export type AgendaAppointmentInput = {
 export type AgendaPrimaryAction = {
   kind: AgendaActionKind;
   label: string;
+  appointmentId?: string;
+  reportId?: string;
 };
 
 export type DayAgendaAppointment = AgendaAppointmentInput & {
   beginAt: Date;
   endAt: Date;
+  durationLabel: string;
   reportStatus: AgendaReportStatus;
   primaryAction: AgendaPrimaryAction;
 };
@@ -129,7 +133,7 @@ export function getAgendaPrimaryAction(
     return { kind: "create_report", label: "Créer le compte rendu" };
   }
   if (appointmentStatus === "CANCELLED") {
-    return { kind: "prepare", label: "Préparer" };
+    return { kind: "cancelled", label: "Annulée" };
   }
   return { kind: "prepare", label: "Préparer" };
 }
@@ -147,18 +151,21 @@ export function buildDayAgendaModel({
     .map((appointment): DayAgendaAppointment => {
       const beginAt = new Date(appointment.beginAt);
       const endAt = new Date(appointment.endAt);
-      const reportStatus = deriveAgendaReportStatus(
-        appointment.reports ?? [],
-        appointment.status,
-      );
+      const reports = appointment.reports ?? [];
+      const reportStatus = deriveAgendaReportStatus(reports, appointment.status);
+      const primaryAction = {
+        ...getAgendaPrimaryAction(reportStatus, appointment.status),
+        ...getAgendaPrimaryActionTarget(appointment.id, reports),
+      };
 
       return {
         ...appointment,
         beginAt,
         endAt,
-        reports: appointment.reports ?? [],
+        durationLabel: formatDurationLabel(beginAt, endAt),
+        reports,
         reportStatus,
-        primaryAction: getAgendaPrimaryAction(reportStatus, appointment.status),
+        primaryAction,
       };
     })
     .sort((a, b) => a.beginAt.getTime() - b.beginAt.getTime());
@@ -214,12 +221,40 @@ function formatAgendaTime(value: Date) {
   }).format(value);
 }
 
-function getLatestAgendaReport(reports: AgendaReportInput[]) {
+function getAgendaPrimaryActionTarget(
+  appointmentId: string,
+  reports: AgendaReportInput[],
+) {
+  const latestReport = getLatestAgendaReport(reports);
+
+  return {
+    appointmentId,
+    reportId: latestReport?.id,
+  };
+}
+
+function formatDurationLabel(beginAt: Date, endAt: Date) {
+  const durationMinutes = Math.max(
+    0,
+    Math.round((endAt.getTime() - beginAt.getTime()) / 60000),
+  );
+
+  if (durationMinutes < 60) return `${durationMinutes} min`;
+
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes}`;
+}
+
+function getLatestAgendaReport(
+  reports: AgendaReportInput[],
+): AgendaReportInput | null {
   let latestReport: AgendaReportInput | null = null;
   let latestScore = Number.NEGATIVE_INFINITY;
   let latestIndex = -1;
 
-  reports.forEach((report, index) => {
+  for (const [index, report] of reports.entries()) {
     const score = getAgendaReportUpdatedAtScore(report.updatedAt);
 
     if (
@@ -230,7 +265,7 @@ function getLatestAgendaReport(reports: AgendaReportInput[]) {
       latestScore = score;
       latestIndex = index;
     }
-  });
+  }
 
   return latestReport;
 }
