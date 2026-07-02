@@ -36,7 +36,10 @@ import {
   MessageScrollerViewport,
 } from "@biume/ui/components/message-scroller";
 import { Spinner } from "@biume/ui/components/spinner";
-import { addActionToHistory } from "#/lib/ai/context-builder";
+import {
+  addActionToHistory,
+  getActionsHistory,
+} from "#/lib/ai/context-builder";
 
 const quickSuggestions = [
   {
@@ -140,13 +143,14 @@ export function AssistantChatWorkspace() {
     const actionLabel = `Assistant : ${message.slice(0, 60)}${message.length > 60 ? " (suite)" : ""}`;
 
     addActionToHistory(actionLabel);
+    const recentActions = getActionsHistory();
     await sendMessage(
       { text: message },
       {
         body: {
           context: {
             ...appContext,
-            recentActions: [actionLabel, ...appContext.recentActions].slice(0, 5),
+            recentActions,
           },
         },
       },

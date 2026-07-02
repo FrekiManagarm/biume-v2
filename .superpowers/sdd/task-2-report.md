@@ -62,3 +62,9 @@ Cached:    1 cached, 1 total
 - Fixed stale assistant chat context in `apps/web/src/components/dashboard/assistant/assistant-chat-workspace.tsx`.
 - `handleSend(...)` now computes the action label once, writes it with `addActionToHistory(...)`, and sends an inline `context` override with `recentActions` immediately prepended and capped to 5 items.
 - This preserves existing behavior while ensuring the current `/api/chat` request includes the just-added action even though same-tab `localStorage` writes do not refresh `useAppContext()` synchronously.
+
+## Re-review fix
+
+- Adjusted `apps/web/src/components/dashboard/assistant/assistant-chat-workspace.tsx` to avoid the stale hook snapshot in `recentActions`.
+- `handleSend(...)` now imports `getActionsHistory(...)`, writes the new action with `addActionToHistory(...)`, then reads a fresh history snapshot and passes that into `sendMessage(...)` as `context.recentActions`.
+- This keeps the same-tab assistant action history intact across second and later sends while leaving the rest of the chat flow unchanged.
