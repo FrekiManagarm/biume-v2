@@ -7,8 +7,17 @@ import { describe, expect, test, vi } from "vitest";
 import { DashboardOverviewView } from "./dashboard-overview-view";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
-    <a href={to} {...props}>
+  Link: ({
+    children,
+    params,
+    to,
+    ...props
+  }: {
+    children: ReactNode;
+    params?: Record<string, string>;
+    to: string;
+  }) => (
+    <a href={params?.id ? to.replace("$id", params.id) : to} {...props}>
       {children}
     </a>
   ),
@@ -33,6 +42,7 @@ describe("DashboardOverviewView", () => {
             endAt: new Date(2026, 6, 2, 15, 0),
             status: "CONFIRMED",
             atHome: true,
+            note: "Suivi locomoteur",
             patient: {
               id: "patient-1",
               name: "Naska",
@@ -58,7 +68,7 @@ describe("DashboardOverviewView", () => {
         recentActivity={[
           {
             id: "activity-1",
-            title: "Compte rendu envoyé",
+            title: "Rapport envoyé",
             description: "Naska · Malo Garnier",
             timestamp: "Il y a 2h",
           },
@@ -72,13 +82,19 @@ describe("DashboardOverviewView", () => {
     expect(screen.getByText("Agenda du jour")).toBeTruthy();
     expect(screen.getAllByText("Naska").length).toBeGreaterThan(0);
     expect(screen.getByText("À domicile")).toBeTruthy();
+    expect(screen.getByText("Chien · Border Collie")).toBeTruthy();
+    expect(screen.getByText("Suivi locomoteur")).toBeTruthy();
     expect(screen.getByText("À traiter")).toBeTruthy();
     expect(screen.getByText("Finaliser · Orka")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Ouvrir l'agenda/ })).toBeTruthy();
     expect(screen.getAllByText("Préparer").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Finaliser").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Préparer" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Finaliser" })).toBeNull();
+    expect(
+      screen.getAllByRole("link", { name: "Finaliser" }).every((link) =>
+        link.getAttribute("href")?.includes("/dashboard/reports/report-1/edit"),
+      ),
+    ).toBe(true);
     expect(screen.getByText("Compte rendu envoyé")).toBeTruthy();
     expect(screen.getByText("Animaux ajoutés")).toBeTruthy();
     expect(screen.getByText("4")).toBeTruthy();

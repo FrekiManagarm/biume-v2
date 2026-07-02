@@ -80,7 +80,7 @@ describe("buildDashboardOverviewModel", () => {
       ["next", formatLocalTime(model.nextAppointment!.beginAt)],
       ["appointments", "3"],
       ["reports", "1"],
-      ["followUps", "0"],
+      ["activity", "7"],
     ]);
     expect(model.priorities.map((item) => item.appointmentId)).toEqual([
       "next",
@@ -183,5 +183,49 @@ describe("buildDashboardOverviewModel", () => {
       priorities: "Rien d'urgent à traiter.",
       recentActivity: "Aucune activité récente à afficher.",
     });
+  });
+
+  test("normalizes legacy activity vocabulary for the overview", () => {
+    const model = buildDashboardOverviewModel({
+      selectedDate: new Date("2026-07-02T00:00:00.000Z"),
+      now: new Date("2026-07-02T08:30:00.000Z"),
+      appointments: [],
+      metrics: {
+        newAnimals: 0,
+        newOwners: 0,
+        sentReports: 0,
+      },
+      recentActivity: [
+        {
+          id: "report-activity",
+          title: "Rapport envoyé",
+          description: "Rapport de suivi",
+          timestamp: "Il y a 2h",
+        },
+        {
+          id: "animal-activity",
+          type: "new_patient",
+          title: "Nouveau patient",
+          description: "Patient ajouté",
+          timestamp: "Hier",
+        },
+      ],
+    });
+
+    expect(model.recentActivity).toEqual([
+      {
+        id: "report-activity",
+        title: "Compte rendu envoyé",
+        description: "Compte rendu de suivi",
+        timestamp: "Il y a 2h",
+      },
+      {
+        id: "animal-activity",
+        type: "new_patient",
+        title: "Nouvel animal",
+        description: "Animal ajouté",
+        timestamp: "Hier",
+      },
+    ]);
   });
 });

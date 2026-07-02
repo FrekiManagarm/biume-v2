@@ -99,6 +99,8 @@ function AgendaPreviewRow({
 }) {
   const animalName = appointment.patient?.name ?? "Animal non renseigné";
   const ownerName = appointment.patient?.owner?.name ?? "Propriétaire inconnu";
+  const species = appointment.patient?.animal?.name ?? "Espèce inconnue";
+  const breed = appointment.patient?.breed;
   const locationLabel = appointment.atHome ? "À domicile" : "Lieu fixe";
   const status = reportStatusConfig[appointment.reportStatus];
 
@@ -119,6 +121,12 @@ function AgendaPreviewRow({
         <div className="mt-2 grid gap-1 text-xs text-slate-500 sm:grid-cols-2">
           <span className="flex min-w-0 items-center gap-1.5">
             <PawPrint className="size-3.5 shrink-0 text-slate-400" />
+            <span className="truncate">
+              {breed ? `${species} · ${breed}` : species}
+            </span>
+          </span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Clock className="size-3.5 shrink-0 text-slate-400" />
             <span className="truncate">{appointment.durationLabel}</span>
           </span>
           <span className="flex min-w-0 items-center gap-1.5">
@@ -129,6 +137,9 @@ function AgendaPreviewRow({
             )}
             <span className="truncate">{locationLabel}</span>
           </span>
+          {appointment.note ? (
+            <span className="truncate">{appointment.note}</span>
+          ) : null}
         </div>
       </div>
 
@@ -141,10 +152,46 @@ function AgendaPreviewRow({
         {status.label}
       </span>
 
-      <span className="inline-flex min-h-8 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 md:w-auto">
-        {appointment.primaryAction.label}
-      </span>
+      <AgendaAction appointment={appointment} />
     </article>
+  );
+}
+
+function AgendaAction({
+  appointment,
+}: {
+  appointment: DayAgendaAppointment;
+}) {
+  const reportId = appointment.primaryAction.reportId;
+  const shouldEditReport =
+    reportId &&
+    (appointment.primaryAction.kind === "finalize_report" ||
+      appointment.primaryAction.kind === "send_report");
+
+  if (shouldEditReport) {
+    return (
+      <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
+        <Link to="/dashboard/reports/$id/edit" params={{ id: reportId }}>
+          {appointment.primaryAction.label}
+        </Link>
+      </Button>
+    );
+  }
+
+  if (reportId && appointment.primaryAction.kind === "view_report") {
+    return (
+      <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
+        <Link to="/dashboard/reports/$id" params={{ id: reportId }}>
+          {appointment.primaryAction.label}
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <span className="text-sm font-medium text-slate-500 md:text-right">
+      {appointment.primaryAction.label}
+    </span>
   );
 }
 

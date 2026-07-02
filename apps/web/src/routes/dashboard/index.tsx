@@ -1,4 +1,3 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
@@ -7,7 +6,10 @@ import {
   AlertTitle,
 } from "#/components/ui/alert";
 import { DashboardOverviewView } from "#/components/dashboard/overview/dashboard-overview-view";
-import { dashboardOverviewQueryOptions } from "#/lib/api/queries/dashboard.query";
+import {
+  dashboardOverviewQueryOptions,
+  getDashboardOverviewDate,
+} from "#/lib/api/queries/dashboard.query";
 import { Skeleton } from "#/components/ui/skeleton";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -21,15 +23,20 @@ export const Route = createFileRoute("/dashboard/")({
       },
     ],
   }),
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(dashboardOverviewQueryOptions()),
+  loaderDeps: () => ({
+    selectedDate: getDashboardOverviewDate(),
+  }),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(
+      dashboardOverviewQueryOptions(deps.selectedDate),
+    ),
   pendingComponent: DashboardOverviewPending,
   errorComponent: DashboardOverviewError,
   component: DashboardIndexPage,
 });
 
 function DashboardIndexPage() {
-  const { data } = useSuspenseQuery(dashboardOverviewQueryOptions());
+  const data = Route.useLoaderData();
 
   return (
     <DashboardOverviewView

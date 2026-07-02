@@ -1,18 +1,14 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getCurrentOrganization } from "#/lib/api/actions/auth.action";
 import { getDashboardAgendaDay } from "#/lib/api/actions/dashboard-agenda.action";
 import {
-  getClienteleBySpecies,
-  getDraftReportsMetric,
   getNewClientsMetric,
   getNewPatientsMetric,
   getRecentActivity,
-  getRecentReports,
   getSentReportsMetric,
 } from "#/lib/api/actions/dashboard.action";
 
-function toDateSearch(date: Date) {
+export function getDashboardOverviewDate(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -20,48 +16,33 @@ function toDateSearch(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export const dashboardOverviewQueryOptions = () => {
-  const today = toDateSearch(new Date());
-
-  return queryOptions({
-    queryKey: ["dashboard", "overview", today] as const,
+export const dashboardOverviewQueryOptions = (selectedDate: string) =>
+  queryOptions({
+    queryKey: ["dashboard", "overview", selectedDate] as const,
     queryFn: async () => {
       const [
-        organization,
         newClients,
         newPatients,
         sentReports,
-        draftReports,
-        species,
         recentActivity,
-        recentReports,
         agendaDay,
       ] = await Promise.all([
-        getCurrentOrganization(),
         getNewClientsMetric(90),
         getNewPatientsMetric(90),
         getSentReportsMetric(30),
-        getDraftReportsMetric(30),
-        getClienteleBySpecies(),
         getRecentActivity(5),
-        getRecentReports(5),
-        getDashboardAgendaDay(today),
+        getDashboardAgendaDay(selectedDate),
       ]);
 
       return {
-        organization,
         selectedDate: agendaDay.selectedDate,
         appointments: agendaDay.appointments,
         metrics: {
           newClients,
           newPatients,
           sentReports,
-          draftReports,
         },
-        species,
         recentActivity,
-        recentReports,
       };
     },
   });
-};

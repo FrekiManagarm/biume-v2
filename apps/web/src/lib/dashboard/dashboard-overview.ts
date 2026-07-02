@@ -1,12 +1,14 @@
 import {
   buildDayAgendaModel,
   type AgendaAppointmentInput,
+  type AgendaActionKind,
   type AgendaTodoItem,
   type DayAgendaAppointment,
 } from "./day-agenda";
 
 type RecentActivityInput = {
   id: string;
+  type?: "report" | "new_patient";
   title: string;
   description: string;
   timestamp: string;
@@ -19,7 +21,7 @@ type ActivityMetricsInput = {
 };
 
 export type DashboardSummaryItem = {
-  id: "next" | "appointments" | "reports" | "followUps";
+  id: "next" | "appointments" | "reports" | "activity";
   label: string;
   value: string;
   detail: string;
@@ -34,6 +36,7 @@ export type DashboardPriorityItem = {
   description: string;
   timeLabel: string;
   actionLabel: string;
+  actionKind: AgendaActionKind;
   tone: "neutral" | "warning" | "success";
 };
 
@@ -86,6 +89,7 @@ export function buildDashboardOverviewModel({
         appointment.endAt.getTime() >= now.getTime(),
     ) ?? null;
   const reportTodoCount = dayAgenda.todo.afterSession.length;
+  const normalizedRecentActivity = recentActivity.map(normalizeRecentActivity);
   const priorities = [
     ...dayAgenda.todo.beforeSession.map((item) =>
       toPriorityItem(item, "neutral"),
@@ -109,7 +113,10 @@ export function buildDashboardOverviewModel({
         label: "Prochaine séance",
         value: nextAppointment ? formatTime(nextAppointment.beginAt) : "-",
         detail: nextAppointment
-          ? getAppointmentAnimalLabel(nextAppointment)
+          ? `${getAppointmentAnimalLabel(nextAppointment)} · ${formatTimeUntil(
+              nextAppointment,
+              now,
+            )}`
           : "Aucune séance à venir aujourd'hui",
         tone: "neutral",
       },
@@ -124,19 +131,22 @@ export function buildDashboardOverviewModel({
         id: "reports",
         label: "Comptes rendus",
         value: String(reportTodoCount),
-        detail: "À créer, finaliser ou envoyer",
+        detail:
+          reportTodoCount > 0
+            ? `${reportTodoCount} action${reportTodoCount > 1 ? "s" : ""} en attente`
+            : "Aucun compte rendu en retard",
         tone: reportTodoCount > 0 ? "warning" : "success",
       },
       {
-        id: "followUps",
-        label: "Suivis",
-        value: "0",
-        detail: "Module dédié à venir",
+        id: "activity",
+        label: "Activité 30 j",
+        value: String(metrics.sentReports),
+        detail: "Comptes rendus envoyés",
         tone: "neutral",
       },
     ],
     priorities,
-    recentActivity,
+    recentActivity: normalizedRecentActivity,
     activitySignals: [
       {
         label: "Animaux ajoutés",
@@ -174,6 +184,7 @@ function toPriorityItem(
     description: item.ownerName,
     timeLabel: item.timeLabel,
     actionLabel: item.action.label,
+    actionKind: item.action.kind,
     tone,
   };
 }
@@ -187,4 +198,51 @@ function formatTime(value: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function formatTimeUntil(appointment: DayAgendaAppointment, now: Date) {
+  if (
+    appointment.beginAt.getTime() <= now.getTime() &&
+    appointment.endAt.getTime() >= now.getTime()
+  ) {
+    return "En cours";
+  }
+
+  const minutes = Math.max(
+    0,
+    Math.round((appointment.beginAt.getTime() - now.getTime()) / 60000),
+  );
+
+  if (minutes < 60) return `dans ${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return remainingMinutes === 0
+    ? `dans ${hours} h`
+    : `dans ${hours} h ${remainingMinutes}`;
+}
+
+function normalizeRecentActivity(activity: RecentActivityInput) {
+  if (activity.type === "new_patient") {
+    return {
+      ...activity,
+      title: "Nouvel animal",
+      description: replaceLegacyVocabulary(activity.description),
+    };
+  }
+
+  return {
+    ...activity,
+    title: replaceLegacyVocabulary(activity.title),
+    description: replaceLegacyVocabulary(activity.description),
+  };
+}
+
+function replaceLegacyVocabulary(value: string) {
+  return value
+    .replaceAll("Rapport", "Compte rendu")
+    .replaceAll("rapport", "compte rendu")
+    .replaceAll("Patient", "Animal")
+    .replaceAll("patient", "animal");
 }

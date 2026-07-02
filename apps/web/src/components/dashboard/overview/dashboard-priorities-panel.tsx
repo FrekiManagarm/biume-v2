@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   CheckCircle2,
@@ -7,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
 
@@ -71,11 +73,51 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
         <p className="mt-1 truncate text-xs text-slate-500">
           {priority.timeLabel} · {priority.description}
         </p>
-        <span className="mt-3 inline-flex min-h-6 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 sm:w-auto">
-          {priority.actionLabel}
-        </span>
+        <PriorityAction priority={priority} />
       </div>
     </article>
+  );
+}
+
+function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
+  if (
+    priority.reportId &&
+    (priority.actionKind === "finalize_report" ||
+      priority.actionKind === "send_report")
+  ) {
+    return (
+      <Button
+        asChild
+        size="sm"
+        variant="outline"
+        className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
+      >
+        <Link to="/dashboard/reports/$id/edit" params={{ id: priority.reportId }}>
+          {priority.actionLabel}
+        </Link>
+      </Button>
+    );
+  }
+
+  if (priority.reportId && priority.actionKind === "view_report") {
+    return (
+      <Button
+        asChild
+        size="sm"
+        variant="outline"
+        className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
+      >
+        <Link to="/dashboard/reports/$id" params={{ id: priority.reportId }}>
+          {priority.actionLabel}
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <span className="mt-3 inline-flex text-xs font-medium text-slate-500">
+      {priority.actionLabel}
+    </span>
   );
 }
 
