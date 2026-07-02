@@ -20,7 +20,6 @@ import { PatientCard } from "./components/PatientCard";
 import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
-import { useFocusMode } from "@/lib/context/focus-mode-context";
 
 import type {
   Observation,
@@ -84,7 +83,6 @@ export function AdvancedReportEditor({
   initialData,
 }: AdvancedReportEditorProps) {
   const navigate = useNavigate();
-  const { setFocusMode } = useFocusMode();
 
   // Fonction helper pour charger les observations
   const getObservationType = (
@@ -196,7 +194,6 @@ export function AdvancedReportEditor({
   const [isVulgarisationOpen, setIsVulgarisationOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { isFocusMode, toggleFocusMode } = useFocusMode();
 
   // État initial sauvegardé pour la détection des changements
   const [lastSavedState, setLastSavedState] = useState({
@@ -383,19 +380,6 @@ export function AdvancedReportEditor({
     },
   );
 
-  useHotkeys(
-    "mod+f",
-    () => {
-      toggleFocusMode();
-    },
-    {
-      description: "Activer/désactiver le mode focus (Cmd/Ctrl+F)",
-      preventDefault: true,
-      enableOnFormTags: true,
-      enableOnContentEditable: true,
-    },
-  );
-
   // Récupération des détails de l'animal sélectionné
   const { data: petData } = useQuery({
     queryKey: ["pet", selectedPetId],
@@ -496,7 +480,6 @@ export function AdvancedReportEditor({
             to: "/dashboard/reports/$id",
             params: { id: reportId },
           });
-          toggleFocusMode();
         }
       } else {
         toast.error("Erreur lors de la mise à jour du rapport");
@@ -597,7 +580,6 @@ export function AdvancedReportEditor({
   };
 
   const navigateBack = () => {
-    setFocusMode(false);
     history.back();
   };
 
@@ -765,19 +747,19 @@ export function AdvancedReportEditor({
   };
 
   return (
-    <div className="h-full w-full bg-background flex flex-col">
+    <div className="min-h-[100dvh] w-full bg-background text-foreground">
       {/* Desktop Layout */}
-      <div className="hidden lg:block h-full">
+      <div className="hidden min-h-[100dvh] lg:block">
         <div
           className={cn(
-            "grid w-full h-full gap-4 transition-all duration-300",
+            "grid min-h-[100dvh] w-full gap-4 p-4 transition-all duration-200 ease-out",
             isSidebarCollapsed
-              ? "grid-cols-[88px_1fr]"
-              : "grid-cols-[18rem_1fr]",
+              ? "grid-cols-[72px_minmax(0,1fr)]"
+              : "grid-cols-[20rem_minmax(0,1fr)]",
           )}
         >
           {/* Navigation latérale */}
-          <div className="h-full overflow-y-auto overflow-x-hidden space-y-4">
+          <div className="flex max-h-[calc(100dvh-2rem)] min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden">
             <ReportSidebarNavigation
               title={title}
               onTitleChange={setTitle}
@@ -793,8 +775,6 @@ export function AdvancedReportEditor({
               getTabProgress={getTabProgress}
               getTabCount={getTabCount}
               hasUnsavedChanges={hasUnsavedChanges}
-              focusMode={isFocusMode}
-              onToggleFocusMode={toggleFocusMode}
               isCollapsed={isSidebarCollapsed}
               onToggleCollapse={() =>
                 setIsSidebarCollapsed(!isSidebarCollapsed)
@@ -819,12 +799,12 @@ export function AdvancedReportEditor({
           </div>
 
           {/* Contenu principal */}
-          <div className="h-full flex flex-col min-h-0 overflow-x-hidden">
+          <main className="min-h-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-foreground/5">
             {isCat ? (
-              <div className="h-full w-full flex items-center justify-center">
-                <Card className="max-w-xl w-full rounded-2xl shadow-sm">
-                  <div className="p-8 flex items-start gap-4">
-                    <div className="mt-1 text-yellow-600 dark:text-yellow-400">
+              <div className="flex min-h-[calc(100dvh-2rem)] w-full items-center justify-center p-6">
+                <Card className="w-full max-w-xl rounded-2xl border-border shadow-sm">
+                  <div className="flex items-start gap-4 p-8">
+                    <div className="mt-1 text-primary">
                       <AlertTriangle className="h-6 w-6" />
                     </div>
                     <div className="space-y-2">
@@ -842,8 +822,8 @@ export function AdvancedReportEditor({
                 </Card>
               </div>
             ) : (
-              <div className="h-full flex flex-col">
-                <div className="flex-1 min-h-0">
+              <div className="flex min-h-[calc(100dvh-2rem)] flex-col">
+                <div className="min-h-0 flex-1 overflow-hidden">
                   {activeTab === "clinical" && (
                     <ObservationsTab
                       observations={observations}
@@ -905,12 +885,12 @@ export function AdvancedReportEditor({
                 </div>
               </div>
             )}
-          </div>
+          </main>
         </div>
       </div>
 
       {/* Mobile/Tablet Layout */}
-      <div className="lg:hidden">
+      <div className="min-h-[100dvh] bg-background lg:hidden">
         {/* Header mobile simple */}
         <div className="sticky top-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b border-border z-10">
           <div className="flex items-center justify-between p-4">
@@ -1278,14 +1258,6 @@ export function AdvancedReportEditor({
                   </span>
                   <kbd className="px-2 py-1 text-xs bg-muted rounded border font-mono">
                     Cmd+S
-                  </kbd>
-                </div>
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-sm text-muted-foreground">
-                    Mode focus (masquer le layout)
-                  </span>
-                  <kbd className="px-2 py-1 text-xs bg-muted rounded border font-mono">
-                    Cmd+F
                   </kbd>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import {
+  createAppointment as createAppointmentFn,
   getAppointments as getAppointmentsFn,
   getAppointmentsByPatientId as getAppointmentsByPatientIdFn,
   getAppointmentsWithoutReport as getAppointmentsWithoutReportFn,
@@ -7,6 +8,17 @@ import {
 
 export function getAppointments() {
   return getAppointmentsFn();
+}
+
+export function createAppointment(input: {
+  atHome?: boolean;
+  beginAt: Date;
+  endAt: Date;
+  note?: string;
+  notifyOwner?: boolean;
+  patientId: string;
+}) {
+  return createAppointmentFn({ data: input });
 }
 
 export function getAppointmentsByPatientId(patientId: string) {

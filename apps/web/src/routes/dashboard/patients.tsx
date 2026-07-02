@@ -786,7 +786,7 @@ function CreatePatientDialog({
             />
           </div>
 
-          <CredenzaFooter className="border-t border-slate-200 bg-white px-6 py-4">
+          <CredenzaFooter className="mb-0 border-t border-slate-200 bg-white px-6 pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

@@ -626,6 +626,7 @@ export function AddAnatomicalIssueDialog({
                 </h3>
                 <div className="flex items-center gap-2">
                   <DropdownMenu
+                    modal={false}
                     open={openRegionPopover}
                     onOpenChange={setOpenRegionPopover}
                   >

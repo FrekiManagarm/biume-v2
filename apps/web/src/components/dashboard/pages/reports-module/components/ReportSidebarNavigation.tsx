@@ -1,24 +1,20 @@
-
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   CalendarClockIcon,
   ChevronLeftIcon,
-  SaveIcon,
   EyeIcon,
+  HomeIcon,
   KeyboardIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  HomeIcon,
+  SaveIcon,
 } from "lucide-react";
+
 import { cn } from "@/lib/style";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -53,8 +49,6 @@ export function ReportSidebarNavigation({
   getTabCount,
   hasUnsavedChanges,
   onTitleChange,
-  focusMode = false,
-  onToggleFocusMode,
   isCollapsed = false,
   onToggleCollapse,
   appointment,
@@ -72,8 +66,6 @@ export function ReportSidebarNavigation({
   getTabCount: (tabId: string) => number;
   hasUnsavedChanges: boolean;
   onTitleChange?: (title: string) => void;
-  focusMode?: boolean;
-  onToggleFocusMode?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   appointment?: {
@@ -83,21 +75,6 @@ export function ReportSidebarNavigation({
     atHome?: boolean | null;
   };
 }) {
-  const getAppointmentStatus = (status?: string | null) => {
-    switch (status) {
-      case "CONFIRMED":
-        return { label: "Confirmé", className: "text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300/90 dark:bg-emerald-900/30 dark:border-emerald-800" };
-      case "COMPLETED":
-        return { label: "Terminé", className: "text-primary-foreground bg-primary/15 border-primary/20" };
-      case "CANCELLED":
-        return { label: "Annulé", className: "text-red-700 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/20 dark:border-red-800" };
-      case "CREATED":
-        return { label: "En attente", className: "text-muted-foreground bg-muted/40 border-muted" };
-      default:
-        return null;
-    }
-  };
-
   const parseDate = (value?: Date) => {
     if (!value) return null;
     const date = value instanceof Date ? value : new Date(value);
@@ -106,254 +83,197 @@ export function ReportSidebarNavigation({
 
   const appointmentStart = appointment ? parseDate(appointment.beginAt) : null;
   const appointmentEnd = appointment ? parseDate(appointment.endAt) : null;
-
   const appointmentDateLabel = appointmentStart
     ? new Intl.DateTimeFormat("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    }).format(appointmentStart)
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(appointmentStart)
     : undefined;
-
   const appointmentTimeLabel = appointmentStart
     ? `${appointmentStart.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}${appointmentEnd
-      ? ` - ${appointmentEnd.toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit",
-      })}`
-      : ""
-    }`
+      })}${
+        appointmentEnd
+          ? ` - ${appointmentEnd.toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`
+          : ""
+      }`
     : undefined;
 
-  const appointmentStatus = getAppointmentStatus(appointment?.status);
+  const statusLabel =
+    appointment?.status === "CONFIRMED"
+      ? "Confirmé"
+      : appointment?.status === "COMPLETED"
+        ? "Terminé"
+        : appointment?.status === "CANCELLED"
+          ? "Annulé"
+          : appointment?.status === "CREATED"
+            ? "En attente"
+            : null;
 
-  const getProgressPercentage = () => {
-    const totalTabs = categories.reduce((acc, cat) => acc + cat.tabs.length, 0);
-    const completedTabs = categories.reduce(
-      (acc, cat) =>
-        acc + cat.tabs.filter((tab) => getTabProgress(String(tab.id))).length,
-      0,
-    );
-    return { completed: completedTabs, total: totalTabs };
-  };
-
-  const progress = getProgressPercentage();
+  const progress = categories.reduce(
+    (acc, category) => {
+      acc.total += category.tabs.length;
+      acc.completed += category.tabs.filter((tab) =>
+        getTabProgress(String(tab.id)),
+      ).length;
+      return acc;
+    },
+    { completed: 0, total: 0 },
+  );
   const progressPercent =
     progress.total > 0
       ? Math.round((progress.completed / progress.total) * 100)
       : 0;
 
+  const actionButtonClass =
+    "h-10 rounded-xl border-border text-sm font-medium text-foreground shadow-none hover:bg-muted active:scale-[0.98]";
+  const collapsedControlClass =
+    "h-11 w-11 rounded-xl text-muted-foreground shadow-none hover:bg-muted hover:text-foreground active:scale-[0.98]";
+
   return (
     <TooltipProvider delayDuration={300}>
-      <Card
+      <aside
         className={cn(
-          "flex flex-col p-0 transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-[72px]" : "w-full",
+          "flex min-h-0 flex-col rounded-2xl border border-border bg-card text-card-foreground shadow-sm shadow-foreground/5 transition-all duration-200 ease-out",
+          isCollapsed ? "w-[72px] p-2" : "w-full p-4",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
-        <CardContent className="flex flex-col h-full gap-0 p-4">
-          {/* Header */}
-          <div>
-            <div
-              className={cn(
-                "flex items-center gap-3",
-                isCollapsed ? "justify-center flex-col" : "justify-between",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={onGoBack}
-                      className="h-9 w-9 shrink-0"
-                    >
-                      <ChevronLeftIcon className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Retour</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+        <div
+          className={cn(
+            "flex items-center gap-2 border-b border-border/70 pb-4",
+            isCollapsed ? "flex-col" : "justify-between",
+          )}
+        >
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onGoBack}
+                  aria-label="Retour"
+                  className={cn(
+                    isCollapsed
+                      ? collapsedControlClass
+                      : "h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <ChevronLeftIcon className="h-5 w-5" />
+                </Button>
+              }
+            />
+            <TooltipContent side="right">
+              <p>Retour</p>
+            </TooltipContent>
+          </Tooltip>
 
-              <div className="flex items-center gap-2">
-                {!focusMode && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="relative inline-flex items-center justify-center">
-                        <svg
-                          width={isCollapsed ? 40 : 48}
-                          height={isCollapsed ? 40 : 48}
-                          className="shrink-0 transition-all duration-300"
-                        >
-                          <title>Progression: {progressPercent}%</title>
-                          {/* Cercle de fond */}
-                          <circle
-                            cx={isCollapsed ? 20 : 24}
-                            cy={isCollapsed ? 20 : 24}
-                            r={isCollapsed ? 16 : 20}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                            className="text-muted-foreground/30"
-                          />
-                          {/* Cercle de progression */}
-                          <circle
-                            cx={isCollapsed ? 20 : 24}
-                            cy={isCollapsed ? 20 : 24}
-                            r={isCollapsed ? 16 : 20}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                            strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * (isCollapsed ? 16 : 20)}`}
-                            strokeDashoffset={
-                              2 *
-                              Math.PI *
-                              (isCollapsed ? 16 : 20) *
-                              (1 - progress.completed / progress.total)
-                            }
-                            className="text-primary transition-all duration-300 ease-in-out"
-                            transform={`rotate(-90 ${isCollapsed ? 20 : 24} ${isCollapsed ? 20 : 24})`}
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span
-                            className={cn(
-                              "font-semibold text-foreground transition-all duration-300",
-                              isCollapsed ? "text-[10px]" : "text-xs",
-                            )}
-                          >
-                            {progressPercent}%
-                          </span>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>
-                        Progression: {progress.completed}/{progress.total}{" "}
-                        sections complétées
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+          {!isCollapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                Edition du rapport
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {progressPercent}% complété
+              </p>
+            </div>
+          )}
 
-                {!isCollapsed && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onToggleCollapse}
-                        className="h-9 w-9 shrink-0"
-                      >
-                        <PanelLeftCloseIcon className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>Réduire la barre latérale</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggleCollapse}
+                  aria-label={
+                    isCollapsed
+                      ? "Agrandir la barre latérale"
+                      : "Réduire la barre latérale"
+                  }
+                  className={cn(
+                    isCollapsed
+                      ? collapsedControlClass
+                      : "h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  {isCollapsed ? (
+                    <PanelLeftOpenIcon className="h-5 w-5" />
+                  ) : (
+                    <PanelLeftCloseIcon className="h-5 w-5" />
+                  )}
+                </Button>
+              }
+            />
+            <TooltipContent side="right">
+              <p>
+                {isCollapsed
+                  ? "Agrandir la barre latérale"
+                  : "Réduire la barre latérale"}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-              {isCollapsed && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={onToggleCollapse}
-                      className="h-9 w-9 shrink-0"
-                    >
-                      <PanelLeftOpenIcon className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Agrandir la barre latérale</p>
-                  </TooltipContent>
-                </Tooltip>
+        {!isCollapsed && (
+          <div className="space-y-4 border-b border-border/70 py-4">
+            <div className="flex flex-col gap-2">
+              <Label
+                htmlFor="title"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Titre
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(event) => onTitleChange?.(event.target.value)}
+                placeholder="Titre du rapport"
+                className="h-11 rounded-xl border-input bg-background text-[15px] font-semibold shadow-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              />
+              {hasUnsavedChanges && (
+                <p className="text-xs font-medium text-primary">
+                  Modifications non sauvegardées
+                </p>
               )}
             </div>
-          </div>
 
-          <Separator className="my-3" />
-
-          {/* Navigation */}
-          <nav
-            className={cn(
-              "py-2 space-y-4 overflow-hidden",
-              isCollapsed && "overflow-visible",
-            )}
-          >
-            {!focusMode && !isCollapsed && (
-              <div className="flex flex-col items-start gap-3">
-                <div className="flex flex-col gap-2">
-                  <Label
-                    htmlFor="title"
-                    className="pl-2 text-xs font-medium text-muted-foreground"
-                  >
-                    Titre
-                  </Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => onTitleChange?.(e.target.value)}
-                    placeholder="Titre du rapport"
-                    className="text-base font-semibold h-9"
-                  />
-                  {hasUnsavedChanges && (
-                    <div
-                      className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shrink-0"
-                      title="Modifications non sauvegardées"
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {appointment && !isCollapsed && (
-              <div className="w-full rounded-lg border bg-muted/40 px-3 py-2.5 space-y-2">
+            {appointment && (
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <CalendarClockIcon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Rendez-vous lié
-                    </span>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <CalendarClockIcon className="h-4 w-4" />
+                    <span className="text-xs font-medium">Rendez-vous</span>
                   </div>
-                  {appointmentStatus && (
+                  {statusLabel && (
                     <Badge
                       variant="outline"
-                      className={cn(
-                        "h-5 px-2 text-[11px] font-medium",
-                        appointmentStatus.className,
-                      )}
+                      className="h-6 rounded-full border-border bg-background px-2 text-[11px] font-medium text-muted-foreground"
                     >
-                      {appointmentStatus.label}
+                      {statusLabel}
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground leading-tight">
+                <div className="mt-3 flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
                       {appointmentDateLabel || "Date non définie"}
-                    </span>
+                    </p>
                     {appointmentTimeLabel && (
-                      <span className="text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {appointmentTimeLabel}
-                      </span>
+                      </p>
                     )}
                   </div>
                   {appointment.atHome && (
                     <Badge
-                      variant="secondary"
-                      className="h-6 px-2 text-[11px] font-medium gap-1"
+                      variant="outline"
+                      className="h-7 shrink-0 gap-1 rounded-full border-primary/20 bg-primary/10 px-2 text-xs font-medium text-primary hover:bg-primary/10"
                     >
                       <HomeIcon className="h-3.5 w-3.5" />
                       À domicile
@@ -362,320 +282,244 @@ export function ReportSidebarNavigation({
                 </div>
               </div>
             )}
+          </div>
+        )}
 
-            {!focusMode && !isCollapsed && <Separator className="my-3" />}
+        {isCollapsed && appointment && (
+          <div className="flex justify-center border-b border-border/70 py-3">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <CalendarClockIcon className="h-4 w-4" />
+                  </div>
+                }
+              />
+              <TooltipContent side="right">
+                <p>Rendez-vous</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
-            {appointment && isCollapsed && (
-              <div className="flex justify-center">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-10 h-10 bg-linear-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center shrink-0 hover:from-primary/30 hover:to-primary/20 transition-all group relative cursor-default">
-                      <CalendarClockIcon className="h-4 w-4 text-primary" />
-                      {appointmentStatus && (
-                        <div
-                          className={cn(
-                            "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-semibold",
-                            appointmentStatus.className,
-                          )}
-                        >
-                          ·
-                        </div>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="flex flex-col gap-1.5 max-w-[220px]"
-                  >
-                    <p className="font-medium text-sm">Rendez-vous lié</p>
-                    {appointmentDateLabel && (
-                      <p className="text-xs text-muted-foreground">
-                        {appointmentDateLabel}
-                      </p>
-                    )}
-                    {appointmentTimeLabel && (
-                      <p className="text-xs text-muted-foreground">
-                        {appointmentTimeLabel}
-                      </p>
-                    )}
-                    {appointment.atHome && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <HomeIcon className="h-3 w-3" />
-                        <span>À domicile</span>
-                      </div>
-                    )}
-                    {appointmentStatus && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span className="font-semibold">{appointmentStatus.label}</span>
-                      </div>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+        <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-4">
+          {!isCollapsed && (
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted-foreground">Sections</p>
+              <p className="text-xs text-muted-foreground">
+                {progress.completed}/{progress.total}
+              </p>
+            </div>
+          )}
+
+          <div
+            className={cn(
+              "space-y-5",
+              isCollapsed && "flex flex-col items-center space-y-3",
             )}
-
+          >
             {categories.map((category) => (
-              <div key={category.id} className="space-y-4">
-                {!focusMode && !isCollapsed && (
-                  <div className="flex items-center gap-2 px-2">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {category.name}
+              <div
+                key={category.id}
+                className={cn(
+                  "space-y-2",
+                  isCollapsed && "flex flex-col items-center",
+                )}
+              >
+                {!isCollapsed && (
+                  <div className="flex items-center gap-2 px-1 text-muted-foreground">
+                    <span className="[&_svg]:h-4 [&_svg]:w-4">
+                      {category.icon}
                     </span>
+                    <span className="text-xs font-medium">{category.name}</span>
                   </div>
                 )}
 
-                <div
-                  className={cn(
-                    "space-y-2",
-                    isCollapsed && "flex flex-col items-center",
-                  )}
-                >
-                  {category.tabs.map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    const hasProgress = getTabProgress(String(tab.id));
-                    const count = getTabCount(String(tab.id));
-                    const isCompleted = hasProgress && count > 0;
+                {category.tabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const count = getTabCount(String(tab.id));
+                  const isCompleted = getTabProgress(String(tab.id)) && count > 0;
 
-                    const tabButton = (
-                      <button
-                        key={String(tab.id)}
-                        onClick={() => onChangeTab(tab.id as TabId)}
+                  const tabButton = (
+                    <button
+                      key={String(tab.id)}
+                      type="button"
+                      onClick={() => onChangeTab(tab.id as TabId)}
+                      className={cn(
+                        "group flex items-center rounded-xl text-left transition-colors active:scale-[0.99]",
+                        isCollapsed
+                          ? "relative h-11 w-11 justify-center"
+                          : "w-full gap-3 px-3 py-2.5",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                      aria-label={isCollapsed ? tab.label : undefined}
+                    >
+                      <span
                         className={cn(
-                          "flex items-center gap-3 rounded-lg group transition-all duration-300",
-                          isCollapsed
-                            ? "w-10 h-10 justify-center p-0 relative"
-                            : "w-full px-3 py-3",
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted/50",
+                          "shrink-0 [&_svg]:h-4 [&_svg]:w-4",
+                          isActive ? "text-primary-foreground" : "text-muted-foreground",
                         )}
                       >
-                        {isCollapsed ? (
-                          <>
-                            <div className="shrink-0 text-primary-foreground">
-                              {tab.icon}
-                            </div>
-                            {count > 0 && (
-                              <div
-                                className={cn(
-                                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold",
-                                  isActive
-                                    ? "bg-primary-foreground text-primary"
-                                    : isCompleted
-                                      ? "bg-green-500 text-white"
-                                      : "bg-muted-foreground text-background",
-                                )}
-                              >
-                                {count}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex-1 flex items-center gap-2 min-w-0">
-                              <div className="shrink-0 text-primary-foreground">
-                                {tab.icon}
-                              </div>
-                              <span className="font-medium text-sm truncate text-primary-foreground">
-                                {tab.label}
-                              </span>
-                            </div>
+                        {tab.icon}
+                      </span>
+                      {!isCollapsed && (
+                        <>
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                            {tab.label}
+                          </span>
+                          {count > 0 && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "h-5 rounded-full px-2 text-[11px]",
+                                isActive
+                                  ? "border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground"
+                                  : isCompleted
+                                    ? "border-primary/20 bg-primary/10 text-primary"
+                                    : "border-border text-muted-foreground",
+                              )}
+                            >
+                              {count}
+                            </Badge>
+                          )}
+                        </>
+                      )}
+                      {isCollapsed && count > 0 && (
+                        <span
+                          className={cn(
+                            "absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                            isActive
+                              ? "bg-primary-foreground text-primary"
+                              : "bg-primary text-primary-foreground",
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
 
-                            {count > 0 && (
-                              <Badge
-                                variant={isActive ? "secondary" : "outline"}
-                                className={cn(
-                                  "h-5 px-2 text-xs font-medium shrink-0",
-                                  isActive
-                                    ? "bg-primary-foreground/20 text-primary-foreground border-0"
-                                    : isCompleted
-                                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800"
-                                      : "",
-                                )}
-                              >
-                                {count}
-                              </Badge>
-                            )}
-                          </>
-                        )}
-                      </button>
+                  if (isCollapsed) {
+                    return (
+                      <Tooltip key={String(tab.id)}>
+                        <TooltipTrigger render={tabButton} />
+                        <TooltipContent side="right">
+                          <p>{tab.label}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     );
+                  }
 
-                    if (isCollapsed) {
-                      return (
-                        <Tooltip key={String(tab.id)}>
-                          <TooltipTrigger asChild>{tabButton}</TooltipTrigger>
-                          <TooltipContent
-                            side="right"
-                            className="flex flex-col gap-1"
-                          >
-                            <p className="font-medium">{tab.label}</p>
-                            {count > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                {count} élément{count > 1 ? "s" : ""}
-                              </p>
-                            )}
-                            {isCompleted && (
-                              <p className="text-xs text-green-600 dark:text-green-400">
-                                ✓ Complété
-                              </p>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    }
-
-                    return tabButton;
-                  })}
-                </div>
+                  return tabButton;
+                })}
               </div>
             ))}
-          </nav>
+          </div>
+        </nav>
 
-          <Separator className="my-3" />
+        <div
+          className={cn(
+            "mt-auto border-t border-border/70 pt-3",
+            isCollapsed ? "space-y-2" : "space-y-3",
+          )}
+        >
+          {!isCollapsed && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPreview}
+                className={actionButtonClass}
+              >
+                <EyeIcon className="mr-1.5 h-4 w-4" />
+                Aperçu
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShortcuts}
+                className={actionButtonClass}
+              >
+                <KeyboardIcon className="mr-1.5 h-4 w-4" />
+                Raccourcis
+              </Button>
+            </div>
+          )}
 
-          {/* Actions */}
-          <div
-            className={cn(
-              "space-y-2 pb-2",
-              isCollapsed && "flex flex-col items-center",
-            )}
-          >
-            {!focusMode && !isCollapsed && (
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onPreview}
-                  className="h-9 text-xs"
-                >
-                  <EyeIcon className="h-3.5 w-3.5 mr-1.5" />
-                  Aperçu
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onShortcuts}
-                  className="h-9 text-xs"
-                >
-                  <KeyboardIcon className="h-3.5 w-3.5 mr-1.5" />
-                  Raccourcis
-                </Button>
-              </div>
-            )}
-
-            {!focusMode && isCollapsed && (
-              <div className="flex flex-col gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
+          {isCollapsed && (
+            <div className="flex flex-col items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={onPreview}
-                      className="h-10 w-10"
+                      aria-label="Aperçu"
+                      className={cn("border-border", collapsedControlClass)}
                     >
                       <EyeIcon className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Aperçu</p>
-                  </TooltipContent>
-                </Tooltip>
+                  }
+                />
+                <TooltipContent side="right">
+                  <p>Aperçu</p>
+                </TooltipContent>
+              </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={onShortcuts}
-                      className="h-10 w-10"
+                      aria-label="Raccourcis clavier"
+                      className={cn("border-border", collapsedControlClass)}
                     >
                       <KeyboardIcon className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Raccourcis clavier</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            )}
-
-            {onToggleFocusMode && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={focusMode ? "default" : "outline"}
-                    size={isCollapsed ? "icon" : "sm"}
-                    onClick={onToggleFocusMode}
-                    className={cn(
-                      "font-medium transition-all duration-300",
-                      isCollapsed ? "h-10 w-10" : "w-full h-10",
-                    )}
-                  >
-                    {focusMode ? (
-                      <>
-                        <Minimize2Icon
-                          className={cn("h-4 w-4", !isCollapsed && "mr-2")}
-                        />
-                        {!isCollapsed && "Quitter le mode focus"}
-                      </>
-                    ) : (
-                      <>
-                        <Maximize2Icon
-                          className={cn("h-4 w-4", !isCollapsed && "mr-2")}
-                        />
-                        {!isCollapsed && "Mode focus"}
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                {isCollapsed && (
-                  <TooltipContent side="right">
-                    <p>{focusMode ? "Quitter le mode focus" : "Mode focus"}</p>
-                  </TooltipContent>
-                )}
+                  }
+                />
+                <TooltipContent side="right">
+                  <p>Raccourcis clavier</p>
+                </TooltipContent>
               </Tooltip>
-            )}
+            </div>
+          )}
 
-            <Tooltip>
-              <TooltipTrigger asChild>
+          <Tooltip>
+            <TooltipTrigger
+              render={
                 <Button
                   variant="default"
                   size={isCollapsed ? "icon" : "sm"}
                   onClick={onSave}
                   disabled={isSaving}
+                  aria-label={isCollapsed ? "Finaliser le rapport" : undefined}
                   className={cn(
-                    "font-medium transition-all duration-300",
-                    isCollapsed ? "h-10 w-10" : "w-full h-10",
+                    "rounded-xl bg-primary font-semibold text-primary-foreground shadow-none hover:bg-primary/90 active:scale-[0.98]",
+                    isCollapsed ? "h-11 w-11" : "h-10 w-full",
                   )}
                 >
                   <SaveIcon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                   {!isCollapsed &&
                     (isSaving ? "Enregistrement..." : "Finaliser le rapport")}
                 </Button>
-              </TooltipTrigger>
-              {isCollapsed && (
-                <TooltipContent side="right">
-                  <p>
-                    {isSaving ? "Enregistrement..." : "Finaliser le rapport"}
-                  </p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-
-            {isCollapsed && hasUnsavedChanges && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shrink-0" />
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Modifications non sauvegardées</p>
-                </TooltipContent>
-              </Tooltip>
+              }
+            />
+            {isCollapsed && (
+              <TooltipContent side="right">
+                <p>
+                  {isSaving ? "Enregistrement..." : "Finaliser le rapport"}
+                </p>
+              </TooltipContent>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </Tooltip>
+        </div>
+      </aside>
     </TooltipProvider>
   );
 }

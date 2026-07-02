@@ -3,15 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import {
-  CalendarIcon,
-  CheckIcon,
-  ChevronRightIcon,
-  ClipboardIcon,
-  Loader2Icon,
-  PawPrintIcon,
-  Search,
-} from "lucide-react";
+import { ChevronRightIcon, Loader2Icon, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { AnimalCredenza } from "@/components/animal-folder";
@@ -41,6 +33,7 @@ import {
   getPatientById,
 } from "@/lib/api/actions/patients.action";
 import { createReport } from "@/lib/api/actions/reports.action";
+import { canSubmitReportDraft } from "./InitializationDialog.helpers";
 
 type InitializationDialogProps = {
   showInitDialog: boolean;
@@ -66,7 +59,6 @@ export function InitializationDialog({
   setShowInitDialog,
 }: InitializationDialogProps) {
   const navigate = useNavigate();
-  const [appointmentChoiceMade, setAppointmentChoiceMade] = useState(false);
   const [isAnimalCredenzaOpen, setIsAnimalCredenzaOpen] = useState(false);
   const [petSearchTerm, setPetSearchTerm] = useState("");
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
@@ -125,18 +117,17 @@ export function InitializationDialog({
       },
     });
 
-  const canCreate =
-    !!selectedPetId &&
-    appointmentChoiceMade &&
-    !!consultationReason.trim() &&
-    !isLoadingPets &&
-    !isLoadingPet &&
-    !isCreatingReport;
+  const canCreate = canSubmitReportDraft({
+    selectedPetId,
+    consultationReason,
+    isLoadingPets,
+    isLoadingPet,
+    isCreatingReport,
+  });
 
   const handlePetChange = (petId: string) => {
     setSelectedPetId(petId);
     setSelectedAppointmentId(null);
-    setAppointmentChoiceMade(false);
   };
 
   const onComplete = async () => {
@@ -156,55 +147,35 @@ export function InitializationDialog({
   return (
     <>
       <Credenza open={showInitDialog} onOpenChange={setShowInitDialog}>
-        <CredenzaContent className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-0 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.45)] sm:max-w-[680px]">
-          <CredenzaHeader className="border-b border-slate-200 px-5 py-5 text-left sm:px-6">
-            <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]">
-              <ClipboardIcon className="size-3.5 text-emerald-700" />
-              Nouveau document
-            </div>
-            <CredenzaTitle className="text-2xl font-semibold tracking-tight text-slate-950">
-              Préparer un rapport.
+        <CredenzaContent className="overflow-hidden rounded-xl border border-border bg-background p-0 sm:max-w-[560px]">
+          <CredenzaHeader className="border-b px-5 py-4 text-left">
+            <CredenzaTitle className="text-lg font-semibold tracking-tight">
+              Créer un rapport
             </CredenzaTitle>
-            <CredenzaDescription className="max-w-xl text-sm leading-6 text-slate-600">
-              Choisissez l&apos;animal, rattachez un rendez-vous si besoin, puis
-              indiquez le motif de la séance avant d&apos;ouvrir l&apos;éditeur.
+            <CredenzaDescription className="text-sm text-muted-foreground">
+              Renseignez les informations de départ, puis ouvrez le brouillon.
             </CredenzaDescription>
           </CredenzaHeader>
 
-          <div className="grid max-h-[68vh] gap-4 overflow-y-auto px-5 py-5 sm:px-6">
-            <SetupBlock
-              description="Un titre court facilite la recherche dans la bibliothèque."
-              icon={ClipboardIcon}
-              step="01"
-              title="Identifier le rapport"
-            >
-              <FieldGroup label="Titre du rapport" htmlFor="report-title">
-                <Input
-                  id="report-title"
-                  placeholder="Exemple : Séance du 12/10 - Max"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  className="h-11 bg-white"
-                />
-              </FieldGroup>
-            </SetupBlock>
+          <div className="grid max-h-[68vh] gap-5 overflow-y-auto px-5 py-5">
+            <FieldGroup label="Titre" htmlFor="report-title">
+              <Input
+                id="report-title"
+                placeholder="Nouveau rapport"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                className="h-10"
+              />
+            </FieldGroup>
 
-            <SetupBlock
-              description="Sélectionnez le patient concerné pour préremplir le dossier."
-              icon={PawPrintIcon}
-              step="02"
-              title="Choisir l'animal"
-            >
+            <FieldGroup label="Animal" htmlFor="pet-select">
               <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                 <Select
                   value={selectedPetId ?? ""}
                   onValueChange={handlePetChange}
                   disabled={isLoadingPets}
                 >
-                  <SelectTrigger
-                    id="pet-select"
-                    className="h-11 w-full bg-white"
-                  >
+                  <SelectTrigger id="pet-select" className="h-10 w-full">
                     {isLoadingPets ? (
                       <div className="flex items-center gap-2">
                         <Loader2Icon className="size-4 animate-spin" />
@@ -218,8 +189,8 @@ export function InitializationDialog({
                     {pets.length > 0 ? (
                       <>
                         <div className="px-2 py-2">
-                          <div className="flex items-center rounded-md border border-slate-200 bg-slate-50 px-2">
-                            <Search className="mr-2 size-4 text-slate-400" />
+                          <div className="flex items-center rounded-md border bg-muted/50 px-2">
+                            <Search className="mr-2 size-4 text-muted-foreground" />
                             <Input
                               placeholder="Rechercher un animal..."
                               className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
@@ -244,15 +215,15 @@ export function InitializationDialog({
                                     src={pet.image ?? undefined}
                                     alt={pet.name ?? ""}
                                   />
-                                  <AvatarFallback className="rounded-xl bg-emerald-50 text-xs text-emerald-800">
+                                  <AvatarFallback className="rounded-xl bg-muted text-xs">
                                     {getInitials(pet.name)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="min-w-0">
-                                  <span className="block truncate text-sm font-medium text-slate-950">
+                                  <span className="block truncate text-sm font-medium">
                                     {pet.name}
                                   </span>
-                                  <span className="block truncate text-xs text-slate-500">
+                                  <span className="block truncate text-xs text-muted-foreground">
                                     {pet.animal?.name ?? "Animal"}
                                     {pet.breed ? ` - ${pet.breed}` : ""}
                                     {pet.owner?.name
@@ -264,7 +235,7 @@ export function InitializationDialog({
                             </SelectItem>
                           ))
                         ) : (
-                          <div className="px-3 py-6 text-center text-sm text-slate-500">
+                          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                             Aucun animal trouvé
                           </div>
                         )}
@@ -281,7 +252,8 @@ export function InitializationDialog({
                   type="button"
                   variant="outline"
                   onClick={() => setIsAnimalCredenzaOpen(true)}
-                  className="h-11 justify-start sm:w-11 sm:px-0"
+                  disabled={!selectedPetId}
+                  className="h-10 justify-start sm:w-10 sm:px-0"
                 >
                   <Search className="size-4" />
                   <span className="sm:sr-only">Ouvrir le dossier animal</span>
@@ -289,122 +261,103 @@ export function InitializationDialog({
               </div>
 
               {selectedPet ? (
-                <div className="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3">
-                  <Avatar className="size-10 rounded-xl">
+                <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-3 rounded-lg border bg-muted/40 px-3 py-2">
+                  <Avatar className="size-8 rounded-lg">
                     <AvatarImage
                       src={selectedPet.image ?? undefined}
                       alt={selectedPet.name}
                     />
-                    <AvatarFallback className="rounded-xl bg-white text-sm font-semibold text-emerald-800">
+                    <AvatarFallback className="rounded-lg bg-background text-xs font-semibold">
                       {getInitials(selectedPet.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-950">
+                    <p className="truncate text-sm font-medium">
                       {selectedPet.name}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-emerald-800">
+                    <p className="truncate text-xs text-muted-foreground">
                       {selectedPet.animal?.name ?? "Animal"}
                       {selectedPet.owner?.name
                         ? ` - ${selectedPet.owner.name}`
                         : ""}
                     </p>
                   </div>
-                  <CheckIcon className="size-4 text-emerald-700" />
                 </div>
               ) : null}
-            </SetupBlock>
+            </FieldGroup>
 
-            {selectedPetId ? (
-              <SetupBlock
-                description="Le rendez-vous reste optionnel, mais le choix doit être confirmé."
-                icon={CalendarIcon}
-                step="03"
-                title="Rattacher la séance"
+            <FieldGroup
+              label="Rendez-vous (optionnel)"
+              htmlFor="appointment-select"
+            >
+              <Select
+                value={selectedAppointmentId ?? NO_APPOINTMENT_VALUE}
+                onValueChange={(value) => {
+                  setSelectedAppointmentId(
+                    value === NO_APPOINTMENT_VALUE ? null : value,
+                  );
+                }}
+                disabled={!selectedPetId || isLoadingAppointments}
               >
-                <Select
-                  value={
-                    appointmentChoiceMade
-                      ? (selectedAppointmentId ?? NO_APPOINTMENT_VALUE)
-                      : undefined
-                  }
-                  onValueChange={(value) => {
-                    setAppointmentChoiceMade(true);
-                    setSelectedAppointmentId(
-                      value === NO_APPOINTMENT_VALUE ? null : value,
-                    );
-                  }}
-                  disabled={isLoadingAppointments}
-                >
-                  <SelectTrigger
-                    id="appointment-select"
-                    className="h-11 w-full bg-white"
-                  >
-                    {isLoadingAppointments ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2Icon className="size-4 animate-spin" />
-                        <span>Chargement des rendez-vous...</span>
-                      </div>
-                    ) : (
-                      <SelectValue placeholder="Sélectionner un rendez-vous ou aucun" />
-                    )}
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_APPOINTMENT_VALUE}>
-                      Aucun rendez-vous
-                    </SelectItem>
-                    {appointmentsData?.length ? (
-                      appointmentsData.map((appointment) => (
-                        <SelectItem key={appointment.id} value={appointment.id}>
-                          {format(
-                            new Date(appointment.beginAt),
-                            "dd MMMM yyyy 'à' HH:mm",
-                            {
-                              locale: fr,
-                            },
-                          )}
-                          {getAppointmentStatusLabel(appointment.status)}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="__no_available__" disabled>
-                        Aucun rendez-vous disponible
+                <SelectTrigger id="appointment-select" className="h-10 w-full">
+                  {isLoadingAppointments ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2Icon className="size-4 animate-spin" />
+                      <span>Chargement des rendez-vous...</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Aucun rendez-vous" />
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_APPOINTMENT_VALUE}>
+                    Aucun rendez-vous
+                  </SelectItem>
+                  {appointmentsData?.length ? (
+                    appointmentsData.map((appointment) => (
+                      <SelectItem key={appointment.id} value={appointment.id}>
+                        {format(
+                          new Date(appointment.beginAt),
+                          "dd MMMM yyyy 'à' HH:mm",
+                          {
+                            locale: fr,
+                          },
+                        )}
+                        {getAppointmentStatusLabel(appointment.status)}
                       </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </SetupBlock>
-            ) : null}
+                    ))
+                  ) : (
+                    <SelectItem value="__no_available__" disabled>
+                      Aucun rendez-vous disponible
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </FieldGroup>
 
-            {appointmentChoiceMade ? (
-              <SetupBlock
-                description="Cette information apparaîtra comme point de départ du rapport."
-                icon={CheckIcon}
-                step="04"
-                title="Décrire le motif"
-              >
-                <FieldGroup
-                  label="Motif de la séance"
-                  htmlFor="consultation-reason"
-                >
-                  <Textarea
-                    id="consultation-reason"
-                    placeholder="Exemple : Boiterie membre postérieur gauche, suivi post-opératoire..."
-                    value={consultationReason}
-                    onChange={(event) =>
-                      setConsultationReason(event.target.value)
-                    }
-                    className="min-h-24 resize-y bg-white"
-                  />
-                </FieldGroup>
-              </SetupBlock>
-            ) : null}
+            <FieldGroup
+              label="Motif de la séance"
+              htmlFor="consultation-reason"
+            >
+              <Textarea
+                id="consultation-reason"
+                placeholder="Boiterie, suivi post-opératoire, contrôle..."
+                value={consultationReason}
+                onChange={(event) => setConsultationReason(event.target.value)}
+                className="min-h-24 resize-y"
+              />
+            </FieldGroup>
           </div>
 
-          <CredenzaFooter className="mx-0 mb-0 flex flex-col-reverse gap-3 rounded-none border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="text-xs leading-5 text-slate-500">
-              Le rapport sera créé en brouillon et ouvert dans l&apos;éditeur.
-            </p>
+          <CredenzaFooter className="mx-0 mb-0 flex flex-col-reverse gap-3 rounded-none border-t bg-muted/40 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowInitDialog(false)}
+              className="h-10 w-full sm:w-auto"
+            >
+              Annuler
+            </Button>
             <Button
               onClick={() => void onComplete()}
               disabled={!canCreate}
@@ -440,48 +393,6 @@ export function InitializationDialog({
   );
 }
 
-function SetupBlock({
-  children,
-  description,
-  icon: Icon,
-  step,
-  title,
-}: {
-  children: ReactNode;
-  description: string;
-  icon: typeof ClipboardIcon;
-  step: string;
-  title: string;
-}) {
-  return (
-    <section className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.45)]">
-      <div className="mb-4 grid grid-cols-[auto_1fr] gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
-          <Icon className="size-4" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <StepBadge>{step}</StepBadge>
-            <h3 className="font-semibold tracking-tight text-slate-950">
-              {title}
-            </h3>
-          </div>
-          <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function StepBadge({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-500">
-      {children}
-    </span>
-  );
-}
-
 function FieldGroup({
   children,
   htmlFor,
@@ -493,7 +404,7 @@ function FieldGroup({
 }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={htmlFor} className="text-sm font-medium text-slate-700">
+      <Label htmlFor={htmlFor} className="text-sm font-medium">
         {label}
       </Label>
       {children}

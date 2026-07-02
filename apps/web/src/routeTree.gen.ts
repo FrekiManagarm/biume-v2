@@ -28,7 +28,7 @@ import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as DashboardReportsIdEditRouteImport } from './routes/dashboard/reports_.$id.edit'
+import { Route as DashboardReportsIdEditRouteImport } from './routes/dashboard_.reports_.$id_.edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -126,9 +126,9 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardReportsIdEditRoute = DashboardReportsIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => DashboardReportsIdRoute,
+  id: '/dashboard_/reports_/$id_/edit',
+  path: '/dashboard/reports/$id/edit',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -150,7 +150,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
-  '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
+  '/dashboard/reports/$id': typeof DashboardReportsIdRoute
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -171,7 +171,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
-  '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
+  '/dashboard/reports/$id': typeof DashboardReportsIdRoute
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRoutesById {
@@ -194,8 +194,8 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
-  '/dashboard/reports_/$id': typeof DashboardReportsIdRouteWithChildren
-  '/dashboard/reports_/$id/edit': typeof DashboardReportsIdEditRoute
+  '/dashboard/reports_/$id': typeof DashboardReportsIdRoute
+  '/dashboard_/reports_/$id_/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -262,7 +262,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/reports_/$id'
-    | '/dashboard/reports_/$id/edit'
+    | '/dashboard_/reports_/$id_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -277,6 +277,7 @@ export interface RootRouteChildren {
   ApiUploadthingRoute: typeof ApiUploadthingRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
+  DashboardReportsIdEditRoute: typeof DashboardReportsIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -414,26 +415,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/reports_/$id/edit': {
-      id: '/dashboard/reports_/$id/edit'
-      path: '/edit'
+    '/dashboard_/reports_/$id_/edit': {
+      id: '/dashboard_/reports_/$id_/edit'
+      path: '/dashboard/reports/$id/edit'
       fullPath: '/dashboard/reports/$id/edit'
       preLoaderRoute: typeof DashboardReportsIdEditRouteImport
-      parentRoute: typeof DashboardReportsIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface DashboardReportsIdRouteChildren {
-  DashboardReportsIdEditRoute: typeof DashboardReportsIdEditRoute
-}
-
-const DashboardReportsIdRouteChildren: DashboardReportsIdRouteChildren = {
-  DashboardReportsIdEditRoute: DashboardReportsIdEditRoute,
-}
-
-const DashboardReportsIdRouteWithChildren =
-  DashboardReportsIdRoute._addFileChildren(DashboardReportsIdRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
@@ -443,7 +433,7 @@ interface DashboardRouteChildren {
   DashboardReportsRoute: typeof DashboardReportsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardReportsIdRoute: typeof DashboardReportsIdRouteWithChildren
+  DashboardReportsIdRoute: typeof DashboardReportsIdRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -454,7 +444,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardReportsRoute: DashboardReportsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardReportsIdRoute: DashboardReportsIdRouteWithChildren,
+  DashboardReportsIdRoute: DashboardReportsIdRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -473,6 +463,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadthingRoute: ApiUploadthingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAutumnSplatRoute: ApiAutumnSplatRoute,
+  DashboardReportsIdEditRoute: DashboardReportsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

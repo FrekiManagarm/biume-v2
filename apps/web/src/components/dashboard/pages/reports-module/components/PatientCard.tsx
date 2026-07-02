@@ -1,6 +1,5 @@
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/style";
-import { UserIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, PawPrintIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -22,21 +21,21 @@ export function PatientCard({
 }: PatientCardProps) {
   return (
     <TooltipProvider>
-      <Card
+      <section
         className={cn(
-          "flex flex-col p-0 transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-[72px]" : "w-full",
+          "flex flex-col rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm shadow-foreground/5 transition-all duration-200 ease-out",
+          isCollapsed ? "w-[72px] p-2" : "w-full",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
-        <div className="p-4">
+        <div>
           {/* Header */}
           {!isCollapsed && (
-            <div className="flex items-center gap-2 px-2 mb-2">
-              <UserIcon className="h-4 w-4 text-muted-foreground" />
+            <div className="mb-3 flex items-center justify-between px-1">
               <span className="text-xs font-medium text-muted-foreground">
                 Patient
               </span>
+              <PawPrintIcon className="h-4 w-4 text-muted-foreground" />
             </div>
           )}
 
@@ -47,13 +46,12 @@ export function PatientCard({
                 render={
                   <button
                     onClick={onPatientClick}
-                    className="w-full flex items-center justify-center"
+                    className="flex w-full items-center justify-center"
                   >
-                    <div className="w-10 h-10 bg-linear-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center shrink-0 hover:from-primary/30 hover:to-primary/20 transition-all group relative">
-                      <span className="text-base font-semibold text-primary">
+                    <div className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors hover:bg-primary/15">
+                      <span className="text-base font-semibold">
                         {patient.name.charAt(0).toUpperCase()}
                       </span>
-                      <div className="absolute inset-0 rounded-lg ring-2 ring-transparent group-hover:ring-primary/30 transition-all" />
                     </div>
                   </button>
                 }
@@ -85,28 +83,26 @@ export function PatientCard({
           ) : (
             <button
               onClick={onPatientClick}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
+              className="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted active:scale-[0.99]"
             >
-              <div className="w-9 h-9 bg-linear-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center shrink-0 group-hover:from-primary/30 group-hover:to-primary/20 transition-all">
-                <span className="text-sm font-semibold text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
+                <span className="text-sm font-semibold">
                   {patient.name.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0 text-left">
+              <div className="min-w-0 flex-1 text-left">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium text-foreground truncate">
+                  <h4 className="truncate text-sm font-semibold text-foreground">
                     {patient.name}
                   </h4>
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="mt-0.5 flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
                     {patient.animal?.name || patient.type}
                   </span>
                   {patient.gender && (
                     <>
-                      <span className="text-xs text-muted-foreground/50">
-                        •
-                      </span>
+                      <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
                       <span className="text-xs text-muted-foreground">
                         {patient.gender}
                       </span>
@@ -114,11 +110,11 @@ export function PatientCard({
                   )}
                 </div>
               </div>
-              <ChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
             </button>
           )}
         </div>
-      </Card>
+      </section>
     </TooltipProvider>
   );
 }

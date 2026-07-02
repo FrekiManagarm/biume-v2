@@ -1,13 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { AdvancedReportEditor } from "#/components/dashboard/pages/reports-module/reports-editor";
 import { EmptyPanel } from "#/components/dashboard/dashboard-shell";
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { getCurrentOrganization, getSession } from "#/functions/auth.function";
 import { reportQueryOptions } from "#/lib/api/queries/reports.query";
 import { Button } from "@biume/ui/components/button";
+import { getDashboardRedirectTarget } from "./dashboard";
 
-export const Route = createFileRoute("/dashboard/reports_/$id/edit")({
+export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
   head: () => ({
     meta: [
       { title: "Edition du rapport | Biume" },
@@ -17,19 +18,41 @@ export const Route = createFileRoute("/dashboard/reports_/$id/edit")({
       },
     ],
   }),
+  beforeLoad: async () => {
+    const session = await getSession();
+
+    if (!session) {
+      throw redirect({ to: "/signin" });
+    }
+
+    if (!session.session.activeOrganizationId) {
+      throw redirect({ to: "/select-organization" });
+    }
+
+    const currentOrganization = await getCurrentOrganization().catch(
+      () => null,
+    );
+    const redirectTarget = getDashboardRedirectTarget(
+      session,
+      currentOrganization,
+    );
+
+    if (redirectTarget) {
+      throw redirect({ to: redirectTarget });
+    }
+
+    return { org: currentOrganization };
+  },
   loader: async ({ context, params }) => {
-    const [org] = await Promise.all([
-      getCurrentOrganization(),
+    await Promise.all([
       context.queryClient.ensureQueryData(reportQueryOptions(params.id)),
     ]);
-
-    return { org };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { org } = Route.useLoaderData();
+  const { org } = Route.useRouteContext();
   const { id: reportId } = Route.useParams();
   const { data: reportResult } = useSuspenseQuery(reportQueryOptions(reportId));
 
