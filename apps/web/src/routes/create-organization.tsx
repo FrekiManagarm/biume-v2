@@ -15,10 +15,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
-import {
-  FileDropzone,
-  formatFileRejection,
-} from "#/components/file-dropzone";
+import { FileDropzone, formatFileRejection } from "#/components/file-dropzone";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
@@ -177,12 +174,12 @@ function CreateOrganization() {
       return;
     }
 
-    await navigate({ to: "/dashboard/owners" });
+    await navigate({ to: "/dashboard" });
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#f9fafb] text-slate-950">
-      <div className="mx-auto grid min-h-[100dvh] w-full max-w-7xl grid-cols-1 px-4 py-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12 md:px-8 lg:px-10">
+    <main className="min-h-dvh bg-[#f9fafb] text-slate-950">
+      <div className="mx-auto grid min-h-dvh w-full max-w-7xl grid-cols-1 px-4 py-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12 md:px-8 lg:px-10">
         <section className="flex flex-col justify-between border-b border-slate-200 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-10">
           <div>
             <div className="inline-flex w-fit items-center gap-2 text-sm font-semibold tracking-tight">
@@ -196,7 +193,7 @@ function CreateOrganization() {
               Biume
             </div>
 
-            <div className="mt-14 max-w-[34rem] md:mt-24">
+            <div className="mt-14 max-w-136 md:mt-24">
               <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-26px_rgba(15,23,42,0.45)]">
                 <Sparkles className="size-3.5 text-emerald-700" />
                 Nouvel espace
@@ -204,7 +201,7 @@ function CreateOrganization() {
               <h1 className="text-4xl font-semibold leading-none tracking-tight text-slate-950 md:text-6xl">
                 Créez votre organisation.
               </h1>
-              <p className="mt-5 max-w-[30rem] text-base leading-7 text-slate-600">
+              <p className="mt-5 max-w-120 text-base leading-7 text-slate-600">
                 Ajoutez un espace professionnel pour isoler les propriétaires,
                 rapports et paramètres de cette activité.
               </p>
@@ -220,7 +217,7 @@ function CreateOrganization() {
         </section>
 
         <section className="flex items-center py-8 md:py-12">
-          <div className="w-full max-w-[620px]">
+          <div className="w-full max-w-155">
             <Button
               asChild
               variant="ghost"
@@ -248,7 +245,7 @@ function CreateOrganization() {
 
             <form
               onSubmit={handleSubmit}
-              className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6"
+              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6"
             >
               <div className="grid gap-5">
                 <div className="grid gap-2">
@@ -331,10 +328,7 @@ function CreateOrganization() {
                       />
                       <div className="min-w-0">
                         <p className="flex items-center gap-1.5 font-medium">
-                          <CheckCircle2
-                            className="size-4"
-                            aria-hidden="true"
-                          />
+                          <CheckCircle2 className="size-4" aria-hidden="true" />
                           Logo importé
                         </p>
                         <p className="truncate text-xs text-emerald-700">
@@ -353,7 +347,6 @@ function CreateOrganization() {
                       </Button>
                     </div>
                   ) : null}
-
                 </div>
 
                 {error ? (
@@ -390,7 +383,7 @@ function CreateOrganization() {
               </div>
             </form>
 
-            <div className="mt-5 grid grid-cols-[auto_1fr] gap-3 rounded-[1rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+            <div className="mt-5 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
               <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800">
                 <Building2 className="size-4" aria-hidden="true" />
               </div>

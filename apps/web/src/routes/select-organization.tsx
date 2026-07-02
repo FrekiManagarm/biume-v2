@@ -72,7 +72,7 @@ function SelectOrganization() {
       return;
     }
 
-    await navigate({ to: "/dashboard/owners" });
+    await navigate({ to: "/dashboard" });
   }
 
   async function handleSignOut() {
@@ -82,8 +82,8 @@ function SelectOrganization() {
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#f9fafb] text-slate-950">
-      <div className="mx-auto grid min-h-[100dvh] w-full max-w-7xl grid-cols-1 px-4 py-8 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:px-8 lg:px-10">
+    <main className="min-h-dvh bg-[#f9fafb] text-slate-950">
+      <div className="mx-auto grid min-h-dvh w-full max-w-7xl grid-cols-1 px-4 py-8 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:px-8 lg:px-10">
         <section className="flex flex-col justify-between border-b border-slate-200 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-10">
           <div>
             <div className="inline-flex w-fit items-center gap-2 text-sm font-semibold tracking-tight">
@@ -97,7 +97,7 @@ function SelectOrganization() {
               Biume
             </div>
 
-            <div className="mt-14 max-w-[34rem] md:mt-24">
+            <div className="mt-14 max-w-136 md:mt-24">
               <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-26px_rgba(15,23,42,0.45)]">
                 <ShieldCheck className="size-3.5 text-emerald-700" />
                 Session sécurisée
@@ -105,7 +105,7 @@ function SelectOrganization() {
               <h1 className="text-4xl font-semibold leading-none tracking-tight text-slate-950 md:text-6xl">
                 Choisissez l'espace à ouvrir.
               </h1>
-              <p className="mt-5 max-w-[30rem] text-base leading-7 text-slate-600">
+              <p className="mt-5 max-w-120 text-base leading-7 text-slate-600">
                 Chaque organisation possède ses propriétaires, rapports et
                 paramètres. Sélectionnez le bon espace avant d'entrer dans le
                 dashboard.
@@ -187,7 +187,7 @@ function SelectOrganization() {
             ) : null}
 
             {organizations.length > 0 ? (
-              <div className="divide-y divide-slate-200 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]">
+              <div className="divide-y divide-slate-200 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]">
                 {organizations.map((organization, index) => {
                   const isActive = activeOrganizationId === organization.id;
                   const isPending = pendingOrganizationId === organization.id;
@@ -243,7 +243,7 @@ function SelectOrganization() {
 
                       <span
                         className={cn(
-                          "flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition duration-300 group-hover:-translate-y-[1px] group-hover:text-slate-950",
+                          "flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition duration-300 group-hover:-translate-y-px group-hover:text-slate-950",
                           isActive && "border-emerald-200 text-emerald-800",
                         )}
                       >
@@ -261,14 +261,14 @@ function SelectOrganization() {
                 })}
               </div>
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-10 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                   <Building2 className="size-5" aria-hidden="true" />
                 </div>
                 <h2 className="mt-5 text-xl font-semibold tracking-tight text-slate-950">
                   Aucune organisation rattachée
                 </h2>
-                <p className="mt-2 max-w-[34rem] text-sm leading-6 text-slate-600">
+                <p className="mt-2 max-w-136 text-sm leading-6 text-slate-600">
                   Ce compte n'a pas encore accès à une organisation. Créez un
                   espace professionnel maintenant, ou demandez une invitation à
                   un administrateur si vous devez rejoindre une structure

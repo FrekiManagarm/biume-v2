@@ -749,17 +749,17 @@ export function AdvancedReportEditor({
   return (
     <div className="min-h-[100dvh] w-full bg-background text-foreground">
       {/* Desktop Layout */}
-      <div className="hidden min-h-[100dvh] lg:block">
+      <div className="hidden h-[100dvh] lg:block">
         <div
           className={cn(
-            "grid min-h-[100dvh] w-full gap-4 p-4 transition-all duration-200 ease-out",
+            "grid h-full w-full gap-4 p-4 transition-all duration-200 ease-out",
             isSidebarCollapsed
               ? "grid-cols-[72px_minmax(0,1fr)]"
               : "grid-cols-[20rem_minmax(0,1fr)]",
           )}
         >
           {/* Navigation latérale */}
-          <div className="flex max-h-[calc(100dvh-2rem)] min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden">
+          <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden">
             <ReportSidebarNavigation
               title={title}
               onTitleChange={setTitle}
@@ -799,9 +799,9 @@ export function AdvancedReportEditor({
           </div>
 
           {/* Contenu principal */}
-          <main className="min-h-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-foreground/5">
+          <main className="h-full min-h-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-foreground/5">
             {isCat ? (
-              <div className="flex min-h-[calc(100dvh-2rem)] w-full items-center justify-center p-6">
+              <div className="flex h-full w-full items-center justify-center p-6">
                 <Card className="w-full max-w-xl rounded-2xl border-border shadow-sm">
                   <div className="flex items-start gap-4 p-8">
                     <div className="mt-1 text-primary">
@@ -822,18 +822,20 @@ export function AdvancedReportEditor({
                 </Card>
               </div>
             ) : (
-              <div className="flex min-h-[calc(100dvh-2rem)] flex-col">
+              <div className="flex h-full min-h-0 flex-col">
                 <div className="min-h-0 flex-1 overflow-hidden">
                   {activeTab === "clinical" && (
-                    <ObservationsTab
-                      observations={observations}
-                      onRemoveObservation={handleRemoveObservation}
-                      onOpenAddSheet={() => {
-                        setEditingObservationId(null);
-                        setIsAddSheetOpen(true);
-                      }}
-                      onEditObservation={handleEditObservation}
-                    />
+                    <div className="h-full min-h-0 p-6">
+                      <ObservationsTab
+                        observations={observations}
+                        onRemoveObservation={handleRemoveObservation}
+                        onOpenAddSheet={() => {
+                          setEditingObservationId(null);
+                          setIsAddSheetOpen(true);
+                        }}
+                        onEditObservation={handleEditObservation}
+                      />
+                    </div>
                   )}
 
                   {activeTab === "anatomical" && (
@@ -873,14 +875,18 @@ export function AdvancedReportEditor({
                   )}
 
                   {activeTab === "recommendations" && (
-                    <RecommendationsTab
-                      recommendations={recommendations}
-                      setRecommendations={setRecommendations}
-                    />
+                    <div className="h-full min-h-0 p-6">
+                      <RecommendationsTab
+                        recommendations={recommendations}
+                        setRecommendations={setRecommendations}
+                      />
+                    </div>
                   )}
 
                   {activeTab === "notes" && (
-                    <NotesTab notes={notes} setNotes={setNotes} />
+                    <div className="h-full min-h-0 p-6">
+                      <NotesTab notes={notes} setNotes={setNotes} />
+                    </div>
                   )}
                 </div>
               </div>
@@ -954,7 +960,7 @@ export function AdvancedReportEditor({
         <div className="pb-20">
           <div
             className={cn(
-              "py-6",
+              "px-4 py-6",
               activeTab === "clinical" ? "block" : "hidden",
             )}
           >
@@ -998,7 +1004,7 @@ export function AdvancedReportEditor({
 
           <div
             className={cn(
-              "py-6",
+              "px-4 py-6",
               activeTab === "recommendations" ? "block" : "hidden",
             )}
           >
@@ -1009,7 +1015,10 @@ export function AdvancedReportEditor({
           </div>
 
           <div
-            className={cn("py-6", activeTab === "notes" ? "block" : "hidden")}
+            className={cn(
+              "px-4 py-6",
+              activeTab === "notes" ? "block" : "hidden",
+            )}
           >
             <NotesTab notes={notes} setNotes={setNotes} />
           </div>

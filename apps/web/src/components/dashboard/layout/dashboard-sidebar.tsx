@@ -36,7 +36,6 @@ import {
 } from "@biume/ui/components/avatar";
 import { AccountSwitchDialog } from "../dialogs/account-switch-dialog";
 import { toast } from "sonner";
-import { Credenza } from "@biume/ui/components/credenza";
 import {
   Collapsible,
   CollapsibleContent,
@@ -73,7 +72,6 @@ export function DashboardSidebar({
   const [showProfessionalDialog, setShowProfessionalDialog] = useState(false);
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showCredenza, setShowCredenza] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { refetch } = useCustomer();
 
@@ -398,21 +396,25 @@ export function DashboardSidebar({
                       Nouvelle entreprise
                     </DropdownMenuLabel>
                     <DropdownMenuItem
-                      onClick={() => setShowCredenza(true)}
-                      className="group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200 hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm"
-                    >
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/15 transition-colors duration-300 hover:bg-sidebar-primary/20">
-                        <Plus className="size-4 text-sidebar-primary" />
-                      </div>
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-medium leading-none">
-                          Créer une entreprise
-                        </span>
-                        <span className="mt-1 truncate text-xs text-muted-foreground">
-                          Devenez professionnel
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
+                      render={
+                        <Link
+                          to="/create-organization"
+                          className="group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200 hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm"
+                        >
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/15 transition-colors duration-300 hover:bg-sidebar-primary/20">
+                            <Plus className="size-4 text-sidebar-primary" />
+                          </div>
+                          <div className="flex min-w-0 flex-col">
+                            <span className="truncate text-sm font-medium leading-none">
+                              Créer une entreprise
+                            </span>
+                            <span className="mt-1 truncate text-xs text-muted-foreground">
+                              Devenez professionnel
+                            </span>
+                          </div>
+                        </Link>
+                      }
+                    />
                   </DropdownMenuGroup>
                 </>
               )}
@@ -539,10 +541,6 @@ export function DashboardSidebar({
         }
         isLoading={isLoading}
       />
-
-      <Credenza open={showCredenza} onOpenChange={setShowCredenza}>
-        <></>
-      </Credenza>
 
       <UserProfileDialog
         open={showProfile}

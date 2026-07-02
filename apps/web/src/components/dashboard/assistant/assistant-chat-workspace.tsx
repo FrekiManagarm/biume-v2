@@ -204,12 +204,12 @@ export function AssistantChatWorkspace({
   };
 
   return (
-    <section className="grid min-h-[calc(100dvh-9rem)] overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_24px_60px_-32px_rgba(15,23,42,0.32)]">
+    <section className="grid min-h-[34rem] overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_24px_60px_-32px_rgba(15,23,42,0.32)] xl:min-h-0">
       <div className="flex min-h-0 flex-col">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-              <Sparkles className="size-5" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+              <Sparkles className="size-4" />
             </div>
             <div className="min-w-0">
               <h2 className="truncate text-sm font-semibold text-slate-950">
@@ -237,17 +237,17 @@ export function AssistantChatWorkspace({
         <MessageScrollerProvider>
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
-              <MessageScrollerContent className="gap-5 p-5">
+              <MessageScrollerContent className="gap-4 p-4">
                 {messages.length === 0 && !isLoading ? (
-                  <div className="grid min-h-[24rem] content-center gap-5">
+                  <div className="grid min-h-[17rem] content-center gap-4">
                     <div>
                       <p className="text-sm font-medium text-emerald-700">
                         Bonjour, je suis là.
                       </p>
-                      <h3 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight text-slate-950">
+                      <h3 className="mt-2 max-w-xl text-xl font-semibold tracking-tight text-slate-950 md:text-2xl">
                         Déposez une idée brute, je vous aide à la rendre claire.
                       </h3>
-                      <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                         Vous pouvez partir d'une note, d'une question ou d'un
                         objectif. L'assistant peut structurer, reformuler,
                         synthétiser et préparer les prochaines actions.
@@ -262,11 +262,11 @@ export function AssistantChatWorkspace({
                           <button
                             key={suggestion.title}
                             type="button"
-                            className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-left transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0"
+                            className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5 text-left transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0"
                             onClick={() => handleSend(suggestion.prompt)}
                           >
                             <span className="flex items-center gap-3">
-                              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm transition group-hover:text-emerald-700">
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm transition group-hover:text-emerald-700">
                                 <Icon className="size-4" />
                               </span>
                               <span className="text-sm font-medium text-slate-900">
@@ -351,7 +351,7 @@ export function AssistantChatWorkspace({
           </MessageScroller>
         </MessageScrollerProvider>
 
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-slate-100 p-3">
           <div className="relative">
             {filteredCommands.length > 0 ? (
               <div className="absolute bottom-full left-0 right-0 mb-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
@@ -383,7 +383,7 @@ export function AssistantChatWorkspace({
               </div>
             ) : null}
 
-            <div className="rounded-[1.35rem] border border-slate-200 bg-white p-2 shadow-sm">
+            <div className="rounded-[1.25rem] border border-slate-200 bg-white p-1.5 shadow-sm">
               <div className="flex items-center gap-2">
                 <Input
                   ref={inputRef}
@@ -391,7 +391,7 @@ export function AssistantChatWorkspace({
                   onChange={(event) => setInputText(event.target.value)}
                   placeholder="Écrivez une question, une note ou tapez /"
                   disabled={isLoading}
-                  className="h-11 border-0 bg-transparent px-3 shadow-none focus-visible:ring-0"
+                  className="h-10 border-0 bg-transparent px-3 shadow-none focus-visible:ring-0"
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -405,7 +405,7 @@ export function AssistantChatWorkspace({
                   disabled={isLoading || !inputText.trim()}
                   onClick={() => handleSend()}
                   aria-label="Envoyer le message"
-                  className="size-11 shrink-0 rounded-2xl bg-emerald-700 text-white shadow-sm hover:bg-emerald-800"
+                  className="size-10 shrink-0 rounded-2xl bg-emerald-700 text-white shadow-sm hover:bg-emerald-800"
                 >
                   {isLoading ? (
                     <Spinner className="size-4" />
@@ -415,7 +415,7 @@ export function AssistantChatWorkspace({
                 </Button>
               </div>
             </div>
-            <p className="mt-2 px-2 text-xs text-slate-500">
+            <p className="mt-1.5 px-2 text-xs text-slate-500">
               Les commandes commencent par /, mais une phrase naturelle suffit toujours.
             </p>
           </div>

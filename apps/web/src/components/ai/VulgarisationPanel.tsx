@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Drawer,
@@ -10,8 +9,6 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles,
@@ -22,9 +19,29 @@ import {
   CheckIcon,
 } from "lucide-react";
 import { useVulgarisationAgent } from "@/hooks/useVulgarisationAgent";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/style";
+import {
+  Bubble,
+  BubbleContent,
+} from "@biume/ui/components/bubble";
+import {
+  Message,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+} from "@biume/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@biume/ui/components/message-scroller";
+import { Streamdown } from "streamdown";
+import type { UIMessage } from "ai";
 
 interface VulgarisationPanelProps {
   isOpen: boolean;
@@ -49,18 +66,13 @@ const messageVariants = {
   },
 } as const;
 
-// Fonction utilitaire pour extraire le texte d'un message
-function getMessageText(message: any): string {
+function getMessageText(message: UIMessage): string {
   if (message.parts && Array.isArray(message.parts)) {
     const textParts = message.parts
-      .filter((part: any) => part.type === "text")
-      .map((part: any) => part.text || "")
+      .filter((part) => part.type === "text")
+      .map((part) => part.text || "")
       .filter((text: string) => text.length > 0);
     return textParts.join("\n\n");
-  }
-
-  if (typeof message.content === "string") {
-    return message.content;
   }
 
   return "";
@@ -132,8 +144,7 @@ export function VulgarisationPanel({
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="flex-1 flex flex-col min-h-0 p-4 space-y-4">
-          {/* Zone de saisie */}
+        <div className="flex min-h-0 flex-1 flex-col space-y-4 p-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Texte technique :</label>
             <Textarea
@@ -178,94 +189,118 @@ export function VulgarisationPanel({
             </div>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 min-h-0">
-            <ScrollArea className="h-full">
-              <div className="space-y-4 pr-4">
-                <AnimatePresence mode="popLayout">
-                  {messages.map((message) => {
-                    const messageText = getMessageText(message);
-                    return (
-                      <motion.div
-                        key={message.id}
-                        variants={messageVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className={cn(
-                          "rounded-lg p-4",
-                          message.role === "user"
-                            ? "bg-primary/10 border border-primary/20"
-                            : "bg-muted border",
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <Badge variant={message.role === "user" ? "default" : "secondary"}>
-                            {message.role === "user" ? "Vous" : "Assistant"}
-                          </Badge>
-                          {message.role === "assistant" && messageText && (
-                            <div className="flex gap-1">
-                              {onTextInsert && (
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => {
-                                    onTextInsert(messageText);
-                                    toast.success("Texte inséré dans le champ notes");
-                                  }}
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  Utiliser
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleCopy(messageText, message.id)}
-                                className="h-6 px-2"
-                              >
-                                {copiedId === message.id ? (
-                                  <CheckIcon className="h-3 w-3" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">
-                          {messageText}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
+            <MessageScrollerProvider>
+              <MessageScroller>
+                <MessageScrollerViewport>
+                  <MessageScrollerContent className="gap-4 pr-3">
+                    <AnimatePresence mode="popLayout">
+                      {messages.map((message) => {
+                        const messageText = getMessageText(message);
+                        const isUser = message.role === "user";
 
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-2"
-                  >
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </motion.div>
-                )}
+                        return (
+                          <MessageScrollerItem key={message.id}>
+                            <motion.div
+                              variants={messageVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="exit"
+                            >
+                              <Message align={isUser ? "end" : "start"}>
+                                <MessageContent>
+                                  <MessageHeader
+                                    className={cn(
+                                      isUser && "justify-end",
+                                    )}
+                                  >
+                                    {isUser ? "Vous" : "Assistant"}
+                                  </MessageHeader>
+                                  <Bubble
+                                    align={isUser ? "end" : "start"}
+                                    variant={isUser ? "default" : "muted"}
+                                  >
+                                    <BubbleContent>
+                                      <Streamdown className="text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                                        {messageText}
+                                      </Streamdown>
+                                    </BubbleContent>
+                                  </Bubble>
+                                  {!isUser && messageText && (
+                                    <MessageFooter className="gap-1">
+                                      {onTextInsert && (
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() => {
+                                            onTextInsert(messageText);
+                                            toast.success(
+                                              "Texte inséré dans le champ notes",
+                                            );
+                                          }}
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          Utiliser
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleCopy(messageText, message.id)
+                                        }
+                                        className="h-7 px-2"
+                                      >
+                                        {copiedId === message.id ? (
+                                          <CheckIcon className="h-3 w-3" />
+                                        ) : (
+                                          <Copy className="h-3 w-3" />
+                                        )}
+                                      </Button>
+                                    </MessageFooter>
+                                  )}
+                                </MessageContent>
+                              </Message>
+                            </motion.div>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                    </AnimatePresence>
 
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-destructive/10 border border-destructive/20 rounded-lg p-4"
-                  >
-                    <p className="text-sm text-destructive">
-                      Une erreur est survenue. Veuillez réessayer.
-                    </p>
-                  </motion.div>
-                )}
-              </div>
-            </ScrollArea>
+                    {isLoading && (
+                      <MessageScrollerItem>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="space-y-2 rounded-lg border bg-muted p-4"
+                        >
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-4 w-5/6" />
+                        </motion.div>
+                      </MessageScrollerItem>
+                    )}
+
+                    {error && (
+                      <MessageScrollerItem>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-lg border border-destructive/20 bg-destructive/10 p-4"
+                        >
+                          <p className="text-sm text-destructive">
+                            Une erreur est survenue. Veuillez réessayer.
+                          </p>
+                        </motion.div>
+                      </MessageScrollerItem>
+                    )}
+
+                    <MessageScrollerItem scrollAnchor />
+                  </MessageScrollerContent>
+                </MessageScrollerViewport>
+                <MessageScrollerButton />
+              </MessageScroller>
+            </MessageScrollerProvider>
           </div>
 
           {messages.length === 0 && !isLoading && (
@@ -285,7 +320,6 @@ export function VulgarisationPanel({
     </Drawer>
   );
 }
-
 
 
 

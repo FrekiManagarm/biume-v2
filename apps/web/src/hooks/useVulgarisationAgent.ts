@@ -14,7 +14,7 @@ export function useVulgarisationAgent() {
     }),
   });
 
-  const isLoading = status === "streaming";
+  const isLoading = status === "submitted" || status === "streaming";
 
   const sendMessage = async (text: string, reportId?: string) => {
     await send(

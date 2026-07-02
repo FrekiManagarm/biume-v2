@@ -422,7 +422,7 @@ export function ReportSidebarNavigation({
         <div
           className={cn(
             "mt-auto border-t border-border/70 pt-3",
-            isCollapsed ? "space-y-2" : "space-y-3",
+            isCollapsed ? "flex flex-col items-center gap-2" : "space-y-3",
           )}
         >
           {!isCollapsed && (

@@ -3,6 +3,7 @@ import {
   FileText,
   ListChecks,
   MessageCircle,
+  PanelLeft,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -10,6 +11,7 @@ import {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "#/components/ui/sidebar";
 import { useAppContext } from "#/hooks/useAppContext";
 import { AssistantChatWorkspace } from "./assistant-chat-workspace";
 
@@ -71,6 +73,7 @@ function buildPromptRequest(prompt: string): AssistantPromptRequest {
 
 export function AssistantPage() {
   const appContext = useAppContext();
+  const { toggleSidebar } = useSidebar();
   const contextLabel = getContextLabel(appContext.currentPage);
   const [isAssistantBusy, setIsAssistantBusy] = useState(false);
   const [promptRequest, setPromptRequest] =
@@ -85,38 +88,50 @@ export function AssistantPage() {
   };
 
   return (
-    <div className="mx-auto grid w-full max-w-[1400px] gap-5 pb-8 text-slate-950">
-      <header className="grid gap-3 border-b border-slate-200 pb-5 pt-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+    <div className="mx-auto grid w-full max-w-[1400px] gap-3 text-slate-950 xl:h-[calc(100dvh-1rem)] xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden">
+      <header className="grid gap-3 border-b border-slate-200 pb-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
-            <Sparkles className="size-4" />
-            Assistant Biume
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-9 rounded-xl border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-700"
+              onClick={toggleSidebar}
+              aria-label="Afficher ou masquer la navigation"
+            >
+              <PanelLeft className="size-4" />
+            </Button>
+            <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+              <Sparkles className="size-4" />
+              Assistant Biume
+            </div>
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 md:text-3xl">
             Un espace calme pour clarifier, rédiger et avancer.
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
             Posez une question, déposez des notes ou préparez une consultation.
             L'assistant garde le contexte de votre espace Biume pour vous aider
             à formuler des réponses utiles.
           </p>
         </div>
-        <div className="w-fit rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
+        <div className="w-fit rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800">
           Mode assistance
         </div>
       </header>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <section className="grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <AssistantChatWorkspace
           promptRequest={promptRequest}
           onLoadingChange={setIsAssistantBusy}
           onPromptRequestHandled={() => setPromptRequest(null)}
         />
 
-        <aside className="grid gap-4 xl:sticky xl:top-4 xl:self-start">
-          <section className="rounded-[1.5rem] border border-slate-200/70 bg-white p-5 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.18)]">
+        <aside className="grid min-h-0 gap-3 xl:grid-rows-[auto_minmax(0,1fr)]">
+          <section className="rounded-[1.35rem] border border-slate-200/70 bg-white p-4 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.18)]">
             <div className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                 <ShieldCheck className="size-4" />
               </div>
               <div>
@@ -129,18 +144,18 @@ export function AssistantPage() {
               </div>
             </div>
 
-            <dl className="mt-4 grid gap-3 text-sm">
-              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+            <dl className="mt-3 grid text-sm">
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-2">
                 <dt className="text-slate-500">Espace</dt>
                 <dd className="font-medium text-slate-900">{contextLabel}</dd>
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-2">
                 <dt className="text-slate-500">Patient</dt>
                 <dd className="font-medium text-slate-900">
                   {appContext.selectedPatient ? "Sélectionné" : "Non sélectionné"}
                 </dd>
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
                 <dt className="text-slate-500">Client</dt>
                 <dd className="font-medium text-slate-900">
                   {appContext.selectedClient ? "Sélectionné" : "Non sélectionné"}
@@ -149,14 +164,14 @@ export function AssistantPage() {
             </dl>
           </section>
 
-          <section className="rounded-[1.5rem] border border-slate-200/70 bg-white p-5 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.18)]">
+          <section className="flex min-h-0 flex-col rounded-[1.35rem] border border-slate-200/70 bg-white p-4 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.18)]">
             <div className="flex items-center gap-2">
               <MessageCircle className="size-4 text-emerald-700" />
               <h2 className="text-sm font-semibold text-slate-950">
                 Raccourcis utiles
               </h2>
             </div>
-            <div className="mt-4 grid gap-2">
+            <div className="mt-3 grid min-h-0 gap-2 overflow-y-auto pr-1">
               {contextActions.map((action) => {
                 const Icon = action.icon;
 
@@ -166,7 +181,7 @@ export function AssistantPage() {
                     type="button"
                     variant="ghost"
                     disabled={isAssistantBusy}
-                    className="h-auto justify-start rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left hover:border-emerald-200 hover:bg-emerald-50/80"
+                    className="h-auto justify-start rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left hover:border-emerald-200 hover:bg-emerald-50/80 xl:p-2.5"
                     onClick={() => handleShortcutClick(action.prompt)}
                   >
                     <div className="flex items-start gap-3">
@@ -184,17 +199,6 @@ export function AssistantPage() {
                 );
               })}
             </div>
-          </section>
-
-          <section className="rounded-[1.5rem] border border-emerald-200/70 bg-emerald-50/80 p-5">
-            <h2 className="text-sm font-semibold text-emerald-950">
-              À savoir
-            </h2>
-            <p className="mt-2 text-xs leading-5 text-emerald-900/75">
-              L'assistant peut aider à rédiger, structurer et prioriser. Il ne
-              réalise pas d'action destructive dans l'application sans votre
-              intervention.
-            </p>
           </section>
         </aside>
       </section>
