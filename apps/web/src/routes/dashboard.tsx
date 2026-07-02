@@ -2,12 +2,10 @@ import {
   createFileRoute,
   Outlet,
   redirect,
-  useLocation,
 } from "@tanstack/react-router";
 import { DashboardSidebar } from "#/components/dashboard/layout/dashboard-sidebar";
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header";
-import { cn } from "#/lib/style";
 import {
   getCurrentOrganization,
   getOrganizations,
@@ -90,8 +88,6 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
   const { session, organizations, sidebarDefaultOpen } =
     Route.useRouteContext();
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
 
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
@@ -101,15 +97,8 @@ function RouteComponent() {
           organizations={organizations as Organization[]}
         />
         <SidebarInset>
-          {isAssistantRoute ? null : <DashboardHeader />}
-          <div
-            className={cn(
-              "w-full",
-              isAssistantRoute
-                ? "min-h-0 flex-1 overflow-hidden p-2"
-                : "mb-4 overflow-y-auto p-4",
-            )}
-          >
+          <DashboardHeader />
+          <div className="mb-4 w-full overflow-y-auto p-4">
             <Outlet />
           </div>
         </SidebarInset>

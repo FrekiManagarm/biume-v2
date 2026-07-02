@@ -3,7 +3,6 @@ import {
   FileText,
   ListChecks,
   MessageCircle,
-  PanelLeft,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -11,7 +10,6 @@ import {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useSidebar } from "#/components/ui/sidebar";
 import { useAppContext } from "#/hooks/useAppContext";
 import { AssistantChatWorkspace } from "./assistant-chat-workspace";
 
@@ -73,7 +71,6 @@ function buildPromptRequest(prompt: string): AssistantPromptRequest {
 
 export function AssistantPage() {
   const appContext = useAppContext();
-  const { toggleSidebar } = useSidebar();
   const contextLabel = getContextLabel(appContext.currentPage);
   const [isAssistantBusy, setIsAssistantBusy] = useState(false);
   const [promptRequest, setPromptRequest] =
@@ -92,16 +89,6 @@ export function AssistantPage() {
       <header className="grid gap-3 border-b border-slate-200 pb-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-9 rounded-xl border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-700"
-              onClick={toggleSidebar}
-              aria-label="Afficher ou masquer la navigation"
-            >
-              <PanelLeft className="size-4" />
-            </Button>
             <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
               <Sparkles className="size-4" />
               Assistant Biume
