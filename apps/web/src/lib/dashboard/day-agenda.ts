@@ -58,11 +58,14 @@ export type AgendaAppointmentInput = {
 export type AgendaPrimaryAction = {
   kind: AgendaActionKind;
   label: string;
+  appointmentId?: string;
+  reportId?: string;
 };
 
 export type DayAgendaAppointment = AgendaAppointmentInput & {
   beginAt: Date;
   endAt: Date;
+  durationLabel: string;
   reportStatus: AgendaReportStatus;
   primaryAction: AgendaPrimaryAction;
 };
@@ -147,18 +150,21 @@ export function buildDayAgendaModel({
     .map((appointment): DayAgendaAppointment => {
       const beginAt = new Date(appointment.beginAt);
       const endAt = new Date(appointment.endAt);
-      const reportStatus = deriveAgendaReportStatus(
-        appointment.reports ?? [],
-        appointment.status,
-      );
+      const reports = appointment.reports ?? [];
+      const reportStatus = deriveAgendaReportStatus(reports, appointment.status);
+      const primaryAction = {
+        ...getAgendaPrimaryAction(reportStatus, appointment.status),
+        ...getAgendaPrimaryActionTarget(appointment.id, reports),
+      };
 
       return {
         ...appointment,
         beginAt,
         endAt,
-        reports: appointment.reports ?? [],
+        durationLabel: formatDurationLabel(beginAt, endAt),
+        reports,
         reportStatus,
-        primaryAction: getAgendaPrimaryAction(reportStatus, appointment.status),
+        primaryAction,
       };
     })
     .sort((a, b) => a.beginAt.getTime() - b.beginAt.getTime());
@@ -212,6 +218,32 @@ function formatAgendaTime(value: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function getAgendaPrimaryActionTarget(
+  appointmentId: string,
+  reports: AgendaReportInput[],
+) {
+  const latestReport = getLatestAgendaReport(reports);
+
+  return {
+    appointmentId,
+    reportId: latestReport?.id,
+  };
+}
+
+function formatDurationLabel(beginAt: Date, endAt: Date) {
+  const durationMinutes = Math.max(
+    0,
+    Math.round((endAt.getTime() - beginAt.getTime()) / 60000),
+  );
+
+  if (durationMinutes < 60) return `${durationMinutes} min`;
+
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes}`;
 }
 
 function getLatestAgendaReport(reports: AgendaReportInput[]) {
