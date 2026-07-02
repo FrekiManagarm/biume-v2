@@ -186,6 +186,5 @@ function formatTime(value: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
   }).format(value);
 }

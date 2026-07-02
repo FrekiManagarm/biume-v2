@@ -25,6 +25,13 @@ function appointment(
   };
 }
 
+function formatLocalTime(value: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value);
+}
+
 describe("buildDashboardOverviewModel", () => {
   test("builds top summary, next appointment, priorities and recent activity", () => {
     const model = buildDashboardOverviewModel({
@@ -70,7 +77,7 @@ describe("buildDashboardOverviewModel", () => {
     expect(model.heroLabel).toBe("Vue d'ensemble");
     expect(model.nextAppointment?.id).toBe("next");
     expect(model.summary.map((item) => [item.id, item.value])).toEqual([
-      ["next", "09:00"],
+      ["next", formatLocalTime(model.nextAppointment!.beginAt)],
       ["appointments", "3"],
       ["reports", "1"],
       ["followUps", "0"],
