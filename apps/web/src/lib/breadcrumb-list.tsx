@@ -8,6 +8,10 @@ export const breadcrumbProList = (reportId?: string) => [
     href: `/dashboard/agenda`,
   },
   {
+    title: "Assistant",
+    href: `/dashboard/assistant`,
+  },
+  {
     title: "Clients",
     href: `/dashboard/clients`,
   },

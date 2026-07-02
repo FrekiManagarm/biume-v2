@@ -21,10 +21,12 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
 import { Route as DashboardPatientsRouteImport } from './routes/dashboard/patients'
-import { Route as DashboardOwnersRouteImport } from './routes/dashboard/owners'
 import { Route as DashboardClientsRouteImport } from './routes/dashboard/clients'
+import { Route as DashboardAssistantRouteImport } from './routes/dashboard/assistant'
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
+import { Route as ApiVulgarisationRouteImport } from './routes/api/vulgarisation'
 import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -90,14 +92,14 @@ const DashboardPatientsRoute = DashboardPatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardOwnersRoute = DashboardOwnersRouteImport.update({
-  id: '/owners',
-  path: '/owners',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardClientsRoute = DashboardClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAssistantRoute = DashboardAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
@@ -105,9 +107,19 @@ const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ApiVulgarisationRoute = ApiVulgarisationRouteImport.update({
+  id: '/api/vulgarisation',
+  path: '/api/vulgarisation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
   id: '/api/uploadthing',
   path: '/api/uploadthing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
@@ -140,10 +152,12 @@ export interface FileRoutesByFullPath {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/vulgarisation': typeof ApiVulgarisationRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/assistant': typeof DashboardAssistantRoute
   '/dashboard/clients': typeof DashboardClientsRoute
-  '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -161,10 +175,12 @@ export interface FileRoutesByTo {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/vulgarisation': typeof ApiVulgarisationRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/assistant': typeof DashboardAssistantRoute
   '/dashboard/clients': typeof DashboardClientsRoute
-  '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -184,10 +200,12 @@ export interface FileRoutesById {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/vulgarisation': typeof ApiVulgarisationRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/assistant': typeof DashboardAssistantRoute
   '/dashboard/clients': typeof DashboardClientsRoute
-  '/dashboard/owners': typeof DashboardOwnersRoute
   '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -208,10 +226,12 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
+    | '/api/vulgarisation'
     | '/dashboard/agenda'
+    | '/dashboard/assistant'
     | '/dashboard/clients'
-    | '/dashboard/owners'
     | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
@@ -229,10 +249,12 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
+    | '/api/vulgarisation'
     | '/dashboard/agenda'
+    | '/dashboard/assistant'
     | '/dashboard/clients'
-    | '/dashboard/owners'
     | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
@@ -251,10 +273,12 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
+    | '/api/vulgarisation'
     | '/dashboard/agenda'
+    | '/dashboard/assistant'
     | '/dashboard/clients'
-    | '/dashboard/owners'
     | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
@@ -274,7 +298,9 @@ export interface RootRouteChildren {
   SelectOrganizationRoute: typeof SelectOrganizationRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiUploadthingRoute: typeof ApiUploadthingRoute
+  ApiVulgarisationRoute: typeof ApiVulgarisationRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
   DashboardReportsIdEditRoute: typeof DashboardReportsIdEditRoute
@@ -366,18 +392,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPatientsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/owners': {
-      id: '/dashboard/owners'
-      path: '/owners'
-      fullPath: '/dashboard/owners'
-      preLoaderRoute: typeof DashboardOwnersRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/clients': {
       id: '/dashboard/clients'
       path: '/clients'
       fullPath: '/dashboard/clients'
       preLoaderRoute: typeof DashboardClientsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/assistant': {
+      id: '/dashboard/assistant'
+      path: '/assistant'
+      fullPath: '/dashboard/assistant'
+      preLoaderRoute: typeof DashboardAssistantRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/agenda': {
@@ -387,11 +413,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAgendaRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/vulgarisation': {
+      id: '/api/vulgarisation'
+      path: '/api/vulgarisation'
+      fullPath: '/api/vulgarisation'
+      preLoaderRoute: typeof ApiVulgarisationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/uploadthing': {
       id: '/api/uploadthing'
       path: '/api/uploadthing'
       fullPath: '/api/uploadthing'
       preLoaderRoute: typeof ApiUploadthingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/reports_/$id': {
@@ -427,8 +467,8 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
+  DashboardAssistantRoute: typeof DashboardAssistantRoute
   DashboardClientsRoute: typeof DashboardClientsRoute
-  DashboardOwnersRoute: typeof DashboardOwnersRoute
   DashboardPatientsRoute: typeof DashboardPatientsRoute
   DashboardReportsRoute: typeof DashboardReportsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -438,8 +478,8 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAgendaRoute: DashboardAgendaRoute,
+  DashboardAssistantRoute: DashboardAssistantRoute,
   DashboardClientsRoute: DashboardClientsRoute,
-  DashboardOwnersRoute: DashboardOwnersRoute,
   DashboardPatientsRoute: DashboardPatientsRoute,
   DashboardReportsRoute: DashboardReportsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
@@ -460,7 +500,9 @@ const rootRouteChildren: RootRouteChildren = {
   SelectOrganizationRoute: SelectOrganizationRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiUploadthingRoute: ApiUploadthingRoute,
+  ApiVulgarisationRoute: ApiVulgarisationRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAutumnSplatRoute: ApiAutumnSplatRoute,
   DashboardReportsIdEditRoute: DashboardReportsIdEditRoute,
