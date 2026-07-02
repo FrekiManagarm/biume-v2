@@ -56,10 +56,10 @@ const itemBaseClassName =
   "group/nav relative flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-sidebar-foreground/72 outline-none transition-[background,color,box-shadow,transform] duration-200 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0";
 
 const itemActiveClassName =
-  "bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_10px_24px_hsl(168_44%_14%/0.16)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[hsl(160_55%_64%)] hover:bg-sidebar-primary hover:text-sidebar-primary-foreground group-data-[collapsible=icon]:before:top-auto group-data-[collapsible=icon]:before:bottom-1 group-data-[collapsible=icon]:before:left-1/2 group-data-[collapsible=icon]:before:h-1 group-data-[collapsible=icon]:before:w-4 group-data-[collapsible=icon]:before:-translate-x-1/2";
+  "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm shadow-foreground/5 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-sidebar-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:before:top-auto group-data-[collapsible=icon]:before:bottom-1 group-data-[collapsible=icon]:before:left-1/2 group-data-[collapsible=icon]:before:h-1 group-data-[collapsible=icon]:before:w-4 group-data-[collapsible=icon]:before:-translate-x-1/2";
 
 const iconClassName =
-  "size-4 shrink-0 text-sidebar-foreground/62 transition-colors group-hover/nav:text-sidebar-accent-foreground group-data-[active=true]/nav:text-[hsl(160_55%_64%)]";
+  "size-4 shrink-0 text-sidebar-foreground/62 transition-colors group-hover/nav:text-sidebar-accent-foreground group-data-[active=true]/nav:text-sidebar-primary";
 
 export function DashboardSidebar({
   session,
@@ -157,7 +157,7 @@ export function DashboardSidebar({
         <Icon
           className={cn(
             iconClassName,
-            menu.active && "text-[hsl(160_55%_64%)]",
+            menu.active && "text-sidebar-primary",
           )}
         />
         <span className="truncate group-data-[collapsible=icon]:hidden">
@@ -183,7 +183,7 @@ export function DashboardSidebar({
               <Icon
                 className={cn(
                   iconClassName,
-                  menu.active && "text-[hsl(160_55%_64%)]",
+                  menu.active && "text-sidebar-primary",
                 )}
               />
               <span className="sr-only">{menu.label}</span>
@@ -233,7 +233,7 @@ export function DashboardSidebar({
               <Icon
                 className={cn(
                   iconClassName,
-                  menu.active && "text-[hsl(160_55%_64%)]",
+                  menu.active && "text-sidebar-primary",
                 )}
               />
               <span className="truncate">{menu.label}</span>
@@ -280,7 +280,7 @@ export function DashboardSidebar({
                 <button
                   type="button"
                   title={isCollapsed ? activeOrganization?.name : undefined}
-                  className="flex h-14 w-full items-center gap-3 rounded-md border border-sidebar-border/80 bg-sidebar-accent/45 px-2.5 text-left shadow-[0_1px_0_hsl(154_24%_84%/0.7)] outline-none transition-colors duration-200 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
+                  className="flex h-14 w-full items-center gap-3 rounded-md border border-sidebar-border/80 bg-sidebar-accent/45 px-2.5 text-left shadow-sm shadow-foreground/5 outline-none transition-colors duration-200 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
                 >
                   <OrganizationMark className="group-data-[collapsible=icon]:size-9" />
                   <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">

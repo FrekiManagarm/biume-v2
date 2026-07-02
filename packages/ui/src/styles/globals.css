@@ -71,14 +71,14 @@
   --chart-3: hsl(197 37% 24%);
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
-  --sidebar: hsl(150 33% 98%);
-  --sidebar-foreground: hsl(168 44% 14%);
-  --sidebar-primary: hsl(164 56% 28%);
-  --sidebar-primary-foreground: hsl(150 40% 98%);
-  --sidebar-accent: hsl(154 34% 92%);
-  --sidebar-accent-foreground: hsl(168 44% 14%);
-  --sidebar-border: hsl(154 24% 84%);
-  --sidebar-ring: hsl(164 56% 28%);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
@@ -105,14 +105,14 @@
   --chart-3: hsl(30 80% 55%);
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
-  --sidebar: hsl(174 20% 9%);
-  --sidebar-foreground: hsl(150 40% 96%);
-  --sidebar-primary: hsl(160 55% 64%);
-  --sidebar-primary-foreground: hsl(174 28% 10%);
-  --sidebar-accent: hsl(172 20% 16%);
-  --sidebar-accent-foreground: hsl(150 40% 96%);
-  --sidebar-border: hsl(172 18% 20%);
-  --sidebar-ring: hsl(160 55% 64%);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 @layer base {
