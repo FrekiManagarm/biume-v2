@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,6 +40,7 @@ import {
   addActionToHistory,
   getActionsHistory,
 } from "#/lib/ai/context-builder";
+import type { AssistantPromptRequest } from "./assistant-page";
 
 const quickSuggestions = [
   {
@@ -114,9 +115,18 @@ function getMessageText(message: UIMessage): string {
     .join("\n\n");
 }
 
-export function AssistantChatWorkspace() {
+type AssistantChatWorkspaceProps = {
+  promptRequest?: AssistantPromptRequest | null;
+  onPromptRequestHandled?: () => void;
+};
+
+export function AssistantChatWorkspace({
+  promptRequest,
+  onPromptRequestHandled,
+}: AssistantChatWorkspaceProps) {
   const [inputText, setInputText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const handledPromptRequestIdRef = useRef<string | null>(null);
   const appContext = useAppContext();
   const { messages, status, error, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -134,6 +144,10 @@ export function AssistantChatWorkspace() {
 
   const handleSend = async (text = inputText) => {
     const message = text.trim();
+
+    if (isLoading) {
+      return;
+    }
 
     if (!message) {
       toast.error("Veuillez saisir une question");
@@ -157,6 +171,20 @@ export function AssistantChatWorkspace() {
     );
     setInputText("");
   };
+
+  useEffect(() => {
+    if (!promptRequest || isLoading) {
+      return;
+    }
+
+    if (handledPromptRequestIdRef.current === promptRequest.id) {
+      return;
+    }
+
+    handledPromptRequestIdRef.current = promptRequest.id;
+    void handleSend(promptRequest.prompt);
+    onPromptRequestHandled?.();
+  }, [handleSend, isLoading, onPromptRequestHandled, promptRequest]);
 
   const handleReset = () => {
     setMessages([]);

@@ -26,6 +26,7 @@ import { Route as DashboardClientsRouteImport } from './routes/dashboard/clients
 import { Route as DashboardAssistantRouteImport } from './routes/dashboard/assistant'
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
 import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -116,6 +117,11 @@ const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
   path: '/api/uploadthing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
   id: '/reports_/$id',
   path: '/reports/$id',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/assistant': typeof DashboardAssistantRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/assistant': typeof DashboardAssistantRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/assistant': typeof DashboardAssistantRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
     | '/dashboard/agenda'
     | '/dashboard/assistant'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
     | '/dashboard/agenda'
     | '/dashboard/assistant'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/chat'
     | '/api/uploadthing'
     | '/dashboard/agenda'
     | '/dashboard/assistant'
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   SelectOrganizationRoute: typeof SelectOrganizationRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiUploadthingRoute: typeof ApiUploadthingRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
@@ -413,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadthingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/reports_/$id': {
       id: '/dashboard/reports_/$id'
       path: '/reports/$id'
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   SelectOrganizationRoute: SelectOrganizationRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiUploadthingRoute: ApiUploadthingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAutumnSplatRoute: ApiAutumnSplatRoute,

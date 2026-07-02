@@ -7,7 +7,9 @@ import {
   Sparkles,
   Stethoscope,
 } from "lucide-react";
+import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useAppContext } from "#/hooks/useAppContext";
 import { AssistantChatWorkspace } from "./assistant-chat-workspace";
 
@@ -16,25 +18,34 @@ const contextActions = [
     label: "Préparer une consultation",
     description: "Questions, points à vérifier et notes utiles.",
     icon: Stethoscope,
+    prompt:
+      "Aide-moi à préparer une consultation avec les points à vérifier, les questions utiles et les informations à noter.",
   },
   {
     label: "Structurer un rapport",
     description: "Plan clair pour transformer des notes en document.",
     icon: FileText,
+    prompt:
+      "Aide-moi à structurer mon prochain rapport avec un plan simple, professionnel et facile à relire.",
   },
   {
     label: "Clarifier les relances",
     description: "Priorités et prochaines actions à garder en tête.",
     icon: ClipboardCheck,
+    prompt:
+      "Aide-moi à organiser mes relances patients et à identifier les prochaines actions importantes.",
   },
   {
     label: "Faire une synthèse",
     description: "Résumé exploitable sans perdre le contexte.",
     icon: ListChecks,
+    prompt:
+      "Résume cette situation en points importants, risques à surveiller et prochaines étapes possibles.",
   },
 ];
 
 function getContextLabel(pathname: string) {
+  if (pathname.includes("/assistant")) return "Assistant";
   if (pathname.includes("/agenda")) return "Agenda";
   if (pathname.includes("/patients")) return "Animaux";
   if (pathname.includes("/clients")) return "Propriétaires";
@@ -44,9 +55,29 @@ function getContextLabel(pathname: string) {
   return "Dashboard";
 }
 
+export type AssistantPromptRequest = {
+  id: string;
+  prompt: string;
+  source: "shortcut";
+};
+
+function buildPromptRequest(prompt: string): AssistantPromptRequest {
+  return {
+    id: `${Date.now()}-${prompt}`,
+    prompt,
+    source: "shortcut",
+  };
+}
+
 export function AssistantPage() {
   const appContext = useAppContext();
   const contextLabel = getContextLabel(appContext.currentPage);
+  const [promptRequest, setPromptRequest] =
+    useState<AssistantPromptRequest | null>(null);
+
+  const handleShortcutClick = (prompt: string) => {
+    setPromptRequest(buildPromptRequest(prompt));
+  };
 
   return (
     <div className="mx-auto grid w-full max-w-[1400px] gap-5 pb-8 text-slate-950">
@@ -71,7 +102,10 @@ export function AssistantPage() {
       </header>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <AssistantChatWorkspace />
+        <AssistantChatWorkspace
+          promptRequest={promptRequest}
+          onPromptRequestHandled={() => setPromptRequest(null)}
+        />
 
         <aside className="grid gap-4 xl:sticky xl:top-4 xl:self-start">
           <section className="rounded-[1.5rem] border border-slate-200/70 bg-white p-5 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.18)]">
@@ -121,9 +155,12 @@ export function AssistantPage() {
                 const Icon = action.icon;
 
                 return (
-                  <div
+                  <Button
                     key={action.label}
-                    className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3"
+                    type="button"
+                    variant="ghost"
+                    className="h-auto justify-start rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left hover:border-emerald-200 hover:bg-emerald-50/80"
+                    onClick={() => handleShortcutClick(action.prompt)}
                   >
                     <div className="flex items-start gap-3">
                       <Icon className="mt-0.5 size-4 shrink-0 text-emerald-700" />
@@ -136,7 +173,7 @@ export function AssistantPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Button>
                 );
               })}
             </div>
