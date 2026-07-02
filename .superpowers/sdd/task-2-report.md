@@ -56,3 +56,9 @@ Cached:    1 cached, 1 total
 
 - No functional concerns from this task’s scoped UI implementation.
 - The new components are not wired to a route in this task by design; Task 3 is expected to handle route integration.
+
+## Fix review follow-up
+
+- Fixed stale assistant chat context in `apps/web/src/components/dashboard/assistant/assistant-chat-workspace.tsx`.
+- `handleSend(...)` now computes the action label once, writes it with `addActionToHistory(...)`, and sends an inline `context` override with `recentActions` immediately prepended and capped to 5 items.
+- This preserves existing behavior while ensuring the current `/api/chat` request includes the just-added action even though same-tab `localStorage` writes do not refresh `useAppContext()` synchronously.

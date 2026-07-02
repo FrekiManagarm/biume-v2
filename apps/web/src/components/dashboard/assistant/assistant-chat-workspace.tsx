@@ -137,10 +137,20 @@ export function AssistantChatWorkspace() {
       return;
     }
 
-    addActionToHistory(
-      `Assistant : ${message.slice(0, 60)}${message.length > 60 ? " (suite)" : ""}`,
+    const actionLabel = `Assistant : ${message.slice(0, 60)}${message.length > 60 ? " (suite)" : ""}`;
+
+    addActionToHistory(actionLabel);
+    await sendMessage(
+      { text: message },
+      {
+        body: {
+          context: {
+            ...appContext,
+            recentActions: [actionLabel, ...appContext.recentActions].slice(0, 5),
+          },
+        },
+      },
     );
-    await sendMessage({ text: message }, { body: { context: appContext } });
     setInputText("");
   };
 
