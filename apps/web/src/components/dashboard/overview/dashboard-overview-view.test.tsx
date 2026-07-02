@@ -16,9 +16,11 @@ vi.mock("@tanstack/react-router", () => ({
 
 describe("DashboardOverviewView", () => {
   test("renders a compact overview with agenda, priorities, and activity", () => {
+    const selectedDate = new Date(2026, 6, 2, 0, 0);
+
     render(
       <DashboardOverviewView
-        selectedDate={new Date()}
+        selectedDate={selectedDate}
         metrics={{
           newAnimals: 4,
           newOwners: 2,
@@ -27,8 +29,8 @@ describe("DashboardOverviewView", () => {
         appointments={[
           {
             id: "appointment-upcoming",
-            beginAt: new Date(Date.now() + 60 * 60 * 1000),
-            endAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+            beginAt: new Date(2026, 6, 2, 14, 0),
+            endAt: new Date(2026, 6, 2, 15, 0),
             status: "CONFIRMED",
             atHome: true,
             patient: {
@@ -41,8 +43,8 @@ describe("DashboardOverviewView", () => {
           },
           {
             id: "appointment-draft",
-            beginAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-            endAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+            beginAt: new Date(2026, 6, 2, 10, 0),
+            endAt: new Date(2026, 6, 2, 11, 0),
             status: "COMPLETED",
             atHome: false,
             reports: [{ id: "report-1", status: "draft", updatedAt: null }],
