@@ -20,11 +20,12 @@ function toDateSearch(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export const dashboardOverviewQueryOptions = () =>
-  queryOptions({
-    queryKey: ["dashboard", "overview"] as const,
+export const dashboardOverviewQueryOptions = () => {
+  const today = toDateSearch(new Date());
+
+  return queryOptions({
+    queryKey: ["dashboard", "overview", today] as const,
     queryFn: async () => {
-      const today = toDateSearch(new Date());
       const [
         organization,
         newClients,
@@ -63,3 +64,4 @@ export const dashboardOverviewQueryOptions = () =>
       };
     },
   });
+};
