@@ -49,3 +49,12 @@ const DashboardAssistantRoute = DashboardAssistantRouteImport.update({
 ## Concerns
 
 - Regenerating `apps/web/src/routeTree.gen.ts` also surfaced pre-existing routing changes already present in the worktree, including entries for `/api/chat`, `/api/vulgarisation`, and the removal of `/dashboard/owners`. I did not modify those source routes in this task, but the generated file reflects the current repository state.
+
+## Review Fix
+
+- Review follow-up: regenerated [apps/web/src/routeTree.gen.ts](/Users/mathieuchambaud/Documents/Perso-Projects/biume-v2/apps/web/src/routeTree.gen.ts:1) from a temporary clean `git worktree` based on `HEAD` so the user's unrelated local deletion of [apps/web/src/routes/dashboard/owners.tsx](/Users/mathieuchambaud/Documents/Perso-Projects/biume-v2/apps/web/src/routes/dashboard/owners.tsx:1) in the main worktree could not affect route discovery.
+- Temporary worktree path used: `/tmp/biume-routegen-7zwO60`. In that clean checkout, I linked the existing root `node_modules` so `bun --filter @biume/web generate-routes` could run, then copied only the generated route tree back into the main worktree and removed the temporary worktree.
+- Verification in the main worktree now passes for both expected route families:
+  - `rg "/dashboard/assistant|DashboardAssistant" apps/web/src/routeTree.gen.ts`
+  - `rg "DashboardOwners|/dashboard/owners" apps/web/src/routeTree.gen.ts`
+- Scope remained limited to the regenerated route tree and this appended report entry. I did not restore or modify the user's local deletion of `apps/web/src/routes/dashboard/owners.tsx` in the main worktree.
