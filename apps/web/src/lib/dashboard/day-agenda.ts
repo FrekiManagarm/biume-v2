@@ -246,12 +246,14 @@ function formatDurationLabel(beginAt: Date, endAt: Date) {
   return minutes === 0 ? `${hours} h` : `${hours} h ${minutes}`;
 }
 
-function getLatestAgendaReport(reports: AgendaReportInput[]) {
+function getLatestAgendaReport(
+  reports: AgendaReportInput[],
+): AgendaReportInput | null {
   let latestReport: AgendaReportInput | null = null;
   let latestScore = Number.NEGATIVE_INFINITY;
   let latestIndex = -1;
 
-  reports.forEach((report, index) => {
+  for (const [index, report] of reports.entries()) {
     const score = getAgendaReportUpdatedAtScore(report.updatedAt);
 
     if (
@@ -262,7 +264,7 @@ function getLatestAgendaReport(reports: AgendaReportInput[]) {
       latestScore = score;
       latestIndex = index;
     }
-  });
+  }
 
   return latestReport;
 }
