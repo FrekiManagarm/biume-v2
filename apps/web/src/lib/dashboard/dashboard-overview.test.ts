@@ -127,6 +127,35 @@ describe("buildDashboardOverviewModel", () => {
     expect(model.nextAppointment?.id).toBe("ongoing");
   });
 
+  test("ignores a cancelled future appointment when selecting the next appointment", () => {
+    const model = buildDashboardOverviewModel({
+      selectedDate: new Date("2026-07-02T00:00:00.000Z"),
+      now: new Date("2026-07-02T08:30:00.000Z"),
+      appointments: [
+        appointment({
+          id: "cancelled-future",
+          beginAt: new Date("2026-07-02T09:00:00.000Z"),
+          endAt: new Date("2026-07-02T10:00:00.000Z"),
+          status: "CANCELLED",
+        }),
+        appointment({
+          id: "later-confirmed",
+          beginAt: new Date("2026-07-02T10:30:00.000Z"),
+          endAt: new Date("2026-07-02T11:30:00.000Z"),
+          status: "CONFIRMED",
+        }),
+      ],
+      metrics: {
+        newAnimals: 0,
+        newOwners: 0,
+        sentReports: 0,
+      },
+      recentActivity: [],
+    });
+
+    expect(model.nextAppointment?.id).toBe("later-confirmed");
+  });
+
   test("returns calm empty states when the day has no appointments or priorities", () => {
     const model = buildDashboardOverviewModel({
       selectedDate: new Date("2026-07-02T00:00:00.000Z"),
