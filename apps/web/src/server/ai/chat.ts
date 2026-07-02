@@ -13,6 +13,12 @@ import {
   type AppContext,
 } from "#/lib/ai/context-builder";
 
+const MAX_REQUEST_CHARS = 120_000;
+const MAX_MESSAGES = 24;
+const MAX_MESSAGE_PARTS = 32;
+const MAX_TEXT_PART_CHARS = 6_000;
+const MAX_TOTAL_TEXT_CHARS = 30_000;
+
 const contextEntitySchema = z
   .object({
     id: z.string().trim().min(1).max(128),
@@ -32,8 +38,71 @@ const appContextSchema = z
   })
   .optional();
 
+const uiMessageSchema = z
+  .object({
+    role: z.enum(["system", "user", "assistant"]),
+    parts: z
+      .array(
+        z
+          .object({
+            type: z.string().trim().min(1).max(64),
+          })
+          .passthrough(),
+      )
+      .max(MAX_MESSAGE_PARTS),
+  })
+  .passthrough();
+
 const chatRequestSchema = z.object({
-  messages: z.array(z.custom<UIMessage>()),
+  messages: z
+    .array(uiMessageSchema)
+    .min(1)
+    .max(MAX_MESSAGES)
+    .superRefine((messages, ctx) => {
+      let totalTextLength = 0;
+
+      for (const [messageIndex, message] of messages.entries()) {
+        for (const [partIndex, part] of message.parts.entries()) {
+          if (part.type !== "text") {
+            continue;
+          }
+
+          const text = (part as { text?: unknown }).text;
+          if (typeof text !== "string") {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Text message parts must include text",
+              path: [messageIndex, "parts", partIndex, "text"],
+            });
+            continue;
+          }
+
+          if (text.length > MAX_TEXT_PART_CHARS) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.too_big,
+              maximum: MAX_TEXT_PART_CHARS,
+              type: "string",
+              inclusive: true,
+              message: "Text message part is too long",
+              path: [messageIndex, "parts", partIndex, "text"],
+            });
+          }
+
+          totalTextLength += text.length;
+        }
+      }
+
+      if (totalTextLength > MAX_TOTAL_TEXT_CHARS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_big,
+          maximum: MAX_TOTAL_TEXT_CHARS,
+          type: "array",
+          inclusive: true,
+          message: "Message history is too long",
+          path: [],
+        });
+      }
+    }),
   context: appContextSchema,
 });
 
@@ -91,7 +160,27 @@ export async function handleChatRequest(request: Request) {
     return new Response("Active organization required", { status: 403 });
   }
 
-  const body = chatRequestSchema.parse(await request.json());
+  const rawBody = await request.text();
+  if (rawBody.length > MAX_REQUEST_CHARS) {
+    return new Response("Request body too large", { status: 413 });
+  }
+
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(rawBody);
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  const parsedBody = chatRequestSchema.safeParse(parsedJson);
+  if (!parsedBody.success) {
+    return Response.json(
+      { error: "Invalid chat request" },
+      { status: 400 },
+    );
+  }
+
+  const body = parsedBody.data;
   const context = buildAuthenticatedContext(
     body.context,
     session.session.activeOrganizationId,
@@ -100,7 +189,7 @@ export async function handleChatRequest(request: Request) {
   const result = streamText({
     model: openai("gpt-5.4-mini"),
     instructions: buildInstructions(context),
-    messages: await convertToModelMessages(body.messages),
+    messages: await convertToModelMessages(body.messages as UIMessage[]),
   });
 
   return result.toUIMessageStreamResponse();
