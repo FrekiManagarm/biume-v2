@@ -74,6 +74,11 @@ describe("DashboardOverviewView", () => {
     expect(screen.getByText("À domicile")).toBeTruthy();
     expect(screen.getByText("À traiter")).toBeTruthy();
     expect(screen.getByText("Finaliser · Orka")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Ouvrir l'agenda/ })).toBeTruthy();
+    expect(screen.getAllByText("Préparer").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Finaliser").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Préparer" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Finaliser" })).toBeNull();
     expect(screen.getByText("Compte rendu envoyé")).toBeTruthy();
     expect(screen.getByText("Animaux ajoutés")).toBeTruthy();
     expect(screen.getByText("4")).toBeTruthy();

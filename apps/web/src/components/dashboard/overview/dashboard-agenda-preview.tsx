@@ -2,13 +2,10 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   CalendarDays,
-  CheckCircle2,
   Clock,
-  FileText,
   Home,
   MapPin,
   PawPrint,
-  Send,
 } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
@@ -144,33 +141,11 @@ function AgendaPreviewRow({
         {status.label}
       </span>
 
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="w-full md:w-auto"
-      >
+      <span className="inline-flex min-h-8 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 md:w-auto">
         {appointment.primaryAction.label}
-        <ActionIcon actionKind={appointment.primaryAction.kind} />
-      </Button>
+      </span>
     </article>
   );
-}
-
-function ActionIcon({
-  actionKind,
-}: {
-  actionKind: DayAgendaAppointment["primaryAction"]["kind"];
-}) {
-  if (actionKind === "send_report") {
-    return <Send className="size-4" data-icon="inline-end" />;
-  }
-
-  if (actionKind === "view_report") {
-    return <CheckCircle2 className="size-4" data-icon="inline-end" />;
-  }
-
-  return <FileText className="size-4" data-icon="inline-end" />;
 }
 
 function formatTime(value: Date) {

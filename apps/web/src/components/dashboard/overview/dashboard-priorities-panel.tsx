@@ -7,7 +7,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
 
@@ -72,14 +71,9 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
         <p className="mt-1 truncate text-xs text-slate-500">
           {priority.timeLabel} · {priority.description}
         </p>
-        <Button
-          type="button"
-          size="xs"
-          variant="outline"
-          className="mt-3 w-full sm:w-auto"
-        >
+        <span className="mt-3 inline-flex min-h-6 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 sm:w-auto">
           {priority.actionLabel}
-        </Button>
+        </span>
       </div>
     </article>
   );
