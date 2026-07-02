@@ -1,6 +1,7 @@
 import {
-  Contact2,
   CalendarDays,
+  Contact2,
+  LayoutDashboard,
   type LucideIcon,
   NotepadText,
   PawPrint,
@@ -36,8 +37,14 @@ export function proMenuList(pathname: string): Group[] {
       menus: [
         {
           href: `/dashboard`,
-          label: "Agenda",
+          label: "Vue d'ensemble",
           active: pathname === `/dashboard`,
+          icon: LayoutDashboard,
+        },
+        {
+          href: `/dashboard/agenda`,
+          label: "Agenda",
+          active: pathname === `/dashboard/agenda`,
           icon: CalendarDays,
         },
       ],
