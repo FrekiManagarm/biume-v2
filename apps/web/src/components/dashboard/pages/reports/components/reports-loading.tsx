@@ -1,20 +1,18 @@
 import { ReportsHeader } from "./reports-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { LoaderCircle } from "lucide-react";
 
 export function ReportsLoading() {
   return (
-    <div className="space-y-4">
+    <div className="grid w-full gap-5 pb-8 text-slate-950">
       <ReportsHeader disabled />
-      <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Chargement des rapports...</p>
-            </div>
+      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+        <div className="flex min-h-40 items-center justify-center">
+          <div className="text-center">
+            <LoaderCircle className="mx-auto mb-4 size-8 animate-spin text-slate-500" />
+            <p className="text-sm text-slate-500">Chargement des rapports...</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

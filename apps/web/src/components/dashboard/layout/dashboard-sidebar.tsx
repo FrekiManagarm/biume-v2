@@ -1,3 +1,5 @@
+"use client";
+
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   organization,
@@ -6,31 +8,16 @@ import {
 } from "#/lib/auth-client";
 import { proMenuList, type Menu, type Submenu } from "#/lib/menu-list";
 import {
-  Building,
   AlertCircle,
+  Building,
   Check,
-  Plus,
-  ChevronsUpDown,
   ChevronRight,
+  ChevronsUpDown,
   LogOut,
+  Plus,
   User,
 } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
-  useSidebar,
-  SidebarSeparator,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  SidebarFooter,
-} from "#/components/ui/sidebar";
+import { Sidebar, useSidebar } from "#/components/ui/sidebar";
 import { cn } from "@biume/ui/lib/utils";
 import { useState } from "react";
 import {
@@ -55,10 +42,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@biume/ui/components/collapsible";
-// import Stepper from "@biume/ui/components/onboarding/components/stepper";
 import type { AuthSession } from "@biume/auth";
 import type { Organization, User as UserType } from "@biume/db/schema/index";
-// Separator intégré au composant Sidebar via SidebarSeparator
 import { useCustomer } from "autumn-js/react";
 import { UserProfileDialog } from "../dialogs/user-profile-dialog";
 
@@ -66,6 +51,15 @@ interface DashboardSidebarProps {
   session: AuthSession;
   organizations: Organization[];
 }
+
+const itemBaseClassName =
+  "group/nav relative flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-sidebar-foreground/72 outline-none transition-[background,color,box-shadow,transform] duration-200 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0";
+
+const itemActiveClassName =
+  "bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_10px_24px_hsl(168_44%_14%/0.16)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[hsl(160_55%_64%)] hover:bg-sidebar-primary hover:text-sidebar-primary-foreground group-data-[collapsible=icon]:before:top-auto group-data-[collapsible=icon]:before:bottom-1 group-data-[collapsible=icon]:before:left-1/2 group-data-[collapsible=icon]:before:h-1 group-data-[collapsible=icon]:before:w-4 group-data-[collapsible=icon]:before:-translate-x-1/2";
+
+const iconClassName =
+  "size-4 shrink-0 text-sidebar-foreground/62 transition-colors group-hover/nav:text-sidebar-accent-foreground group-data-[active=true]/nav:text-[hsl(160_55%_64%)]";
 
 export function DashboardSidebar({
   session,
@@ -83,8 +77,8 @@ export function DashboardSidebar({
   const [showProfile, setShowProfile] = useState(false);
   const { refetch } = useCustomer();
 
-  // Récupérer les menus
   const menuGroups = proMenuList(pathname || "");
+  const isCollapsed = state === "collapsed" && !isMobile;
 
   const handleOrganizationSwitch = async (orgId: string) => {
     setSwitchingOrg(orgId);
@@ -119,331 +113,353 @@ export function DashboardSidebar({
     }
   };
 
-  // Composant pour le menu replié avec dropdown
-  const CollapsedSubMenu = ({ menu }: { menu: Menu }) => {
+  const OrganizationMark = ({ className }: { className?: string }) => (
+    <div
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground shadow-sm",
+        className,
+      )}
+    >
+      {activeOrganization?.logo ? (
+        <img
+          src={activeOrganization.logo}
+          alt={activeOrganization.name ?? ""}
+          width={36}
+          height={36}
+          className="size-full object-cover"
+        />
+      ) : (
+        <Building className="size-4" />
+      )}
+    </div>
+  );
+
+  const NavLink = ({
+    menu,
+    className,
+  }: {
+    menu: Menu | Submenu;
+    className?: string;
+  }) => {
+    const Icon = menu.icon;
+
     return (
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton isActive={menu.active} tooltip={menu.label}>
-                {menu.icon && <menu.icon className="h-4 w-4" />}
-                <span>{menu.label}</span>
-                <ChevronRight className="ml-auto h-4 w-4" />
-              </SidebarMenuButton>
-            }
-          />
-          <DropdownMenuContent side="right" align="start" className="w-48">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{menu.label}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {menu.submenus?.map((submenu: Submenu, index: number) => (
-                <DropdownMenuItem
-                  key={index}
-                  render={
-                    <a
-                      href={submenu.href}
-                      className={cn(
-                        "flex items-center gap-2",
-                        submenu.active && "bg-accent text-accent-foreground",
-                      )}
-                    >
-                      {submenu.icon && <submenu.icon className="h-4 w-4" />}
-                      <span>{submenu.label}</span>
-                    </a>
-                  }
-                />
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
+      <Link
+        to={menu.href}
+        title={isCollapsed ? menu.label : undefined}
+        data-active={menu.active ? true : undefined}
+        className={cn(
+          itemBaseClassName,
+          menu.active && itemActiveClassName,
+          className,
+        )}
+      >
+        <Icon
+          className={cn(
+            iconClassName,
+            menu.active && "text-[hsl(160_55%_64%)]",
+          )}
+        />
+        <span className="truncate group-data-[collapsible=icon]:hidden">
+          {menu.label}
+        </span>
+      </Link>
     );
   };
 
-  // Composant pour le menu déployé avec sous-menus
+  const CollapsedSubMenu = ({ menu }: { menu: Menu }) => {
+    const Icon = menu.icon;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              title={menu.label}
+              data-active={menu.active ? true : undefined}
+              className={cn(itemBaseClassName, menu.active && itemActiveClassName)}
+            >
+              <Icon
+                className={cn(
+                  iconClassName,
+                  menu.active && "text-[hsl(160_55%_64%)]",
+                )}
+              />
+              <span className="sr-only">{menu.label}</span>
+            </button>
+          }
+        />
+        <DropdownMenuContent side="right" align="start" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{menu.label}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {menu.submenus?.map((submenu) => (
+              <DropdownMenuItem
+                key={submenu.href}
+                render={
+                  <Link
+                    to={submenu.href}
+                    className={cn(
+                      "flex items-center gap-2",
+                      submenu.active &&
+                        "bg-sidebar-accent text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <submenu.icon className="size-4" />
+                    <span>{submenu.label}</span>
+                  </Link>
+                }
+              />
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   const ExpandedSubMenu = ({ menu }: { menu: Menu }) => {
+    const Icon = menu.icon;
+
     return (
       <Collapsible defaultOpen={menu.active}>
-        <SidebarMenuItem>
-          <CollapsibleTrigger
-            render={
-              <SidebarMenuButton className="group" isActive={menu.active}>
-                {menu.icon && <menu.icon className="h-4 w-4" />}
-                <span>{menu.label}</span>
-                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-              </SidebarMenuButton>
-            }
-          />
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {menu.submenus?.map((submenu: Submenu, index: number) => (
-                <SidebarMenuSubItem key={index}>
-                  <SidebarMenuSubButton
-                    isActive={submenu.active}
-                    render={
-                      <Link
-                        to={submenu.href}
-                        className="flex items-center gap-2"
-                      >
-                        {submenu.icon && <submenu.icon className="h-4 w-4" />}
-                        <span>{submenu.label}</span>
-                      </Link>
-                    }
-                  />
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
+        <CollapsibleTrigger
+          render={
+            <button
+              type="button"
+              data-active={menu.active ? true : undefined}
+              className={cn(itemBaseClassName, menu.active && itemActiveClassName)}
+            >
+              <Icon
+                className={cn(
+                  iconClassName,
+                  menu.active && "text-[hsl(160_55%_64%)]",
+                )}
+              />
+              <span className="truncate">{menu.label}</span>
+              <ChevronRight className="ml-auto size-4 text-sidebar-foreground/42 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+            </button>
+          }
+        />
+        <CollapsibleContent>
+          <ul className="ml-4 mt-1 grid gap-1 border-l border-sidebar-border/80 pl-3">
+            {menu.submenus?.map((submenu) => (
+              <li key={submenu.href}>
+                <NavLink menu={submenu} className="h-8 text-xs" />
+              </li>
+            ))}
+          </ul>
+        </CollapsibleContent>
       </Collapsible>
     );
   };
 
+  const NavItem = ({ menu }: { menu: Menu }) => {
+    if (menu.submenus) {
+      return isCollapsed ? (
+        <CollapsedSubMenu menu={menu} />
+      ) : (
+        <ExpandedSubMenu menu={menu} />
+      );
+    }
+
+    return <NavLink menu={menu} />;
+  };
+
   return (
-    <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="pb-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton size="lg">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      {activeOrganization?.logo ? (
-                        <img
-                          src={activeOrganization?.logo ?? ""}
-                          alt={activeOrganization?.name ?? ""}
-                          width={32}
-                          height={32}
-                          className="object-cover rounded-xl"
-                        />
-                      ) : (
-                        <Building className="size-4" />
-                      )}
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {activeOrganization?.name}
-                      </span>
-                      <span className="truncate text-xs">
-                        {activeOrganization?.name}
-                      </span>
-                    </div>
-                    <ChevronsUpDown className="ml-auto" />
-                  </SidebarMenuButton>
-                }
-              />
-              <DropdownMenuContent
-                align="end"
-                side={isMobile ? "bottom" : "right"}
-                className="w-64 p-2 rounded-lg border border-border/40 shadow-lg animate-in fade-in-50 zoom-in-95 slide-in-from-top-5 duration-200"
-              >
-                {organizations && organizations.length > 0 && (
-                  <>
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-xs font-medium px-2 py-1.5 text-muted-foreground">
-                        Comptes professionnels
-                      </DropdownMenuLabel>
-                      <div className="max-h-50 overflow-y-auto my-1 rounded-md space-y-0.5 pr-1">
-                        {organizations.map((org) => (
-                          <DropdownMenuItem
-                            key={org.id}
-                            className={cn(
-                              "group flex items-center gap-3 p-2 rounded-md transition-all cursor-pointer duration-200",
-                              activeOrganization?.id === org.id
-                                ? "bg-primary/10 text-primary font-medium shadow-sm"
-                                : "hover:bg-accent hover:translate-x-1 hover:shadow-sm",
-                              switchingOrg === org.id &&
-                                "animate-pulse opacity-70",
-                            )}
-                            onSelect={() => handleOrganizationSwitch(org.id)}
-                            disabled={switchingOrg !== null}
-                          >
-                            {org.logo ? (
-                              <div
-                                className={cn(
-                                  "h-8 w-8 overflow-hidden rounded-md shadow-sm shrink-0 transition-all duration-300",
-                                  activeOrganization?.id === org.id
-                                    ? "ring-2 ring-primary/30"
-                                    : "ring-1 ring-border/50 hover:ring-primary/20",
-                                )}
-                              >
-                                <img
-                                  src={org.logo}
-                                  alt={org.name}
-                                  width={32}
-                                  height={32}
-                                  className={cn(
-                                    "h-full w-full object-cover transition-transform duration-300",
-                                    activeOrganization?.id !== org.id &&
-                                      "hover:scale-110",
-                                  )}
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={cn(
-                                  "h-8 w-8 rounded-md flex items-center justify-center shrink-0 transition-all duration-300",
-                                  activeOrganization?.id === org.id
-                                    ? "bg-primary/20"
-                                    : "bg-primary/10 hover:bg-primary/15",
-                                )}
-                              >
-                                <Building className="h-4 w-4 text-primary" />
-                              </div>
-                            )}
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium leading-none">
-                                {org.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground mt-1">
-                                Compte professionnel
-                              </span>
-                            </div>
-                            {activeOrganization?.id === org.id && (
-                              <Check className="h-4 w-4 ml-auto text-primary animate-in zoom-in-50 duration-300" />
-                            )}
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    </DropdownMenuGroup>
-                    <DropdownMenuGroup>
-                      <DropdownMenuSeparator className="my-2" />
-                      <DropdownMenuLabel className="text-xs font-medium px-2 py-1.5 text-muted-foreground">
-                        Nouvelle entreprise
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem
-                        onClick={() => setShowCredenza(true)}
-                        className="group flex items-center gap-3 p-2 rounded-md hover:bg-accent hover:translate-x-1 transition-all cursor-pointer duration-200 hover:shadow-sm"
-                      >
-                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0 transition-all duration-300 hover:bg-primary/20">
-                          <Plus className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium leading-none">
-                            Créer une entreprise
-                          </span>
-                          <span className="text-xs text-muted-foreground mt-1">
-                            Devenez professionnel
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
-      <SidebarSeparator />
-
-      <SidebarContent>
-        {/* Menus principaux sans groupe */}
-        {menuGroups
-          .filter((group) => !group.groupLabel)
-          .map((group, groupIndex) => (
-            <SidebarGroup key={groupIndex}>
-              <SidebarMenu>
-                {group.menus.map((menu, menuIndex) => {
-                  if (menu.submenus) {
-                    return state === "collapsed" ? (
-                      <CollapsedSubMenu key={menuIndex} menu={menu} />
-                    ) : (
-                      <ExpandedSubMenu key={menuIndex} menu={menu} />
-                    );
-                  }
-                  return (
-                    <SidebarMenuItem key={menuIndex}>
-                      <SidebarMenuButton
-                        isActive={menu.active}
-                        tooltip={state === "collapsed" ? menu.label : undefined}
-                        render={
-                          <a
-                            href={menu.href}
-                            className={cn(
-                              "flex items-center gap-3",
-                              menu.active && "font-medium",
-                            )}
-                          >
-                            {menu.icon && <menu.icon className="h-4 w-4" />}
-                            <span>{menu.label}</span>
-                          </a>
-                        }
-                      />
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroup>
-          ))}
-
-        {/* Groupes de menus */}
-        {menuGroups
-          .filter((group) => group.groupLabel)
-          .map((group, groupIndex) => {
-            return (
-              <SidebarGroup key={groupIndex}>
-                <SidebarGroupLabel className="flex items-center gap-2">
-                  <span>{group.groupLabel}</span>
-                </SidebarGroupLabel>
-
-                <SidebarMenu>
-                  {group.menus.map((menu, menuIndex) => {
-                    if (menu.submenus) {
-                      return state === "collapsed" ? (
-                        <CollapsedSubMenu key={menuIndex} menu={menu} />
-                      ) : (
-                        <ExpandedSubMenu key={menuIndex} menu={menu} />
-                      );
-                    }
-                    return (
-                      <SidebarMenuItem key={menuIndex}>
-                        <SidebarMenuButton
-                          isActive={menu.active && !menu.comingSoon}
-                          disabled={menu.comingSoon}
-                          tooltip={
-                            state === "collapsed" ? menu.label : undefined
-                          }
-                          render={
-                            <a
-                              href={menu.href}
+    <Sidebar
+      variant="sidebar"
+      collapsible="icon"
+      className="border-sidebar-border bg-sidebar"
+    >
+      <div className="flex size-full min-h-0 flex-col bg-sidebar text-sidebar-foreground">
+        <div className="px-3 pb-3 pt-3 group-data-[collapsible=icon]:px-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  title={isCollapsed ? activeOrganization?.name : undefined}
+                  className="flex h-14 w-full items-center gap-3 rounded-md border border-sidebar-border/80 bg-sidebar-accent/45 px-2.5 text-left shadow-[0_1px_0_hsl(154_24%_84%/0.7)] outline-none transition-colors duration-200 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
+                >
+                  <OrganizationMark className="group-data-[collapsible=icon]:size-9" />
+                  <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                    <span className="block truncate text-sm font-semibold text-sidebar-foreground">
+                      {activeOrganization?.name}
+                    </span>
+                    <span className="block truncate text-xs text-sidebar-foreground/55">
+                      Compte professionnel
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="size-4 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
+                </button>
+              }
+            />
+            <DropdownMenuContent
+              align="end"
+              side={isMobile ? "bottom" : "right"}
+              className="w-64 rounded-lg border border-border/40 p-2 shadow-lg animate-in fade-in-50 zoom-in-95 slide-in-from-top-5 duration-200"
+            >
+              {organizations && organizations.length > 0 && (
+                <>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                      Comptes professionnels
+                    </DropdownMenuLabel>
+                    <div className="my-1 max-h-50 space-y-0.5 overflow-y-auto rounded-md pr-1">
+                      {organizations.map((org) => (
+                        <DropdownMenuItem
+                          key={org.id}
+                          className={cn(
+                            "group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200",
+                            activeOrganization?.id === org.id
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                              : "hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm",
+                            switchingOrg === org.id && "animate-pulse opacity-70",
+                          )}
+                          onSelect={() => handleOrganizationSwitch(org.id)}
+                          disabled={switchingOrg !== null}
+                        >
+                          {org.logo ? (
+                            <div
                               className={cn(
-                                "flex items-center gap-3",
-                                menu.active && "font-medium",
+                                "size-8 shrink-0 overflow-hidden rounded-md shadow-sm transition-all duration-300",
+                                activeOrganization?.id === org.id
+                                  ? "ring-2 ring-sidebar-primary/30"
+                                  : "ring-1 ring-sidebar-border/50 hover:ring-sidebar-primary/20",
                               )}
                             >
-                              {menu.icon && <menu.icon className="h-4 w-4" />}
-                              <span>{menu.label}</span>
-                            </a>
-                          }
-                        />
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroup>
-            );
-          })}
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
-                    <Avatar className="h-8 w-8 rounded-lg">
+                              <img
+                                src={org.logo}
+                                alt={org.name}
+                                width={32}
+                                height={32}
+                                className={cn(
+                                  "size-full object-cover transition-transform duration-300",
+                                  activeOrganization?.id !== org.id &&
+                                    "hover:scale-110",
+                                )}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/15 transition-colors duration-300 hover:bg-sidebar-primary/20">
+                              <Building className="size-4 text-sidebar-primary" />
+                            </div>
+                          )}
+                          <div className="flex min-w-0 flex-col">
+                            <span className="truncate text-sm font-medium leading-none">
+                              {org.name}
+                            </span>
+                            <span className="mt-1 truncate text-xs text-muted-foreground">
+                              Compte professionnel
+                            </span>
+                          </div>
+                          {activeOrganization?.id === org.id && (
+                            <Check className="ml-auto size-4 text-sidebar-primary animate-in zoom-in-50 duration-300" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </DropdownMenuGroup>
+                  <DropdownMenuGroup>
+                    <DropdownMenuSeparator className="my-2" />
+                    <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                      Nouvelle entreprise
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() => setShowCredenza(true)}
+                      className="group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200 hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm"
+                    >
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/15 transition-colors duration-300 hover:bg-sidebar-primary/20">
+                        <Plus className="size-4 text-sidebar-primary" />
+                      </div>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-medium leading-none">
+                          Créer une entreprise
+                        </span>
+                        <span className="mt-1 truncate text-xs text-muted-foreground">
+                          Devenez professionnel
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="mx-3 h-px bg-sidebar-border/70 group-data-[collapsible=icon]:mx-2" />
+
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:px-1.5">
+          <div className="grid gap-3 group-data-[collapsible=icon]:gap-2">
+            {menuGroups.map((group, groupIndex) => (
+              <section
+                key={`${group.groupLabel}-${groupIndex}`}
+                className="grid gap-1"
+              >
+                {group.groupLabel ? (
+                  <div className="px-3 pb-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/44 group-data-[collapsible=icon]:sr-only">
+                    {group.groupLabel}
+                  </div>
+                ) : null}
+                <ul className="grid gap-1">
+                  {group.menus.map((menu) => (
+                    <li key={menu.href}>
+                      <NavItem menu={menu} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </nav>
+
+        <div className="mx-3 mb-3 border-t border-sidebar-border/70 pt-3 group-data-[collapsible=icon]:mx-1.5 group-data-[collapsible=icon]:mb-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  title={isCollapsed ? session.user.name : undefined}
+                  className="flex h-12 w-full items-center gap-3 rounded-md px-2 text-left text-sidebar-foreground/78 outline-none transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                >
+                  <Avatar className="size-8 rounded-md ring-1 ring-sidebar-border">
+                    <AvatarImage
+                      src={session.user.image ?? ""}
+                      alt={session.user.name ?? ""}
+                    />
+                    <AvatarFallback className="rounded-md bg-sidebar-primary/15 text-sidebar-primary">
+                      {session.user.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1 text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="block truncate font-medium">
+                      {session.user.name}
+                    </span>
+                    <span className="block truncate text-xs text-sidebar-foreground/52">
+                      {session.user.email}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="size-4 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
+                </button>
+              }
+            />
+            <DropdownMenuContent
+              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                    <Avatar className="size-8 rounded-md ring-1 ring-sidebar-border">
                       <AvatarImage
                         src={session.user.image ?? ""}
-                        alt={session.user.name ?? ""}
+                        alt={session.user.name}
                       />
-                      <AvatarFallback className="rounded-lg">
+                      <AvatarFallback className="rounded-md bg-sidebar-primary/15 text-sidebar-primary">
                         {session.user.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -455,64 +471,33 @@ export function DashboardSidebar({
                         {session.user.email}
                       </span>
                     </div>
-                    <ChevronsUpDown className="ml-auto size-4" />
-                  </SidebarMenuButton>
-                }
-              />
-              <DropdownMenuContent
-                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                side={isMobile ? "bottom" : "right"}
-                align="end"
-                sideOffset={4}
-              >
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                      <Avatar className="h-8 w-8 rounded-lg">
-                        <AvatarImage
-                          src={session.user.image ?? ""}
-                          alt={session.user.name}
-                        />
-                        <AvatarFallback className="rounded-lg">
-                          {session.user.name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-medium">
-                          {session.user.name}
-                        </span>
-                        <span className="truncate text-xs">
-                          {session.user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setShowProfile(true)}>
-                    <User className="size-4" />
-                    Mon profil
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="gap-2 group text-red-500"
-                    onClick={async () => {
-                      await signOut({
-                        fetchOptions: {
-                          onSuccess: () => {
-                            void navigate({ to: "/signin" });
-                          },
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setShowProfile(true)}>
+                  <User className="size-4" />
+                  Mon profil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="gap-2 text-red-500 group"
+                  onClick={async () => {
+                    await signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          void navigate({ to: "/signin" });
                         },
-                      });
-                    }}
-                  >
-                    <LogOut className="size-4 text-red-500 group-hover:text-white" />
-                    Se déconnecter
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+                      },
+                    });
+                  }}
+                >
+                  <LogOut className="size-4 text-red-500 group-hover:text-white" />
+                  Se déconnecter
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
 
       <AccountSwitchDialog
         open={showProfessionalDialog}
@@ -525,7 +510,6 @@ export function DashboardSidebar({
       />
 
       <Credenza open={showCredenza} onOpenChange={setShowCredenza}>
-        {/*<Stepper />*/}
         <></>
       </Credenza>
 

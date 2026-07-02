@@ -1,8 +1,9 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-import ReportDetails from "#/components/reports-module/reports-details";
+import ReportDetails from "#/components/dashboard/pages/reports-module/reports-details";
 import { EmptyPanel } from "#/components/dashboard/dashboard-shell";
-import { getReportById } from "#/lib/api/actions/reports.action";
+import { reportQueryOptions } from "#/lib/api/queries/reports.query";
 import { Button } from "@biume/ui/components/button";
 
 export const Route = createFileRoute("/dashboard/reports_/$id")({
@@ -15,12 +16,14 @@ export const Route = createFileRoute("/dashboard/reports_/$id")({
       },
     ],
   }),
-  loader: ({ params }) => getReportById({ reportId: params.id }),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(reportQueryOptions(params.id)),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const result = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const { data: result } = useSuspenseQuery(reportQueryOptions(id));
 
   if (!result.success || !result.data) {
     return (

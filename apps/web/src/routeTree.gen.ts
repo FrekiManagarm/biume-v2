@@ -17,11 +17,16 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreateOrganizationRouteImport } from './routes/create-organization'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
+import { Route as DashboardPatientsRouteImport } from './routes/dashboard/patients'
 import { Route as DashboardOwnersRouteImport } from './routes/dashboard/owners'
+import { Route as DashboardClientsRouteImport } from './routes/dashboard/clients'
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
+import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
+import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardReportsIdEditRouteImport } from './routes/dashboard/reports_.$id.edit'
 
@@ -65,6 +70,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -75,9 +85,19 @@ const DashboardReportsRoute = DashboardReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardPatientsRoute = DashboardPatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardOwnersRoute = DashboardOwnersRouteImport.update({
   id: '/owners',
   path: '/owners',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardClientsRoute = DashboardClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
@@ -85,10 +105,20 @@ const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
+  id: '/api/uploadthing',
+  path: '/api/uploadthing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
   id: '/reports_/$id',
   path: '/reports/$id',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
+  id: '/api/autumn/$',
+  path: '/api/autumn/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -110,28 +140,37 @@ export interface FileRoutesByFullPath {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
+  '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create-organization': typeof CreateOrganizationRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
+  '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
@@ -145,11 +184,16 @@ export interface FileRoutesById {
   '/select-organization': typeof SelectOrganizationRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/api/uploadthing': typeof ApiUploadthingRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/owners': typeof DashboardOwnersRoute
+  '/dashboard/patients': typeof DashboardPatientsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports_/$id': typeof DashboardReportsIdRouteWithChildren
   '/dashboard/reports_/$id/edit': typeof DashboardReportsIdEditRoute
 }
@@ -164,28 +208,37 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/uploadthing'
     | '/dashboard/agenda'
+    | '/dashboard/clients'
     | '/dashboard/owners'
+    | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
+    | '/dashboard/'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/reports/$id'
     | '/dashboard/reports/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/create-organization'
-    | '/dashboard'
     | '/forgot-password'
     | '/reset-password'
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/uploadthing'
     | '/dashboard/agenda'
+    | '/dashboard/clients'
     | '/dashboard/owners'
+    | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
+    | '/dashboard'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/reports/$id'
     | '/dashboard/reports/$id/edit'
   id:
@@ -198,11 +251,16 @@ export interface FileRouteTypes {
     | '/select-organization'
     | '/signin'
     | '/signup'
+    | '/api/uploadthing'
     | '/dashboard/agenda'
+    | '/dashboard/clients'
     | '/dashboard/owners'
+    | '/dashboard/patients'
     | '/dashboard/reports'
     | '/dashboard/settings'
+    | '/dashboard/'
     | '/api/auth/$'
+    | '/api/autumn/$'
     | '/dashboard/reports_/$id'
     | '/dashboard/reports_/$id/edit'
   fileRoutesById: FileRoutesById
@@ -216,7 +274,9 @@ export interface RootRouteChildren {
   SelectOrganizationRoute: typeof SelectOrganizationRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  ApiUploadthingRoute: typeof ApiUploadthingRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -277,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/settings'
@@ -291,11 +358,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReportsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/patients': {
+      id: '/dashboard/patients'
+      path: '/patients'
+      fullPath: '/dashboard/patients'
+      preLoaderRoute: typeof DashboardPatientsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/owners': {
       id: '/dashboard/owners'
       path: '/owners'
       fullPath: '/dashboard/owners'
       preLoaderRoute: typeof DashboardOwnersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/clients': {
+      id: '/dashboard/clients'
+      path: '/clients'
+      fullPath: '/dashboard/clients'
+      preLoaderRoute: typeof DashboardClientsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/agenda': {
@@ -305,12 +386,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAgendaRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/uploadthing': {
+      id: '/api/uploadthing'
+      path: '/api/uploadthing'
+      fullPath: '/api/uploadthing'
+      preLoaderRoute: typeof ApiUploadthingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/reports_/$id': {
       id: '/dashboard/reports_/$id'
       path: '/reports/$id'
       fullPath: '/dashboard/reports/$id'
       preLoaderRoute: typeof DashboardReportsIdRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/api/autumn/$': {
+      id: '/api/autumn/$'
+      path: '/api/autumn/$'
+      fullPath: '/api/autumn/$'
+      preLoaderRoute: typeof ApiAutumnSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -342,17 +437,23 @@ const DashboardReportsIdRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
+  DashboardClientsRoute: typeof DashboardClientsRoute
   DashboardOwnersRoute: typeof DashboardOwnersRoute
+  DashboardPatientsRoute: typeof DashboardPatientsRoute
   DashboardReportsRoute: typeof DashboardReportsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardReportsIdRoute: typeof DashboardReportsIdRouteWithChildren
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAgendaRoute: DashboardAgendaRoute,
+  DashboardClientsRoute: DashboardClientsRoute,
   DashboardOwnersRoute: DashboardOwnersRoute,
+  DashboardPatientsRoute: DashboardPatientsRoute,
   DashboardReportsRoute: DashboardReportsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
   DashboardReportsIdRoute: DashboardReportsIdRouteWithChildren,
 }
 
@@ -369,7 +470,9 @@ const rootRouteChildren: RootRouteChildren = {
   SelectOrganizationRoute: SelectOrganizationRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  ApiUploadthingRoute: ApiUploadthingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAutumnSplatRoute: ApiAutumnSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

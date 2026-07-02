@@ -1,7 +1,5 @@
-
 import { useMemo, useState, useEffect } from "react";
 import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   ReportsHeader,
   ReportsStats,
@@ -87,11 +85,9 @@ export function AdvancedReportsTable({
   const pluralSuffix = reports.length > 1 ? "s" : "";
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <ReportsHeader />
+    <div className="grid w-full gap-5 pb-8 text-slate-950">
+      <ReportsHeader total={stats.total} drafts={stats.brouillons} />
 
-      {/* Cartes de statistiques */}
       <ReportsStats
         total={stats.total}
         brouillons={stats.brouillons}
@@ -99,44 +95,46 @@ export function AdvancedReportsTable({
         rapportsCeMois={stats.rapportsCeMois}
       />
 
-      {/* Contenu */}
-      <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-        <CardContent>
-          <div className="space-y-4">
-            {/* Filtres */}
-            <ReportsFilters
-              searchQuery={searchQuery}
-              statusFilter={statusFilter}
-              onSearchChange={handleSearchChange}
-              onStatusChange={handleStatusChange}
-            />
-
-            {/* Statistiques */}
-            <div className="text-muted-foreground text-sm">
-              {reports.length} rapport{pluralSuffix} trouvé{pluralSuffix}
-            </div>
-
-            {/* Table ou Empty state si filtrage sans résultat */}
-            {reports.length === 0 ? (
-              <ReportsNoResults
-                onResetFilters={() => {
-                  handleSearchChange("");
-                  handleStatusChange("tous");
-                }}
-              />
-            ) : (
-              <>
-                <ReportsTable reports={currentReports} />
-                <ReportsPagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            )}
+      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
+        <div className="mb-5 grid gap-4 border-b border-slate-200 pb-5 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-medium text-emerald-700">Bibliothèque</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+              Comptes rendus de consultation.
+            </h2>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-sm text-slate-500">
+            {reports.length} rapport{pluralSuffix} trouvé{pluralSuffix}
+          </div>
+        </div>
+
+        <div className="grid gap-5">
+          <ReportsFilters
+            searchQuery={searchQuery}
+            statusFilter={statusFilter}
+            onSearchChange={handleSearchChange}
+            onStatusChange={handleStatusChange}
+          />
+
+          {reports.length === 0 ? (
+            <ReportsNoResults
+              onResetFilters={() => {
+                handleSearchChange("");
+                handleStatusChange("tous");
+              }}
+            />
+          ) : (
+            <>
+              <ReportsTable reports={currentReports} />
+              <ReportsPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

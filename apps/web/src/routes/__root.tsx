@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { getContext } from "#/integrations/tanstack-query/root-provider";
 import { AutumnProvider } from "autumn-js/react";
+import { TooltipProvider } from "@biume/ui/components/tooltip";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -59,7 +60,9 @@ function RootDocument() {
             <HeadContent />
           </head>
           <body>
-            <Outlet />
+            <TooltipProvider>
+              <Outlet />
+            </TooltipProvider>
 
             <TanStackDevtools
               config={{

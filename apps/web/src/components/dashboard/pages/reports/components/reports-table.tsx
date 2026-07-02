@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -46,7 +45,8 @@ import { deleteReport } from "@/lib/api/actions/reports.action";
 import { toast } from "sonner";
 import { sendNewReportClientEmailWithPDF } from "@/lib/api/actions/email.action";
 import { PDFDownloadLink } from "@react-pdf/renderer";
-import { ReportPDF } from "@/components/reports-module/components/ReportPDF";
+import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
+import { cn } from "#/lib/utils";
 
 type ReportStatus = "brouillon" | "finalisé" | "envoyé";
 
@@ -71,31 +71,41 @@ const getReportStatus = (report: AdvancedReport): ReportStatus => {
 // Fonction helper pour le badge de statut
 const getStatusBadge = (status: ReportStatus) => {
   const variants = {
-    brouillon: { variant: "outline" as const, label: "Brouillon" },
-    finalisé: { variant: "default" as const, label: "Finalisé" },
-    envoyé: { variant: "secondary" as const, label: "Envoyé" },
+    brouillon: {
+      label: "Brouillon",
+      className: "border-amber-200 bg-amber-50 text-amber-800",
+    },
+    finalisé: {
+      label: "Finalisé",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    },
+    envoyé: {
+      label: "Envoyé",
+      className: "border-sky-200 bg-sky-50 text-sky-800",
+    },
   };
 
   const config = variants[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return (
+    <span
+      className={cn(
+        "inline-flex h-7 items-center rounded-lg border px-2.5 text-xs font-semibold",
+        config.className,
+      )}
+    >
+      {config.label}
+    </span>
+  );
 };
 
 // Fonction helper pour le badge de type d'animal
 const getPatientTypeBadge = (type: string) => {
-  const variants = {
-    Chien: { variant: "default" as const, emoji: "🐕" },
-    Chat: { variant: "secondary" as const, emoji: "🐈" },
-    Cheval: { variant: "outline" as const, emoji: "🐴" },
-    Oiseau: { variant: "outline" as const, emoji: "🦜" },
-  };
-
-  const config = variants[type as keyof typeof variants] || {
-    variant: "outline" as const,
-    emoji: "🐾",
-  };
   return (
-    <Badge variant={config.variant}>
-      <span className="mr-1">{config.emoji}</span>
+    <Badge
+      variant="outline"
+      className="w-fit border-slate-200 bg-slate-50 text-slate-600"
+    >
+      <PawPrint className="mr-1 size-3" />
       {type}
     </Badge>
   );
@@ -201,37 +211,55 @@ export function ReportsTable({ reports }: ReportsTableProps) {
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Titre</TableHead>
-            <TableHead>Patient</TableHead>
-            <TableHead>Propriétaire</TableHead>
-            <TableHead>Raison consultation</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Créé le</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+        <TableHeader className="bg-slate-50">
+          <TableRow className="hover:bg-slate-50">
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Titre
+            </TableHead>
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Patient
+            </TableHead>
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Propriétaire
+            </TableHead>
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Raison consultation
+            </TableHead>
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Statut
+            </TableHead>
+            <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
+              Créé le
+            </TableHead>
+            <TableHead className="h-11 text-right text-xs font-semibold uppercase text-slate-500">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {reports.map((report) => (
             <TableRow
               key={report.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer border-slate-100 transition duration-200 hover:bg-slate-50/80"
               onClick={() => handleViewReport(report.id)}
             >
-              <TableCell>
-                <div className="font-medium">{report.title}</div>
-                <div className="text-muted-foreground text-sm truncate max-w-[200px]">
+              <TableCell className="py-4">
+                <div className="font-semibold text-slate-950">
+                  {report.title}
+                </div>
+                <div className="mt-1 max-w-[240px] truncate text-sm text-slate-500">
                   {report.notes || "Aucune note"}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="py-4">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <PawPrint className="text-muted-foreground size-3" />
-                    <span className="font-medium">
+                    <span className="flex size-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500">
+                      <PawPrint className="size-3.5" />
+                    </span>
+                    <span className="font-medium text-slate-950">
                       {report.patient?.name || "N/A"}
                     </span>
                   </div>
@@ -240,43 +268,48 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                   )}
                 </div>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="text-muted-foreground size-3" />
+              <TableCell className="py-4">
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <User className="size-3.5 text-slate-400" />
                   <span>{report.patient?.owner?.name || "N/A"}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-muted-foreground text-sm">
+              <TableCell className="max-w-[220px] truncate py-4 text-sm text-slate-500">
                 {report.consultationReason || "Non spécifié"}
               </TableCell>
-              <TableCell>{getStatusBadge(getReportStatus(report))}</TableCell>
-              <TableCell>
+              <TableCell className="py-4">
+                {getStatusBadge(getReportStatus(report))}
+              </TableCell>
+              <TableCell className="py-4">
                 <div className="flex flex-col gap-1 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="text-muted-foreground size-3" />
-                    <span>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <Calendar className="size-3.5 text-slate-400" />
+                    <span className="font-medium">
                       {report.createdAt ? formatDate(report.createdAt) : "N/A"}
                     </span>
                   </div>
                   {report.updatedAt && (
-                    <div className="text-muted-foreground text-xs">
+                    <div className="text-xs text-slate-500">
                       Modifié: {formatDate(report.updatedAt)}
                     </div>
                   )}
                 </div>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="py-4 text-right">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="size-4" />
-                      <span className="sr-only">Ouvrir le menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-9 text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="size-4" />
+                        <span className="sr-only">Ouvrir le menu</span>
+                      </Button>
+                    }
+                  />
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem
@@ -297,35 +330,37 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                       <Edit className="size-4" />
                       Modifier
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <PDFDownloadLink
-                        document={
-                          <ReportPDF
-                            report={{
-                              id: report.id,
-                              title: report.title,
-                              createdAt: report.createdAt || new Date(),
-                              patient: report.patient,
-                              organization: report.organization,
-                              anatomicalIssues: report.anatomicalIssues,
-                              recommendations: report.recommendations,
-                            }}
-                            type="advanced_report"
-                          />
-                        }
-                        fileName={`rapport-${report.id}.pdf`}
-                      >
-                        {({ loading }) => (
-                          <div
-                            className="flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Download className="size-4" />
-                            {loading ? "Génération..." : "Télécharger le PDF"}
-                          </div>
-                        )}
-                      </PDFDownloadLink>
-                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={
+                        <PDFDownloadLink
+                          document={
+                            <ReportPDF
+                              report={{
+                                id: report.id,
+                                title: report.title,
+                                createdAt: report.createdAt || new Date(),
+                                patient: report.patient,
+                                organization: report.organization,
+                                anatomicalIssues: report.anatomicalIssues,
+                                recommendations: report.recommendations,
+                              }}
+                              type="advanced_report"
+                            />
+                          }
+                          fileName={`rapport-${report.id}.pdf`}
+                        >
+                          {({ loading }) => (
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Download className="size-4" />
+                              {loading ? "Génération..." : "Télécharger le PDF"}
+                            </div>
+                          )}
+                        </PDFDownloadLink>
+                      }
+                    />
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();

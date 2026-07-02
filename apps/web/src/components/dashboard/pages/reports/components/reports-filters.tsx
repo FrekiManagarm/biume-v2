@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,18 +22,19 @@ export function ReportsFilters({
   onStatusChange,
 }: ReportsFiltersProps) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
       <div className="relative flex-1">
-        <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <Input
           placeholder="Rechercher par titre, patient ou propriétaire..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
+          className="h-11 bg-white pl-9"
         />
       </div>
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="h-11 w-full bg-white lg:w-[220px]">
+          <SlidersHorizontal className="size-4 text-slate-400" />
           <SelectValue placeholder="Filtrer par statut" />
         </SelectTrigger>
         <SelectContent>

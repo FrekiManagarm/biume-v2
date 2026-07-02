@@ -1,7 +1,8 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import ReportsPageClient from "#/components/dashboard/pages/reports/client";
-import { getAllReports } from "#/lib/api/actions/reports.action";
+import { reportsQueryOptions } from "#/lib/api/queries/reports.query";
 
 type ReportsSearch = {
   search?: string;
@@ -31,13 +32,19 @@ export const Route = createFileRoute("/dashboard/reports")({
     search: search.search ?? "",
     status: search.status ?? "tous",
   }),
-  loader: ({ deps }) => getAllReports(deps),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(reportsQueryOptions(deps)),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const reports = Route.useLoaderData();
   const search = Route.useSearch();
+  const { data: reports } = useSuspenseQuery(
+    reportsQueryOptions({
+      search: search.search ?? "",
+      status: search.status ?? "tous",
+    }),
+  );
   const navigate = useNavigate({ from: "/dashboard/reports" });
 
   return (

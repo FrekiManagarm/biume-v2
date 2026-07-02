@@ -8,16 +8,23 @@ import {
   ArrowLeft,
   ArrowRight,
   Building2,
+  CheckCircle2,
   LoaderCircle,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
+import {
+  FileDropzone,
+  formatFileRejection,
+} from "#/components/file-dropzone";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { getSession } from "#/functions/auth.function";
 import { organization as organizationClient } from "#/lib/auth-client";
+import { useUploadThing } from "#/lib/utils/uploadthing";
 
 export function createOrganizationSlug(name: string): string {
   const slug = name
@@ -57,10 +64,19 @@ function CreateOrganization() {
   const { session } = Route.useRouteContext();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [logo, setLogo] = useState("");
+  const [logoFile, setLogoFile] = useState<File[]>([]);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [logoUploadProgress, setLogoUploadProgress] = useState(0);
   const [hasEditedSlug, setHasEditedSlug] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+
+  const { startUpload, isUploading: isLogoUploading } = useUploadThing(
+    "organizationLogoUploader",
+    {
+      onUploadProgress: setLogoUploadProgress,
+    },
+  );
 
   const effectiveSlug = useMemo(
     () => createOrganizationSlug(hasEditedSlug ? slug : name),
@@ -80,6 +96,48 @@ function CreateOrganization() {
     setSlug(createOrganizationSlug(value));
   }
 
+  async function handleLogoFilesChange(files: File[]) {
+    setLogoFile(files);
+    setLogoUrl("");
+    setLogoUploadProgress(0);
+    setError(null);
+
+    const [file] = files;
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const uploadedFiles = await startUpload([file]);
+      const uploadedFile = uploadedFiles?.[0];
+      const uploadedUrl = uploadedFile?.ufsUrl || uploadedFile?.url;
+
+      if (!uploadedUrl) {
+        setError("Impossible de récupérer l'URL du logo importé.");
+        return;
+      }
+
+      setLogoUrl(uploadedUrl);
+      setLogoUploadProgress(100);
+    } catch (uploadError) {
+      setLogoFile([]);
+      setLogoUrl("");
+      setLogoUploadProgress(0);
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Impossible d'importer ce logo pour le moment.",
+      );
+    }
+  }
+
+  function clearLogo() {
+    setLogoFile([]);
+    setLogoUrl("");
+    setLogoUploadProgress(0);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -92,12 +150,22 @@ function CreateOrganization() {
       return;
     }
 
+    if (isLogoUploading) {
+      setError("Veuillez attendre la fin de l'import du logo.");
+      return;
+    }
+
+    if (logoFile.length > 0 && !logoUrl) {
+      setError("Le logo n'a pas encore été importé.");
+      return;
+    }
+
     setIsPending(true);
 
     const result = await organizationClient.create({
       name: organizationName,
       slug: organizationSlug,
-      logo: logo.trim() || undefined,
+      logo: logoUrl || undefined,
     });
 
     if (result.error) {
@@ -164,7 +232,7 @@ function CreateOrganization() {
               </Link>
             </Button>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <p className="text-sm font-medium text-emerald-700">
                 Identité de l'organisation
               </p>
@@ -173,14 +241,22 @@ function CreateOrganization() {
               </h2>
             </div>
 
+            <p className="mb-2 text-xs leading-5 text-slate-500">
+              <span className="font-medium text-red-600">*</span> Champs
+              obligatoires
+            </p>
+
             <form
               onSubmit={handleSubmit}
               className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6"
             >
               <div className="grid gap-5">
                 <div className="grid gap-2">
-                  <Label htmlFor="organization-name">
+                  <Label htmlFor="organization-name" className="gap-1">
                     Nom de l'organisation
+                    <span className="text-red-600" aria-hidden="true">
+                      *
+                    </span>
                   </Label>
                   <Input
                     id="organization-name"
@@ -196,7 +272,12 @@ function CreateOrganization() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="organization-slug">Slug</Label>
+                  <Label htmlFor="organization-slug" className="gap-1">
+                    Slug
+                    <span className="text-red-600" aria-hidden="true">
+                      *
+                    </span>
+                  </Label>
                   <div className="grid grid-cols-1 overflow-hidden rounded-md border border-input bg-transparent focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 sm:grid-cols-[1fr_auto]">
                     <Input
                       id="organization-slug"
@@ -217,18 +298,62 @@ function CreateOrganization() {
 
                 <div className="grid gap-2">
                   <Label htmlFor="organization-logo">Logo optionnel</Label>
-                  <Input
+                  <FileDropzone
+                    accept={{
+                      "image/jpeg": [".jpg", ".jpeg"],
+                      "image/png": [".png"],
+                      "image/webp": [".webp"],
+                      "image/svg+xml": [".svg"],
+                    }}
+                    description="PNG, JPG, WebP ou SVG. Taille maximale: 2 MB."
+                    disabled={isLogoUploading || isPending}
+                    files={logoFile}
                     id="organization-logo"
-                    value={logo}
-                    onChange={(event) => setLogo(event.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                    className="h-11"
+                    maxFiles={1}
+                    maxSize={2 * 1024 * 1024}
+                    onFilesChange={handleLogoFilesChange}
+                    onRejected={(rejections) => {
+                      setError(rejections.map(formatFileRejection).join(" "));
+                    }}
+                    title={
+                      isLogoUploading
+                        ? `Import en cours (${logoUploadProgress}%)`
+                        : "Importer le logo"
+                    }
                   />
-                  <p className="text-xs leading-5 text-slate-500">
-                    Vous pourrez aussi l'ajouter plus tard depuis les
-                    paramètres.
-                  </p>
+
+                  {logoUrl ? (
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                      <img
+                        alt=""
+                        className="size-10 rounded-md border border-emerald-200 bg-white object-cover"
+                        src={logoUrl}
+                      />
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 font-medium">
+                          <CheckCircle2
+                            className="size-4"
+                            aria-hidden="true"
+                          />
+                          Logo importé
+                        </p>
+                        <p className="truncate text-xs text-emerald-700">
+                          {logoUrl}
+                        </p>
+                      </div>
+                      <Button
+                        aria-label="Retirer le logo"
+                        disabled={isPending}
+                        onClick={clearLogo}
+                        size="icon-sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  ) : null}
+
                 </div>
 
                 {error ? (
@@ -241,12 +366,14 @@ function CreateOrganization() {
                 ) : null}
 
                 <Button
-                  disabled={isPending}
+                  disabled={isPending || isLogoUploading}
                   type="submit"
                   className="h-11 w-full active:scale-[0.98]"
                 >
-                  Créer l'organisation
-                  {isPending ? (
+                  {isLogoUploading
+                    ? "Import du logo..."
+                    : "Créer l'organisation"}
+                  {isPending || isLogoUploading ? (
                     <LoaderCircle
                       className="size-4 animate-spin"
                       data-icon="inline-end"

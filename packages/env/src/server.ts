@@ -14,6 +14,7 @@ export const env = createEnv({
     ENCRYPTION_KEY: z.string(),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
+    UPLOADTHING_TOKEN: z.string(),
     NODE_ENV: z.string(),
   },
   runtimeEnv: process.env,
