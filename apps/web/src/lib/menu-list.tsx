@@ -6,6 +6,7 @@ import {
   NotepadText,
   PawPrint,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 export type Submenu = {
@@ -14,6 +15,8 @@ export type Submenu = {
   active: boolean;
   comingSoon?: boolean;
   icon: LucideIcon;
+  variant?: "default" | "assistant";
+  badge?: string;
 };
 
 export type Menu = {
@@ -23,6 +26,8 @@ export type Menu = {
   icon: LucideIcon;
   submenus?: Submenu[];
   comingSoon?: boolean;
+  variant?: "default" | "assistant";
+  badge?: string;
 };
 
 export type Group = {
@@ -46,6 +51,14 @@ export function proMenuList(pathname: string): Group[] {
           label: "Agenda",
           active: pathname === `/dashboard/agenda`,
           icon: CalendarDays,
+        },
+        {
+          href: `/dashboard/assistant`,
+          label: "Assistant",
+          active: pathname.startsWith(`/dashboard/assistant`),
+          icon: Sparkles,
+          variant: "assistant",
+          badge: "IA",
         },
       ],
     },

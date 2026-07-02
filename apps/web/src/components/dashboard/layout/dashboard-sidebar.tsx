@@ -167,6 +167,33 @@ export function DashboardSidebar({
     );
   };
 
+  const AssistantNavLink = ({ menu }: { menu: Menu }) => {
+    const Icon = menu.icon;
+
+    return (
+      <Link
+        to={menu.href}
+        title={isCollapsed ? menu.label : undefined}
+        data-active={menu.active ? true : undefined}
+        className={cn(
+          "group/nav relative flex h-11 w-full items-center gap-3 overflow-hidden rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3 text-sm font-semibold text-emerald-950 outline-none shadow-sm shadow-emerald-950/5 transition-[background,color,box-shadow,transform,border-color] duration-200 hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-100/80 hover:text-emerald-950 focus-visible:ring-2 focus-visible:ring-emerald-500/30 active:translate-y-0 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+          menu.active &&
+            "border-emerald-300 bg-emerald-100 text-emerald-950 shadow-md shadow-emerald-950/10 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-emerald-700 group-data-[collapsible=icon]:before:top-auto group-data-[collapsible=icon]:before:bottom-1 group-data-[collapsible=icon]:before:left-1/2 group-data-[collapsible=icon]:before:h-1 group-data-[collapsible=icon]:before:w-4 group-data-[collapsible=icon]:before:-translate-x-1/2",
+        )}
+      >
+        <Icon className="size-4 shrink-0 text-emerald-700 transition-transform duration-200 group-hover/nav:scale-105" />
+        <span className="truncate group-data-[collapsible=icon]:hidden">
+          {menu.label}
+        </span>
+        {menu.badge ? (
+          <span className="ml-auto rounded-full border border-emerald-200 bg-white/80 px-1.5 py-0.5 text-[0.65rem] font-bold leading-none text-emerald-700 group-data-[collapsible=icon]:hidden">
+            {menu.badge}
+          </span>
+        ) : null}
+      </Link>
+    );
+  };
+
   const CollapsedSubMenu = ({ menu }: { menu: Menu }) => {
     const Icon = menu.icon;
 
@@ -255,6 +282,10 @@ export function DashboardSidebar({
   };
 
   const NavItem = ({ menu }: { menu: Menu }) => {
+    if (menu.variant === "assistant") {
+      return <AssistantNavLink menu={menu} />;
+    }
+
     if (menu.submenus) {
       return isCollapsed ? (
         <CollapsedSubMenu menu={menu} />
