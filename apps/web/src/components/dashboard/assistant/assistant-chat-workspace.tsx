@@ -117,10 +117,12 @@ function getMessageText(message: UIMessage): string {
 
 type AssistantChatWorkspaceProps = {
   promptRequest?: AssistantPromptRequest | null;
+  onLoadingChange?: (isLoading: boolean) => void;
   onPromptRequestHandled?: () => void;
 };
 
 export function AssistantChatWorkspace({
+  onLoadingChange,
   promptRequest,
   onPromptRequestHandled,
 }: AssistantChatWorkspaceProps) {
@@ -135,6 +137,10 @@ export function AssistantChatWorkspace({
   });
 
   const isLoading = status === "submitted" || status === "streaming";
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
+
   const filteredCommands = useMemo(() => {
     if (!inputText.startsWith("/") || inputText.includes(" ")) return [];
     return commands.filter((command) =>
@@ -173,11 +179,16 @@ export function AssistantChatWorkspace({
   };
 
   useEffect(() => {
-    if (!promptRequest || isLoading) {
+    if (!promptRequest) {
       return;
     }
 
     if (handledPromptRequestIdRef.current === promptRequest.id) {
+      return;
+    }
+
+    if (isLoading) {
+      onPromptRequestHandled?.();
       return;
     }
 

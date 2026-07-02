@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { auth } from "@biume/auth";
 import { env } from "@biume/env/server";
 import {
   convertToModelMessages,
@@ -12,9 +13,28 @@ import {
   type AppContext,
 } from "#/lib/ai/context-builder";
 
+const contextEntitySchema = z
+  .object({
+    id: z.string().trim().min(1).max(128),
+    name: z.string().trim().max(160).optional(),
+  })
+  .optional();
+
+const appContextSchema = z
+  .object({
+    currentPage: z.string().trim().min(1).max(180).default("/dashboard"),
+    selectedPatient: contextEntitySchema,
+    selectedClient: contextEntitySchema,
+    recentActions: z
+      .array(z.string().trim().min(1).max(180))
+      .max(5)
+      .default([]),
+  })
+  .optional();
+
 const chatRequestSchema = z.object({
   messages: z.array(z.custom<UIMessage>()),
-  context: z.custom<AppContext>().optional(),
+  context: appContextSchema,
 });
 
 const openai = createOpenAI({
@@ -47,12 +67,39 @@ Contexte actuel de l'utilisateur :
 ${contextPrompt}`;
 }
 
+function buildAuthenticatedContext(
+  context: z.infer<typeof appContextSchema>,
+  organizationId: string,
+): AppContext {
+  return {
+    currentPage: context?.currentPage ?? "/dashboard",
+    organizationId,
+    selectedPatient: context?.selectedPatient,
+    selectedClient: context?.selectedClient,
+    recentActions: context?.recentActions ?? [],
+  };
+}
+
 export async function handleChatRequest(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  if (!session.session.activeOrganizationId) {
+    return new Response("Active organization required", { status: 403 });
+  }
+
   const body = chatRequestSchema.parse(await request.json());
+  const context = buildAuthenticatedContext(
+    body.context,
+    session.session.activeOrganizationId,
+  );
 
   const result = streamText({
     model: openai("gpt-5.4-mini"),
-    instructions: buildInstructions(body.context),
+    instructions: buildInstructions(context),
     messages: await convertToModelMessages(body.messages),
   });
 

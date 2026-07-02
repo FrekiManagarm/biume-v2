@@ -72,10 +72,15 @@ function buildPromptRequest(prompt: string): AssistantPromptRequest {
 export function AssistantPage() {
   const appContext = useAppContext();
   const contextLabel = getContextLabel(appContext.currentPage);
+  const [isAssistantBusy, setIsAssistantBusy] = useState(false);
   const [promptRequest, setPromptRequest] =
     useState<AssistantPromptRequest | null>(null);
 
   const handleShortcutClick = (prompt: string) => {
+    if (isAssistantBusy) {
+      return;
+    }
+
     setPromptRequest(buildPromptRequest(prompt));
   };
 
@@ -104,6 +109,7 @@ export function AssistantPage() {
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <AssistantChatWorkspace
           promptRequest={promptRequest}
+          onLoadingChange={setIsAssistantBusy}
           onPromptRequestHandled={() => setPromptRequest(null)}
         />
 
@@ -159,6 +165,7 @@ export function AssistantPage() {
                     key={action.label}
                     type="button"
                     variant="ghost"
+                    disabled={isAssistantBusy}
                     className="h-auto justify-start rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left hover:border-emerald-200 hover:bg-emerald-50/80"
                     onClick={() => handleShortcutClick(action.prompt)}
                   >

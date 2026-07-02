@@ -59,7 +59,7 @@ export function buildContextPrompt(context: AppContext): string {
 
 function getPageDisplayName(pathname: string): string {
   const pageMap: Record<string, string> = {
-    "/dashboard": "Tableau de bord",
+    "/dashboard/assistant": "Assistant",
     "/dashboard/agenda": "Agenda",
     "/dashboard/patients": "Patients",
     "/dashboard/clients": "Clients",
@@ -73,14 +73,17 @@ function getPageDisplayName(pathname: string): string {
     }
   }
 
+  if (pathname === "/dashboard") {
+    return "Tableau de bord";
+  }
+
   return pathname;
 }
 
 export function addActionToHistory(action: string): void {
   if (typeof window === "undefined") return;
 
-  const stored = window.localStorage.getItem("biume-ai-actions-history");
-  const history = stored ? (JSON.parse(stored) as string[]) : [];
+  const history = getActionsHistory();
   const nextHistory = [action, ...history].slice(0, 5);
 
   window.localStorage.setItem(
@@ -93,5 +96,14 @@ export function getActionsHistory(): string[] {
   if (typeof window === "undefined") return [];
 
   const stored = window.localStorage.getItem("biume-ai-actions-history");
-  return stored ? (JSON.parse(stored) as string[]) : [];
+  if (!stored) return [];
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }
