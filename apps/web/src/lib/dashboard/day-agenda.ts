@@ -14,6 +14,7 @@ export type AgendaReportStatus =
   | "sent";
 
 export type AgendaActionKind =
+  | "cancelled"
   | "prepare"
   | "create_report"
   | "finalize_report"
@@ -132,7 +133,7 @@ export function getAgendaPrimaryAction(
     return { kind: "create_report", label: "Créer le compte rendu" };
   }
   if (appointmentStatus === "CANCELLED") {
-    return { kind: "prepare", label: "Préparer" };
+    return { kind: "cancelled", label: "Annulée" };
   }
   return { kind: "prepare", label: "Préparer" };
 }

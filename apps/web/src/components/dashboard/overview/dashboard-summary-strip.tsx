@@ -18,7 +18,7 @@ const iconBySummaryId: Record<DashboardSummaryItem["id"], LucideIcon> = {
   next: CalendarClock,
   appointments: ClipboardList,
   reports: FileText,
-  activity: HeartHandshake,
+  followUps: HeartHandshake,
 };
 
 const toneClassName: Record<DashboardSummaryItem["tone"], string> = {

@@ -80,8 +80,13 @@ describe("buildDashboardOverviewModel", () => {
       ["next", formatLocalTime(model.nextAppointment!.beginAt)],
       ["appointments", "3"],
       ["reports", "1"],
-      ["activity", "7"],
+      ["followUps", "-"],
     ]);
+    expect(model.summary.find((item) => item.id === "followUps")).toMatchObject(
+      {
+        detail: "À connecter aux rappels programmés",
+      },
+    );
     expect(model.priorities.map((item) => item.appointmentId)).toEqual([
       "next",
       "draft",

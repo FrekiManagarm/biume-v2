@@ -47,6 +47,7 @@ function DashboardIndexPage() {
         sentReports: data.metrics.sentReports.value,
       }}
       recentActivity={data.recentActivity}
+      now={new Date(data.generatedAt)}
       selectedDate={new Date(`${data.selectedDate}T00:00:00`)}
     />
   );

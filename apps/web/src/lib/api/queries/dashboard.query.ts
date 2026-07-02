@@ -35,6 +35,7 @@ export const dashboardOverviewQueryOptions = (selectedDate: string) =>
       ]);
 
       return {
+        generatedAt: new Date().toISOString(),
         selectedDate: agendaDay.selectedDate,
         appointments: agendaDay.appointments,
         metrics: {

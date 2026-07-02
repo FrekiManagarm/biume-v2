@@ -1,6 +1,7 @@
 import {
   buildDashboardOverviewModel,
   type DashboardOverviewModel,
+  type RecentActivityInput,
 } from "#/lib/dashboard/dashboard-overview";
 import type { AgendaAppointmentInput } from "#/lib/dashboard/day-agenda";
 
@@ -16,25 +17,22 @@ export type DashboardOverviewViewProps = {
     newOwners: number;
     sentReports: number;
   };
-  recentActivity: Array<{
-    id: string;
-    title: string;
-    description: string;
-    timestamp: string;
-  }>;
+  now?: Date;
+  recentActivity: RecentActivityInput[];
   selectedDate: Date;
 };
 
 export function DashboardOverviewView({
   appointments,
   metrics,
+  now = new Date(),
   recentActivity,
   selectedDate,
 }: DashboardOverviewViewProps) {
   const model = buildDashboardOverviewModel({
     appointments,
     metrics,
-    now: new Date(),
+    now,
     recentActivity,
     selectedDate,
   });

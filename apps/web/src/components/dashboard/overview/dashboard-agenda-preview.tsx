@@ -46,6 +46,11 @@ const reportStatusConfig: Record<
   },
 };
 
+const cancelledStatusConfig = {
+  label: "Annulée",
+  className: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
 export function DashboardAgendaPreview({
   appointments,
   emptyLabel,
@@ -102,7 +107,10 @@ function AgendaPreviewRow({
   const species = appointment.patient?.animal?.name ?? "Espèce inconnue";
   const breed = appointment.patient?.breed;
   const locationLabel = appointment.atHome ? "À domicile" : "Lieu fixe";
-  const status = reportStatusConfig[appointment.reportStatus];
+  const status =
+    appointment.status === "CANCELLED"
+      ? cancelledStatusConfig
+      : reportStatusConfig[appointment.reportStatus];
 
   return (
     <article className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3 md:grid-cols-[5.5rem_minmax(0,1fr)_minmax(8rem,auto)_auto] md:items-center">
@@ -163,6 +171,14 @@ function AgendaAction({
   appointment: DayAgendaAppointment;
 }) {
   const reportId = appointment.primaryAction.reportId;
+  if (appointment.primaryAction.kind === "cancelled") {
+    return (
+      <span className="text-sm font-medium text-slate-500 md:text-right">
+        {appointment.primaryAction.label}
+      </span>
+    );
+  }
+
   const shouldEditReport =
     reportId &&
     (appointment.primaryAction.kind === "finalize_report" ||

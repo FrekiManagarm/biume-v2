@@ -115,8 +115,8 @@ describe("getAgendaPrimaryAction", () => {
 
   test("does not imply a report for a cancelled appointment without report", () => {
     expect(getAgendaPrimaryAction("none", "CANCELLED")).toMatchObject({
-      kind: "prepare",
-      label: "Préparer",
+      kind: "cancelled",
+      label: "Annulée",
     });
   });
 });

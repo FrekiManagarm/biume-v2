@@ -6,7 +6,7 @@ import {
   type DayAgendaAppointment,
 } from "./day-agenda";
 
-type RecentActivityInput = {
+export type RecentActivityInput = {
   id: string;
   type?: "report" | "new_patient";
   title: string;
@@ -21,7 +21,7 @@ type ActivityMetricsInput = {
 };
 
 export type DashboardSummaryItem = {
-  id: "next" | "appointments" | "reports" | "activity";
+  id: "next" | "appointments" | "reports" | "followUps";
   label: string;
   value: string;
   detail: string;
@@ -138,10 +138,10 @@ export function buildDashboardOverviewModel({
         tone: reportTodoCount > 0 ? "warning" : "success",
       },
       {
-        id: "activity",
-        label: "Activité 30 j",
-        value: String(metrics.sentReports),
-        detail: "Comptes rendus envoyés",
+        id: "followUps",
+        label: "Suivis",
+        value: "-",
+        detail: "À connecter aux rappels programmés",
         tone: "neutral",
       },
     ],

@@ -30,6 +30,7 @@ describe("DashboardOverviewView", () => {
     render(
       <DashboardOverviewView
         selectedDate={selectedDate}
+        now={new Date(2026, 6, 2, 12, 0)}
         metrics={{
           newAnimals: 4,
           newOwners: 2,
@@ -64,6 +65,18 @@ describe("DashboardOverviewView", () => {
               owner: { id: "owner-2", name: "Lina Moreau" },
             },
           },
+          {
+            id: "appointment-cancelled",
+            beginAt: new Date(2026, 6, 2, 16, 0),
+            endAt: new Date(2026, 6, 2, 17, 0),
+            status: "CANCELLED",
+            atHome: true,
+            patient: {
+              id: "patient-3",
+              name: "Moka",
+              owner: { id: "owner-3", name: "Noé Bernard" },
+            },
+          },
         ]}
         recentActivity={[
           {
@@ -81,7 +94,7 @@ describe("DashboardOverviewView", () => {
     ).toBeTruthy();
     expect(screen.getByText("Agenda du jour")).toBeTruthy();
     expect(screen.getAllByText("Naska").length).toBeGreaterThan(0);
-    expect(screen.getByText("À domicile")).toBeTruthy();
+    expect(screen.getAllByText("À domicile").length).toBeGreaterThan(0);
     expect(screen.getByText("Chien · Border Collie")).toBeTruthy();
     expect(screen.getByText("Suivi locomoteur")).toBeTruthy();
     expect(screen.getByText("À traiter")).toBeTruthy();
@@ -90,6 +103,8 @@ describe("DashboardOverviewView", () => {
     expect(screen.getAllByText("Préparer").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Finaliser").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Préparer" })).toBeNull();
+    expect(screen.getAllByText("Annulée").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Annulée" })).toBeNull();
     expect(
       screen.getAllByRole("link", { name: "Finaliser" }).every((link) =>
         link.getAttribute("href")?.includes("/dashboard/reports/report-1/edit"),
