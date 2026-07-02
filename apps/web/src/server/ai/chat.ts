@@ -18,6 +18,17 @@ const MAX_MESSAGES = 24;
 const MAX_MESSAGE_PARTS = 32;
 const MAX_TEXT_PART_CHARS = 6_000;
 const MAX_TOTAL_TEXT_CHARS = 30_000;
+const MAX_OUTPUT_TOKENS = 1_500;
+
+type AssistantTextPart = {
+  type: "text";
+  text: string;
+};
+
+type AssistantUIMessage = Omit<UIMessage, "role" | "parts"> & {
+  role: "user" | "assistant";
+  parts: AssistantTextPart[];
+};
 
 const contextEntitySchema = z
   .object({
@@ -40,18 +51,21 @@ const appContextSchema = z
 
 const uiMessageSchema = z
   .object({
-    role: z.enum(["system", "user", "assistant"]),
+    id: z.string().trim().min(1).max(128),
+    role: z.enum(["user", "assistant"]),
     parts: z
       .array(
         z
           .object({
-            type: z.string().trim().min(1).max(64),
+            type: z.literal("text"),
+            text: z.string().max(MAX_TEXT_PART_CHARS),
           })
           .passthrough(),
       )
       .max(MAX_MESSAGE_PARTS),
   })
-  .passthrough();
+  .passthrough()
+  .transform((message) => message as AssistantUIMessage);
 
 const chatRequestSchema = z.object({
   messages: z
@@ -61,34 +75,9 @@ const chatRequestSchema = z.object({
     .superRefine((messages, ctx) => {
       let totalTextLength = 0;
 
-      for (const [messageIndex, message] of messages.entries()) {
-        for (const [partIndex, part] of message.parts.entries()) {
-          if (part.type !== "text") {
-            continue;
-          }
-
-          const text = (part as { text?: unknown }).text;
-          if (typeof text !== "string") {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: "Text message parts must include text",
-              path: [messageIndex, "parts", partIndex, "text"],
-            });
-            continue;
-          }
-
-          if (text.length > MAX_TEXT_PART_CHARS) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.too_big,
-              maximum: MAX_TEXT_PART_CHARS,
-              type: "string",
-              inclusive: true,
-              message: "Text message part is too long",
-              path: [messageIndex, "parts", partIndex, "text"],
-            });
-          }
-
-          totalTextLength += text.length;
+      for (const message of messages) {
+        for (const part of message.parts) {
+          totalTextLength += part.text.length;
         }
       }
 
@@ -96,7 +85,7 @@ const chatRequestSchema = z.object({
         ctx.addIssue({
           code: z.ZodIssueCode.too_big,
           maximum: MAX_TOTAL_TEXT_CHARS,
-          type: "array",
+          origin: "array",
           inclusive: true,
           message: "Message history is too long",
           path: [],
@@ -189,7 +178,8 @@ export async function handleChatRequest(request: Request) {
   const result = streamText({
     model: openai("gpt-5.4-mini"),
     instructions: buildInstructions(context),
-    messages: await convertToModelMessages(body.messages as UIMessage[]),
+    messages: await convertToModelMessages(body.messages),
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
   });
 
   return result.toUIMessageStreamResponse();

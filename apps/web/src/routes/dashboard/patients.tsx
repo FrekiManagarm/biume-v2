@@ -14,7 +14,7 @@ import {
   UserRound,
   Weight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -119,6 +119,16 @@ function PatientsPage() {
     null,
   );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedPatientId) {
+      window.localStorage.setItem("currentPetId", selectedPatientId);
+      return;
+    }
+
+    window.localStorage.removeItem("currentPetId");
+  }, [selectedPatientId]);
+
   const searchQuery = search.search ?? "";
   const typeFilter = search.type ?? "tous";
   const currentPage = Math.max(1, search.page ?? 1);
