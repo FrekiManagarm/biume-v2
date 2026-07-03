@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { FileTextIcon } from "lucide-react";
 import { describe, expect, test, vi } from "vitest";
 
@@ -69,6 +69,27 @@ describe("ReportSidebarNavigation", () => {
     expect(screen.queryByText("Quitter le mode focus")).toBeNull();
   });
 
+  test("saves the report draft without using the finalization action", () => {
+    const onSave = vi.fn();
+    const onFinalize = vi.fn();
+
+    const { container } = render(
+      <ReportSidebarNavigation
+        {...defaultProps}
+        onSave={onSave}
+        onFinalize={onFinalize}
+      />,
+    );
+    const sidebar = within(container);
+
+    fireEvent.click(
+      sidebar.getByRole("button", { name: "Sauvegarder le rapport" }),
+    );
+
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(onFinalize).not.toHaveBeenCalled();
+  });
+
   test("keeps collapsed rail controls centered with the same touch target", () => {
     const { container } = render(
       <ReportSidebarNavigation {...defaultProps} isCollapsed />,
@@ -76,9 +97,9 @@ describe("ReportSidebarNavigation", () => {
     const rail = within(container);
 
     expect(rail.getByLabelText("Retour").className).toContain("h-11 w-11");
-    expect(rail.getByLabelText("Agrandir la barre latérale").className).toContain(
-      "h-11 w-11",
-    );
+    expect(
+      rail.getByLabelText("Agrandir la barre latérale").className,
+    ).toContain("h-11 w-11");
     expect(rail.getByLabelText("Clinique").className).toContain("h-11 w-11");
     expect(rail.getByLabelText("Aperçu").className).toContain("h-11 w-11");
     expect(rail.getByLabelText("Raccourcis clavier").className).toContain(

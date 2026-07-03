@@ -3,6 +3,8 @@ import { MarketingPage } from "../../components/marketing-page";
 export default function PrivacyPage() {
   return (
     <MarketingPage
+      path="/privacy"
+      breadcrumbName="Confidentialite"
       eyebrow="Confidentialite"
       title={
         <>

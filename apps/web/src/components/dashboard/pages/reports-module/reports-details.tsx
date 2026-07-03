@@ -312,6 +312,8 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
                     id: report.id,
                     title: report.title,
                     createdAt: report.createdAt || new Date(),
+                    consultationReason: report.consultationReason,
+                    notes: report.notes,
                     patient: report.patient,
                     organization: report.organization,
                     anatomicalIssues: report.anatomicalIssues,

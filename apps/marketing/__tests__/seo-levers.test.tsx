@@ -8,12 +8,18 @@ import AnimalibAlternativePage, {
 import HunimalisAlternativePage, {
   metadata as hunimalisMetadata,
 } from "../app/alternatives/hunimalis/page";
+import KiwiAppliAlternativePage, {
+  metadata as kiwiAppliMetadata,
+} from "../app/alternatives/kiwiappli/page";
 import MyPawScribeAlternativePage, {
   metadata as myPawScribeMetadata,
 } from "../app/alternatives/mypawscribe/page";
 import MyTourAlternativePage, {
   metadata as myTourMetadata,
 } from "../app/alternatives/mytour/page";
+import NeoVoiceAlternativePage, {
+  metadata as neoVoiceAlternativeMetadata,
+} from "../app/alternatives/neovoice/page";
 import NeoVoiceComparisonPage, {
   metadata as neoVoiceMetadata,
 } from "../app/comparatifs/neovoice-vs-biume/page";
@@ -84,6 +90,13 @@ const leverPages = [
     keywords: ["alternative Hunimalis", "Biume", "compte rendu propriétaire"],
   },
   {
+    path: "/alternatives/kiwiappli",
+    Page: KiwiAppliAlternativePage,
+    metadata: kiwiAppliMetadata,
+    title: "Alternative Kiwi Appli",
+    keywords: ["alternative Kiwi Appli", "Biume", "résumé propriétaire"],
+  },
+  {
     path: "/alternatives/mytour",
     Page: MyTourAlternativePage,
     metadata: myTourMetadata,
@@ -98,6 +111,13 @@ const leverPages = [
     keywords: ["NeoVoice vs Biume", "suivi propriétaire", "praticien"],
   },
   {
+    path: "/alternatives/neovoice",
+    Page: NeoVoiceAlternativePage,
+    metadata: neoVoiceAlternativeMetadata,
+    title: "Alternative NeoVoice",
+    keywords: ["alternative NeoVoice", "migrer", "suivi post-séance"],
+  },
+  {
     path: "/alternatives/mypawscribe",
     Page: MyPawScribeAlternativePage,
     metadata: myPawScribeMetadata,
@@ -108,6 +128,7 @@ const leverPages = [
 
 describe("SEO lever pages", () => {
   test.each(leverPages)("$path has focused metadata, copy, schema, and conversion hooks", ({
+    path,
     Page,
     metadata,
     title,
@@ -119,6 +140,9 @@ describe("SEO lever pages", () => {
     expect(String(metadata.description).length).toBeGreaterThan(120);
     expect(String(metadata.description).length).toBeLessThanOrEqual(170);
     expect(html).toContain("application/ld+json");
+    expect(html).toContain('"@type":"BreadcrumbList"');
+    expect(html).toContain('"name":"Accueil"');
+    expect(html).toContain(`"item":"https://biume.com${path}"`);
     expect(html).toContain("Essayer 15 jours gratuitement");
     for (const keyword of keywords) {
       expect(html.toLowerCase()).toContain(keyword.toLowerCase());
@@ -131,5 +155,16 @@ describe("SEO lever pages", () => {
     for (const page of leverPages) {
       expect(urls).toContain(`https://biume.com${page.path}`);
     }
+  });
+
+  test("NeoVoice alternative page frames migration without referencing private shutdown information", () => {
+    const html = renderToStaticMarkup(<NeoVoiceAlternativePage />);
+
+    expect(html).toContain("changer d'outil");
+    expect(html).toContain("continuité du suivi");
+    expect(html).toContain("Préparer une transition");
+    expect(html).not.toContain("31 août 2026");
+    expect(html).not.toContain("message affiché aux utilisateurs");
+    expect(html).toContain("/blog/migrer-depuis-neovoice-pro");
   });
 });

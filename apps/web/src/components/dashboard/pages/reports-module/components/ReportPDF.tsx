@@ -1,748 +1,805 @@
-import type {
-  AdvancedReportRecommendations,
-  AnatomicalIssue,
-  Organization,
-  Pet,
-} from "@/lib/schemas";
 import {
   Document,
+  G,
+  Image,
   Page,
+  Path,
+  StyleSheet,
+  Svg,
   Text,
   View,
-  StyleSheet,
-  Image,
-  Svg,
-  Path,
-  G,
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-// Styles pour le PDF
+import {
+  buildReportPdfViewModel,
+  getIssueTypeLabel,
+  getLateralityLabel,
+  getSeverityTone,
+  reportPalette,
+  type ReportMetric,
+  type ReportPdfIssue,
+  type ReportPdfRecommendation,
+  type ReportPdfReport,
+  type ReportMetricTone,
+} from "./ReportPDF.helpers";
+
+const metricToneStyles: Record<ReportMetricTone, { color: string; soft: string }> = {
+  accent: { color: reportPalette.accent, soft: reportPalette.accentSoft },
+  forest: { color: reportPalette.forest, soft: reportPalette.forestSoft },
+  ink: { color: reportPalette.ink, soft: reportPalette.faint },
+  sand: { color: reportPalette.sand, soft: reportPalette.sandSoft },
+};
+
 const styles = StyleSheet.create({
   page: {
-    flexDirection: "column",
-    backgroundColor: "#FFFFFF",
-    padding: 30,
+    backgroundColor: reportPalette.paper,
+    color: reportPalette.ink,
     fontFamily: "Helvetica",
+    fontSize: 10,
+    lineHeight: 1.45,
+    paddingBottom: 62,
+    paddingHorizontal: 34,
+    paddingTop: 30,
   },
-  header: {
+  pageWash: {
+    backgroundColor: reportPalette.surface,
+    borderColor: reportPalette.line,
+    borderRadius: 18,
+    borderWidth: 1,
+    minHeight: 720,
+    paddingBottom: 28,
+    paddingHorizontal: 28,
+    paddingTop: 24,
+  },
+  topBar: {
+    alignItems: "center",
+    borderBottomColor: reportPalette.faint,
+    borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 30,
-    paddingBottom: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: "#E5E7EB",
+    marginBottom: 28,
+    paddingBottom: 14,
   },
-  headerLeft: {
-    flexDirection: "column",
+  brandBlock: {
+    flexDirection: "row",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 5,
+  brandMark: {
+    backgroundColor: reportPalette.ink,
+    borderRadius: 10,
+    height: 34,
+    marginRight: 10,
+    width: 34,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 3,
+  brandInitial: {
+    color: reportPalette.surface,
+    fontSize: 15,
+    fontWeight: 700,
+    paddingTop: 8,
+    textAlign: "center",
   },
-  headerRight: {
-    flexDirection: "column",
-    alignItems: "flex-end",
+  brandName: {
+    color: reportPalette.ink,
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: 0.7,
+    marginBottom: 2,
+    textTransform: "uppercase",
+  },
+  brandMeta: {
+    color: reportPalette.muted,
+    fontSize: 9,
   },
   logo: {
-    width: 60,
-    height: 60,
-    marginBottom: 10,
+    height: 34,
+    objectFit: "contain",
+    width: 72,
   },
-  reportInfo: {
+  hero: {
+    flexDirection: "row",
+    marginBottom: 26,
+  },
+  heroCopy: {
+    paddingRight: 26,
+    width: "64%",
+  },
+  eyebrow: {
+    color: reportPalette.accent,
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: 1.2,
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
+  title: {
+    color: reportPalette.ink,
+    fontSize: 28,
+    fontWeight: 700,
+    letterSpacing: -0.7,
+    lineHeight: 1.04,
+    marginBottom: 14,
+  },
+  lead: {
+    color: reportPalette.muted,
+    fontSize: 11,
+    lineHeight: 1.55,
+    maxWidth: 305,
+  },
+  heroRail: {
+    borderLeftColor: reportPalette.accent,
+    borderLeftWidth: 3,
+    paddingLeft: 16,
+    paddingTop: 2,
+    width: "36%",
+  },
+  railLabel: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.9,
+    marginBottom: 5,
+    textTransform: "uppercase",
+  },
+  railValue: {
+    color: reportPalette.ink,
     fontSize: 12,
-    color: "#6B7280",
-    textAlign: "right",
+    fontWeight: 700,
+    marginBottom: 12,
+  },
+  railSmall: {
+    color: reportPalette.muted,
+    fontSize: 9,
+    lineHeight: 1.35,
+    marginBottom: 11,
+  },
+  metricStrip: {
+    borderBottomColor: reportPalette.line,
+    borderBottomWidth: 1,
+    borderTopColor: reportPalette.line,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    marginBottom: 24,
+    paddingVertical: 12,
+  },
+  metric: {
+    borderRightColor: reportPalette.faint,
+    borderRightWidth: 1,
+    paddingRight: 12,
+    width: "25%",
+  },
+  metricLast: {
+    borderRightWidth: 0,
+  },
+  metricNumberWrap: {
+    alignItems: "center",
+    borderRadius: 10,
+    height: 34,
+    justifyContent: "center",
+    marginBottom: 6,
+    width: 44,
+  },
+  metricNumber: {
+    fontSize: 17,
+    fontWeight: 700,
+    lineHeight: 1,
+  },
+  metricLabel: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  identityGrid: {
+    borderBottomColor: reportPalette.line,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    marginBottom: 24,
+    paddingBottom: 18,
+  },
+  identityMain: {
+    paddingRight: 22,
+    width: "58%",
+  },
+  identitySide: {
+    borderLeftColor: reportPalette.faint,
+    borderLeftWidth: 1,
+    paddingLeft: 18,
+    width: "42%",
+  },
+  sectionKicker: {
+    color: reportPalette.accent,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 1,
+    marginBottom: 7,
+    textTransform: "uppercase",
+  },
+  patientName: {
+    color: reportPalette.ink,
+    fontSize: 19,
+    fontWeight: 700,
+    letterSpacing: -0.2,
+    marginBottom: 4,
+  },
+  mutedText: {
+    color: reportPalette.muted,
+    fontSize: 10,
+    lineHeight: 1.45,
+  },
+  reasonBox: {
+    backgroundColor: reportPalette.faint,
+    borderRadius: 12,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  reasonText: {
+    color: reportPalette.ink,
+    fontSize: 10,
+    lineHeight: 1.45,
+  },
+  infoRow: {
+    borderTopColor: reportPalette.faint,
+    borderTopWidth: 1,
+    paddingVertical: 7,
+  },
+  infoLabel: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.7,
+    marginBottom: 3,
+    textTransform: "uppercase",
+  },
+  infoValue: {
+    color: reportPalette.ink,
+    fontSize: 9.5,
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 15,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    color: reportPalette.ink,
+    fontSize: 15,
+    fontWeight: 700,
+    letterSpacing: -0.2,
   },
-  anatomicalSection: {
-    marginBottom: 30,
+  sectionCaption: {
+    color: reportPalette.muted,
+    fontSize: 8.5,
   },
-  anatomicalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  anatomicalViews: {
+  anatomyGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
   },
-  anatomicalView: {
-    width: "48%",
-    alignItems: "center",
+  anatomyPanel: {
+    width: "50%",
   },
-  anatomicalImage: {
+  anatomyPanelLeft: {
+    paddingRight: 8,
+  },
+  anatomyPanelRight: {
+    paddingLeft: 8,
+  },
+  anatomyFrame: {
+    backgroundColor: "#FBF8F2",
+    borderColor: reportPalette.line,
+    borderRadius: 14,
+    borderWidth: 1,
+    height: 190,
+    marginBottom: 8,
+    overflow: "hidden",
+    padding: 8,
+    position: "relative",
+  },
+  anatomyImage: {
+    height: "100%",
+    objectFit: "contain",
     width: "100%",
-    height: 300,
-    marginBottom: 10,
-    border: "1px solid #E5E7EB",
-    borderRadius: 8,
   },
-  anatomicalLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#374151",
+  anatomyLabel: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.8,
     textAlign: "center",
+    textTransform: "uppercase",
   },
-  issuesList: {
-    marginTop: 25,
-  },
-  issueItem: {
+  issueRow: {
+    borderTopColor: reportPalette.line,
+    borderTopWidth: 1,
     flexDirection: "row",
-    marginBottom: 15,
-    padding: 12,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 6,
-    borderLeftWidth: 4,
-    borderLeftColor: "#3B82F6",
+    paddingVertical: 11,
   },
-  issueIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-    marginTop: 2,
+  issueIndex: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.7,
+    paddingTop: 2,
+    width: 30,
   },
-  issueContent: {
-    flex: 1,
+  issueBody: {
+    paddingRight: 14,
+    width: "67%",
+  },
+  issueMetaColumn: {
+    width: "24%",
+  },
+  issueTitleLine: {
+    flexDirection: "row",
+    marginBottom: 5,
   },
   issueTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
+    color: reportPalette.ink,
+    fontSize: 11.5,
+    fontWeight: 700,
+    marginRight: 8,
+  },
+  badge: {
+    borderRadius: 8,
+    color: reportPalette.surface,
+    fontSize: 7.5,
+    fontWeight: 700,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    textTransform: "uppercase",
   },
   issueDescription: {
-    fontSize: 12,
-    color: "#6B7280",
-    lineHeight: 1.4,
-    marginBottom: 4,
+    color: reportPalette.muted,
+    fontSize: 9.5,
+    lineHeight: 1.45,
   },
-  issueMeta: {
-    fontSize: 10,
-    color: "#9CA3AF",
-  },
-  issueBadge: {
-    backgroundColor: "#EF4444",
-    color: "#FFFFFF",
+  severityPill: {
+    borderRadius: 10,
+    fontSize: 8,
+    fontWeight: 700,
+    marginBottom: 6,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    fontSize: 10,
-    fontWeight: "bold",
-    marginLeft: 10,
-  },
-  issueBadgeSecondary: {
-    backgroundColor: "#6B7280",
-    color: "#FFFFFF",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    fontSize: 10,
-    fontWeight: "bold",
-    marginLeft: 10,
-  },
-  recommendationsSection: {
-    marginTop: 30,
-  },
-  recommendationItem: {
-    flexDirection: "row",
-    marginBottom: 12,
-    padding: 10,
-    backgroundColor: "#F0FDF4",
-    borderRadius: 6,
-    borderLeftWidth: 4,
-    borderLeftColor: "#10B981",
-  },
-  recommendationIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-    marginTop: 2,
-  },
-  recommendationContent: {
-    flex: 1,
-  },
-  recommendationTitle: {
-    fontSize: 13,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 3,
-  },
-  recommendationText: {
-    fontSize: 12,
-    color: "#374151",
-    lineHeight: 1.4,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 30,
-    left: 30,
-    right: 30,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-  },
-  footerLeft: {
-    fontSize: 10,
-    color: "#9CA3AF",
-  },
-  footerRight: {
-    fontSize: 10,
-    color: "#9CA3AF",
-  },
-  pageNumber: {
-    position: "absolute",
-    bottom: 15,
-    right: 30,
-    fontSize: 10,
-    color: "#9CA3AF",
-  },
-  summaryBox: {
-    backgroundColor: "#F3F4F6",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 10,
-  },
-  summaryStats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  summaryStat: {
-    alignItems: "center",
-  },
-  summaryStatNumber: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#3B82F6",
-  },
-  summaryStatLabel: {
-    fontSize: 10,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  patientInfoSection: {
-    backgroundColor: "#F8FAFC",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-    border: "1px solid #E2E8F0",
-  },
-  patientInfoTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 10,
+    paddingVertical: 4,
     textAlign: "center",
   },
-  patientInfoGrid: {
+  issueTinyMeta: {
+    color: reportPalette.muted,
+    fontSize: 8,
+    lineHeight: 1.35,
+  },
+  recommendationRow: {
+    borderTopColor: reportPalette.line,
+    borderTopWidth: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
+    paddingVertical: 11,
   },
-  patientInfoColumn: {
-    width: "48%",
+  recommendationMarker: {
+    backgroundColor: reportPalette.forest,
+    borderRadius: 7,
+    height: 14,
+    marginRight: 10,
+    marginTop: 1,
+    width: 14,
   },
-  patientInfoItem: {
-    marginBottom: 4,
-  },
-  patientInfoLabel: {
+  recommendationText: {
+    color: reportPalette.ink,
+    flex: 1,
     fontSize: 10,
-    fontWeight: "bold",
-    color: "#475569",
-    marginBottom: 1,
+    lineHeight: 1.45,
   },
-  patientInfoValue: {
+  notePanel: {
+    backgroundColor: reportPalette.faint,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  emptyState: {
+    alignItems: "center",
+    borderColor: reportPalette.line,
+    borderRadius: 14,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 22,
+  },
+  emptyTitle: {
+    color: reportPalette.ink,
     fontSize: 11,
-    color: "#1E293B",
+    fontWeight: 700,
+    marginBottom: 4,
+    textAlign: "center",
   },
-  appointmentInfoBox: {
-    backgroundColor: "#EFF6FF",
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 8,
-    border: "1px solid #BFDBFE",
+  emptyText: {
+    color: reportPalette.muted,
+    fontSize: 9.5,
+    lineHeight: 1.45,
+    textAlign: "center",
   },
-  appointmentInfoTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#1E40AF",
-    marginBottom: 3,
-  },
-  appointmentInfoText: {
-    fontSize: 10,
-    color: "#1E40AF",
-    marginBottom: 1,
+  footerLeft: {
+    bottom: 28,
+    left: 34,
+    position: "absolute",
+    color: reportPalette.muted,
+    fontSize: 8,
   },
 });
 
 type ReportPDFProps = {
-  report: {
-    id: string;
-    title: string;
-    createdAt: Date | string;
-    patient?: Pet;
-    organization?: Organization;
-    anatomicalIssues?: AnatomicalIssue[];
-    recommendations?: AdvancedReportRecommendations[];
-  };
+  report: ReportPdfReport;
   type: "advanced_report";
 };
 
-export function ReportPDF(props: ReportPDFProps) {
-  const formatDate = (date: Date | string | null) => {
-    if (!date) return "Date inconnue";
-    return format(new Date(date), "dd MMMM yyyy 'à' HH:mm", { locale: fr });
-  };
+function formatReportDate(date: Date | string | null) {
+  if (!date) return "Date inconnue";
+  return format(new Date(date), "dd MMMM yyyy", { locale: fr });
+}
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return mins > 0
-        ? `${hours}h${mins.toString().padStart(2, "0")}`
-        : `${hours}h`;
-    }
-    return `${mins}min`;
-  };
+function formatGeneratedAt(date: Date | string | null) {
+  if (!date) return "Date inconnue";
+  return format(new Date(date), "dd MMMM yyyy 'a' HH:mm", { locale: fr });
+}
 
-  // Fonction pour déterminer l'image anatomique selon la race de l'animal
-  const getAnimalImage = (side: "left" | "right") => {
-    const patient = props.report.patient;
-    const animalType =
-      patient?.animal?.code?.toLowerCase() ||
-      patient?.type?.toLowerCase() ||
-      "dog";
+function getAnimalImage(kind: "cat" | "dog" | "horse", side: "left" | "right") {
+  const assetPath =
+    kind === "horse"
+      ? `/assets/images/horse-${side}-side.png`
+      : `/assets/images/${kind}-${side}-side.jpg`;
 
-    switch (animalType) {
-      case "cat":
-        return side === "left"
-          ? "/assets/images/cat-left-side.jpg"
-          : "/assets/images/cat-right-side.jpg";
-      case "horse":
-        return side === "left"
-          ? "/assets/images/horse-left-side.png"
-          : "/assets/images/horse-right-side.png";
-      case "bird":
-      case "cow":
-      case "nac":
-      case "dog":
-      default:
-        return side === "left"
-          ? "/assets/images/dog-left-side.jpg"
-          : "/assets/images/dog-right-side.jpg";
-    }
-  };
+  if (typeof window !== "undefined") return assetPath;
 
-  // Fonction pour obtenir la couleur de remplissage selon la sévérité
-  const getSeverityFillColor = (severity: number) => {
-    switch (severity) {
-      case 1:
-        return "#22C55E"; // Vert
-      case 2:
-        return "#EAB308"; // Jaune
-      case 3:
-        return "#F97316"; // Orange
-      case 4:
-        return "#EF4444"; // Rouge
-      case 5:
-        return "#A855F7"; // Violet
-      default:
-        return "#EAB308"; // Jaune par défaut
-    }
-  };
+  return new URL(`../../../../../../public${assetPath}`, import.meta.url)
+    .pathname;
+}
 
-  // Fonction pour rendre le SVG anatomique dans le PDF
-  const renderAnatomicalSVG = (dysfunctions: any[], side: "left" | "right") => {
-    if (!dysfunctions || dysfunctions.length === 0) return null;
+function MetricBlock({
+  isLast,
+  metric,
+}: {
+  isLast: boolean;
+  metric: ReportMetric;
+}) {
+  const tone = metricToneStyles[metric.tone];
 
-    return (
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 500 380"
-        style={{ position: "absolute", top: 0, left: 0 }}
-      >
-        {dysfunctions.map((dysfunction) => {
-          const anatomicalPart = dysfunction.anatomicalPart;
-          if (!anatomicalPart) return null;
-
-          const path =
-            side === "left"
-              ? anatomicalPart.pathLeft
-              : anatomicalPart.pathRight;
-          const transform =
-            side === "left"
-              ? anatomicalPart.transformLeft
-              : anatomicalPart.transformRight;
-
-          if (!path) return null;
-
-          return (
-            <G key={dysfunction.id}>
-              <Path
-                d={path}
-                transform={transform || ""}
-                fill={getSeverityFillColor(dysfunction.severity)}
-                fillOpacity={0.5}
-                stroke={getSeverityFillColor(dysfunction.severity)}
-                strokeWidth="2"
-                strokeOpacity={0.8}
-              />
-            </G>
-          );
-        })}
-      </Svg>
-    );
-  };
-
-  const getReportTypeLabel = () => {
-    return "Rapport Avancé";
-  };
-
-  const renderAnatomicalIssues = () => {
-    if (
-      !props.report.anatomicalIssues ||
-      props.report.anatomicalIssues.length === 0
-    ) {
-      return (
-        <View style={styles.issuesList}>
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#6B7280",
-              textAlign: "center",
-              fontStyle: "italic",
-            }}
-          >
-            Aucune observation anatomique enregistrée
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.issuesList}>
-        {props.report.anatomicalIssues.map((issue: any, index: number) => (
-          <View key={issue.id || index} style={styles.issueItem}>
-            <View style={styles.issueContent}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 4,
-                }}
-              >
-                <Text style={styles.issueTitle}>
-                  {issue.anatomicalPart?.name ||
-                    issue.anatomicalPartId ||
-                    "Partie anatomique"}
-                </Text>
-                <Text
-                  style={
-                    issue.type === "dysfunction"
-                      ? styles.issueBadge
-                      : styles.issueBadgeSecondary
-                  }
-                >
-                  {issue.type === "dysfunction" ? "Dysfonction" : "Suspicion"}
-                </Text>
-              </View>
-              <Text style={styles.issueDescription}>
-                {issue.notes || "Aucune description disponible"}
-              </Text>
-              {issue.laterality && (
-                <Text style={styles.issueMeta}>
-                  Latéralité : {issue.laterality}
-                </Text>
-              )}
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderRecommendations = () => {
-    if (
-      !props.report.recommendations ||
-      props.report.recommendations.length === 0
-    ) {
-      return (
-        <View style={styles.recommendationsSection}>
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#6B7280",
-              textAlign: "center",
-              fontStyle: "italic",
-            }}
-          >
-            Aucune recommandation disponible
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.recommendationsSection}>
-        {props.report.recommendations.map((rec: any, index: number) => (
-          <View key={rec.id || index} style={styles.recommendationItem}>
-            <View style={styles.recommendationContent}>
-              <Text style={styles.recommendationTitle}>
-                Recommandation #{index + 1}
-              </Text>
-              <Text style={styles.recommendationText}>
-                {rec.recommendation || rec.description || "Recommandation"}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderSummaryStats = () => {
-    if (props.type !== "advanced_report") return null;
-
-    const observations = props.report.anatomicalIssues?.filter(
-      (i: any) => i.type === "observation",
-    ).length || 0;
-    const dysfunctions =
-      props.report.anatomicalIssues?.filter(
-        (i: any) => i.type === "dysfunction",
-      ).length || 0;
-    const suspicions =
-      props.report.anatomicalIssues?.filter(
-        (i: any) => i.type === "anatomicalSuspicion",
-      ).length || 0;
-    const recommendations = props.report.recommendations?.length || 0;
-
-    return (
-      <View style={styles.summaryBox}>
-        <Text style={styles.summaryTitle}>Résumé du rapport</Text>
-        <View style={styles.summaryStats}>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatNumber}>{observations}</Text>
-            <Text style={styles.summaryStatLabel}>Observations</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatNumber}>{dysfunctions}</Text>
-            <Text style={styles.summaryStatLabel}>Dysfonctions</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatNumber}>{suspicions}</Text>
-            <Text style={styles.summaryStatLabel}>Suspicions</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatNumber}>{recommendations}</Text>
-            <Text style={styles.summaryStatLabel}>Recommandations</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const renderPatientInfo = () => {
-    const client = props.report.patient?.owner;
-    const patient = props.report.patient;
-
-    return (
-      <View style={styles.patientInfoSection}>
-        <Text style={styles.patientInfoTitle}>
-          Informations du patient et du client
+  return (
+    <View style={isLast ? [styles.metric, styles.metricLast] : styles.metric}>
+      <View style={[styles.metricNumberWrap, { backgroundColor: tone.soft }]}>
+        <Text style={[styles.metricNumber, { color: tone.color }]}>
+          {metric.value}
         </Text>
-
-        <View style={styles.patientInfoGrid}>
-          {/* Colonne gauche - Informations du client */}
-          <View style={styles.patientInfoColumn}>
-            <Text style={styles.patientInfoLabel}>PROPRIÉTAIRE</Text>
-            <View style={styles.patientInfoItem}>
-              <Text style={styles.patientInfoValue}>
-                {client?.name || "Non spécifié"}
-              </Text>
-            </View>
-            {client?.email && (
-              <View style={styles.patientInfoItem}>
-                <Text style={styles.patientInfoValue}>{client.email}</Text>
-              </View>
-            )}
-            {client?.phone && (
-              <View style={styles.patientInfoItem}>
-                <Text style={styles.patientInfoValue}>{client.phone}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Colonne droite - Informations du patient */}
-          <View style={styles.patientInfoColumn}>
-            <Text style={styles.patientInfoLabel}>PATIENT</Text>
-
-            {/* Afficher le patient du rapport */}
-            {patient ? (
-              <View style={styles.patientInfoItem}>
-                <Text style={styles.patientInfoValue}>
-                  {patient.name || "Animal non spécifié"}
-                </Text>
-                {(patient.animal.code) && (
-                  <Text style={styles.patientInfoValue}>
-                    {patient.animal.code}
-                  </Text>
-                )}
-              </View>
-            ) : (
-              <View style={styles.patientInfoItem}>
-                <Text style={styles.patientInfoValue}>Animal non spécifié</Text>
-              </View>
-            )}
-          </View>
-        </View>
       </View>
-    );
-  };
+      <Text style={styles.metricLabel}>{metric.label}</Text>
+    </View>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
+function SectionHeader({
+  caption,
+  title,
+}: {
+  caption?: string;
+  title: string;
+}) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {caption ? <Text style={styles.sectionCaption}>{caption}</Text> : null}
+    </View>
+  );
+}
+
+function EmptyState({
+  body,
+  title,
+}: {
+  body: string;
+  title: string;
+}) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyText}>{body}</Text>
+    </View>
+  );
+}
+
+function AnatomicalOverlay({
+  issues,
+  side,
+}: {
+  issues: ReportPdfIssue[];
+  side: "left" | "right";
+}) {
+  if (issues.length === 0) return null;
+
+  return (
+    <Svg
+      height="100%"
+      style={{ left: 8, position: "absolute", top: 8 }}
+      viewBox="0 0 500 380"
+      width="100%"
+    >
+      {issues.map((issue, index) => {
+        const anatomicalPart = issue.anatomicalPart;
+        const path =
+          side === "left" ? anatomicalPart?.pathLeft : anatomicalPart?.pathRight;
+        const transform =
+          side === "left"
+            ? anatomicalPart?.transformLeft
+            : anatomicalPart?.transformRight;
+        const tone = getSeverityTone(issue.severity);
+
+        if (!path) return null;
+
+        return (
+          <G key={issue.id || `${side}-${index}`}>
+            <Path
+              d={path}
+              fill={tone.fill}
+              fillOpacity={0.42}
+              stroke={tone.stroke}
+              strokeOpacity={0.78}
+              strokeWidth="2"
+              transform={transform || ""}
+            />
+          </G>
+        );
+      })}
+    </Svg>
+  );
+}
+
+function AnatomicalPanel({
+  image,
+  issues,
+  label,
+  side,
+}: {
+  image: string;
+  issues: ReportPdfIssue[];
+  label: string;
+  side: "left" | "right";
+}) {
+  return (
+    <View
+      style={[
+        styles.anatomyPanel,
+        side === "left" ? styles.anatomyPanelLeft : styles.anatomyPanelRight,
+      ]}
+    >
+      <View style={styles.anatomyFrame}>
+        <Image src={image} style={styles.anatomyImage} />
+        <AnatomicalOverlay issues={issues} side={side} />
+      </View>
+      <Text style={styles.anatomyLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function IssueRow({ issue, index }: { issue: ReportPdfIssue; index: number }) {
+  const severity = getSeverityTone(issue.severity);
+  const anatomicalName =
+    issue.anatomicalPart?.name || issue.anatomicalPartId || "Zone anatomique";
+
+  return (
+    <View style={styles.issueRow} wrap={false}>
+      <Text style={styles.issueIndex}>{String(index + 1).padStart(2, "0")}</Text>
+      <View style={styles.issueBody}>
+        <View style={styles.issueTitleLine}>
+          <Text style={styles.issueTitle}>{anatomicalName}</Text>
+          <Text style={[styles.badge, { backgroundColor: severity.fill }]}>
+            {getIssueTypeLabel(issue.type)}
+          </Text>
+        </View>
+        <Text style={styles.issueDescription}>
+          {issue.notes?.trim() || "Aucune note clinique precisee pour ce point."}
+        </Text>
+      </View>
+      <View style={styles.issueMetaColumn}>
+        <Text
+          style={[
+            styles.severityPill,
+            { backgroundColor: severity.soft, color: severity.fill },
+          ]}
+        >
+          {severity.label}
+        </Text>
+        <Text style={styles.issueTinyMeta}>
+          Lateralite: {getLateralityLabel(issue.laterality)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function RecommendationRow({
+  index,
+  recommendation,
+}: {
+  index: number;
+  recommendation: ReportPdfRecommendation;
+}) {
+  return (
+    <View style={styles.recommendationRow} wrap={false}>
+      <View style={styles.recommendationMarker} />
+      <Text style={styles.recommendationText}>
+        {index + 1}.{" "}
+        {recommendation.recommendation?.trim() ||
+          recommendation.description?.trim() ||
+          "Recommandation a completer."}
+      </Text>
+    </View>
+  );
+}
+
+export function ReportPDF(props: ReportPDFProps) {
+  const model = buildReportPdfViewModel(props.report);
+  const issues = props.report.anatomicalIssues ?? [];
+  const recommendations = props.report.recommendations ?? [];
+  const leftImage = getAnimalImage(model.animalKind, "left");
+  const rightImage = getAnimalImage(model.animalKind, "right");
+  const generatedAt = formatGeneratedAt(new Date());
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* En-tête */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>
-              {props.report.title || "Rapport Médical"}
-            </Text>
-            <Text style={styles.subtitle}>{getReportTypeLabel()}</Text>
-            <Text style={styles.subtitle}>
-              {props.report.patient?.name || "Animal non spécifié"}
-            </Text>
-          </View>
-          <View style={styles.headerRight}>
-            {props.report.organization?.logo && (
-              <Image
-                style={styles.logo}
-                src={props.report.organization?.logo || ""}
-              />
-            )}
-            <Text style={styles.reportInfo}>
-              {props.report.organization?.name}
-            </Text>
-            <Text style={styles.reportInfo}>
-              {formatDate(props.report.createdAt)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Informations du patient et du client */}
-        {renderPatientInfo()}
-
-        {/* Résumé statistiques */}
-        {renderSummaryStats()}
-
-        {/* Section schéma anatomique pour les rapports avancés */}
-        {props.type === "advanced_report" && (
-          <View style={styles.anatomicalSection}>
-            <Text style={styles.anatomicalTitle}>Schéma Anatomique</Text>
-            <View style={styles.anatomicalViews}>
-              <View style={styles.anatomicalView}>
-                <View style={styles.anatomicalImage}>
-                  {/* Image anatomique gauche avec overlay SVG */}
-                  <Image
-                    src={getAnimalImage("left")}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                  {renderAnatomicalSVG(
-                    props.report.anatomicalIssues || [],
-                    "left",
-                  )}
-                </View>
-                <Text style={styles.anatomicalLabel}>Vue Latérale Gauche</Text>
+        <View style={styles.pageWash}>
+          <View style={styles.topBar}>
+            <View style={styles.brandBlock}>
+              <View style={styles.brandMark}>
+                <Text style={styles.brandInitial}>B</Text>
               </View>
-              <View style={styles.anatomicalView}>
-                <View style={styles.anatomicalImage}>
-                  {/* Image anatomique droite avec overlay SVG */}
-                  <Image
-                    src={getAnimalImage("right")}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                  {renderAnatomicalSVG(
-                    props.report.anatomicalIssues || [],
-                    "right",
-                  )}
-                </View>
-                <Text style={styles.anatomicalLabel}>Vue Latérale Droite</Text>
+              <View>
+                <Text style={styles.brandName}>{model.organizationName}</Text>
+                <Text style={styles.brandMeta}>Compte rendu proprietaire</Text>
               </View>
             </View>
+            {props.report.organization?.logo ? (
+              <Image src={props.report.organization.logo} style={styles.logo} />
+            ) : (
+              <Text style={styles.brandMeta}>Biume</Text>
+            )}
           </View>
-        )}
 
-        {/* Contenu spécifique selon le type de rapport */}
-        <>
-          {/* Section observations anatomiques */}
+          <View style={styles.hero}>
+            <View style={styles.heroCopy}>
+              <Text style={styles.eyebrow}>Rapport clinique</Text>
+              <Text style={styles.title}>{model.reportTitle}</Text>
+              <Text style={styles.lead}>
+                Synthese claire de la seance, des points anatomiques observes et
+                des recommandations a suivre apres consultation.
+              </Text>
+            </View>
+
+            <View style={styles.heroRail}>
+              <Text style={styles.railLabel}>Patient</Text>
+              <Text style={styles.railValue}>{model.patientName}</Text>
+              <Text style={styles.railLabel}>Date</Text>
+              <Text style={styles.railSmall}>
+                {formatReportDate(props.report.createdAt)}
+              </Text>
+              <Text style={styles.railLabel}>Dossier</Text>
+              <Text style={styles.railSmall}>{props.report.id}</Text>
+            </View>
+          </View>
+
+          <View style={styles.metricStrip}>
+            {model.metrics.map((metric, index) => (
+              <MetricBlock
+                isLast={index === model.metrics.length - 1}
+                key={metric.label}
+                metric={metric}
+              />
+            ))}
+          </View>
+
+          <View style={styles.identityGrid} wrap={false}>
+            <View style={styles.identityMain}>
+              <Text style={styles.sectionKicker}>Contexte animal</Text>
+              <Text style={styles.patientName}>{model.patientName}</Text>
+              <Text style={styles.mutedText}>{model.patientDescriptor}</Text>
+              <View style={styles.reasonBox}>
+                <Text style={styles.sectionKicker}>Motif</Text>
+                <Text style={styles.reasonText}>{model.consultationReason}</Text>
+              </View>
+            </View>
+
+            <View style={styles.identitySide}>
+              <InfoRow label="Proprietaire" value={model.ownerLine} />
+              <InfoRow label="Profil" value={model.patientFacts} />
+              <InfoRow label="Cabinet" value={model.organizationName} />
+            </View>
+          </View>
+
+          {model.practitionerNotes ? (
+            <View style={styles.section}>
+              <SectionHeader title="Notes de seance" />
+              <View style={styles.notePanel}>
+                <Text style={styles.reasonText}>{model.practitionerNotes}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {props.type === "advanced_report" ? (
+            <View style={styles.section} wrap={false}>
+              <SectionHeader
+                caption="Visualisation des zones marquees"
+                title="Cartographie anatomique"
+              />
+              <View style={styles.anatomyGrid}>
+                <AnatomicalPanel
+                  image={leftImage}
+                  issues={issues}
+                  label="Vue laterale gauche"
+                  side="left"
+                />
+                <AnatomicalPanel
+                  image={rightImage}
+                  issues={issues}
+                  label="Vue laterale droite"
+                  side="right"
+                />
+              </View>
+            </View>
+          ) : null}
+
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Observations Anatomiques</Text>
-            {renderAnatomicalIssues()}
+            <SectionHeader
+              caption={`${issues.length} point${issues.length > 1 ? "s" : ""}`}
+              title="Observations"
+            />
+            {issues.length > 0 ? (
+              issues.map((issue, index) => (
+                <IssueRow index={index} issue={issue} key={issue.id || index} />
+              ))
+            ) : (
+              <EmptyState
+                body="Le rapport ne contient pas encore de point anatomique detaille."
+                title="Aucune observation anatomique"
+              />
+            )}
           </View>
 
-          {/* Section recommandations */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recommandations</Text>
-            {renderRecommendations()}
+            <SectionHeader
+              caption={`${recommendations.length} element${
+                recommendations.length > 1 ? "s" : ""
+              }`}
+              title="Recommandations"
+            />
+            {recommendations.length > 0 ? (
+              recommendations.map((recommendation, index) => (
+                <RecommendationRow
+                  index={index}
+                  key={recommendation.id || index}
+                  recommendation={recommendation}
+                />
+              ))
+            ) : (
+              <EmptyState
+                body="Ajoutez les consignes de repos, de reprise d'activite ou de suivi avant l'envoi."
+                title="Aucune recommandation"
+              />
+            )}
           </View>
-        </>
 
-        {/* Pied de page */}
-        <View style={styles.footer}>
-          <Text style={styles.footerLeft}>
-            Rapport généré le {formatDate(new Date())}
-          </Text>
-          <Text style={styles.footerRight}>
-            {props.report.organization?.name} - Biume
-          </Text>
         </View>
 
-        <Text
-          style={styles.pageNumber}
-          render={({ pageNumber, totalPages }) =>
-            `${pageNumber} / ${totalPages}`
-          }
-        />
+        <Text fixed style={styles.footerLeft}>
+          Genere le {generatedAt} avec Biume
+        </Text>
       </Page>
     </Document>
   );

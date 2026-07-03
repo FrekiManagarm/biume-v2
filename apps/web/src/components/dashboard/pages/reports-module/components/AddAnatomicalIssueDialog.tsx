@@ -48,6 +48,8 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 import { SparklesIcon } from "@/components/ui/sparkles-icon";
 
+type AnatomicalZone = "articulation" | "fascias" | "organes" | "muscles";
+
 interface AddAnatomicalIssueDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -248,11 +250,7 @@ export function AddAnatomicalIssueDialog({
   };
 
   const animalType = getAnimalType();
-  const zone = (selectedZone || "articulation") as
-    | "articulation"
-    | "fascias"
-    | "organes"
-    | "muscles";
+  const zone = selectedZone as AnatomicalZone | undefined;
 
   // Fonction pour obtenir les données anatomiques selon le mode
   const getTestModeRegionsData = () => {
@@ -271,11 +269,14 @@ export function AddAnatomicalIssueDialog({
   const { data: anatomicalPartsResponse, isLoading } = useQuery({
     queryKey: ["anatomicalParts", animalType, zone],
     queryFn: async () => {
+      if (!zone) {
+        return [];
+      }
       const result = await getAnatomicalParts({ animalType, zone });
       console.log("🔍 Données récupérées de la base:", result);
       return result || [];
     },
-    enabled: isOpen && !!animalType && !!zone && !isTestMode,
+    enabled: isOpen && !!animalType && !!selectedZone && !isTestMode,
   });
 
   // Utiliser les données de test ou de la base selon le mode
@@ -602,9 +603,15 @@ export function AddAnatomicalIssueDialog({
                   open={isInterventionZoneSelectOpen}
                   onOpenChange={setIsInterventionZoneSelectOpen}
                   value={newIssue.interventionZone || ""}
-                  onValueChange={(value) =>
-                    setNewIssue({ ...newIssue, interventionZone: value })
-                  }
+                  onValueChange={(value) => {
+                    setNewIssue({
+                      ...newIssue,
+                      interventionZone: value,
+                      region: "",
+                    });
+                    setRegionSearchTerm("");
+                    setOpenRegionPopover(false);
+                  }}
                 >
                   <SelectTrigger
                     className={cn(
@@ -644,6 +651,7 @@ export function AddAnatomicalIssueDialog({
                       <Button
                         variant="outline"
                         role="combobox"
+                        disabled={!selectedZone}
                         className={cn(
                           "flex-1 justify-between h-10",
                           !newIssue.region ? "text-muted-foreground" : "",
@@ -652,7 +660,9 @@ export function AddAnatomicalIssueDialog({
                       >
                         {newIssue.region
                           ? getRegionName()
-                          : "Sélectionner une région"}
+                          : selectedZone
+                            ? "Sélectionner une région"
+                            : "Sélectionner d'abord une zone"}
                         <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>

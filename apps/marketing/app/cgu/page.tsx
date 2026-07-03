@@ -3,6 +3,8 @@ import { MarketingPage } from "../../components/marketing-page";
 export default function TermsPage() {
   return (
     <MarketingPage
+      path="/cgu"
+      breadcrumbName="Conditions generales d'utilisation"
       eyebrow="Conditions"
       title={
         <>

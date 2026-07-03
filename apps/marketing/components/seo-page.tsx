@@ -1,7 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { webAppPath } from "../lib/web-app-url";
-import { absoluteUrl, JsonLd, siteName, siteUrl } from "../lib/seo";
+import {
+  absoluteUrl,
+  JsonLd,
+  pageBreadcrumbJsonLd,
+  siteName,
+  siteUrl,
+} from "../lib/seo";
 import LandingFooter from "./footer";
 import { Header } from "./header";
 
@@ -88,6 +94,7 @@ export function SeoPage({
   return (
     <>
       <JsonLd data={schema} />
+      <JsonLd data={pageBreadcrumbJsonLd({ path, name: eyebrow })} />
       <Header />
       <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>

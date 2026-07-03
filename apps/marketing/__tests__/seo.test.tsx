@@ -18,6 +18,7 @@ import { rootMetadata } from "../lib/metadata";
 const pageChecks = [
   {
     name: "product",
+    path: "/logiciel-osteopathe-animalier",
     Page: ProductPage,
     metadata: productMetadata,
     title: "Logiciel ostéopathe animalier",
@@ -29,6 +30,7 @@ const pageChecks = [
   },
   {
     name: "report",
+    path: "/compte-rendu-osteopathe-animalier",
     Page: ReportPage,
     metadata: reportMetadata,
     title: "Compte rendu ostéopathe animalier",
@@ -40,6 +42,7 @@ const pageChecks = [
   },
   {
     name: "pricing",
+    path: "/tarifs",
     Page: PricingPage,
     metadata: pricingMetadata,
     title: "Tarif logiciel ostéopathe animalier",
@@ -47,6 +50,7 @@ const pageChecks = [
   },
   {
     name: "comparisons",
+    path: "/comparatifs",
     Page: ComparisonHubPage,
     metadata: comparisonMetadata,
     title: "Alternatives aux logiciels ostéopathe animalier",
@@ -66,6 +70,7 @@ describe("marketing SEO", () => {
   });
 
   test.each(pageChecks)("$name page has unique metadata and keyword-focused copy", ({
+    path,
     Page,
     metadata,
     title,
@@ -78,6 +83,9 @@ describe("marketing SEO", () => {
     expect(String(metadata.description).length).toBeGreaterThan(120);
     expect(String(metadata.description).length).toBeLessThanOrEqual(170);
     expect(html).toContain("application/ld+json");
+    expect(html).toContain('"@type":"BreadcrumbList"');
+    expect(html).toContain('"name":"Accueil"');
+    expect(html).toContain(`"item":"https://biume.com${path}"`);
     for (const keyword of keywords) {
       expect(html.toLowerCase()).toContain(keyword.toLowerCase());
     }

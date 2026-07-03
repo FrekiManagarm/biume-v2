@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternatives aux logiciels ostéopathe animalier",
   description:
-    "Comparez Biume, Animalib, Hunimalis, Stenko, MyTour, NeoVoice et MyPawScribe selon votre besoin: gestion, relances ou suivi.",
+    "Comparez Biume, Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe selon votre besoin: gestion, relances ou suivi.",
   path: "/comparatifs",
 });
 
@@ -22,7 +22,7 @@ export default function ComparisonHubPage() {
           </span>
         </>
       }
-      description="Animalib, Hunimalis, Stenko, MyTour, NeoVoice et MyPawScribe répondent à des besoins différents. Biume se différencie par le compte rendu propriétaire, le suivi post-séance et la relance de suivi."
+      description="Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe répondent à des besoins différents. Biume se différencie par le compte rendu propriétaire, le suivi post-séance et la relance de suivi."
       stats={[
         { value: "7", label: "outils comparés" },
         { value: "1", label: "angle suivi" },
@@ -48,6 +48,11 @@ export default function ComparisonHubPage() {
           eyebrow: "Hunimalis",
           title: "Hunimalis couvre les professionnels animaliers avec une logique tout-en-un.",
           body: "Hunimalis peut convenir si vous voulez centraliser rendez-vous, visibilité, dossiers et facturation. Biume est plus étroit, mais plus précis sur le compte rendu propriétaire et la continuité post-séance.",
+        },
+        {
+          eyebrow: "Kiwi Appli",
+          title: "Kiwi Appli couvre la gestion et les comptes rendus de consultation.",
+          body: "Kiwi Appli peut convenir si vous cherchez fiches clients, comptes rendus, facturation et ressources métier. Biume garde un angle plus spécifique: transformer la séance en résumé propriétaire, timeline animal et relance de suivi.",
         },
         {
           eyebrow: "Stenko",
@@ -93,8 +98,10 @@ export default function ComparisonHubPage() {
         { href: "/alternatives/animalib", label: "Alternative Animalib" },
         { href: "/alternatives/stenko", label: "Alternative Stenko" },
         { href: "/alternatives/hunimalis", label: "Alternative Hunimalis" },
+        { href: "/alternatives/kiwiappli", label: "Alternative Kiwi Appli" },
         { href: "/alternatives/mytour", label: "Alternative MyTour" },
         { href: "/comparatifs/neovoice-vs-biume", label: "NeoVoice vs Biume" },
+        { href: "/alternatives/neovoice", label: "Alternative NeoVoice" },
         { href: "/alternatives/mypawscribe", label: "Alternative MyPawScribe" },
         { href: "/tarifs", label: "Tarifs" },
       ]}

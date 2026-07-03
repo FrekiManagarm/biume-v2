@@ -21,6 +21,17 @@ describe("region dropdown layering", () => {
     },
   );
 
+  test.each(["AddAnatomicalIssueDialog.tsx", "AddObservationsDialog.tsx"])(
+    "%s waits for an intervention zone before loading anatomical regions",
+    (fileName) => {
+      const source = readComponentSource(fileName);
+
+      expect(source).not.toContain('selectedZone || "articulation"');
+      expect(source).toMatch(/enabled:[\s\S]*!!selectedZone/);
+      expect(source).toMatch(/disabled=\{!selectedZone\}/);
+    },
+  );
+
   test.each([
     {
       fileName: "AddAnatomicalIssueDialog.tsx",

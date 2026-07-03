@@ -5,6 +5,7 @@ import { webAppPath } from "../lib/web-app-url";
 const navLinks = [
   { href: "/logiciel-osteopathe-animalier", label: "Produit" },
   { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu" },
+  { href: "/blog", label: "Blog" },
   { href: "/tarifs", label: "Tarifs" },
 ];
 

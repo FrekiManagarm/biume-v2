@@ -3,6 +3,8 @@ import { MarketingPage } from "../../components/marketing-page";
 export default function AboutPage() {
   return (
     <MarketingPage
+      path="/about"
+      breadcrumbName="A propos"
       eyebrow="A propos de Biume"
       title={
         <>

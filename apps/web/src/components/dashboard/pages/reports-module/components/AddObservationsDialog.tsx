@@ -44,6 +44,8 @@ import { AnatomicalHistoryAndDiagnosticPanel } from "./AnatomicalHistoryAndDiagn
 import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 import { SparklesIcon } from "@/components/ui/sparkles-icon";
 
+type AnatomicalZone = "articulation" | "fascias" | "organes" | "muscles";
+
 interface AddObservationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -102,21 +104,20 @@ export function AddObservationDialog({
   };
 
   const animalType = getAnimalType();
-  const zone = (selectedZone || "articulation") as
-    | "articulation"
-    | "fascias"
-    | "organes"
-    | "muscles";
+  const zone = selectedZone as AnatomicalZone | undefined;
 
   // Récupérer les données anatomiques depuis la base de données
   const { data: anatomicalPartsResponse } = useQuery({
     queryKey: ["anatomicalParts", animalType, zone],
     queryFn: async () => {
+      if (!zone) {
+        return [];
+      }
       const result = await getAnatomicalParts({ animalType, zone });
       console.log("🔍 Données récupérées de la base:", result);
       return result || [];
     },
-    enabled: isOpen && !!animalType && !!zone,
+    enabled: isOpen && !!animalType && !!selectedZone,
   });
 
   // Fonction pour avancer au prochain step
@@ -430,12 +431,15 @@ export function AddObservationDialog({
                   open={isInterventionZoneSelectOpen}
                   onOpenChange={setIsInterventionZoneSelectOpen}
                   value={newObservation.interventionZone}
-                  onValueChange={(value) =>
+                  onValueChange={(value) => {
                     setNewObservation({
                       ...newObservation,
                       interventionZone: value as InterventionZone,
-                    })
-                  }
+                      region: "",
+                    });
+                    setRegionSearchTerm("");
+                    setOpenRegionPopover(false);
+                  }}
                 >
                   <SelectTrigger
                     className={cn(
@@ -475,6 +479,7 @@ export function AddObservationDialog({
                       <Button
                         variant="outline"
                         role="combobox"
+                        disabled={!selectedZone}
                         className={cn(
                           "flex-1 justify-between h-10",
                           !newObservation.region ? "text-muted-foreground" : "",
@@ -485,7 +490,9 @@ export function AddObservationDialog({
                       >
                         {newObservation.region
                           ? getRegionName()
-                          : "Sélectionner une région"}
+                          : selectedZone
+                            ? "Sélectionner une région"
+                            : "Sélectionner d'abord une zone"}
                         <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>

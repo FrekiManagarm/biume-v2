@@ -45,6 +45,7 @@ export function ReportSidebarNavigation({
   onPreview,
   onShortcuts,
   onSave,
+  onFinalize = onSave,
   isSaving,
   getTabProgress,
   getTabCount,
@@ -62,6 +63,7 @@ export function ReportSidebarNavigation({
   onPreview: () => void;
   onShortcuts: () => void;
   onSave: () => void;
+  onFinalize?: () => void;
   isSaving: boolean;
   getTabProgress: (tabId: string) => boolean;
   getTabCount: (tabId: string) => number;
@@ -508,9 +510,40 @@ export function ReportSidebarNavigation({
             <TooltipTrigger
               render={
                 <Button
-                  variant="default"
+                  variant="outline"
                   size={isCollapsed ? "icon" : "sm"}
                   onClick={onSave}
+                  disabled={isSaving}
+                  aria-label={
+                    isCollapsed ? "Sauvegarder le rapport" : undefined
+                  }
+                  className={cn(
+                    "rounded-xl border-border bg-background font-semibold text-foreground shadow-none hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
+                    isCollapsed ? "h-11 w-11" : "h-10 w-full",
+                  )}
+                >
+                  <SaveIcon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                  {!isCollapsed &&
+                    (isSaving ? "Enregistrement..." : "Sauvegarder le rapport")}
+                </Button>
+              }
+            />
+            {isCollapsed && (
+              <TooltipContent side="right">
+                <p>
+                  {isSaving ? "Enregistrement..." : "Sauvegarder le rapport"}
+                </p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="default"
+                  size={isCollapsed ? "icon" : "sm"}
+                  onClick={onFinalize}
                   disabled={isSaving}
                   aria-label={isCollapsed ? "Finaliser le rapport" : undefined}
                   className={cn(
@@ -518,7 +551,9 @@ export function ReportSidebarNavigation({
                     isCollapsed ? "h-11 w-11" : "h-10 w-full",
                   )}
                 >
-                  <SaveIcon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                  <CheckCircle2Icon
+                    className={cn("h-4 w-4", !isCollapsed && "mr-2")}
+                  />
                   {!isCollapsed &&
                     (isSaving ? "Enregistrement..." : "Finaliser le rapport")}
                 </Button>

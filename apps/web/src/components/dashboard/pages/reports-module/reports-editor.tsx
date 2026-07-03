@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { updateReport } from "@/lib/api/actions/reports.action";
 import type { InferSelectModel } from "drizzle-orm";
@@ -19,6 +19,11 @@ import { PatientCard } from "./components/PatientCard";
 import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
+import {
+  buildReportUpdatePayload,
+  invalidateReportUpdateQueries,
+  type ReportUpdateStatus,
+} from "./reports-editor.helpers";
 
 import type {
   Observation,
@@ -81,6 +86,7 @@ export function AdvancedReportEditor({
   initialData,
 }: AdvancedReportEditorProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fonction helper pour charger les observations
   const getObservationType = (
@@ -463,9 +469,10 @@ export function AdvancedReportEditor({
   // Mutation pour mettre à jour le rapport
   const updateReportMutation = useMutation({
     mutationFn: updateReport,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data?.success) {
         toast.success("Rapport mis à jour avec succès");
+        await invalidateReportUpdateQueries(queryClient, reportId);
         // Mettre à jour l'état de sauvegarde après succès
         setLastSavedState({
           title,
@@ -491,20 +498,18 @@ export function AdvancedReportEditor({
     },
   });
 
-  const handleUpdateReport = async (
-    status: "draft" | "finalized" = "draft",
-  ) => {
-    const reportDataToSend = {
+  const handleUpdateReport = async (status: ReportUpdateStatus = "draft") => {
+    const reportDataToSend = buildReportUpdatePayload({
       reportId,
-      title: title,
-      petId: selectedPetId || undefined,
-      consultationReason: consultationReason || undefined,
-      notes: notes || undefined,
-      observations: observations || [],
-      anatomicalIssues: anatomicalIssues || [],
-      recommendations: recommendations || [],
-      status: status,
-    };
+      title,
+      selectedPetId,
+      consultationReason,
+      notes,
+      observations,
+      anatomicalIssues,
+      recommendations,
+      status,
+    });
 
     console.log(reportDataToSend, "reportDataToSend");
 
@@ -785,7 +790,8 @@ export function AdvancedReportEditor({
               onGoBack={handleGoBack}
               onPreview={() => setShowPreview(true)}
               onShortcuts={() => setIsShortcutsModalOpen(true)}
-              onSave={handleOpenReminderDialog}
+              onSave={() => void handleUpdateReport("draft")}
+              onFinalize={handleOpenReminderDialog}
               isSaving={updateReportMutation.isPending}
               getTabProgress={getTabProgress}
               getTabCount={getTabCount}

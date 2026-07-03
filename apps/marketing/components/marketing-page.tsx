@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { JsonLd, pageBreadcrumbJsonLd } from "../lib/seo";
 import { webAppPath } from "../lib/web-app-url";
 import LandingFooter from "./footer";
 import { Header } from "./header";
@@ -22,6 +23,8 @@ type ContentSection = {
 };
 
 type MarketingPageProps = {
+  path: string;
+  breadcrumbName: string;
   eyebrow: string;
   title: ReactNode;
   description: string;
@@ -44,6 +47,8 @@ type MarketingPageProps = {
 };
 
 export function MarketingPage({
+  path,
+  breadcrumbName,
   eyebrow,
   title,
   description,
@@ -58,6 +63,7 @@ export function MarketingPage({
 }: MarketingPageProps) {
   return (
     <>
+      <JsonLd data={pageBreadcrumbJsonLd({ path, name: breadcrumbName })} />
       <Header />
       <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
