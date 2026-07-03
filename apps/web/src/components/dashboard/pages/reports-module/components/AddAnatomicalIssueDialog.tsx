@@ -81,6 +81,8 @@ export function AddAnatomicalIssueDialog({
 }: AddAnatomicalIssueDialogProps) {
   const [regionSearchTerm, setRegionSearchTerm] = useState("");
   const [openRegionPopover, setOpenRegionPopover] = useState(false);
+  const [isInterventionZoneSelectOpen, setIsInterventionZoneSelectOpen] =
+    useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [hoveredSeverity, setHoveredSeverity] = useState<number | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
@@ -419,8 +421,14 @@ export function AddAnatomicalIssueDialog({
     return !!newIssue.type && !!newIssue.region && !!newIssue.laterality;
   };
 
+  const isSelectOpen = isInterventionZoneSelectOpen;
+
   return (
-    <Credenza open={isOpen} onOpenChange={onOpenChange}>
+    <Credenza
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      disablePointerDismissal={isSelectOpen}
+    >
       <CredenzaContent className="w-full sm:max-w-[550px] p-0 rounded-xl overflow-hidden border-none shadow-xl">
         {/* En-tête avec l'étape actuelle */}
         <div className="relative h-16 flex items-center justify-center bg-primary text-white">
@@ -591,6 +599,8 @@ export function AddAnatomicalIssueDialog({
                   <span className="text-destructive">*</span>
                 </h3>
                 <Select
+                  open={isInterventionZoneSelectOpen}
+                  onOpenChange={setIsInterventionZoneSelectOpen}
                   value={newIssue.interventionZone || ""}
                   onValueChange={(value) =>
                     setNewIssue({ ...newIssue, interventionZone: value })

@@ -2,7 +2,7 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { getContext } from "./integrations/tanstack-query/root-provider";
-import { Loader2 } from "lucide-react";
+import { RouterPendingComponent } from "./components/router/router-pending";
 
 export function getRouter() {
   const context = getContext();
@@ -13,7 +13,7 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
-    defaultPendingComponent: () => <Loader2 className="animate-spin" />,
+    defaultPendingComponent: RouterPendingComponent,
     defaultNotFoundComponent: () => <div>Not Found</div>,
   });
 

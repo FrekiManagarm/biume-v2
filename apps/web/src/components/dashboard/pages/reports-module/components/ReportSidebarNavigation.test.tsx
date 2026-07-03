@@ -45,7 +45,7 @@ describe("ReportSidebarNavigation", () => {
   test("renders a simple report editing shell", () => {
     render(<ReportSidebarNavigation {...defaultProps} />);
 
-    expect(screen.getByText("Edition du rapport")).not.toBeNull();
+    expect(screen.getByText("Édition du rapport")).not.toBeNull();
     expect(screen.getByText("Sections")).not.toBeNull();
     expect(screen.getByText("Rendez-vous")).not.toBeNull();
     expect(screen.getByDisplayValue("Rapport de suivi")).not.toBeNull();

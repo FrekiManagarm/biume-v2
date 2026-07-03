@@ -39,6 +39,7 @@ import {
   ChevronLeftIcon,
   EyeIcon,
   SaveIcon,
+  PlusIcon,
   KeyboardIcon,
   AlertTriangle,
   MessageCircleIcon,
@@ -436,6 +437,11 @@ export function AdvancedReportEditor({
 
   const handleRemoveObservation = (id: string) => {
     setObservations(observations.filter((obs) => obs.id !== id));
+  };
+
+  const handleOpenAddObservation = () => {
+    setEditingObservationId(null);
+    setIsAddSheetOpen(true);
   };
 
   const handleEditObservation = (id: string) => {
@@ -851,6 +857,15 @@ export function AdvancedReportEditor({
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
+                  {activeTab === "clinical" && (
+                    <Button
+                      onClick={handleOpenAddObservation}
+                      className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]"
+                    >
+                      <PlusIcon className="size-4" />
+                      Nouvelle observation
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => setIsVulgarisationOpen(true)}
@@ -918,10 +933,7 @@ export function AdvancedReportEditor({
                         <ObservationsTab
                           observations={observations}
                           onRemoveObservation={handleRemoveObservation}
-                          onOpenAddSheet={() => {
-                            setEditingObservationId(null);
-                            setIsAddSheetOpen(true);
-                          }}
+                          onOpenAddSheet={handleOpenAddObservation}
                           onEditObservation={handleEditObservation}
                         />
                       </div>
@@ -1045,7 +1057,22 @@ export function AdvancedReportEditor({
               </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div
+              className={cn(
+                "grid gap-2",
+                activeTab === "clinical" ? "grid-cols-5" : "grid-cols-4",
+              )}
+            >
+              {activeTab === "clinical" && (
+                <Button
+                  size="sm"
+                  onClick={handleOpenAddObservation}
+                  className="h-9 rounded-xl bg-primary text-primary-foreground active:scale-[0.98]"
+                  aria-label="Nouvelle observation"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -1105,10 +1132,7 @@ export function AdvancedReportEditor({
             <ObservationsTab
               observations={observations}
               onRemoveObservation={handleRemoveObservation}
-              onOpenAddSheet={() => {
-                setEditingObservationId(null);
-                setIsAddSheetOpen(true);
-              }}
+              onOpenAddSheet={handleOpenAddObservation}
               onEditObservation={handleEditObservation}
             />
           </div>

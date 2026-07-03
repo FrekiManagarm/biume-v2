@@ -67,6 +67,8 @@ export function InitializationDialog({
   >(null);
   const [consultationReason, setConsultationReason] = useState("");
   const [title, setTitle] = useState("Nouveau rapport");
+  const [isPetSelectOpen, setIsPetSelectOpen] = useState(false);
+  const [isAppointmentSelectOpen, setIsAppointmentSelectOpen] = useState(false);
 
   const { data: allPetsData, isLoading: isLoadingPets } = useQuery({
     queryKey: ["pro-patients"],
@@ -144,9 +146,15 @@ export function InitializationDialog({
     });
   };
 
+  const isSelectOpen = isPetSelectOpen || isAppointmentSelectOpen;
+
   return (
     <>
-      <Credenza open={showInitDialog} onOpenChange={setShowInitDialog}>
+      <Credenza
+        open={showInitDialog}
+        onOpenChange={setShowInitDialog}
+        disablePointerDismissal={isSelectOpen}
+      >
         <CredenzaContent className="overflow-hidden rounded-xl border border-border bg-background p-0 sm:max-w-[560px]">
           <CredenzaHeader className="border-b px-5 py-4 text-left">
             <CredenzaTitle className="text-lg font-semibold tracking-tight">
@@ -171,6 +179,8 @@ export function InitializationDialog({
             <FieldGroup label="Animal" htmlFor="pet-select">
               <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                 <Select
+                  open={isPetSelectOpen}
+                  onOpenChange={setIsPetSelectOpen}
                   value={selectedPetId ?? ""}
                   onValueChange={handlePetChange}
                   disabled={isLoadingPets}
@@ -291,6 +301,8 @@ export function InitializationDialog({
               htmlFor="appointment-select"
             >
               <Select
+                open={isAppointmentSelectOpen}
+                onOpenChange={setIsAppointmentSelectOpen}
                 value={selectedAppointmentId ?? NO_APPOINTMENT_VALUE}
                 onValueChange={(value) => {
                   setSelectedAppointmentId(

@@ -32,6 +32,7 @@ interface BaseProps {
 interface RootCredenzaProps extends BaseProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  disablePointerDismissal?: boolean;
 }
 
 interface CredenzaProps extends BaseProps {
@@ -50,13 +51,24 @@ const useCredenzaMode = () => {
   return context ?? isDesktop;
 };
 
-const Credenza = ({ children, ...props }: RootCredenzaProps) => {
+const Credenza = ({
+  children,
+  disablePointerDismissal = false,
+  ...props
+}: RootCredenzaProps) => {
   const isDesktop = useMediaQuery(desktop);
-  const Credenza = isDesktop ? Dialog : Drawer;
 
   return (
     <CredenzaContext.Provider value={isDesktop}>
-      <Credenza {...props}>{children}</Credenza>
+      {isDesktop ? (
+        <Dialog {...props} disablePointerDismissal={disablePointerDismissal}>
+          {children}
+        </Dialog>
+      ) : (
+        <Drawer {...props} dismissible={!disablePointerDismissal}>
+          {children}
+        </Drawer>
+      )}
     </CredenzaContext.Provider>
   );
 };

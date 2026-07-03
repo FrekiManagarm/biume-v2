@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,29 +86,8 @@ export function ObservationsTab({
 }: ObservationsTabProps) {
   return (
     <div className="flex flex-col h-full">
-      {/* Header moderne */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold text-foreground">
-            Observations cliniques
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {observations.length === 0
-              ? "Aucune observation ajoutée"
-              : `${observations.length} observation${observations.length > 1 ? "s" : ""} enregistrée${observations.length > 1 ? "s" : ""}`}
-          </p>
-        </div>
-        <Button
-          onClick={onOpenAddSheet}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nouvelle observation
-        </Button>
-      </div>
-
       {/* Contenu */}
-      <div className="flex-1 overflow-y-auto p-2 mt-2">
+      <div className="flex-1 overflow-y-auto p-2">
         {observations.length > 0 ? (
           <div className="grid gap-4">
             {observations.map((obs, index) => {

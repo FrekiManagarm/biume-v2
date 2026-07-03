@@ -73,6 +73,8 @@ export function AddObservationDialog({
   const [currentStep, setCurrentStep] = useState(1);
   const [regionSearchTerm, setRegionSearchTerm] = useState("");
   const [openRegionPopover, setOpenRegionPopover] = useState(false);
+  const [isInterventionZoneSelectOpen, setIsInterventionZoneSelectOpen] =
+    useState(false);
   const [hoveredSeverity, setHoveredSeverity] = useState<number | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [isVulgarisationOpen, setIsVulgarisationOpen] = useState(false);
@@ -216,8 +218,14 @@ export function AddObservationDialog({
     }
   };
 
+  const isSelectOpen = isInterventionZoneSelectOpen;
+
   return (
-    <Credenza open={isOpen} onOpenChange={onOpenChange}>
+    <Credenza
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      disablePointerDismissal={isSelectOpen}
+    >
       <CredenzaContent className="sm:max-w-[500px] p-0 rounded-xl overflow-hidden border-none shadow-xl max-h-[90vh] flex flex-col">
         <CredenzaHeader className="relative h-16 flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-white flex-shrink-0">
           <CredenzaTitle className="text-xl font-medium text-white z-10">
@@ -419,6 +427,8 @@ export function AddObservationDialog({
                   <span className="text-destructive">*</span>
                 </Label>
                 <Select
+                  open={isInterventionZoneSelectOpen}
+                  onOpenChange={setIsInterventionZoneSelectOpen}
                   value={newObservation.interventionZone}
                   onValueChange={(value) =>
                     setNewObservation({
