@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative Stenko",
   description:
-    "Comparez Stenko et Biume: relation pro-propriétaire large côté Stenko, résumé propriétaire et timeline animal côté Biume.",
+    "Comparez Stenko et Biume: agenda, propriétaires, patients, documents, résumé propriétaire et timeline animal côté Biume pour praticiens.",
   path: "/alternatives/stenko",
 });
 
@@ -18,23 +18,23 @@ export default function StenkoAlternativePage() {
         <>
           Alternative Stenko pour un{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-            suivi plus spécialisé
+            suivi praticien
           </span>
         </>
       }
-      description="Stenko travaille la relation entre professionnels et propriétaires d'animaux. Biume se spécialise dans le résumé propriétaire, la timeline animal et le suivi post-séance validé par le praticien."
+      description="Stenko travaille la relation entre professionnels et propriétaires d'animaux. Biume couvre agenda, propriétaires, patients, documents, résumé propriétaire et suivi post-séance."
       stats={[
         { value: "Relation", label: "Stenko" },
-        { value: "Séance", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
         { value: "J+7", label: "retour suivi" },
       ]}
       panel={{
         eyebrow: "Comparaison",
         title: "Stenko relie les acteurs, Biume part de la séance.",
-        body: "Stenko peut convenir pour une logique plus large entre professionnels et propriétaires. Biume démarre du rendez-vous et transforme ce moment en suivi compréhensible.",
+        body: "Stenko peut convenir pour une logique plus large entre professionnels et propriétaires. Biume démarre du rendez-vous, relie agenda, propriétaires et patients, puis transforme ce moment en suivi compréhensible.",
         items: [
           "Stenko: relation pro-propriétaire et outils de gestion.",
-          "Biume: résumé de séance et compte rendu propriétaire.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
           "Biume: relances et timeline animal centrées sur l'évolution.",
         ],
       }}
@@ -51,15 +51,15 @@ export default function StenkoAlternativePage() {
         },
         {
           eyebrow: "Différence",
-          title: "Biume est plus étroit, donc plus précis.",
-          body: "L'objectif n'est pas de tout couvrir. L'objectif est que le propriétaire comprenne mieux, garde une trace et revienne vers vous au bon moment.",
+          title: "Biume transforme la gestion en continuité de soin.",
+          body: "L'objectif est de garder un fil clair entre rendez-vous, dossier animal, observations, compte rendu propriétaire et prochaine étape validée par le praticien.",
         },
       ]}
       faq={[
         {
           question: "Biume est-il une alternative à Stenko ?",
           answer:
-            "Oui si votre priorité est le suivi post-séance et le compte rendu propriétaire. Pour une plateforme plus large, Stenko peut rester complémentaire.",
+            "Oui si votre priorité est de gérer agenda, propriétaires, patients animaux, comptes rendus et suivi post-séance dans un flux pensé pour le praticien.",
         },
         {
           question: "Quelle différence pour le propriétaire ?",

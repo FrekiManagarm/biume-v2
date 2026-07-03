@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative Hunimalis",
   description:
-    "Comparez Hunimalis et Biume: gestion tout-en-un côté Hunimalis, compte rendu propriétaire et suivi post-séance côté Biume.",
+    "Comparez Hunimalis et Biume: agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance pour thérapeutes animaliers.",
   path: "/alternatives/hunimalis",
 });
 
@@ -16,25 +16,25 @@ export default function HunimalisAlternativePage() {
       eyebrow="Alternative Hunimalis"
       title={
         <>
-          Alternative Hunimalis pour vos{" "}
+          Alternative Hunimalis pour gérer vos{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-            comptes rendus propriétaire
+            suivis propriétaire
           </span>
         </>
       }
-      description="Hunimalis est orienté gestion d'activité pour professionnels animaliers. Biume cible le compte rendu propriétaire, la timeline animal et le suivi post-séance des praticiens manuels."
+      description="Hunimalis est orienté gestion d'activité pour professionnels animaliers. Biume couvre agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance des praticiens manuels."
       stats={[
-        { value: "Tout-en-un", label: "Hunimalis" },
-        { value: "Suivi", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
+        { value: "Patients", label: "Biume" },
         { value: "PDF", label: "propriétaire" },
       ]}
       panel={{
         eyebrow: "Comparaison",
-        title: "Hunimalis centralise, Biume approfondit l'après-séance.",
-        body: "Si vous voulez un logiciel large de gestion, Hunimalis peut répondre. Si vous voulez rendre vos séances plus lisibles après coup, Biume est plus ciblé.",
+        title: "Biume centralise le suivi et rend la séance lisible.",
+        body: "Si vous comparez Hunimalis et Biume, regardez le flux complet: agenda, propriétaires, patients animaux, documents, comptes rendus et continuité après chaque rendez-vous.",
         items: [
           "Hunimalis: rendez-vous, dossiers, visibilité et gestion.",
-          "Biume: compte rendu propriétaire après la séance.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
           "Biume: relances et évolution par animal.",
         ],
       }}
@@ -46,8 +46,8 @@ export default function HunimalisAlternativePage() {
         },
         {
           eyebrow: "Quand choisir Biume",
-          title: "Quand vos clients ne retiennent pas tout ce que vous expliquez.",
-          body: "Biume transforme la séance en compte rendu propriétaire clair et en suivi concret. Le praticien garde la validation finale, l'outil apporte la régularité.",
+          title: "Quand vous voulez gérer le dossier et prolonger la séance.",
+          body: "Biume relie le rendez-vous, le propriétaire, le patient animal, les documents et le compte rendu. Le praticien garde la validation finale, l'outil apporte la régularité.",
         },
         {
           eyebrow: "Différence",
@@ -59,7 +59,7 @@ export default function HunimalisAlternativePage() {
         {
           question: "Biume remplace-t-il Hunimalis ?",
           answer:
-            "Pas nécessairement. Biume peut compléter un outil de gestion si votre enjeu est surtout le compte rendu propriétaire et le suivi post-séance.",
+            "Biume peut répondre au besoin si vous cherchez agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance dans un même espace.",
         },
         {
           question: "Biume convient-il aux thérapeutes animaliers indépendants ?",

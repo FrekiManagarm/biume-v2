@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Logiciel ostéopathe animalier",
   description:
-    "Biume aide les ostéopathes animaliers à envoyer un suivi post-séance clair, une timeline animal et des relances propriétaire validées.",
+    "Biume aide les ostéopathes animaliers à gérer agenda, propriétaires, patients, comptes rendus et suivi post-séance clair.",
   path: "/logiciel-osteopathe-animalier",
 });
 
@@ -22,7 +22,7 @@ export default function ProductSeoPage() {
           </span>
         </>
       }
-      description="Biume est un logiciel ostéopathe animalier pensé pour les praticiens manuels de santé animale: résumé de séance, compte rendu propriétaire, timeline animal et relance de suivi, sans remplacer votre expertise."
+      description="Biume est un logiciel ostéopathe animalier pensé pour les praticiens manuels de santé animale: agenda, gestion des propriétaires et patients, compte rendu, timeline animal et relance de suivi, sans remplacer votre expertise."
       stats={[
         { value: "15 j", label: "essai gratuit" },
         { value: "0", label: "carte requise" },
@@ -30,12 +30,12 @@ export default function ProductSeoPage() {
       ]}
       panel={{
         eyebrow: "Positionnement",
-        title: "Pas un logiciel de gestion de plus.",
-        body: "Animalib, Hunimalis, Stenko ou MyTour couvrent très bien l'administratif. Biume se concentre sur ce qui se passe après la séance: ce que le propriétaire comprend, retient et fait ensuite.",
+        title: "Un socle métier, avec un vrai suivi après la séance.",
+        body: "Biume couvre les besoins quotidiens du praticien: agenda, propriétaires, patients, documents et comptes rendus. Sa différence est de relier cette gestion à ce qui se passe après la séance: ce que le propriétaire comprend, retient et fait ensuite.",
         items: [
+          "L'agenda garde vos rendez-vous et le contexte de suivi.",
+          "Les propriétaires, patients et documents restent reliés à chaque animal.",
           "Le praticien garde la validation finale de chaque contenu.",
-          "Le propriétaire reçoit un résumé court, lisible et rassurant.",
-          "La timeline animal garde les points observés et l'évolution.",
         ],
       }}
       sections={[
@@ -43,6 +43,11 @@ export default function ProductSeoPage() {
           eyebrow: "Intent",
           title: "Un logiciel pour les ostéopathes animaliers qui veulent mieux suivre leurs clients.",
           body: "Après une séance, le propriétaire oublie souvent une partie des explications. Biume structure vos points observés, vos conseils transmis par le praticien et la prochaine étape pour rendre le suivi post-séance plus professionnel.",
+        },
+        {
+          eyebrow: "Gestion",
+          title: "Agenda, propriétaires et patients dans le même flux.",
+          body: "Vous gardez vos rendez-vous, vos propriétaires, vos patients animaux et les documents utiles au même endroit. Le suivi post-séance ne vit pas à côté de la gestion: il s'appuie sur elle.",
         },
         {
           eyebrow: "Compte rendu",
@@ -62,9 +67,9 @@ export default function ProductSeoPage() {
       ]}
       faq={[
         {
-          question: "Biume remplace-t-il mon logiciel de gestion ?",
+          question: "Biume inclut-il un agenda et une gestion propriétaires/patients ?",
           answer:
-            "Non. Biume peut vivre à côté de votre agenda, facturation ou logiciel métier. Il cible surtout le compte rendu propriétaire et le suivi post-séance.",
+            "Oui. Biume inclut une partie agenda, une gestion des propriétaires, des patients animaux et des documents. Sa différence est de relier ce socle au compte rendu et au suivi post-séance.",
         },
         {
           question: "Est-ce adapté aux praticiens mobiles ?",

@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative Kiwi Appli",
   description:
-    "Alternative Kiwi Appli pour ostéopathes animaliers: comparez gestion, comptes rendus, résumé propriétaire et suivi post-séance avec Biume.",
+    "Alternative Kiwi Appli pour ostéopathes animaliers: comparez agenda, propriétaires, patients, comptes rendus et suivi post-séance avec Biume.",
   path: "/alternatives/kiwiappli",
 });
 
@@ -22,19 +22,19 @@ export default function KiwiAppliAlternativePage() {
           </span>
         </>
       }
-      description="Kiwi Appli aide les ostéopathes animaliers à gérer fiches clients, comptes rendus, factures et ressources métier. Biume se concentre sur le compte rendu propriétaire, la timeline animal et la relance post-séance."
+      description="Kiwi Appli aide les ostéopathes animaliers à gérer fiches clients, comptes rendus, factures et ressources métier. Biume propose aussi agenda, propriétaires et patients, avec un angle fort sur le résumé propriétaire et la relance post-séance."
       stats={[
-        { value: "Gestion", label: "Kiwi Appli" },
-        { value: "Suivi", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
+        { value: "Patients", label: "Biume" },
         { value: "J+7", label: "relance" },
       ]}
       panel={{
         eyebrow: "Comparaison",
-        title: "Kiwi Appli structure la consultation, Biume prolonge la séance.",
-        body: "Le bon choix dépend de votre priorité. Kiwi Appli met en avant la gestion quotidienne et le compte rendu de consultation. Biume travaille surtout la compréhension propriétaire et la continuité après rendez-vous.",
+        title: "Kiwi Appli et Biume couvrent la gestion, Biume insiste sur l'après-séance.",
+        body: "Le bon choix dépend de votre priorité. Kiwi Appli met en avant la gestion quotidienne et le compte rendu de consultation. Biume couvre aussi agenda, propriétaires et patients, puis relie ce socle à la compréhension propriétaire et à la continuité après rendez-vous.",
         items: [
           "Kiwi Appli: fiches clients, comptes rendus, factures, encyclopédie.",
-          "Biume: résumé propriétaire validé par le praticien.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
           "Biume: timeline animal et relances post-séance.",
         ],
       }}
@@ -46,8 +46,8 @@ export default function KiwiAppliAlternativePage() {
         },
         {
           eyebrow: "Quand choisir Biume",
-          title: "Quand votre enjeu est la communication propriétaire après la séance.",
-          body: "Biume est plus spécialisé si vous voulez transformer vos observations en résumé propriétaire clair, garder une timeline animal et préparer une relance utile après la séance.",
+          title: "Quand vous voulez gestion métier et communication propriétaire.",
+          body: "Biume est pertinent si vous voulez gérer agenda, propriétaires, patients animaux et documents, tout en transformant vos observations en résumé propriétaire clair et en relance utile après la séance.",
         },
         {
           eyebrow: "Différence",
@@ -55,26 +55,26 @@ export default function KiwiAppliAlternativePage() {
           body: "Dans une logique de gestion, le compte rendu documente la consultation. Dans Biume, il devient aussi un support de compréhension, de suivi et de continuité pour le propriétaire.",
         },
         {
-          eyebrow: "Complément",
-          title: "Vous pouvez tester Biume sans changer tout votre back-office.",
-          body: "Si Kiwi Appli couvre déjà votre organisation, Biume peut être testé sur quelques séances où le résumé propriétaire, la relance J+7 ou la timeline animal sont les plus utiles.",
+          eyebrow: "Essai",
+          title: "Vous pouvez tester Biume sur un flux complet.",
+          body: "Testez Biume sur quelques rendez-vous: agenda, propriétaire, patient animal, compte rendu, résumé propriétaire et relance J+7. Vous verrez vite si le flux convient à votre pratique.",
         },
       ]}
       faq={[
         {
           question: "Biume remplace-t-il Kiwi Appli ?",
           answer:
-            "Pas forcément. Biume peut compléter Kiwi Appli si votre priorité est de renforcer la compréhension propriétaire, la timeline animal et le suivi post-séance.",
+            "Biume peut devenir votre espace de travail si vous voulez couvrir agenda, propriétaires, patients animaux, documents, compte rendu et suivi post-séance, avec un accent fort sur la compréhension propriétaire.",
         },
         {
           question: "Quelle alternative choisir pour les comptes rendus ?",
           answer:
-            "Si vous cherchez surtout à produire un document de consultation, Kiwi Appli peut convenir. Si vous voulez un résumé propriétaire relié à une relance et à une timeline, Biume est plus spécialisé.",
+            "Biume est pertinent si vous voulez relier le document de consultation à un résumé propriétaire, une timeline animal et une relance de suivi.",
         },
         {
           question: "Puis-je tester Biume avec mes outils actuels ?",
           answer:
-            "Oui. Vous pouvez tester Biume sur quelques vraies séances sans changer immédiatement votre agenda, votre facturation ou votre organisation existante.",
+            "Oui. Vous pouvez tester Biume sur quelques vraies séances et comparer le flux complet: rendez-vous, propriétaire, patient, compte rendu et suivi après séance.",
         },
       ]}
       internalLinks={[

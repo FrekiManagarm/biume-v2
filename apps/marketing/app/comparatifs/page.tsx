@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternatives aux logiciels ostéopathe animalier",
   description:
-    "Comparez Biume, Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe selon votre besoin: gestion, relances ou suivi.",
+    "Comparez Biume, Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe: agenda, patients, suivi et relances.",
   path: "/comparatifs",
 });
 
@@ -22,37 +22,38 @@ export default function ComparisonHubPage() {
           </span>
         </>
       }
-      description="Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe répondent à des besoins différents. Biume se différencie par le compte rendu propriétaire, le suivi post-séance et la relance de suivi."
+      description="Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe répondent à des besoins différents. Biume couvre agenda, propriétaires, patients animaux, documents, comptes rendus et suivi post-séance."
       stats={[
-        { value: "7", label: "outils comparés" },
-        { value: "1", label: "angle suivi" },
+        { value: "8", label: "outils comparés" },
+        { value: "1", label: "socle Biume" },
         { value: "FR", label: "marché ciblé" },
       ]}
       panel={{
         eyebrow: "Choisir",
         title: "Le bon outil dépend du problème prioritaire.",
-        body: "Si votre sujet principal est l'agenda, la facturation ou les tournées, un logiciel de gestion peut être prioritaire. Si votre enjeu est que le propriétaire comprenne, se souvienne et revienne au bon moment, Biume devient plus pertinent.",
+        body: "Biume couvre aussi un socle métier: agenda, propriétaires, patients animaux, documents et comptes rendus. Sa différence est de relier cette gestion à un suivi propriétaire clair après la séance.",
         items: [
           "Animalib et Hunimalis: gestion d'activité et dossiers.",
+          "Kiwi Appli: fiches clients, comptes rendus, factures, ressources métier.",
           "Stenko: relation professionnel-propriétaire plus large.",
-          "Biume: résumé de séance, timeline animal et relances.",
+          "Biume: agenda, propriétaires, patients, résumé de séance et relances.",
         ],
       }}
       sections={[
         {
           eyebrow: "Animalib",
           title: "Animalib est fort sur la gestion d'activité.",
-          body: "Animalib parle agenda, clients, consultations, facturation, rapports et usage mobile. Biume ne cherche pas à remplacer ce socle administratif: il se concentre sur le suivi propriétaire après la séance.",
+          body: "Animalib parle agenda, clients, consultations, facturation, rapports et usage mobile. Biume couvre aussi agenda, propriétaires et patients, avec un angle plus marqué sur le résumé propriétaire et le suivi après la séance.",
         },
         {
           eyebrow: "Hunimalis",
           title: "Hunimalis couvre les professionnels animaliers avec une logique tout-en-un.",
-          body: "Hunimalis peut convenir si vous voulez centraliser rendez-vous, visibilité, dossiers et facturation. Biume est plus étroit, mais plus précis sur le compte rendu propriétaire et la continuité post-séance.",
+          body: "Hunimalis peut convenir si vous voulez centraliser rendez-vous, visibilité, dossiers et facturation. Biume couvre agenda, propriétaires, patients, documents et comptes rendus, avec un flux très clair pour la continuité post-séance.",
         },
         {
           eyebrow: "Kiwi Appli",
           title: "Kiwi Appli couvre la gestion et les comptes rendus de consultation.",
-          body: "Kiwi Appli peut convenir si vous cherchez fiches clients, comptes rendus, facturation et ressources métier. Biume garde un angle plus spécifique: transformer la séance en résumé propriétaire, timeline animal et relance de suivi.",
+          body: "Kiwi Appli peut convenir si vous cherchez fiches clients, comptes rendus, facturation et ressources métier. Biume couvre aussi agenda, propriétaires et patients, puis ajoute un flux fort autour du résumé propriétaire, de la timeline animal et de la relance de suivi.",
         },
         {
           eyebrow: "Stenko",
@@ -62,34 +63,34 @@ export default function ComparisonHubPage() {
         {
           eyebrow: "MyTour",
           title: "MyTour répond surtout aux praticiens mobiles et aux tournées.",
-          body: "Si l'enjeu est la route, les kilomètres et l'organisation terrain, MyTour a un angle naturel. Si l'enjeu est la compréhension du soin et la relance après la visite, Biume complète mieux ce flux.",
+          body: "Si l'enjeu est la route, les kilomètres et l'organisation terrain, MyTour a un angle naturel. Biume organise le socle de suivi du praticien: agenda, propriétaires, patients animaux, compte rendu et relance après la visite.",
         },
         {
           eyebrow: "NeoVoice",
           title: "NeoVoice part davantage du propriétaire et du carnet animal.",
-          body: "NeoVoice peut aider le propriétaire à centraliser des informations. Biume part de la séance du praticien pour créer un résumé validé, une timeline animal et une relance post-séance.",
+          body: "NeoVoice peut aider le propriétaire à centraliser des informations. Biume part du praticien avec agenda, propriétaires, patients, résumé validé, timeline animal et relance post-séance.",
         },
         {
           eyebrow: "MyPawScribe",
           title: "MyPawScribe est plus proche du scribe vétérinaire.",
-          body: "Si votre recherche concerne une documentation clinique vétérinaire, MyPawScribe peut être plus naturel. Biume cible les thérapeutes animaliers et la communication propriétaire.",
+          body: "Si votre recherche concerne une documentation clinique vétérinaire, MyPawScribe peut être plus naturel. Biume cible les thérapeutes animaliers avec agenda, propriétaires, patients, documents et communication propriétaire.",
         },
       ]}
       faq={[
         {
           question: "Biume est-il une alternative à Animalib ?",
           answer:
-            "Biume peut être une alternative si votre besoin principal est le compte rendu propriétaire et le suivi post-séance. Pour la gestion complète d'activité, Animalib peut rester complémentaire.",
+            "Oui, si vous cherchez un espace de travail centré praticien avec agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance.",
         },
         {
           question: "Pourquoi choisir Biume plutôt qu'un outil tout-en-un ?",
           answer:
-            "Parce que Biume est spécialisé sur un moment précis: transformer une séance en résumé clair, feedback propriétaire, timeline animal et relance utile.",
+            "Parce que Biume relie la gestion quotidienne du cabinet à la continuité après séance: résumé clair, feedback propriétaire, timeline animal et relance utile.",
         },
         {
           question: "Puis-je utiliser Biume avec un autre logiciel ?",
           answer:
-            "Oui. Beaucoup de praticiens peuvent garder leur outil d'agenda ou de facturation et utiliser Biume pour professionnaliser le suivi propriétaire.",
+            "Oui. Vous pouvez tester Biume sur un flux réel: rendez-vous, propriétaire, patient animal, document, compte rendu et suivi propriétaire.",
         },
       ]}
       internalLinks={[

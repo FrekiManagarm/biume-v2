@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "NeoVoice vs Biume",
   description:
-    "NeoVoice vs Biume: carnet et suivi côté propriétaire avec NeoVoice; compte rendu post-séance validé par le praticien avec Biume.",
+    "NeoVoice vs Biume: carnet côté propriétaire; agenda, propriétaires, patients, comptes rendus et suivi côté praticien avec Biume.",
   path: "/comparatifs/neovoice-vs-biume",
 });
 
@@ -23,19 +23,19 @@ export default function NeoVoiceComparisonPage() {
           , quel point de départ ?
         </>
       }
-      description="NeoVoice aide les propriétaires à centraliser le suivi de leur animal. Biume part du praticien: résumé propriétaire, points observés, timeline animal et relance post-séance."
+      description="NeoVoice aide les propriétaires à centraliser le suivi de leur animal. Biume part du praticien: agenda, propriétaires, patients, résumé propriétaire, timeline animal et relance post-séance."
       stats={[
         { value: "Owner", label: "NeoVoice" },
-        { value: "Pro", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
         { value: "J+7", label: "retour suivi" },
       ]}
       panel={{
         eyebrow: "Comparaison",
         title: "NeoVoice centralise le carnet, Biume transforme la séance.",
-        body: "NeoVoice peut être utile pour le propriétaire qui veut suivre son animal. Biume aide le praticien à produire un suivi clair à partir de la séance réelle.",
+        body: "NeoVoice peut être utile pour le propriétaire qui veut suivre son animal. Biume aide le praticien à gérer agenda, propriétaires, patients animaux et documents, puis à produire un suivi clair à partir de la séance réelle.",
         items: [
           "NeoVoice: carnet, documents, rappels et suivi propriétaire.",
-          "Biume: résumé validé par le praticien après la séance.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
           "Biume: relances et timeline centrées sur l'évolution observée.",
         ],
       }}
@@ -48,7 +48,7 @@ export default function NeoVoiceComparisonPage() {
         {
           eyebrow: "Quand choisir Biume",
           title: "Quand le besoin part de la séance du praticien.",
-          body: "Biume est plus adapté si vous voulez transformer vos observations en compte rendu propriétaire, garder l'évolution par animal et préparer une relance utile après rendez-vous.",
+          body: "Biume est adapté si vous voulez relier agenda, propriétaire, patient animal et observations, puis transformer la séance en compte rendu propriétaire et relance utile.",
         },
         {
           eyebrow: "Différence",
@@ -60,7 +60,7 @@ export default function NeoVoiceComparisonPage() {
         {
           question: "NeoVoice et Biume répondent-ils au même besoin ?",
           answer:
-            "Pas exactement. NeoVoice part plutôt du propriétaire et du carnet de suivi. Biume part du praticien et du suivi post-séance.",
+            "NeoVoice part plutôt du propriétaire et du carnet de suivi. Biume part du praticien avec agenda, propriétaires, patients animaux et suivi post-séance.",
         },
         {
           question: "Biume crée-t-il un carnet animal complet ?",

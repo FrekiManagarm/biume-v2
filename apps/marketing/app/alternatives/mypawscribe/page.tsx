@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative MyPawScribe",
   description:
-    "Comparez MyPawScribe et Biume: scribe IA vétérinaire côté MyPawScribe; suivi post-séance pour thérapeute animalier côté Biume.",
+    "Comparez MyPawScribe et Biume: scribe vétérinaire d'un côté; agenda, propriétaires, patients et suivi côté Biume pour thérapeutes animaliers.",
   path: "/alternatives/mypawscribe",
 });
 
@@ -22,19 +22,19 @@ export default function MyPawScribeAlternativePage() {
           </span>
         </>
       }
-      description="MyPawScribe s'adresse plutôt aux comptes rendus vétérinaires et à la documentation clinique. Biume est pensé pour un thérapeute animalier qui veut un résumé propriétaire et un suivi post-séance."
+      description="MyPawScribe s'adresse plutôt aux comptes rendus vétérinaires et à la documentation clinique. Biume est pensé pour un thérapeute animalier qui veut agenda, propriétaires, patients, résumé propriétaire et suivi post-séance."
       stats={[
         { value: "Vet", label: "MyPawScribe" },
-        { value: "Thérapie", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
         { value: "PDF", label: "propriétaire" },
       ]}
       panel={{
         eyebrow: "Comparaison",
         title: "Un scribe vétérinaire n'a pas le même rôle qu'un suivi post-séance.",
-        body: "MyPawScribe peut convenir à une logique clinique vétérinaire. Biume reste volontairement centré sur les praticiens manuels, la compréhension propriétaire et la continuité du suivi.",
+        body: "MyPawScribe peut convenir à une logique clinique vétérinaire. Biume reste centré sur les praticiens manuels avec agenda, propriétaires, patients animaux, compréhension propriétaire et continuité du suivi.",
         items: [
           "MyPawScribe: documentation vétérinaire et scribe IA.",
-          "Biume: résumé propriétaire validé par le praticien manuel.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
           "Biume: timeline animal, retours et relance J+7/J+30.",
         ],
       }}
@@ -47,7 +47,7 @@ export default function MyPawScribeAlternativePage() {
         {
           eyebrow: "Quand choisir Biume",
           title: "Quand votre enjeu est la relation propriétaire après la séance.",
-          body: "Biume aide à expliquer les points observés, transmettre vos conseils, garder une timeline animal et relancer le propriétaire sans prétendre produire un avis médical autonome.",
+          body: "Biume aide à gérer le rendez-vous, le propriétaire, le patient animal et les documents, puis à expliquer les points observés, transmettre vos conseils et relancer le propriétaire.",
         },
         {
           eyebrow: "Différence",

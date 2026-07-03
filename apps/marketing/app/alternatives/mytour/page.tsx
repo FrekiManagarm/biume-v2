@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative MyTour",
   description:
-    "Comparez MyTour et Biume: tournées, kilomètres et facturation côté MyTour; suivi post-séance et résumé propriétaire côté Biume.",
+    "Comparez MyTour et Biume: tournées côté MyTour; agenda, propriétaires, patients et suivi post-séance côté Biume pour praticiens mobiles.",
   path: "/alternatives/mytour",
 });
 
@@ -16,26 +16,26 @@ export default function MyTourAlternativePage() {
       eyebrow="Alternative MyTour"
       title={
         <>
-          Alternative MyTour pour le{" "}
+          Alternative MyTour pour organiser le{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-            suivi post-séance
+            suivi praticien
           </span>
         </>
       }
-      description="MyTour est pertinent pour les professionnels animaliers mobiles qui veulent gérer tournées, kilomètres et facturation. Biume cible un autre moment: le suivi propriétaire après la séance."
+      description="MyTour est pertinent pour les professionnels animaliers mobiles qui veulent gérer tournées, kilomètres et facturation. Biume couvre agenda, propriétaires, patients et suivi propriétaire après la séance."
       stats={[
         { value: "Route", label: "MyTour" },
-        { value: "Suivi", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
         { value: "J+7", label: "retour client" },
       ]}
       panel={{
         eyebrow: "Comparaison",
-        title: "MyTour organise vos déplacements, Biume organise l'après-séance.",
-        body: "Les deux besoins peuvent coexister. MyTour répond au quotidien terrain; Biume aide le propriétaire à comprendre la séance et à revenir vers vous au bon moment.",
+        title: "MyTour organise les tournées, Biume organise le suivi de séance.",
+        body: "MyTour répond au quotidien terrain. Biume couvre le flux praticien autour du rendez-vous: agenda, propriétaires, patients animaux, documents, compte rendu et relance au bon moment.",
         items: [
           "MyTour: tournées, kilomètres, facturation et organisation mobile.",
-          "Biume: compte rendu propriétaire et timeline animal.",
-          "Usage possible: MyTour pour la route, Biume pour le suivi.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
+          "Biume: compte rendu propriétaire, timeline animal et relances.",
         ],
       }}
       sections={[
@@ -51,15 +51,15 @@ export default function MyTourAlternativePage() {
         },
         {
           eyebrow: "Différence",
-          title: "Biume ne remplace pas un outil de tournée.",
-          body: "Biume complète le travail terrain en rendant la séance plus mémorable pour le propriétaire: points observés, conseils transmis, éléments à surveiller et prochaine étape.",
+          title: "Biume transforme la visite en suivi exploitable.",
+          body: "Biume rend la séance plus mémorable pour le propriétaire: rendez-vous, patient animal, points observés, conseils transmis, éléments à surveiller et prochaine étape.",
         },
       ]}
       faq={[
         {
           question: "Biume remplace-t-il MyTour ?",
           answer:
-            "Non si votre besoin principal est la tournée ou les kilomètres. Biume peut compléter MyTour pour le compte rendu propriétaire et le suivi post-séance.",
+            "Biume répond au besoin si votre priorité est agenda, propriétaires, patients, documents, compte rendu propriétaire et suivi post-séance.",
         },
         {
           question: "Biume convient-il aux praticiens mobiles ?",
@@ -69,7 +69,7 @@ export default function MyTourAlternativePage() {
         {
           question: "Pourquoi créer une page alternative MyTour ?",
           answer:
-            "Parce que certains praticiens comparent leurs outils. Biume doit clarifier son rôle: suivi après la séance, pas gestion de tournée.",
+            "Parce que certains praticiens comparent leurs outils. Biume clarifie son rôle: organiser le suivi du praticien autour du rendez-vous, du patient animal et de la relation propriétaire.",
         },
       ]}
       internalLinks={[

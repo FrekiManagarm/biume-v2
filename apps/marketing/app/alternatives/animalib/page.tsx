@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternative Animalib",
   description:
-    "Comparez Animalib et Biume: gestion d'activité côté Animalib, suivi post-séance, résumé propriétaire et relances côté Biume.",
+    "Comparez Animalib et Biume: agenda, propriétaires, patients, documents, comptes rendus, relances et suivi post-séance pour praticiens animaliers.",
   path: "/alternatives/animalib",
 });
 
@@ -16,26 +16,26 @@ export default function AnimalibAlternativePage() {
       eyebrow="Alternative Animalib"
       title={
         <>
-          Alternative Animalib pour le{" "}
+          Alternative Animalib pour gérer et{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-            suivi post-séance
+            suivre vos séances
           </span>
         </>
       }
-      description="Animalib est un outil utile pour gérer l'activité d'un ostéopathe animalier. Biume se concentre sur un autre levier: le résumé propriétaire, la timeline animal et la relance de suivi."
+      description="Animalib est un outil utile pour gérer l'activité d'un ostéopathe animalier. Biume propose aussi agenda, propriétaires, patients, documents et comptes rendus, avec un flux fort de suivi post-séance."
       stats={[
-        { value: "Admin", label: "Animalib" },
-        { value: "Suivi", label: "Biume" },
+        { value: "Agenda", label: "Biume" },
+        { value: "Patients", label: "Biume" },
         { value: "15 j", label: "essai gratuit" },
       ]}
       panel={{
         eyebrow: "Comparaison",
-        title: "Animalib pour gérer, Biume pour faire comprendre.",
-        body: "Le choix dépend de votre priorité. Si vous cherchez un socle d'agenda et facturation, Animalib peut être pertinent. Si vous voulez professionnaliser l'après-séance, Biume a un angle plus spécialisé.",
+        title: "Biume relie gestion métier et continuité propriétaire.",
+        body: "Le choix dépend de votre priorité. Biume couvre le socle agenda, propriétaires, patients animaux, documents et comptes rendus, puis transforme chaque séance en suivi clair pour le propriétaire.",
         items: [
           "Animalib: gestion d'activité, agenda, clients, consultations.",
-          "Biume: compte rendu propriétaire et suivi post-séance.",
-          "Usage possible: garder Animalib et ajouter Biume au suivi.",
+          "Biume: agenda, propriétaires, patients animaux et documents.",
+          "Biume: compte rendu propriétaire, timeline animal et relances.",
         ],
       }}
       sections={[
@@ -46,30 +46,30 @@ export default function AnimalibAlternativePage() {
         },
         {
           eyebrow: "Quand choisir Biume",
-          title: "Quand votre enjeu est la relation propriétaire après la séance.",
-          body: "Biume est conçu pour transformer vos observations en résumé propriétaire, garder une timeline animal et préparer les relances J+7 ou J+30.",
+          title: "Quand votre enjeu est de gérer et faire comprendre.",
+          body: "Biume est conçu pour gérer vos rendez-vous, propriétaires, patients animaux et documents, puis transformer vos observations en résumé propriétaire et relances J+7 ou J+30.",
         },
         {
           eyebrow: "Différence",
-          title: "Biume ne cherche pas à être un back-office complet.",
-          body: "Cette spécialisation évite de diluer la promesse: aider le propriétaire à comprendre l'évolution et vous aider à garder un suivi plus professionnel.",
+          title: "La différence Biume est la continuité après rendez-vous.",
+          body: "Le produit garde le fil entre agenda, dossier animal, compte rendu, évolution et prochaine étape, pour aider le propriétaire à comprendre et revenir vers vous au bon moment.",
         },
       ]}
       faq={[
         {
           question: "Biume remplace-t-il Animalib ?",
           answer:
-            "Pas forcément. Biume peut compléter Animalib si vous voulez renforcer le compte rendu propriétaire et la relance post-séance.",
+            "Biume peut devenir votre espace de travail si votre priorité est agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance.",
         },
         {
           question: "Quelle alternative choisir pour les comptes rendus ?",
           answer:
-            "Si votre priorité est le résumé propriétaire et la continuité du suivi, Biume est plus spécialisé sur ce besoin.",
+            "Biume est pertinent si vous voulez relier le compte rendu à un patient animal, un propriétaire, une timeline et une relance de suivi.",
         },
         {
-          question: "Puis-je tester Biume sans changer d'outil ?",
+          question: "Puis-je tester Biume sur quelques séances ?",
           answer:
-            "Oui. Vous pouvez tester Biume sur quelques vraies séances sans changer votre agenda ou votre facturation.",
+            "Oui. Vous pouvez tester Biume sur quelques vraies séances avec le flux complet: rendez-vous, propriétaire, patient, compte rendu et suivi.",
         },
       ]}
       internalLinks={[

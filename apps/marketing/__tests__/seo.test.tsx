@@ -102,4 +102,12 @@ describe("marketing SEO", () => {
     expect(rules.sitemap).toBe("https://biume.com/sitemap.xml");
     expect(JSON.stringify(rules)).toContain("/dashboard");
   });
+
+  test("product page mentions agenda and owner patient management", () => {
+    const html = renderToStaticMarkup(<ProductPage />);
+
+    expect(html).toContain("agenda");
+    expect(html).toContain("propriétaires");
+    expect(html).toContain("patients");
+  });
 });

@@ -23,6 +23,7 @@ import NeoVoiceAlternativePage, {
 import NeoVoiceComparisonPage, {
   metadata as neoVoiceMetadata,
 } from "../app/comparatifs/neovoice-vs-biume/page";
+import ComparisonHubPage from "../app/comparatifs/page";
 import StenkoAlternativePage, {
   metadata as stenkoMetadata,
 } from "../app/alternatives/stenko/page";
@@ -166,5 +167,48 @@ describe("SEO lever pages", () => {
     expect(html).not.toContain("31 août 2026");
     expect(html).not.toContain("message affiché aux utilisateurs");
     expect(html).toContain("/blog/migrer-depuis-neovoice-pro");
+  });
+
+  test("Kiwi Appli alternative page presents Biume as more than post-session follow-up", () => {
+    const html = renderToStaticMarkup(<KiwiAppliAlternativePage />);
+
+    expect(html).toContain("agenda");
+    expect(html).toContain("propriétaires");
+    expect(html).toContain("patients");
+    expect(html).not.toContain("Biume se concentre sur le compte rendu propriétaire");
+  });
+
+  test("comparison pages present Biume as a complete practitioner workspace", () => {
+    const pages = [
+      ComparisonHubPage,
+      AnimalibAlternativePage,
+      HunimalisAlternativePage,
+      KiwiAppliAlternativePage,
+      MyPawScribeAlternativePage,
+      MyTourAlternativePage,
+      NeoVoiceAlternativePage,
+      NeoVoiceComparisonPage,
+      StenkoAlternativePage,
+    ];
+    const minimisingPhrases = [
+      "Biume se concentre sur",
+      "Biume ne cherche pas",
+      "Biume ne remplace pas",
+      "Biume est plus étroit",
+      "Pas forcément. Biume peut compléter",
+      "peut rester complémentaire",
+      "sans changer votre agenda",
+    ];
+
+    for (const Page of pages) {
+      const html = renderToStaticMarkup(<Page />);
+
+      expect(html).toContain("agenda");
+      expect(html).toContain("propriétaires");
+      expect(html).toContain("patients");
+      for (const phrase of minimisingPhrases) {
+        expect(html).not.toContain(phrase);
+      }
+    }
   });
 });
