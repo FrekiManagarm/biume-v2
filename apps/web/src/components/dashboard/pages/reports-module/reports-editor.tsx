@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -42,10 +41,8 @@ import {
   SaveIcon,
   KeyboardIcon,
   AlertTriangle,
-  UserIcon,
-  ChevronRightIcon,
+  MessageCircleIcon,
 } from "lucide-react";
-import { SparklesIcon } from "@/components/ui/sparkles-icon";
 import { cn } from "@/lib/style";
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -110,8 +107,7 @@ export function AdvancedReportEditor({
         type: getObservationType(issue.observationType || "none"),
         dysfunctionType: undefined,
         interventionZone: issue.anatomicalPart?.zone as
-          | InterventionZone
-          | undefined,
+          InterventionZone | undefined,
         laterality: issue.laterality,
         anatomicalPart: issue.anatomicalPart,
       })) || [];
@@ -127,8 +123,7 @@ export function AdvancedReportEditor({
         severity: issue.severity,
         notes: issue.notes || "",
         interventionZone: issue.anatomicalPart?.zone as
-          | InterventionZone
-          | undefined,
+          InterventionZone | undefined,
         laterality: issue.laterality,
         anatomicalPart: issue.anatomicalPart,
       })) || [];
@@ -142,11 +137,11 @@ export function AdvancedReportEditor({
 
   const appointmentDetails = initialData.appointment
     ? {
-      beginAt: new Date(initialData.appointment.beginAt),
-      endAt: new Date(initialData.appointment.endAt),
-      status: initialData.appointment.status,
-      atHome: initialData.appointment.atHome,
-    }
+        beginAt: new Date(initialData.appointment.beginAt),
+        endAt: new Date(initialData.appointment.endAt),
+        status: initialData.appointment.status,
+        atHome: initialData.appointment.atHome,
+      }
     : undefined;
 
   // Initialisation directe des états avec les données
@@ -155,7 +150,7 @@ export function AdvancedReportEditor({
   );
   const [title, setTitle] = useState(
     initialData.title ||
-    "Compte rendu détaillé du " + new Date().toLocaleDateString(),
+      "Compte rendu détaillé du " + new Date().toLocaleDateString(),
   );
   const [observations, setObservations] =
     useState<Observation[]>(initialObservations);
@@ -233,13 +228,13 @@ export function AdvancedReportEditor({
     const hasChanges =
       currentState.title !== lastSavedState.title ||
       JSON.stringify(currentState.observations) !==
-      JSON.stringify(lastSavedState.observations) ||
+        JSON.stringify(lastSavedState.observations) ||
       currentState.notes !== lastSavedState.notes ||
       currentState.consultationReason !== lastSavedState.consultationReason ||
       JSON.stringify(currentState.recommendations) !==
-      JSON.stringify(lastSavedState.recommendations) ||
+        JSON.stringify(lastSavedState.recommendations) ||
       JSON.stringify(currentState.anatomicalIssues) !==
-      JSON.stringify(lastSavedState.anatomicalIssues);
+        JSON.stringify(lastSavedState.anatomicalIssues);
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -412,10 +407,10 @@ export function AdvancedReportEditor({
         prev.map((obs) =>
           obs.id === editingObservationId
             ? {
-              ...obs,
-              ...observationWithAnatomicalPart,
-              id: editingObservationId,
-            }
+                ...obs,
+                ...observationWithAnatomicalPart,
+                id: editingObservationId,
+              }
             : obs,
         ),
       );
@@ -535,10 +530,10 @@ export function AdvancedReportEditor({
         prev.map((issue) =>
           issue.id === editingAnatomicalIssueId
             ? {
-              ...issue,
-              ...issueWithAnatomicalPart,
-              id: editingAnatomicalIssueId,
-            }
+                ...issue,
+                ...issueWithAnatomicalPart,
+                id: editingAnatomicalIssueId,
+              }
             : issue,
         ),
       );
@@ -704,7 +699,7 @@ export function AdvancedReportEditor({
     {
       id: "evaluation",
       name: "Évaluation clinique",
-      icon: <ClipboardListIcon className="h-5 w-5 mr-2" />,
+      icon: <ClipboardListIcon className="h-5 w-5" />,
       tabs: [
         {
           id: "clinical",
@@ -721,7 +716,7 @@ export function AdvancedReportEditor({
     {
       id: "recommendations",
       name: "Recommandations & Notes",
-      icon: <HeartHandshakeIcon className="h-5 w-5 mr-2" />,
+      icon: <HeartHandshakeIcon className="h-5 w-5" />,
       tabs: [
         {
           id: "recommendations",
@@ -737,22 +732,36 @@ export function AdvancedReportEditor({
     },
   ];
 
-  // Trouver la catégorie du tab actif
-  const findCategoryForTab = (tabId: string) => {
-    return (
-      categories.find((category) =>
-        category.tabs.some((tab) => tab.id === tabId),
-      )?.id || categories[0].id
-    );
-  };
+  const flatTabs = categories.flatMap((category) =>
+    category.tabs.map((tab) => ({
+      ...tab,
+      categoryName: category.name,
+    })),
+  );
+  const activeTabMeta = flatTabs.find((tab) => tab.id === activeTab);
+  const progressSummary = flatTabs.reduce(
+    (acc, tab) => {
+      acc.total += 1;
+      if (getTabProgress(String(tab.id))) acc.completed += 1;
+      return acc;
+    },
+    { completed: 0, total: 0 },
+  );
+  const progressPercent =
+    progressSummary.total > 0
+      ? Math.round((progressSummary.completed / progressSummary.total) * 100)
+      : 0;
+  const selectedPetSummary = selectedPet
+    ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
+    : "Aucun patient sélectionné";
 
   return (
-    <div className="min-h-[100dvh] w-full bg-background text-foreground">
+    <div className="min-h-[100dvh] w-full bg-slate-50 text-slate-950">
       {/* Desktop Layout */}
       <div className="hidden h-[100dvh] lg:block">
         <div
           className={cn(
-            "grid h-full w-full gap-4 p-4 transition-all duration-200 ease-out",
+            "grid h-full w-full gap-5 p-4 transition-all duration-200 ease-out",
             isSidebarCollapsed
               ? "grid-cols-[72px_minmax(0,1fr)]"
               : "grid-cols-[20rem_minmax(0,1fr)]",
@@ -799,159 +808,288 @@ export function AdvancedReportEditor({
           </div>
 
           {/* Contenu principal */}
-          <main className="h-full min-h-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-foreground/5">
-            {isCat ? (
-              <div className="flex h-full w-full items-center justify-center p-6">
-                <Card className="w-full max-w-xl rounded-2xl border-border shadow-sm">
-                  <div className="flex items-start gap-4 p-8">
-                    <div className="mt-1 text-primary">
-                      <AlertTriangle className="h-6 w-6" />
+          <main className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+            <header className="border-b border-slate-200 bg-white px-5 py-4">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                <div className="min-w-0">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="rounded-lg border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"
+                    >
+                      {activeTabMeta?.categoryName || "Édition"}
+                    </Badge>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {progressPercent}% complété
+                    </span>
+                    {hasUnsavedChanges ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                        <span className="size-2 rounded-full bg-amber-500" />
+                        Modifications non sauvegardées
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                        <span className="size-2 rounded-full bg-emerald-500" />À
+                        jour
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 [&_svg]:size-5">
+                      {activeTabMeta?.icon || <FileTextIcon />}
                     </div>
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-foreground">
-                        Module rapports bientôt disponible pour le chat
-                      </h2>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Le module de comptes rendus n&apos;est pas encore
-                        disponible pour les chats. Sélectionnez un autre type
-                        d&apos;animal pour continuer, ou sélectionnez un autre
-                        type de rapport. Merci de votre compréhension.
+                    <div className="min-w-0">
+                      <h1 className="truncate text-2xl font-semibold leading-none tracking-tight text-slate-950">
+                        {activeTabMeta?.label || "Édition"}
+                      </h1>
+                      <p className="mt-2 truncate text-sm font-medium text-slate-500">
+                        {selectedPetSummary}
                       </p>
                     </div>
                   </div>
-                </Card>
-              </div>
-            ) : (
-              <div className="flex h-full min-h-0 flex-col">
-                <div className="min-h-0 flex-1 overflow-hidden">
-                  {activeTab === "clinical" && (
-                    <div className="h-full min-h-0 p-6">
-                      <ObservationsTab
-                        observations={observations}
-                        onRemoveObservation={handleRemoveObservation}
-                        onOpenAddSheet={() => {
-                          setEditingObservationId(null);
-                          setIsAddSheetOpen(true);
-                        }}
-                        onEditObservation={handleEditObservation}
-                      />
-                    </div>
-                  )}
+                </div>
 
-                  {activeTab === "anatomical" && (
-                    <AnatomicalEvaluationTab
-                      dysfunctions={anatomicalIssues}
-                      setDysfunctions={setAnatomicalIssues}
-                      onAddDysfunction={(issue) => {
-                        const newIssue: AnatomicalIssue = {
-                          id: crypto.randomUUID(),
-                          ...issue,
-                          laterality: issue.laterality || "left",
-                        };
-                        setAnatomicalIssues([...anatomicalIssues, newIssue]);
-                      }}
-                      isAddModalOpen={isAddAnatomicalIssueOpen}
-                      setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
-                      animalData={petData?.animal}
-                      isTestMode={isTestMode}
-                      selectedAnimalType={selectedAnimalType}
-                      anatomicalView={anatomicalView}
-                      setAnatomicalView={setAnatomicalView}
-                      onEditDysfunction={(id) => {
-                        const it = anatomicalIssues.find((d) => d.id === id);
-                        if (!it) return;
-                        setEditingAnatomicalIssueId(id);
-                        setNewAnatomicalIssue({
-                          type: it.type,
-                          region: it.region,
-                          severity: it.severity,
-                          notes: it.notes,
-                          interventionZone: it.interventionZone || "",
-                          laterality: it.laterality,
-                        });
-                        setIsAddAnatomicalIssueOpen(true);
-                      }}
-                    />
-                  )}
-
-                  {activeTab === "recommendations" && (
-                    <div className="h-full min-h-0 p-6">
-                      <RecommendationsTab
-                        recommendations={recommendations}
-                        setRecommendations={setRecommendations}
-                      />
-                    </div>
-                  )}
-
-                  {activeTab === "notes" && (
-                    <div className="h-full min-h-0 p-6">
-                      <NotesTab notes={notes} setNotes={setNotes} />
-                    </div>
-                  )}
+                <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVulgarisationOpen(true)}
+                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
+                  >
+                    <MessageCircleIcon className="size-4" />
+                    Assistant
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPreview(true)}
+                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
+                  >
+                    <EyeIcon className="size-4" />
+                    Aperçu
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleUpdateReport("draft")}
+                    disabled={updateReportMutation.isPending}
+                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
+                  >
+                    <SaveIcon className="size-4" />
+                    Sauvegarder
+                  </Button>
+                  <Button
+                    onClick={handleOpenReminderDialog}
+                    disabled={updateReportMutation.isPending}
+                    className="h-10 rounded-xl bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
+                  >
+                    <CheckIcon className="size-4" />
+                    Finaliser
+                  </Button>
                 </div>
               </div>
-            )}
+            </header>
+
+            <section className="min-h-0 overflow-hidden bg-slate-50/60">
+              {isCat ? (
+                <div className="flex h-full w-full items-center justify-center p-6">
+                  <Card className="w-full max-w-xl rounded-2xl border-border shadow-sm">
+                    <div className="flex items-start gap-4 p-8">
+                      <div className="mt-1 text-primary">
+                        <AlertTriangle className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-2">
+                        <h2 className="text-lg font-semibold text-foreground">
+                          Module rapports bientôt disponible pour le chat
+                        </h2>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Le module de comptes rendus n&apos;est pas encore
+                          disponible pour les chats. Sélectionnez un autre type
+                          d&apos;animal pour continuer, ou sélectionnez un autre
+                          type de rapport. Merci de votre compréhension.
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ) : (
+                <div className="flex h-full min-h-0 flex-col">
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    {activeTab === "clinical" && (
+                      <div className="h-full min-h-0 p-5 xl:p-6">
+                        <ObservationsTab
+                          observations={observations}
+                          onRemoveObservation={handleRemoveObservation}
+                          onOpenAddSheet={() => {
+                            setEditingObservationId(null);
+                            setIsAddSheetOpen(true);
+                          }}
+                          onEditObservation={handleEditObservation}
+                        />
+                      </div>
+                    )}
+
+                    {activeTab === "anatomical" && (
+                      <AnatomicalEvaluationTab
+                        dysfunctions={anatomicalIssues}
+                        setDysfunctions={setAnatomicalIssues}
+                        onAddDysfunction={(issue) => {
+                          const newIssue: AnatomicalIssue = {
+                            id: crypto.randomUUID(),
+                            ...issue,
+                            laterality: issue.laterality || "left",
+                          };
+                          setAnatomicalIssues([...anatomicalIssues, newIssue]);
+                        }}
+                        isAddModalOpen={isAddAnatomicalIssueOpen}
+                        setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
+                        animalData={petData?.animal}
+                        isTestMode={isTestMode}
+                        selectedAnimalType={selectedAnimalType}
+                        anatomicalView={anatomicalView}
+                        setAnatomicalView={setAnatomicalView}
+                        onEditDysfunction={(id) => {
+                          const it = anatomicalIssues.find((d) => d.id === id);
+                          if (!it) return;
+                          setEditingAnatomicalIssueId(id);
+                          setNewAnatomicalIssue({
+                            type: it.type,
+                            region: it.region,
+                            severity: it.severity,
+                            notes: it.notes,
+                            interventionZone: it.interventionZone || "",
+                            laterality: it.laterality,
+                          });
+                          setIsAddAnatomicalIssueOpen(true);
+                        }}
+                      />
+                    )}
+
+                    {activeTab === "recommendations" && (
+                      <div className="h-full min-h-0 p-5 xl:p-6">
+                        <RecommendationsTab
+                          recommendations={recommendations}
+                          setRecommendations={setRecommendations}
+                        />
+                      </div>
+                    )}
+
+                    {activeTab === "notes" && (
+                      <div className="h-full min-h-0 p-5 xl:p-6">
+                        <NotesTab notes={notes} setNotes={setNotes} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
           </main>
         </div>
       </div>
 
       {/* Mobile/Tablet Layout */}
-      <div className="min-h-[100dvh] bg-background lg:hidden">
-        {/* Header mobile simple */}
-        <div className="sticky top-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b border-border z-10">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleGoBack}
-                className="rounded-full hover:bg-primary/10 transition-colors"
-              >
-                <ChevronLeftIcon className="h-5 w-5" />
-              </Button>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-semibold">Modifier le rapport</h1>
-                  {hasUnsavedChanges && (
-                    <div
-                      className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"
-                      title="Modifications non sauvegardées"
-                    />
-                  )}
+      <div className="min-h-[100dvh] bg-slate-50 lg:hidden">
+        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="grid gap-4 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleGoBack}
+                  className="mt-0.5 shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
+                >
+                  <ChevronLeftIcon className="h-5 w-5" />
+                </Button>
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="rounded-lg border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800"
+                    >
+                      {activeTabMeta?.categoryName || "Édition"}
+                    </Badge>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 text-[11px] font-semibold",
+                        hasUnsavedChanges
+                          ? "text-amber-700"
+                          : "text-emerald-700",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-2 rounded-full",
+                          hasUnsavedChanges ? "bg-amber-500" : "bg-emerald-500",
+                        )}
+                      />
+                      {hasUnsavedChanges ? "Non sauvegardé" : "À jour"}
+                    </span>
+                  </div>
+                  <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
+                    {activeTabMeta?.label || "Modifier le rapport"}
+                  </h1>
+                  <p className="mt-1 truncate text-xs font-medium text-slate-500">
+                    {selectedPetSummary}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {selectedPet
-                    ? `${selectedPet.name} • ${selectedPet.animal?.name || selectedPet.type}`
-                    : "Compte rendu détaillé"}
-                </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
+
               <Button
-                variant="ghost"
+                variant="default"
+                size="icon"
+                onClick={handleOpenReminderDialog}
+                disabled={updateReportMutation.isPending}
+                className="shrink-0 rounded-xl bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
+                aria-label="Finaliser le rapport"
+              >
+                <CheckIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsVulgarisationOpen(true)}
+                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
+                aria-label="Assistant"
+              >
+                <MessageCircleIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => setShowPreview(true)}
-                className="flex items-center gap-2"
+                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
+                aria-label="Aperçu"
               >
                 <EyeIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => setIsShortcutsModalOpen(true)}
-                className="flex items-center gap-2"
+                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
+                aria-label="Raccourcis"
               >
                 <KeyboardIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant="default"
+                variant="outline"
                 size="sm"
-                onClick={handleOpenReminderDialog}
+                onClick={() => handleUpdateReport("draft")}
                 disabled={updateReportMutation.isPending}
-                className="flex items-center gap-2"
+                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
+                aria-label="Sauvegarder"
               >
                 <SaveIcon className="h-4 w-4" />
               </Button>
+            </div>
+
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-emerald-600 transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
           </div>
         </div>
@@ -1026,15 +1164,15 @@ export function AdvancedReportEditor({
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-10">
-        <div className="grid grid-cols-4 h-16">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white lg:hidden">
+        <div className="grid h-16 grid-cols-4">
           <button
             onClick={() => handleTabChange("clinical")}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200",
+              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
               activeTab === "clinical"
-                ? "text-primary bg-primary/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                ? "bg-slate-950 text-white"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
             )}
           >
             <div className="relative">
@@ -1042,7 +1180,8 @@ export function AdvancedReportEditor({
                 className={cn(
                   "h-5 w-5 transition-colors duration-200",
                   getTabProgress("clinical") &&
-                  "text-green-600 dark:text-green-400",
+                    activeTab !== "clinical" &&
+                    "text-emerald-700",
                 )}
               />
               {getTabCount("clinical") > 0 && (
@@ -1060,10 +1199,10 @@ export function AdvancedReportEditor({
           <button
             onClick={() => handleTabChange("anatomical")}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200",
+              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
               activeTab === "anatomical"
-                ? "text-primary bg-primary/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                ? "bg-slate-950 text-white"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
             )}
           >
             <div className="relative">
@@ -1071,7 +1210,8 @@ export function AdvancedReportEditor({
                 className={cn(
                   "h-5 w-5 transition-colors duration-200",
                   getTabProgress("anatomical") &&
-                  "text-blue-600 dark:text-blue-400",
+                    activeTab !== "anatomical" &&
+                    "text-emerald-700",
                 )}
               />
               {getTabCount("anatomical") > 0 && (
@@ -1089,10 +1229,10 @@ export function AdvancedReportEditor({
           <button
             onClick={() => handleTabChange("recommendations")}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200",
+              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
               activeTab === "recommendations"
-                ? "text-primary bg-primary/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                ? "bg-slate-950 text-white"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
             )}
           >
             <div className="relative">
@@ -1100,7 +1240,8 @@ export function AdvancedReportEditor({
                 className={cn(
                   "h-5 w-5 transition-colors duration-200",
                   getTabProgress("recommendations") &&
-                  "text-orange-600 dark:text-orange-400",
+                    activeTab !== "recommendations" &&
+                    "text-emerald-700",
                 )}
               />
               {getTabCount("recommendations") > 0 && (
@@ -1118,10 +1259,10 @@ export function AdvancedReportEditor({
           <button
             onClick={() => handleTabChange("notes")}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200",
+              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
               activeTab === "notes"
-                ? "text-primary bg-primary/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                ? "bg-slate-950 text-white"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
             )}
           >
             <div className="relative">
@@ -1129,7 +1270,8 @@ export function AdvancedReportEditor({
                 className={cn(
                   "h-5 w-5 transition-colors duration-200",
                   getTabProgress("notes") &&
-                  "text-purple-600 dark:text-purple-400",
+                    activeTab !== "notes" &&
+                    "text-emerald-700",
                 )}
               />
               {getTabProgress("notes") && (
@@ -1137,7 +1279,7 @@ export function AdvancedReportEditor({
                   variant="secondary"
                   className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none"
                 >
-                  ✓
+                  <CheckIcon className="h-3 w-3" />
                 </Badge>
               )}
             </div>
@@ -1357,12 +1499,10 @@ export function AdvancedReportEditor({
             </div>
 
             {/* Astuce */}
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start gap-2">
-                <span className="text-blue-600 dark:text-blue-400 text-sm">
-                  💡
-                </span>
-                <div className="text-sm text-blue-800 dark:text-blue-200">
+                <KeyboardIcon className="mt-0.5 h-4 w-4 text-slate-500" />
+                <div className="text-sm text-slate-700">
                   <strong>Astuce :</strong> La plupart des raccourcis
                   fonctionnent avec ou sans Shift pour plus de flexibilité. Les
                   raccourcis s&apos;adaptent automatiquement selon l&apos;onglet

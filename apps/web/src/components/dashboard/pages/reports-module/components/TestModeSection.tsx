@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -54,45 +53,49 @@ export function TestModeSection({
   }
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delay={300}>
       <section
         className={cn(
-          "flex flex-col rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm shadow-foreground/5 transition-all duration-200 ease-out",
-          isCollapsed ? "w-[72px] p-2" : "w-full"
+          "flex flex-col rounded-[1.5rem] border border-slate-200 bg-white p-3 text-slate-950 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] transition-all duration-200 ease-out",
+          isCollapsed ? "w-[72px] p-2" : "w-full",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
-        <div className={cn(
-          "p-1",
-          isCollapsed && "flex flex-col items-center p-0"
-        )}>
+        <div
+          className={cn("p-1", isCollapsed && "flex flex-col items-center p-0")}
+        >
           {isCollapsed ? (
             // Mode rétracté : icône avec tooltip
             <Tooltip>
               <TooltipTrigger
                 render={
-                <div className="flex flex-col items-center gap-2">
-                  <div 
-                    className={cn(
-                      "flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5",
-                      isTestMode 
-                        ? "bg-primary/10" 
-                        : "bg-muted"
+                  <div className="flex flex-col items-center gap-2">
+                    <div
+                      className={cn(
+                        "flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5",
+                        isTestMode
+                          ? "bg-amber-50 text-amber-800"
+                          : "bg-slate-100 text-slate-500",
+                      )}
+                      onClick={() => onTestModeChange(!isTestMode)}
+                    >
+                      <TestTubeIcon
+                        className={cn(
+                          "h-5 w-5",
+                          isTestMode ? "text-amber-800" : "text-slate-500",
+                        )}
+                      />
+                    </div>
+                    {isTestMode && (
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
                     )}
-                    onClick={() => onTestModeChange(!isTestMode)}
-                  >
-                    <TestTubeIcon className={cn(
-                      "h-5 w-5",
-                      isTestMode ? "text-primary" : "text-muted-foreground"
-                    )} />
                   </div>
-                  {isTestMode && (
-                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                  )}
-                </div>
                 }
               />
-              <TooltipContent side="right" className="flex flex-col gap-2 max-w-xs">
+              <TooltipContent
+                side="right"
+                className="flex flex-col gap-2 max-w-xs"
+              >
                 <div className="flex items-center gap-2">
                   <TestTubeIcon className="h-4 w-4" />
                   <p className="font-medium">Mode test</p>
@@ -103,7 +106,9 @@ export function TestModeSection({
                 {isTestMode && selectedAnimal && (
                   <div className="flex items-center gap-1 pt-1 border-t">
                     <p className="text-xs font-medium">Type:</p>
-                    <p className="text-xs text-muted-foreground">{selectedAnimal.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAnimal.label}
+                    </p>
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground pt-1 border-t">
@@ -117,10 +122,13 @@ export function TestModeSection({
               {/* Toggle mode test */}
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="test-mode" className="block text-sm font-semibold text-foreground">
+                  <Label
+                    htmlFor="test-mode"
+                    className="block text-sm font-semibold text-slate-950"
+                  >
                     Mode test
                   </Label>
-                  <p className="max-w-[18rem] text-xs leading-5 text-muted-foreground">
+                  <p className="max-w-[18rem] text-xs leading-5 text-slate-500">
                     Utilise les données de test pour les listes anatomiques
                   </p>
                 </div>
@@ -128,19 +136,21 @@ export function TestModeSection({
                   id="test-mode"
                   checked={isTestMode}
                   onCheckedChange={onTestModeChange}
-                  className="mt-1 data-[state=checked]:bg-primary"
+                  className="mt-1 data-[state=checked]:bg-amber-600"
                 />
               </div>
 
               {/* Sélecteur d'animal */}
               {isTestMode && (
                 <div className="space-y-2 mt-4">
-                  <Label className="text-xs font-medium text-muted-foreground">Type d&apos;animal</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Type d&apos;animal
+                  </Label>
                   <Select
                     value={selectedAnimalType}
                     onValueChange={onAnimalTypeChange}
                   >
-                    <SelectTrigger className="w-full rounded-xl border-input bg-background shadow-none">
+                    <SelectTrigger className="w-full rounded-xl border-slate-200 bg-slate-50 shadow-none">
                       <SelectValue placeholder="Sélectionner un type d'animal" />
                     </SelectTrigger>
                     <SelectContent>
@@ -167,9 +177,7 @@ export function TestModeSection({
                     variant="secondary"
                     className={cn(
                       "rounded-full text-xs",
-                      isTestMode
-                        ? "bg-primary/10 text-primary"
-                        : "",
+                      isTestMode ? "bg-amber-50 text-amber-800" : "",
                     )}
                   >
                     <TestTubeIcon className="h-3 w-3 mr-1" />
