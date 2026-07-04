@@ -24,6 +24,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -311,76 +312,80 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                     }
                   />
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewReport(report.id);
-                      }}
-                    >
-                      <Eye className="size-4" />
-                      Voir le rapport
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditReport(report.id);
-                      }}
-                    >
-                      <Edit className="size-4" />
-                      Modifier
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      render={
-                        <PDFDownloadLink
-                          document={
-                            <ReportPDF
-                              report={{
-                                id: report.id,
-                                title: report.title,
-                                createdAt: report.createdAt || new Date(),
-                                patient: report.patient,
-                                organization: report.organization,
-                                anatomicalIssues: report.anatomicalIssues,
-                                recommendations: report.recommendations,
-                              }}
-                              type="advanced_report"
-                            />
-                          }
-                          fileName={`rapport-${report.id}.pdf`}
-                        >
-                          {({ loading }) => (
-                            <div
-                              className="flex items-center gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Download className="size-4" />
-                              {loading ? "Génération..." : "Télécharger le PDF"}
-                            </div>
-                          )}
-                        </PDFDownloadLink>
-                      }
-                    />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendReportByEmail(report);
-                      }}
-                    >
-                      <Send className="size-4" />
-                      Envoyer
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteReport(report);
-                      }}
-                    >
-                      <Trash2 className="size-4" />
-                      Supprimer
-                    </DropdownMenuItem>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewReport(report.id);
+                        }}
+                      >
+                        <Eye className="size-4" />
+                        Voir le rapport
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditReport(report.id);
+                        }}
+                      >
+                        <Edit className="size-4" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        render={
+                          <PDFDownloadLink
+                            document={
+                              <ReportPDF
+                                report={{
+                                  id: report.id,
+                                  title: report.title,
+                                  createdAt: report.createdAt || new Date(),
+                                  patient: report.patient,
+                                  organization: report.organization,
+                                  anatomicalIssues: report.anatomicalIssues,
+                                  recommendations: report.recommendations,
+                                }}
+                                type="advanced_report"
+                              />
+                            }
+                            fileName={`rapport-${report.id}.pdf`}
+                          >
+                            {({ loading }) => (
+                              <div
+                                className="flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Download className="size-4" />
+                                {loading
+                                  ? "Génération..."
+                                  : "Télécharger le PDF"}
+                              </div>
+                            )}
+                          </PDFDownloadLink>
+                        }
+                      />
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendReportByEmail(report);
+                        }}
+                      >
+                        <Send className="size-4" />
+                        Envoyer
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteReport(report);
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

@@ -7,12 +7,10 @@ import {
   CalendarClockIcon,
   CheckCircle2Icon,
   ChevronLeftIcon,
-  EyeIcon,
   HomeIcon,
   KeyboardIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
-  SaveIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/style";
@@ -42,11 +40,7 @@ export function ReportSidebarNavigation({
   activeTab,
   onChangeTab,
   onGoBack,
-  onPreview,
   onShortcuts,
-  onSave,
-  onFinalize = onSave,
-  isSaving,
   getTabProgress,
   getTabCount,
   hasUnsavedChanges,
@@ -60,11 +54,7 @@ export function ReportSidebarNavigation({
   activeTab: TabId | string;
   onChangeTab: (tab: TabId) => void;
   onGoBack: () => void;
-  onPreview: () => void;
   onShortcuts: () => void;
-  onSave: () => void;
-  onFinalize?: () => void;
-  isSaving: boolean;
   getTabProgress: (tabId: string) => boolean;
   getTabCount: (tabId: string) => number;
   hasUnsavedChanges: boolean;
@@ -133,8 +123,6 @@ export function ReportSidebarNavigation({
       ? Math.round((progress.completed / progress.total) * 100)
       : 0;
 
-  const actionButtonClass =
-    "h-10 rounded-xl border-border bg-background text-sm font-semibold text-foreground shadow-none hover:bg-accent hover:text-accent-foreground active:scale-[0.98]";
   const collapsedControlClass =
     "h-11 w-11 rounded-xl text-muted-foreground shadow-none hover:bg-accent hover:text-accent-foreground active:scale-[0.98]";
 
@@ -187,40 +175,70 @@ export function ReportSidebarNavigation({
             </div>
           )}
 
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onToggleCollapse}
-                  aria-label={
-                    isCollapsed
-                      ? "Agrandir la barre latérale"
-                      : "Réduire la barre latérale"
-                  }
-                  className={cn(
-                    isCollapsed
-                      ? collapsedControlClass
-                      : "h-9 w-9 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  )}
-                >
-                  {isCollapsed ? (
-                    <PanelLeftOpenIcon className="h-5 w-5" />
-                  ) : (
-                    <PanelLeftCloseIcon className="h-5 w-5" />
-                  )}
-                </Button>
-              }
-            />
-            <TooltipContent side="right">
-              <p>
-                {isCollapsed
-                  ? "Agrandir la barre latérale"
-                  : "Réduire la barre latérale"}
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          <div
+            className={cn(
+              "flex items-center gap-1",
+              isCollapsed && "flex-col gap-2",
+            )}
+          >
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onShortcuts}
+                    aria-label="Raccourcis clavier"
+                    className={cn(
+                      isCollapsed
+                        ? collapsedControlClass
+                        : "h-9 w-9 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    <KeyboardIcon className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="right">
+                <p>Raccourcis clavier</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleCollapse}
+                    aria-label={
+                      isCollapsed
+                        ? "Agrandir la barre latérale"
+                        : "Réduire la barre latérale"
+                    }
+                    className={cn(
+                      isCollapsed
+                        ? collapsedControlClass
+                        : "h-9 w-9 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    {isCollapsed ? (
+                      <PanelLeftOpenIcon className="h-5 w-5" />
+                    ) : (
+                      <PanelLeftCloseIcon className="h-5 w-5" />
+                    )}
+                  </Button>
+                }
+              />
+              <TooltipContent side="right">
+                <p>
+                  {isCollapsed
+                    ? "Agrandir la barre latérale"
+                    : "Réduire la barre latérale"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
 
         {!isCollapsed && (
@@ -310,18 +328,7 @@ export function ReportSidebarNavigation({
           </div>
         )}
 
-        <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-4">
-          {!isCollapsed && (
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-semibold text-muted-foreground">
-                Sections
-              </p>
-              <p className="text-xs font-medium text-muted-foreground">
-                {progress.completed}/{progress.total}
-              </p>
-            </div>
-          )}
-
+        <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-3">
           <div
             className={cn(
               "space-y-5",
@@ -435,137 +442,7 @@ export function ReportSidebarNavigation({
           </div>
         </nav>
 
-        <div
-          className={cn(
-            "mt-auto border-t border-border pt-3",
-            isCollapsed ? "flex flex-col items-center gap-2" : "space-y-3",
-          )}
-        >
-          {!isCollapsed && (
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPreview}
-                className={actionButtonClass}
-              >
-                <EyeIcon className="mr-1.5 h-4 w-4" />
-                Aperçu
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onShortcuts}
-                className={actionButtonClass}
-              >
-                <KeyboardIcon className="mr-1.5 h-4 w-4" />
-                Raccourcis
-              </Button>
-            </div>
-          )}
-
-          {isCollapsed && (
-            <div className="flex flex-col items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onPreview}
-                      aria-label="Aperçu"
-                      className={cn("border-border", collapsedControlClass)}
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-                <TooltipContent side="right">
-                  <p>Aperçu</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onShortcuts}
-                      aria-label="Raccourcis clavier"
-                      className={cn("border-border", collapsedControlClass)}
-                    >
-                      <KeyboardIcon className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-                <TooltipContent side="right">
-                  <p>Raccourcis clavier</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )}
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size={isCollapsed ? "icon" : "sm"}
-                  onClick={onSave}
-                  disabled={isSaving}
-                  aria-label={
-                    isCollapsed ? "Sauvegarder le rapport" : undefined
-                  }
-                  className={cn(
-                    "rounded-xl border-border bg-background font-semibold text-foreground shadow-none hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
-                    isCollapsed ? "h-11 w-11" : "h-10 w-full",
-                  )}
-                >
-                  <SaveIcon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
-                  {!isCollapsed &&
-                    (isSaving ? "Enregistrement..." : "Sauvegarder le rapport")}
-                </Button>
-              }
-            />
-            {isCollapsed && (
-              <TooltipContent side="right">
-                <p>
-                  {isSaving ? "Enregistrement..." : "Sauvegarder le rapport"}
-                </p>
-              </TooltipContent>
-            )}
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="default"
-                  size={isCollapsed ? "icon" : "sm"}
-                  onClick={onFinalize}
-                  disabled={isSaving}
-                  aria-label={isCollapsed ? "Finaliser le rapport" : undefined}
-                  className={cn(
-                    "rounded-xl bg-primary font-semibold text-primary-foreground shadow-none hover:bg-primary/90 active:scale-[0.98]",
-                    isCollapsed ? "h-11 w-11" : "h-10 w-full",
-                  )}
-                >
-                  <CheckCircle2Icon
-                    className={cn("h-4 w-4", !isCollapsed && "mr-2")}
-                  />
-                  {!isCollapsed &&
-                    (isSaving ? "Enregistrement..." : "Finaliser le rapport")}
-                </Button>
-              }
-            />
-            {isCollapsed && (
-              <TooltipContent side="right">
-                <p>{isSaving ? "Enregistrement..." : "Finaliser le rapport"}</p>
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </div>
+        <div className="mt-auto" />
       </aside>
     </TooltipProvider>
   );

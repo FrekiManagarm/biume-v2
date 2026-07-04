@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,19 +15,20 @@ import {
   CredenzaTitle,
 } from "@/components/ui/credenza";
 import { interventionZones } from "../data/dog/typesDog";
-import type {
-  InterventionZone,
-  NewObservation,
-} from "../data/dog/typesDog";
+import type { InterventionZone, NewObservation } from "../data/dog/typesDog";
 import {
-  ListChecksIcon,
-  EyeIcon,
-  Activity,
-  XIcon,
-  Search,
+  ActivityLogIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
   CheckIcon,
-  Ban,
-} from "lucide-react";
+  CircleBackslashIcon,
+  CounterClockwiseClockIcon,
+  Cross2Icon,
+  EyeOpenIcon,
+  ListBulletIcon,
+  MagicWandIcon,
+  MagnifyingGlassIcon,
+} from "@radix-ui/react-icons";
 import { cn } from "@/lib/style";
 import { useState } from "react";
 import {
@@ -42,9 +42,74 @@ import { getAnatomicalParts } from "@/lib/api/actions/reports.action";
 import type { AnatomicalPart } from "@/lib/schemas/anatomicalPart";
 import { AnatomicalHistoryAndDiagnosticPanel } from "./AnatomicalHistoryAndDiagnosticPanel";
 import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
-import { SparklesIcon } from "@/components/ui/sparkles-icon";
 
 type AnatomicalZone = "articulation" | "fascias" | "organes" | "muscles";
+
+const dialogSteps = [
+  { value: 1, label: "Type" },
+  { value: 2, label: "Localisation" },
+  { value: 3, label: "Détails" },
+];
+
+const observationTypeOptions = [
+  {
+    value: "static",
+    title: "Observation statique",
+    description: "Observation immédiate de l'état",
+    Icon: EyeOpenIcon,
+    selectedClasses: "border-sky-300 bg-sky-50/80 text-sky-950",
+    iconClasses: "bg-sky-100 text-sky-700",
+  },
+  {
+    value: "dynamic",
+    title: "Observation dynamique",
+    description: "Observation pendant le mouvement",
+    Icon: ActivityLogIcon,
+    selectedClasses: "border-teal-300 bg-teal-50/80 text-teal-950",
+    iconClasses: "bg-teal-100 text-teal-700",
+  },
+  {
+    value: "diagnosticExclusion",
+    title: "Diagnostic d'exclusion",
+    description: "Élimination d'une hypothèse diagnostique",
+    Icon: CircleBackslashIcon,
+    selectedClasses: "border-rose-300 bg-rose-50/80 text-rose-950",
+    iconClasses: "bg-rose-100 text-rose-700",
+  },
+] as const;
+
+const severityOptions = [
+  {
+    value: 1,
+    label: "Légère",
+    dot: "bg-emerald-500",
+    selected: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  },
+  {
+    value: 2,
+    label: "Modérée",
+    dot: "bg-amber-500",
+    selected: "border-amber-300 bg-amber-50 text-amber-800",
+  },
+  {
+    value: 3,
+    label: "Importante",
+    dot: "bg-orange-500",
+    selected: "border-orange-300 bg-orange-50 text-orange-800",
+  },
+  {
+    value: 4,
+    label: "Sévère",
+    dot: "bg-red-500",
+    selected: "border-red-300 bg-red-50 text-red-800",
+  },
+  {
+    value: 5,
+    label: "Critique",
+    dot: "bg-rose-600",
+    selected: "border-rose-300 bg-rose-50 text-rose-800",
+  },
+];
 
 interface AddObservationDialogProps {
   isOpen: boolean;
@@ -114,7 +179,6 @@ export function AddObservationDialog({
         return [];
       }
       const result = await getAnatomicalParts({ animalType, zone });
-      console.log("🔍 Données récupérées de la base:", result);
       return result || [];
     },
     enabled: isOpen && !!animalType && !!selectedZone,
@@ -172,8 +236,8 @@ export function AddObservationDialog({
   // Filtrer les régions anatomiques selon le terme de recherche
   const filteredRegions = anatomicalPartsResponse
     ? anatomicalPartsResponse.filter((part) =>
-      part.name.toLowerCase().includes(regionSearchTerm.toLowerCase()),
-    )
+        part.name.toLowerCase().includes(regionSearchTerm.toLowerCase()),
+      )
     : [];
 
   // Plus besoin de mapping complexe ! Les données SVG sont directement dans la DB
@@ -201,24 +265,6 @@ export function AddObservationDialog({
     }
   };
 
-  // Fonction pour obtenir la couleur en fonction de la sévérité
-  const getSeverityColor = (severity: number) => {
-    switch (severity) {
-      case 1:
-        return "#4ade80"; // green-400
-      case 2:
-        return "#facc15"; // yellow-400
-      case 3:
-        return "#fb923c"; // orange-400
-      case 4:
-        return "#f87171"; // red-400
-      case 5:
-        return "#c084fc"; // purple-400
-      default:
-        return "#facc15"; // yellow-400
-    }
-  };
-
   const isSelectOpen = isInterventionZoneSelectOpen;
 
   return (
@@ -227,194 +273,130 @@ export function AddObservationDialog({
       onOpenChange={onOpenChange}
       disablePointerDismissal={isSelectOpen}
     >
-      <CredenzaContent className="sm:max-w-[500px] p-0 rounded-xl overflow-hidden border-none shadow-xl max-h-[90vh] flex flex-col">
-        <CredenzaHeader className="relative h-16 flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-white flex-shrink-0">
-          <CredenzaTitle className="text-xl font-medium text-white z-10">
-            {currentStep === 1 && "Choisir le type d'observation"}
-            {currentStep === 2 && "Localiser l'observation"}
-            {currentStep === 3 && "Détails de l'observation"}
-          </CredenzaTitle>
+      <CredenzaContent className="flex max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-50 p-0 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.65)] sm:max-w-[640px]">
+        <CredenzaHeader className="shrink-0 border-b border-slate-200/70 bg-white px-5 py-5 sm:px-6">
+          <div className="min-w-0 space-y-1.5 pr-10">
+            <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
+              Ajouter une observation
+            </CredenzaTitle>
+            <p className="text-sm leading-relaxed text-slate-500">
+              {currentStep === 1 &&
+                "Choisissez la nature de ce que vous observez."}
+              {currentStep === 2 &&
+                "Renseignez la zone, la région et la latéralité."}
+              {currentStep === 3 &&
+                "Qualifiez la gravité et ajoutez vos notes."}
+            </p>
+          </div>
 
-          {/* Indicateur d'étapes */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-1">
-            <div className="flex gap-1">
-              {[1, 2, 3].map((step) => (
-                <div
-                  key={step}
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {dialogSteps.map((step) => {
+              const isActive = currentStep === step.value;
+              const isComplete =
+                step.value < currentStep && isStepComplete(step.value);
+
+              return (
+                <button
+                  key={step.value}
+                  type="button"
+                  onClick={() => {
+                    if (
+                      step.value < currentStep ||
+                      isStepComplete(currentStep)
+                    ) {
+                      setCurrentStep(step.value);
+                    }
+                  }}
                   className={cn(
-                    "h-1 rounded-full transition-all",
-                    currentStep === step ? "w-10 bg-white" : "w-3 bg-white/40",
-                    isStepComplete(step) && currentStep !== step
-                      ? "bg-white/70"
-                      : "",
+                    "flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition-all duration-200",
+                    isActive
+                      ? "border-slate-950 bg-slate-950 text-white shadow-sm"
+                      : "border-slate-200 bg-slate-50 text-slate-500",
+                    isComplete &&
+                      "border-emerald-200 bg-emerald-50 text-emerald-700",
                   )}
-                />
-              ))}
-            </div>
+                >
+                  <span
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full text-[0.68rem] tabular-nums",
+                      isActive
+                        ? "bg-white/15 text-white"
+                        : "bg-white text-slate-500",
+                      isComplete && "bg-emerald-100 text-emerald-700",
+                    )}
+                  >
+                    {isComplete ? (
+                      <CheckIcon className="h-3 w-3" />
+                    ) : (
+                      step.value
+                    )}
+                  </span>
+                  <span className="truncate">{step.label}</span>
+                </button>
+              );
+            })}
           </div>
         </CredenzaHeader>
 
-        <div className="p-5 pt-4 flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {/* Étape 1: Type d'observation */}
           {currentStep === 1 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3">
-                {/* Observation statique */}
-                <button
-                  type="button"
-                  className={cn(
-                    "relative p-3 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group hover:border-primary/60",
-                    newObservation.type === "static"
-                      ? "border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm"
-                      : "border-border bg-muted/20",
-                  )}
-                  onClick={() =>
-                    setNewObservation({
-                      ...newObservation,
-                      type: "static",
-                    })
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "p-2 rounded-lg transition-colors",
-                        newObservation.type === "static"
-                          ? "bg-primary/20"
-                          : "bg-muted group-hover:bg-primary/10",
-                      )}
-                    >
-                      <EyeIcon
-                        className={cn(
-                          "h-6 w-6 transition-colors",
-                          newObservation.type === "static"
-                            ? "text-primary"
-                            : "text-foreground/70",
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <h3
-                        className={cn(
-                          "font-medium transition-colors text-base",
-                          newObservation.type === "static"
-                            ? "text-primary"
-                            : "text-foreground",
-                        )}
-                      >
-                        Observation statique
-                      </h3>
-                      <p className="text-sm mt-0.5 {newObservation.type === 'static' ? 'text-foreground/80' : 'text-muted-foreground'}">
-                        Observation immédiate de l&apos;état
-                      </p>
-                    </div>
-                  </div>
-                </button>
+            <div className="grid gap-2.5">
+              {observationTypeOptions.map((option) => {
+                const isSelected = newObservation.type === option.value;
+                const Icon = option.Icon;
 
-                {/* Observation dynamique */}
-                <button
-                  type="button"
-                  className={cn(
-                    "relative p-3 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group hover:border-primary/60",
-                    newObservation.type === "dynamic"
-                      ? "border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm"
-                      : "border-border bg-muted/20",
-                  )}
-                  onClick={() =>
-                    setNewObservation({
-                      ...newObservation,
-                      type: "dynamic",
-                    })
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <div
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={cn(
+                      "group grid grid-cols-[2.35rem_minmax(0,1fr)_1.5rem] items-center gap-3 rounded-2xl border bg-white px-3.5 py-3 text-left shadow-[0_18px_45px_-38px_rgba(15,23,42,0.5)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      "hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_22px_55px_-38px_rgba(15,23,42,0.62)] active:translate-y-0 active:scale-[0.99]",
+                      isSelected
+                        ? option.selectedClasses
+                        : "border-slate-200 text-slate-950",
+                    )}
+                    onClick={() =>
+                      setNewObservation({
+                        ...newObservation,
+                        type: option.value,
+                      })
+                    }
+                  >
+                    <span
                       className={cn(
-                        "p-2 rounded-lg transition-colors",
-                        newObservation.type === "dynamic"
-                          ? "bg-primary/20"
-                          : "bg-muted group-hover:bg-primary/10",
+                        "flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-colors",
+                        isSelected && option.iconClasses,
                       )}
                     >
-                      <Activity
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold tracking-tight">
+                        {option.title}
+                      </span>
+                      <span
                         className={cn(
-                          "h-6 w-6 transition-colors",
-                          newObservation.type === "dynamic"
-                            ? "text-primary"
-                            : "text-foreground/70",
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <h3
-                        className={cn(
-                          "font-medium transition-colors text-base",
-                          newObservation.type === "dynamic"
-                            ? "text-primary"
-                            : "text-foreground",
+                          "mt-0.5 block text-sm leading-snug text-slate-500",
+                          isSelected && "text-current/70",
                         )}
                       >
-                        Observation dynamique
-                      </h3>
-                      <p className="text-sm mt-0.5 {newObservation.type === 'dynamic' ? 'text-foreground/80' : 'text-muted-foreground'}">
-                        Observation pendant le mouvement
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Diagnostic d'exclusion */}
-                <button
-                  type="button"
-                  className={cn(
-                    "relative p-3 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group hover:border-red-500/60",
-                    newObservation.type === "diagnosticExclusion"
-                      ? "border-red-500 bg-red-500/10 ring-1 ring-red-400/30 shadow-sm"
-                      : "border-border bg-muted/20",
-                  )}
-                  onClick={() =>
-                    setNewObservation({
-                      ...newObservation,
-                      type: "diagnosticExclusion",
-                    })
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <div
+                        {option.description}
+                      </span>
+                    </span>
+                    <span
                       className={cn(
-                        "p-2 rounded-lg transition-colors",
-                        newObservation.type === "diagnosticExclusion"
-                          ? "bg-red-500/15"
-                          : "bg-muted group-hover:bg-red-50/70",
+                        "flex size-5 items-center justify-center rounded-full border border-slate-200 bg-white text-transparent transition-all",
+                        isSelected &&
+                          "border-slate-950 bg-slate-950 text-white",
                       )}
                     >
-                      <Ban
-                        className={cn(
-                          "h-6 w-6 transition-colors",
-                          newObservation.type === "diagnosticExclusion"
-                            ? "text-red-500"
-                            : "text-foreground/70",
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <h3
-                        className={cn(
-                          "font-medium transition-colors text-base",
-                          newObservation.type === "diagnosticExclusion"
-                            ? "text-red-600"
-                            : "text-foreground",
-                        )}
-                      >
-                        Diagnostic d&apos;exclusion
-                      </h3>
-                      <p className="text-sm mt-0.5 {newObservation.type === 'diagnosticExclusion' ? 'text-foreground/80' : 'text-muted-foreground'}">
-                        Élimination d&apos;une hypothèse diagnostique
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              </div>
+                      <CheckIcon className="h-3 w-3" />
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -422,8 +404,8 @@ export function AddObservationDialog({
           {currentStep === 2 && (
             <div className="space-y-4">
               {/* Zone d'intervention */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
+                <Label className="text-sm font-semibold text-slate-800">
                   Zone d&apos;intervention{" "}
                   <span className="text-destructive">*</span>
                 </Label>
@@ -443,12 +425,10 @@ export function AddObservationDialog({
                 >
                   <SelectTrigger
                     className={cn(
-                      "w-full justify-between h-10",
-                      !newObservation.interventionZone
-                        ? "text-muted-foreground"
-                        : "",
+                      "h-11 w-full justify-between rounded-xl border-slate-200 bg-slate-50 text-sm shadow-none transition-all focus:ring-2 focus:ring-slate-950/10",
+                      !newObservation.interventionZone ? "text-slate-400" : "",
                       newObservation.interventionZone
-                        ? "border-primary bg-primary/5"
+                        ? "border-slate-300 bg-white text-slate-950"
                         : "",
                     )}
                   >
@@ -465,8 +445,8 @@ export function AddObservationDialog({
               </div>
 
               {/* Région anatomique */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
+                <Label className="text-sm font-semibold text-slate-800">
                   Région anatomique <span className="text-destructive">*</span>
                 </Label>
                 <div className="flex items-center gap-2">
@@ -475,58 +455,63 @@ export function AddObservationDialog({
                     open={openRegionPopover}
                     onOpenChange={setOpenRegionPopover}
                   >
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        disabled={!selectedZone}
-                        className={cn(
-                          "flex-1 justify-between h-10",
-                          !newObservation.region ? "text-muted-foreground" : "",
-                          newObservation.region
-                            ? "border-primary bg-primary/5"
-                            : "",
-                        )}
-                      >
-                        {newObservation.region
-                          ? getRegionName()
-                          : selectedZone
-                            ? "Sélectionner une région"
-                            : "Sélectionner d'abord une zone"}
-                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          disabled={!selectedZone}
+                          className={cn(
+                            "h-11 flex-1 justify-between rounded-xl border-slate-200 bg-slate-50 text-sm shadow-none transition-all hover:bg-white active:scale-[0.99]",
+                            !newObservation.region ? "text-slate-400" : "",
+                            newObservation.region
+                              ? "border-slate-300 bg-white text-slate-950"
+                              : "",
+                          )}
+                        >
+                          {newObservation.region
+                            ? getRegionName()
+                            : selectedZone
+                              ? "Sélectionner une région"
+                              : "Sélectionner d'abord une zone"}
+                          <MagnifyingGlassIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent
-                      className="w-[var(--radix-dropdown-menu-trigger-width)] p-0"
+                      className="w-[var(--radix-dropdown-menu-trigger-width)] overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.75)]"
                       align="start"
                     >
                       <div className="flex flex-col">
-                        <div className="flex items-center border-b px-3">
-                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex items-center border-b border-slate-100 bg-slate-50/80 px-3">
+                          <MagnifyingGlassIcon className="mr-2 h-4 w-4 shrink-0 text-slate-400" />
                           <input
-                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
+                            className="flex h-11 w-full bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                             placeholder="Rechercher une région..."
                             value={regionSearchTerm}
-                            onChange={(e) => setRegionSearchTerm(e.target.value)}
+                            onChange={(e) =>
+                              setRegionSearchTerm(e.target.value)
+                            }
                             autoFocus
                           />
                         </div>
 
                         <ScrollArea className="h-[250px]">
                           <div className="p-1">
-                            {regionSearchTerm && filteredRegions.length === 0 && (
-                              <div className="py-6 text-center text-sm">
-                                Aucune région trouvée
-                              </div>
-                            )}
+                            {regionSearchTerm &&
+                              filteredRegions.length === 0 && (
+                                <div className="py-6 text-center text-sm text-slate-500">
+                                  Aucune région trouvée
+                                </div>
+                              )}
 
                             {filteredRegions.map((part) => (
-                              <div key={part.id} className="mb-2">
+                              <div key={part.id} className="mb-1">
                                 <div
                                   className={cn(
-                                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 my-0.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                                    "relative my-0.5 flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm text-slate-700 outline-none transition-colors hover:bg-slate-100 hover:text-slate-950",
                                     part.name === newObservation.region &&
-                                    "bg-accent text-accent-foreground",
+                                      "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
                                   )}
                                   onClick={() => {
                                     setNewObservation({
@@ -538,7 +523,7 @@ export function AddObservationDialog({
                                 >
                                   {part.name}
                                   {part.name === newObservation.region && (
-                                    <CheckIcon className="ml-auto h-4 w-4 text-primary" />
+                                    <CheckIcon className="ml-auto h-4 w-4" />
                                   )}
                                 </div>
                               </div>
@@ -556,72 +541,29 @@ export function AddObservationDialog({
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
+                        size="icon-sm"
                         onClick={() => setIsHistoryPanelOpen(true)}
-                        className="h-10 w-10 shrink-0 group"
+                        className="group h-11 w-11 shrink-0 rounded-xl border border-slate-200 bg-white text-slate-500 transition-all hover:bg-slate-950 hover:text-white active:scale-[0.98]"
                         title="Voir l'historique et le diagnostic IA"
                       >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="transition-all"
-                        >
-                          <defs>
-                            <linearGradient
-                              id="history-gradient-observations"
-                              x1="0%"
-                              y1="0%"
-                              x2="100%"
-                              y2="0%"
-                            >
-                              <stop
-                                offset="0%"
-                                stopColor="rgb(147 51 234)"
-                                stopOpacity="0.8"
-                                className="transition-all group-hover:[stop-opacity:1]"
-                              />
-                              <stop
-                                offset="50%"
-                                stopColor="rgb(219 39 119)"
-                                stopOpacity="0.8"
-                                className="transition-all group-hover:[stop-opacity:1]"
-                              />
-                              <stop
-                                offset="100%"
-                                stopColor="rgb(249 115 22)"
-                                stopOpacity="0.8"
-                                className="transition-all group-hover:[stop-opacity:1]"
-                              />
-                            </linearGradient>
-                          </defs>
-                          <path
-                            d="M3 3v5h5M21 21v-5h-5M3 21l7-7m11-11l-7 7"
-                            stroke="url(#history-gradient-observations)"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        <CounterClockwiseClockIcon className="h-4 w-4" />
                       </Button>
                     )}
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
+                <Label className="text-sm font-semibold text-slate-800">
                   Latéralité <span className="text-destructive">*</span>
                 </Label>
-                <div className="mt-2 flex rounded-md overflow-hidden border mb-3">
+                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                   <button
                     type="button"
                     className={cn(
-                      "flex-1 py-1.5 text-sm font-medium transition-colors border-r",
+                      "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
                       newObservation.laterality === "left"
-                        ? "bg-primary text-white"
-                        : "bg-transparent text-gray-700 hover:bg-gray-50",
+                        ? "bg-slate-950 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white hover:text-slate-950",
                     )}
                     onClick={() =>
                       setNewObservation({
@@ -635,10 +577,10 @@ export function AddObservationDialog({
                   <button
                     type="button"
                     className={cn(
-                      "flex-1 py-1.5 text-sm font-medium transition-colors border-r",
+                      "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
                       newObservation.laterality === "bilateral"
-                        ? "bg-primary text-white"
-                        : "bg-transparent text-gray-700 hover:bg-gray-50",
+                        ? "bg-slate-950 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white hover:text-slate-950",
                     )}
                     onClick={() =>
                       setNewObservation({
@@ -652,10 +594,10 @@ export function AddObservationDialog({
                   <button
                     type="button"
                     className={cn(
-                      "flex-1 py-1.5 text-sm font-medium transition-colors",
+                      "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
                       newObservation.laterality === "right"
-                        ? "bg-primary text-white"
-                        : "bg-transparent text-gray-700 hover:bg-gray-50",
+                        ? "bg-slate-950 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white hover:text-slate-950",
                     )}
                     onClick={() =>
                       setNewObservation({
@@ -667,9 +609,9 @@ export function AddObservationDialog({
                     Droite
                   </button>
                 </div>
-                <div className="flex items-center bg-muted/20 rounded-lg p-2 gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <p className="text-xs text-muted-foreground">
+                <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div className="size-1.5 shrink-0 rounded-full bg-slate-400" />
+                  <p className="text-xs leading-relaxed text-slate-500">
                     {newObservation.laterality === "left" &&
                       "Affecte uniquement le côté gauche du patient"}
                     {newObservation.laterality === "right" &&
@@ -686,71 +628,68 @@ export function AddObservationDialog({
 
           {currentStep === 3 && (
             <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">
-                  Gravité
-                </Label>
-                <div className="mb-2 mt-2 flex items-center justify-between">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
+                <div className="flex items-center justify-between gap-3">
+                  <Label className="text-sm font-semibold text-slate-800">
+                    Gravité
+                  </Label>
                   <span
                     className={cn(
-                      "text-sm font-medium px-3 py-1 rounded-full",
-                      newObservation.severity === 1
-                        ? "bg-green-100 text-green-700"
-                        : newObservation.severity === 2
-                          ? "bg-yellow-100 text-yellow-700"
-                          : newObservation.severity === 3
-                            ? "bg-orange-100 text-orange-700"
-                            : newObservation.severity === 4
-                              ? "bg-red-100 text-red-700"
-                              : "bg-purple-100 text-purple-700",
+                      "rounded-full border px-2.5 py-1 text-xs font-medium",
+                      severityOptions.find(
+                        (option) => option.value === newObservation.severity,
+                      )?.selected,
                     )}
                   >
                     {getLevelLabel(newObservation.severity)}
                   </span>
                 </div>
-                <div className="flex justify-between gap-1 mt-2">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className="flex-1"
-                      onMouseEnter={() => setHoveredSeverity(level)}
-                      onMouseLeave={() => setHoveredSeverity(null)}
-                    >
-                      <div
+
+                <div className="mt-4 grid grid-cols-5 gap-2">
+                  {severityOptions.map((option) => {
+                    const isSelected = newObservation.severity === option.value;
+                    const isPreviewed = hoveredSeverity === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
                         className={cn(
-                          "w-full aspect-square rounded-md cursor-pointer transition-all relative overflow-hidden",
-                          newObservation.severity === level ||
-                            hoveredSeverity === level
-                            ? "ring-2 ring-offset-1"
-                            : "opacity-70 hover:opacity-100",
+                          "group flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white active:translate-y-0 active:scale-[0.98]",
+                          (isSelected || isPreviewed) && option.selected,
                         )}
-                        style={{ backgroundColor: getSeverityColor(level) }}
+                        onMouseEnter={() => setHoveredSeverity(option.value)}
+                        onMouseLeave={() => setHoveredSeverity(null)}
                         onClick={() =>
                           setNewObservation({
                             ...newObservation,
-                            severity: level,
+                            severity: option.value,
                           })
                         }
                       >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white font-bold text-xl">
-                            {level}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="block text-center text-xs mt-1 text-gray-600">
-                        {level === 1 && "Légère"}
-                        {level === 3 && "Modérée"}
-                        {level === 5 && "Critique"}
-                      </span>
-                    </div>
-                  ))}
+                        <span
+                          className={cn(
+                            "flex size-8 items-center justify-center rounded-full bg-white text-sm font-semibold tabular-nums text-slate-700 shadow-sm",
+                            isSelected && "text-slate-950",
+                          )}
+                        >
+                          {option.value}
+                        </span>
+                        <span className="max-w-full truncate text-[0.68rem] font-medium">
+                          {option.label}
+                        </span>
+                        <span
+                          className={cn("h-1 w-7 rounded-full", option.dot)}
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-gray-700">
+                  <Label className="text-sm font-semibold text-slate-800">
                     Observations
                   </Label>
                   <Button
@@ -758,12 +697,10 @@ export function AddObservationDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setIsVulgarisationOpen(true)}
-                    className="h-8 text-xs gap-1.5 group hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/30 hover:to-orange-50/30 dark:hover:from-purple-950/20 dark:hover:via-pink-950/20 dark:hover:to-orange-950/20"
+                    className="h-8 gap-1.5 rounded-xl border-slate-200 bg-white text-xs text-slate-700 shadow-none transition-all hover:bg-slate-950 hover:text-white active:scale-[0.98]"
                   >
-                    <SparklesIcon className="h-3.5 w-3.5" gradientId="sparkles-gradient-observations" />
-                    <span className="bg-gradient-to-r from-purple-600/80 via-pink-600/80 to-orange-600/80 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:via-pink-600 group-hover:to-orange-600">
-                      Vulgariser
-                    </span>
+                    <MagicWandIcon className="h-3.5 w-3.5" />
+                    Vulgariser
                   </Button>
                 </div>
                 <Textarea
@@ -775,11 +712,12 @@ export function AddObservationDialog({
                     })
                   }
                   placeholder="Décrivez vos observations..."
-                  className="resize-none min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="min-h-[128px] resize-none rounded-2xl border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-relaxed text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-slate-950/10"
                 />
                 {newObservation.notes && (
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Utilisez le bouton "Vulgariser" pour transformer le texte technique en langage clair pour vos clients.
+                  <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                    Utilisez le bouton "Vulgariser" pour transformer le texte
+                    technique en langage clair pour vos clients.
                   </p>
                 )}
               </div>
@@ -787,11 +725,26 @@ export function AddObservationDialog({
           )}
         </div>
 
-        <div className="py-3 px-5 border-t flex items-center justify-between flex-shrink-0">
-          {/* Boutons de navigation */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200/70 bg-white px-5 py-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="rounded-xl text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
+          >
+            <Cross2Icon className="mr-1 h-3.5 w-3.5" />
+            Annuler
+          </Button>
+
           <div className="flex items-center gap-2">
             {currentStep > 1 && (
-              <Button variant="outline" size="sm" onClick={prevStep}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={prevStep}
+                className="rounded-xl border-slate-200 bg-white text-slate-700 shadow-none transition-all hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
+              >
+                <ArrowLeftIcon className="mr-1 h-3.5 w-3.5" />
                 Retour
               </Button>
             )}
@@ -801,9 +754,10 @@ export function AddObservationDialog({
                 size="sm"
                 onClick={nextStep}
                 disabled={!isStepComplete(currentStep)}
-                className="shadow-sm bg-primary hover:bg-primary/90"
+                className="rounded-xl bg-slate-950 text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98]"
               >
                 Continuer
+                <ArrowRightIcon className="ml-1 h-3.5 w-3.5" />
               </Button>
             ) : (
               <Button
@@ -824,33 +778,21 @@ export function AddObservationDialog({
                   setCurrentStep(1);
                 }}
                 disabled={!isFormValid()}
-                className="shadow-sm bg-primary hover:bg-primary/90"
+                className="rounded-xl bg-slate-950 text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98]"
               >
-                <ListChecksIcon className="h-3.5 w-3.5 mr-1" />
+                <ListBulletIcon className="mr-1 h-3.5 w-3.5" />
                 {submitLabel || "Ajouter"}
               </Button>
             )}
           </div>
-
-          {/* Bouton d'annulation */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="text-gray-500 hover:bg-gray-100/50"
-          >
-            <XIcon className="h-3.5 w-3.5 mr-1" />
-            Annuler
-          </Button>
         </div>
       </CredenzaContent>
 
       {/* Panneau d'historique et diagnostic IA */}
       {petId &&
         newObservation.region &&
-        anatomicalPartsResponse?.find(
-          (p) => p.name === newObservation.region,
-        )?.id && (
+        anatomicalPartsResponse?.find((p) => p.name === newObservation.region)
+          ?.id && (
           <AnatomicalHistoryAndDiagnosticPanel
             petId={petId}
             anatomicalPartId={

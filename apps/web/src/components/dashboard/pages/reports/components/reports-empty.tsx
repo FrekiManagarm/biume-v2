@@ -8,13 +8,11 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@/components/ui/empty";
-import { ReportsHeader } from "./reports-header";
 import { Link } from "@tanstack/react-router";
 
 export function ReportsEmpty() {
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <ReportsHeader />
       <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-12 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
         <Empty>
           <EmptyHeader>

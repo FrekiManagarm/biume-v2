@@ -58,6 +58,15 @@ const pageChecks = [
   },
 ];
 
+function jsonLdBlocks(html: string) {
+  return Array.from(
+    html.matchAll(
+      /<script type="application\/ld\+json">(?<json>.*?)<\/script>/g,
+    ),
+    (match) => JSON.parse(match.groups?.json ?? "{}") as Record<string, unknown>,
+  );
+}
+
 describe("marketing SEO", () => {
   test("root metadata targets the primary acquisition keyword", () => {
     expect(rootMetadata.metadataBase?.toString()).toBe("https://biume.com/");
@@ -109,5 +118,24 @@ describe("marketing SEO", () => {
     expect(html).toContain("agenda");
     expect(html).toContain("propriétaires");
     expect(html).toContain("patients");
+  });
+
+  test("pricing Product structured data includes a visible offer", () => {
+    const html = renderToStaticMarkup(<PricingPage />);
+    const productSchemas = jsonLdBlocks(html).filter(
+      (schema) => schema["@type"] === "Product",
+    );
+
+    expect(productSchemas).toHaveLength(1);
+    expect(productSchemas[0]).toMatchObject({
+      "@type": "Product",
+      offers: {
+        "@type": "Offer",
+        url: "https://biume.com/tarifs",
+        price: "24.99",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+      },
+    });
   });
 });

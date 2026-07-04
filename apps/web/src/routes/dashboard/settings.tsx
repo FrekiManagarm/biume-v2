@@ -211,39 +211,6 @@ function SettingsPage() {
   return (
     <div className="min-h-full w-full pb-8 text-slate-950">
       <div className="grid w-full gap-6">
-        <header className="grid gap-5 border-b border-slate-200 pb-6 pt-2 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="min-w-0">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]">
-              <Sparkles className="size-3.5 text-emerald-700" />
-              Espace actif
-            </div>
-            <h1 className="text-3xl font-semibold leading-none tracking-tight text-slate-950 md:text-5xl">
-              Paramètres.
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-              Ajustez l'identité de votre organisation, vos préférences de
-              contact et votre abonnement Biume.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
-            <OrganizationLogo
-              logo={organizationForm.getFieldValue("logo")}
-              name={organization.name}
-            />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-950">
-                {organization.name}
-              </p>
-              <p className="mt-0.5 truncate text-xs text-slate-500">
-                {organization.slug
-                  ? `${organization.slug}.biume`
-                  : "Organisation Biume"}
-              </p>
-            </div>
-          </div>
-        </header>
-
         <div className="grid gap-6 lg:grid-cols-[19rem_1fr]">
           <aside className="lg:sticky lg:top-20 lg:self-start">
             <nav className="divide-y divide-slate-200 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]">

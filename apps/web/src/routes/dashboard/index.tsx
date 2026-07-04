@@ -56,12 +56,6 @@ function DashboardIndexPage() {
 function DashboardOverviewPending() {
   return (
     <div className="grid gap-5 pb-8">
-      <header className="grid gap-2 border-b border-border pb-5 pt-2">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-4 w-full max-w-xl" />
-      </header>
-
       <section className="grid gap-2 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <Skeleton key={index} className="h-24 rounded-lg" />
@@ -84,15 +78,6 @@ function DashboardOverviewPending() {
 function DashboardOverviewError() {
   return (
     <div className="grid gap-5 pb-8">
-      <header className="border-b border-border pb-5 pt-2">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Activité
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
-          Vue d'ensemble
-        </h1>
-      </header>
-
       <Alert variant="destructive">
         <AlertTitle>Impossible de charger la vue d'ensemble</AlertTitle>
         <AlertDescription>

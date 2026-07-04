@@ -750,18 +750,6 @@ export function AdvancedReportEditor({
     })),
   );
   const activeTabMeta = flatTabs.find((tab) => tab.id === activeTab);
-  const progressSummary = flatTabs.reduce(
-    (acc, tab) => {
-      acc.total += 1;
-      if (getTabProgress(String(tab.id))) acc.completed += 1;
-      return acc;
-    },
-    { completed: 0, total: 0 },
-  );
-  const progressPercent =
-    progressSummary.total > 0
-      ? Math.round((progressSummary.completed / progressSummary.total) * 100)
-      : 0;
   const selectedPetSummary = selectedPet
     ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
     : "Aucun patient sélectionné";
@@ -788,11 +776,7 @@ export function AdvancedReportEditor({
               activeTab={activeTab}
               onChangeTab={(tab) => setActiveTab(tab)}
               onGoBack={handleGoBack}
-              onPreview={() => setShowPreview(true)}
               onShortcuts={() => setIsShortcutsModalOpen(true)}
-              onSave={() => void handleUpdateReport("draft")}
-              onFinalize={handleOpenReminderDialog}
-              isSaving={updateReportMutation.isPending}
               getTabProgress={getTabProgress}
               getTabCount={getTabCount}
               hasUnsavedChanges={hasUnsavedChanges}
@@ -824,29 +808,6 @@ export function AdvancedReportEditor({
             <header className="border-b border-slate-200 bg-white px-5 py-4">
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
                 <div className="min-w-0">
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-lg border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"
-                    >
-                      {activeTabMeta?.categoryName || "Édition"}
-                    </Badge>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {progressPercent}% complété
-                    </span>
-                    {hasUnsavedChanges ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                        <span className="size-2 rounded-full bg-amber-500" />
-                        Modifications non sauvegardées
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                        <span className="size-2 rounded-full bg-emerald-500" />À
-                        jour
-                      </span>
-                    )}
-                  </div>
-
                   <div className="flex items-start gap-3">
                     <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 [&_svg]:size-5">
                       {activeTabMeta?.icon || <FileTextIcon />}
@@ -1018,30 +979,6 @@ export function AdvancedReportEditor({
                   <ChevronLeftIcon className="h-5 w-5" />
                 </Button>
                 <div className="min-w-0">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-lg border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800"
-                    >
-                      {activeTabMeta?.categoryName || "Édition"}
-                    </Badge>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 text-[11px] font-semibold",
-                        hasUnsavedChanges
-                          ? "text-amber-700"
-                          : "text-emerald-700",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "size-2 rounded-full",
-                          hasUnsavedChanges ? "bg-amber-500" : "bg-emerald-500",
-                        )}
-                      />
-                      {hasUnsavedChanges ? "Non sauvegardé" : "À jour"}
-                    </span>
-                  </div>
                   <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
                     {activeTabMeta?.label || "Modifier le rapport"}
                   </h1>
@@ -1116,13 +1053,6 @@ export function AdvancedReportEditor({
               >
                 <SaveIcon className="h-4 w-4" />
               </Button>
-            </div>
-
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-emerald-600 transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
             </div>
           </div>
         </div>

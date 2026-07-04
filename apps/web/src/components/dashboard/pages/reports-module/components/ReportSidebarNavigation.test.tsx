@@ -26,10 +26,7 @@ describe("ReportSidebarNavigation", () => {
     activeTab: "clinical",
     onChangeTab: vi.fn(),
     onGoBack: vi.fn(),
-    onPreview: vi.fn(),
     onShortcuts: vi.fn(),
-    onSave: vi.fn(),
-    isSaving: false,
     getTabProgress: () => false,
     getTabCount: () => 0,
     hasUnsavedChanges: false,
@@ -69,25 +66,31 @@ describe("ReportSidebarNavigation", () => {
     expect(screen.queryByText("Quitter le mode focus")).toBeNull();
   });
 
-  test("saves the report draft without using the finalization action", () => {
-    const onSave = vi.fn();
-    const onFinalize = vi.fn();
+  test("keeps report actions out of the sidebar", () => {
+    render(<ReportSidebarNavigation {...defaultProps} />);
+
+    expect(screen.queryByRole("button", { name: "Aperçu" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Sauvegarder le rapport" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Finaliser le rapport" }),
+    ).toBeNull();
+  });
+
+  test("opens keyboard shortcuts from the compact header action", () => {
+    const onShortcuts = vi.fn();
 
     const { container } = render(
-      <ReportSidebarNavigation
-        {...defaultProps}
-        onSave={onSave}
-        onFinalize={onFinalize}
-      />,
+      <ReportSidebarNavigation {...defaultProps} onShortcuts={onShortcuts} />,
     );
     const sidebar = within(container);
 
     fireEvent.click(
-      sidebar.getByRole("button", { name: "Sauvegarder le rapport" }),
+      sidebar.getByRole("button", { name: "Raccourcis clavier" }),
     );
 
-    expect(onSave).toHaveBeenCalledOnce();
-    expect(onFinalize).not.toHaveBeenCalled();
+    expect(onShortcuts).toHaveBeenCalledOnce();
   });
 
   test("keeps collapsed rail controls centered with the same touch target", () => {
@@ -101,11 +104,7 @@ describe("ReportSidebarNavigation", () => {
       rail.getByLabelText("Agrandir la barre latérale").className,
     ).toContain("h-11 w-11");
     expect(rail.getByLabelText("Clinique").className).toContain("h-11 w-11");
-    expect(rail.getByLabelText("Aperçu").className).toContain("h-11 w-11");
     expect(rail.getByLabelText("Raccourcis clavier").className).toContain(
-      "h-11 w-11",
-    );
-    expect(rail.getByLabelText("Finaliser le rapport").className).toContain(
       "h-11 w-11",
     );
     expect(rail.getByLabelText("Clinique").parentElement?.className).toContain(

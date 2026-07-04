@@ -1,8 +1,6 @@
-
 import type { ActiveTab } from "./types";
 import { CredenzaContent, CredenzaTitle } from "@/components/ui/credenza";
-import { HeartPulseIcon, Info, FileText } from "lucide-react";
-import { AnimalDetailsSidebar } from "./AnimalCredenza/AnimalDetailsSidebar";
+import { HeartPulseIcon, Info, FileText, PawPrintIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Credenza } from "@/components/ui/credenza";
 import { InfoTab } from "./AnimalCredenza/InfoTab";
@@ -13,7 +11,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MobileNavigation } from "./AnimalCredenza/MobileNavigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/style";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface AnimalCredenzaProps {
   isOpen: boolean;
@@ -54,23 +55,35 @@ export const AnimalCredenza = ({
     enabled: !!petId,
   });
 
+  const getAge = () => {
+    if (!pet?.birthDate) return "Âge inconnu";
+
+    return formatDistanceToNow(new Date(pet.birthDate), {
+      addSuffix: false,
+      locale: fr,
+    });
+  };
+
+  const genderLabel = pet?.gender === "Male" ? "Mâle" : "Femelle";
+
   return (
     <Credenza open={isOpen} onOpenChange={onOpenChange}>
       <VisuallyHidden asChild>
         <CredenzaTitle>Fiche de l&apos;animal</CredenzaTitle>
       </VisuallyHidden>
-      <CredenzaContent className="sm:max-w-[1000px] p-0 overflow-hidden">
-        <div className="flex flex-col md:flex-row h-[80vh] max-h-[650px]">
+      <CredenzaContent className="overflow-hidden p-0 sm:max-w-[900px]">
+        <div className="flex h-[72vh] max-h-[640px] min-h-[480px] flex-col bg-slate-50">
           {isLoadingPet ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="space-y-4 w-[80%]">
-                <Skeleton className="h-8 w-[200px]" />
-                <Skeleton className="h-[400px] w-full" />
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="w-[82%] space-y-4">
+                <Skeleton className="h-16 w-full rounded-2xl" />
+                <Skeleton className="h-10 w-[320px] rounded-xl" />
+                <Skeleton className="h-[300px] w-full rounded-2xl" />
               </div>
             </div>
           ) : !pet ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center space-y-4">
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="space-y-4 text-center">
                 <p className="text-lg font-medium text-muted-foreground">
                   Aucune donnée disponible pour cet animal
                 </p>
@@ -85,26 +98,84 @@ export const AnimalCredenza = ({
             </div>
           ) : (
             <>
-              {/* Navigation mobile */}
-              <MobileNavigation
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                tabs={tabs}
-                animal={pet}
-              />
+              <header className="border-b border-slate-200 bg-white px-4 py-4 md:px-5">
+                <div className="flex flex-col gap-4 pr-8 md:flex-row md:items-start md:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <Avatar className="size-14 rounded-2xl border border-slate-200 bg-slate-50">
+                      <AvatarImage src={pet.image || ""} alt={pet.name} />
+                      <AvatarFallback className="rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
+                        {pet.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
 
-              {/* Sidebar avec photo et navigation - visible uniquement sur desktop */}
-              <div className="hidden md:block border-r">
-                <AnimalDetailsSidebar
-                  animal={pet}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                />
-              </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-xl font-semibold tracking-tight text-slate-950">
+                          {pet.name}
+                        </h2>
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                          {genderLabel}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-slate-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <PawPrintIcon className="size-4" />
+                          {pet.animal?.name || "Animal"}
+                        </span>
+                        {pet.breed && <span>{pet.breed}</span>}
+                        <span>{getAge()}</span>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Contenu principal */}
-              <div className="flex-1 overflow-y-auto">
-                {/* Contenu dynamique en fonction de l'onglet actif */}
+                  {pet.owner && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 md:min-w-[260px]">
+                      <Avatar className="size-10">
+                        <AvatarImage
+                          src={pet.owner.image || ""}
+                          alt={pet.owner.name || "Propriétaire"}
+                        />
+                        <AvatarFallback className="bg-white text-sm font-semibold text-primary">
+                          {pet.owner.name?.substring(0, 2).toUpperCase() ||
+                            "PR"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-950">
+                          {pet.owner.name || "Propriétaire non renseigné"}
+                        </p>
+                        <p className="truncate text-xs font-medium text-slate-500">
+                          {pet.owner.email || `Propriétaire de ${pet.name}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <nav className="mt-4 flex gap-6 overflow-x-auto border-t border-slate-100 pt-3">
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+
+                    return (
+                      <Button
+                        key={tab.id}
+                        variant="ghost"
+                        className={cn(
+                          "h-8 flex-none rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-0 pb-2 text-sm font-semibold text-slate-500 shadow-none hover:bg-transparent hover:text-slate-950 [&_svg]:size-4",
+                          isActive &&
+                            "border-slate-950 text-slate-950 hover:bg-transparent",
+                        )}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.icon}
+                        {tab.label}
+                      </Button>
+                    );
+                  })}
+                </nav>
+              </header>
+
+              <div className="min-h-0 flex-1 overflow-y-auto">
                 {activeTab === "info" && (
                   <InfoTab animal={pet} setActiveTab={setActiveTab} />
                 )}

@@ -8,7 +8,6 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@/components/ui/empty";
-import { ReportsHeader } from "./reports-header";
 
 interface ReportsErrorProps {
   error: string;
@@ -18,7 +17,6 @@ interface ReportsErrorProps {
 export function ReportsError({ error, onRetry }: ReportsErrorProps) {
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <ReportsHeader disabled />
       <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
         <Empty>
           <EmptyHeader>

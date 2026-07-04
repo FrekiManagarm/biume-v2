@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/style";
@@ -94,7 +93,7 @@ export function AnatomicalEvaluationTab({
   const animalType = getAnimalType();
 
   // Récupérer toutes les données anatomiques depuis la base de données (seulement en mode normal)
-  const { data: anatomicalPartsResponse } = useQuery({
+  useQuery({
     queryKey: ["anatomicalParts", animalType, "all"],
     queryFn: async () => {
       if (!animalType) return [];
@@ -320,52 +319,70 @@ export function AnatomicalEvaluationTab({
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Zone principale avec header intégré */}
-      <div className="bg-muted/10 rounded-2xl border shadow-sm relative flex-1 min-h-0 overflow-hidden">
-        {/* Header intégré dans la card - positionné en haut */}
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/90 to-transparent p-4 z-20 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <ActivityIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Visualisation anatomique</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={anatomicalView === "gauche" ? "default" : "outline"}
-                size="sm"
-                className={cn("px-3 relative group")}
-                onClick={() => setAnatomicalView("gauche")}
-              >
-                Vue gauche
-                <span className="ml-1 text-xs opacity-60 group-hover:opacity-100 transition-opacity">
-                  <kbd className="px-1 py-0.5 bg-black/10 rounded text-xs">
-                    1
-                  </kbd>
-                </span>
-              </Button>
-              <Button
-                variant={anatomicalView === "droite" ? "default" : "outline"}
-                size="sm"
-                className={cn("px-3 relative group")}
-                onClick={() => setAnatomicalView("droite")}
-              >
-                Vue droite
-                <span className="ml-1 text-xs opacity-60 group-hover:opacity-100 transition-opacity">
-                  <kbd className="px-1 py-0.5 bg-black/10 rounded text-xs">
-                    2
-                  </kbd>
-                </span>
-              </Button>
-            </div>
+      <div className="bg-background rounded-2xl border shadow-sm relative isolate flex-1 min-h-0 overflow-hidden">
+        {/* Image anatomique avec overlay - zone fixe sans scroll */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="flex h-full w-full items-center justify-center">
+            <AnatomicalImageWithOverlay
+              anatomicalView={anatomicalView}
+              filteredDysfunctions={filteredDysfunctions}
+              renderAnatomicalSVG={renderAnatomicalSVG}
+              animalData={animalData}
+              isTestMode={isTestMode}
+              selectedAnimalType={selectedAnimalType}
+            />
           </div>
         </div>
 
+        <div className="pointer-events-auto absolute right-4 top-4 z-30 inline-flex rounded-2xl border border-border bg-background/90 p-1 shadow-sm backdrop-blur">
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-pressed={anatomicalView === "gauche"}
+            className={cn(
+              "h-9 rounded-xl px-3 text-sm font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground",
+              anatomicalView === "gauche" &&
+                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
+            onClick={() => setAnatomicalView("gauche")}
+          >
+            Vue gauche
+            <kbd
+              className={cn(
+                "ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
+                anatomicalView === "gauche" &&
+                  "bg-primary-foreground/15 text-primary-foreground/80",
+              )}
+            >
+              1
+            </kbd>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-pressed={anatomicalView === "droite"}
+            className={cn(
+              "h-9 rounded-xl px-3 text-sm font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground",
+              anatomicalView === "droite" &&
+                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
+            onClick={() => setAnatomicalView("droite")}
+          >
+            Vue droite
+            <kbd
+              className={cn(
+                "ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
+                anatomicalView === "droite" &&
+                  "bg-primary-foreground/15 text-primary-foreground/80",
+              )}
+            >
+              2
+            </kbd>
+          </Button>
+        </div>
+
         {/* Légende - positionnée en bas à gauche */}
-        <div className="absolute bottom-20 left-4 z-10">
+        <div className="pointer-events-auto absolute bottom-20 left-4 z-30">
           <div className="group relative">
             <div className="bg-background/80 backdrop-blur-sm rounded-lg p-2 shadow-sm cursor-pointer hover:bg-background/90 transition-colors">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -402,20 +419,18 @@ export function AnatomicalEvaluationTab({
           </div>
         </div>
         {/* Bouton Éléments - positionné en bas à gauche */}
-        <div className="absolute bottom-4 left-4 z-10">
+        <div className="pointer-events-auto absolute bottom-4 left-4 z-30">
           <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                className="h-8 px-2"
-              >
-                <ListIcon className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs">
-                  Éléments ({dysfunctions.length})
-                </span>
-              </Button>
-            </SheetTrigger>
+            <SheetTrigger
+              render={
+                <Button variant="default" size="sm" className="h-8 px-2">
+                  <ListIcon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs">
+                    Éléments ({dysfunctions.length})
+                  </span>
+                </Button>
+              }
+            />
             <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
               <SheetHeader className="p-4 border-b">
                 <SheetTitle>Éléments identifiés</SheetTitle>
@@ -440,38 +455,38 @@ export function AnatomicalEvaluationTab({
                               <span className="font-medium truncate">
                                 {isTestMode
                                   ? // En mode test, utiliser les données selon le type d'animal
-                                  (() => {
-                                    let regionsData;
-                                    switch (selectedAnimalType) {
-                                      case "cat":
-                                        regionsData =
-                                          anatomicalRegionsByCategoryCat;
-                                        break;
-                                      case "horse":
-                                        regionsData =
-                                          anatomicalRegionsByCategoryHorse;
-                                        break;
-                                      case "dog":
-                                      default:
-                                        regionsData =
-                                          anatomicalRegionsByCategory;
-                                        break;
-                                    }
-                                    return (
-                                      regionsData
-                                        .find((r) =>
-                                          r.items.find(
+                                    (() => {
+                                      let regionsData;
+                                      switch (selectedAnimalType) {
+                                        case "cat":
+                                          regionsData =
+                                            anatomicalRegionsByCategoryCat;
+                                          break;
+                                        case "horse":
+                                          regionsData =
+                                            anatomicalRegionsByCategoryHorse;
+                                          break;
+                                        case "dog":
+                                        default:
+                                          regionsData =
+                                            anatomicalRegionsByCategory;
+                                          break;
+                                      }
+                                      return (
+                                        regionsData
+                                          .find((r) =>
+                                            r.items.find(
+                                              (i) => i.value === issue.region,
+                                            ),
+                                          )
+                                          ?.items.find(
                                             (i) => i.value === issue.region,
-                                          ),
-                                        )
-                                        ?.items.find(
-                                          (i) => i.value === issue.region,
-                                        )?.label || "Région inconnue"
-                                    );
-                                  })()
+                                          )?.label || "Région inconnue"
+                                      );
+                                    })()
                                   : // Mode normal : utiliser les données de l'API avec anatomicalPart
-                                  issue.anatomicalPart?.name ||
-                                  "Région inconnue"}
+                                    issue.anatomicalPart?.name ||
+                                    "Région inconnue"}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {getLateralityLabel(issue.laterality)}
@@ -545,7 +560,7 @@ export function AnatomicalEvaluationTab({
           </Sheet>
         </div>
         {/* Boutons d'aide et d'ajout - positionnés en bas à droite */}
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+        <div className="pointer-events-auto absolute bottom-4 right-4 z-30 flex flex-col gap-2">
           <div className="group relative">
             <div className="bg-background/80 backdrop-blur-sm rounded-lg p-2 shadow-sm cursor-pointer hover:bg-background/90 transition-colors">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -651,19 +666,6 @@ export function AnatomicalEvaluationTab({
               N
             </div>
           </Button>
-        </div>
-        {/* Image anatomique avec overlay - zone fixe sans scroll */}
-        <div className="h-full">
-          <div className="flex items-center justify-center h-full">
-            <AnatomicalImageWithOverlay
-              anatomicalView={anatomicalView}
-              filteredDysfunctions={filteredDysfunctions}
-              renderAnatomicalSVG={renderAnatomicalSVG}
-              animalData={animalData}
-              isTestMode={isTestMode}
-              selectedAnimalType={selectedAnimalType}
-            />
-          </div>
         </div>
       </div>
       {/* AddAnatomicalIssueDialog est géré au niveau du composant parent (advanced-report-builder) */}

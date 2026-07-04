@@ -9,7 +9,6 @@ import {
   PawPrint,
   Plus,
   Search,
-  Sparkles,
   Stethoscope,
   UserRound,
   Weight,
@@ -185,24 +184,6 @@ function PatientsPage() {
 
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <PageHeader
-        badge="Suivi patients"
-        description="Centralisez les animaux suivis, leur propriétaire et les derniers rapports associés."
-        icon={PawPrint}
-        metricLabel={`${patients.length} patient${patients.length > 1 ? "s" : ""}`}
-        metricSubLabel={`${reportsCount} rapport${reportsCount > 1 ? "s" : ""} associés`}
-        title="Patients."
-        action={
-          <Button
-            className="h-11 gap-2 bg-slate-950 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.8)] hover:bg-slate-800"
-            onClick={() => setIsCreateOpen(true)}
-          >
-            <Plus className="size-4" />
-            Nouveau patient
-          </Button>
-        }
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           detail="Animaux enregistrés"
@@ -229,6 +210,15 @@ function PatientsPage() {
 
       <Panel>
         <PanelHeader
+          action={
+            <Button
+              className="h-10 gap-2 bg-slate-950 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.8)] hover:bg-slate-800"
+              onClick={() => setIsCreateOpen(true)}
+            >
+              <Plus className="size-4" />
+              Nouveau patient
+            </Button>
+          }
           count={`${filteredPatients.length} résultat${filteredPatients.length > 1 ? "s" : ""}`}
           kicker="Dossiers patients"
           title="Animaux suivis."
@@ -826,59 +816,6 @@ function CreatePatientDialog({
   );
 }
 
-function PageHeader({
-  badge,
-  description,
-  icon: Icon,
-  metricLabel,
-  metricSubLabel,
-  title,
-  action,
-}: {
-  action?: React.ReactNode;
-  badge: string;
-  description: string;
-  icon: typeof PawPrint;
-  metricLabel: string;
-  metricSubLabel: string;
-  title: string;
-}) {
-  return (
-    <header className="grid gap-5 border-b border-slate-200 pb-6 pt-2 lg:grid-cols-[1fr_auto] lg:items-end">
-      <div className="min-w-0">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]">
-          <Sparkles className="size-3.5 text-emerald-700" />
-          {badge}
-        </div>
-        <h1 className="text-3xl font-semibold leading-none tracking-tight text-slate-950 md:text-5xl">
-          {title}
-        </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-          {description}
-        </p>
-      </div>
-      <div className="grid gap-3">
-        {action ? (
-          <div className="flex justify-start lg:justify-end">{action}</div>
-        ) : null}
-        <div className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
-          <div className="flex size-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
-            <Icon className="size-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-950">
-              {metricLabel}
-            </p>
-            <p className="mt-0.5 truncate text-xs text-slate-500">
-              {metricSubLabel}
-            </p>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function FormField({
   children,
   error,
@@ -924,10 +861,12 @@ function Panel({ children }: { children: React.ReactNode }) {
 }
 
 function PanelHeader({
+  action,
   count,
   kicker,
   title,
 }: {
+  action?: React.ReactNode;
   count: string;
   kicker: string;
   title: string;
@@ -940,7 +879,10 @@ function PanelHeader({
           {title}
         </h2>
       </div>
-      <div className="text-sm text-slate-500">{count}</div>
+      <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+        <div className="text-sm text-slate-500">{count}</div>
+        {action}
+      </div>
     </div>
   );
 }

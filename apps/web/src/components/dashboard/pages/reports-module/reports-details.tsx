@@ -249,13 +249,13 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
   return (
     <>
       <div className="mx-auto grid w-full max-w-[1400px] gap-5 pb-8 text-slate-950">
-        <header className="grid gap-5 border-b border-slate-200 pb-6 pt-2 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
+        <header className="grid gap-4 border-b border-slate-200 pb-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
           <div className="min-w-0">
             <Button
               variant="ghost"
               size="sm"
               asChild
-              className="-ml-2 mb-4 text-slate-600 active:scale-[0.98]"
+              className="-ml-2 mb-2 h-8 text-slate-600 active:scale-[0.98]"
             >
               <Link to="/dashboard/reports">
                 <ArrowLeft className="size-4" />
@@ -263,10 +263,10 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               </Link>
             </Button>
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <span
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-xs font-semibold",
+                  "inline-flex h-7 items-center gap-2 rounded-lg border px-2.5 text-xs font-semibold",
                   currentStatus.className,
                 )}
               >
@@ -278,10 +278,10 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               </span>
             </div>
 
-            <h1 className="max-w-4xl text-3xl font-semibold leading-none tracking-tight text-slate-950 md:text-5xl">
+            <h1 className="max-w-4xl truncate text-xl font-semibold leading-tight tracking-tight text-slate-950 md:text-2xl">
               {report.title}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
+            <p className="mt-1.5 max-w-2xl text-sm leading-5 text-slate-500">
               {report.patient?.name
                 ? `Compte rendu clinique pour ${report.patient.name}.`
                 : "Compte rendu clinique."}{" "}
@@ -289,7 +289,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="grid gap-2 sm:grid-cols-3 xl:w-[21rem]">
             <Button
               onClick={handleEdit}
               className="h-10 rounded-lg bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"

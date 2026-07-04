@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,10 +14,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  FileDropzone,
-  formatFileRejection,
-} from "@/components/file-dropzone";
+import { FileDropzone, formatFileRejection } from "@/components/file-dropzone";
 import type { Pet } from "@/lib/schemas";
 import {
   getMedicalDocumentsByPetId,
@@ -242,12 +238,14 @@ export const MedicalFilesTab = ({
             open={isUploadDialogOpen}
             onOpenChange={setIsUploadDialogOpen}
           >
-            <DialogTrigger asChild>
-              <Button>
-                <Upload className="h-4 w-4 mr-2" />
-                Ajouter un document
-              </Button>
-            </DialogTrigger>
+            <DialogTrigger
+              render={
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Ajouter un document
+                </Button>
+              }
+            />
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>Ajouter un document médical</DialogTitle>

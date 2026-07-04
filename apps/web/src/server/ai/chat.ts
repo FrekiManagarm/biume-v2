@@ -3,15 +3,17 @@ import { auth } from "@biume/auth";
 import { env } from "@biume/env/server";
 import {
   convertToModelMessages,
+  isStepCount,
   streamText,
   type UIMessage,
 } from "ai";
 import { z } from "zod";
 
+import { buildContextPrompt, type AppContext } from "#/lib/ai/context-builder";
 import {
-  buildContextPrompt,
-  type AppContext,
-} from "#/lib/ai/context-builder";
+  buildAssistantDataSnapshot,
+  createAssistantTools,
+} from "#/server/ai/assistant-tools";
 
 const MAX_REQUEST_CHARS = 120_000;
 const MAX_MESSAGES = 24;
@@ -20,14 +22,8 @@ const MAX_TEXT_PART_CHARS = 6_000;
 const MAX_TOTAL_TEXT_CHARS = 30_000;
 const MAX_OUTPUT_TOKENS = 1_500;
 
-type AssistantTextPart = {
-  type: "text";
-  text: string;
-};
-
-type AssistantUIMessage = Omit<UIMessage, "role" | "parts"> & {
+type AssistantUIMessage = Omit<UIMessage, "role"> & {
   role: "user" | "assistant";
-  parts: AssistantTextPart[];
 };
 
 const contextEntitySchema = z
@@ -57,8 +53,8 @@ const uiMessageSchema = z
       .array(
         z
           .object({
-            type: z.literal("text"),
-            text: z.string().max(MAX_TEXT_PART_CHARS),
+            type: z.string().trim().min(1).max(160),
+            text: z.string().max(MAX_TEXT_PART_CHARS).optional(),
           })
           .passthrough(),
       )
@@ -76,8 +72,10 @@ const chatRequestSchema = z.object({
       let totalTextLength = 0;
 
       for (const message of messages) {
-        for (const part of message.parts) {
-          totalTextLength += part.text.length;
+        for (const part of message.parts as Array<{ text?: unknown }>) {
+          if (typeof part.text === "string") {
+            totalTextLength += part.text.length;
+          }
         }
       }
 
@@ -102,27 +100,47 @@ const openai = createOpenAI({
 const baseInstructions = `Tu es l'assistant IA de Biume, une application de gestion pour professionnels de la sante animale.
 
 Ton role :
-- Aider l'utilisateur a comprendre ou organiser ses patients, clients, rapports et rendez-vous
+- Aider le professionnel a piloter son activite dans Biume : clients, patients, dossiers, rendez-vous, suivi et preparation
+- Consulter les dossiers clients/patients quand l'utilisateur le demande ou quand le contexte l'exige
+- Creer un dossier client, un dossier patient ou un rendez-vous quand la demande est explicite et que les informations obligatoires sont disponibles
+- Preparer un rendez-vous avec une synthese du patient, du proprietaire, des derniers comptes rendus, des points a verifier et du rendez-vous a venir
 - Reformuler, resumer et structurer les informations medicales ou administratives
-- Proposer des prochaines actions concretes dans l'interface Biume
 - Repondre en francais, avec un ton clair, professionnel et concis
 
 Important :
-- Tu n'executes pas encore d'action dans l'application. Si l'utilisateur demande de creer, modifier ou supprimer quelque chose, guide-le clairement et indique les informations necessaires.
-- Tu peux expliquer les commandes textuelles comme /create, /resume, /analyse, /synthese, /followup, /schedule et /todo, mais elles servent ici a orienter la conversation.
-- N'invente pas de donnees patient, client, agenda ou rapport qui ne sont pas dans le message ou le contexte.`;
+- Tu peux utiliser les outils disponibles pour lire ou creer des donnees dans l'organisation active.
+- N'invente jamais de donnees patient, client, agenda ou rapport qui ne viennent pas du message, du contexte ou d'un outil.
+- Pour une creation, n'appelle un outil de creation que si l'utilisateur a donne une intention claire. Si une information obligatoire manque, pose une question courte au lieu de deviner.
+- Avant de creer un patient, verifie le client/proprietaire et le type d'animal si necessaire.
+- Avant de preparer un rendez-vous, recupere le rendez-vous et/ou le dossier patient avec les outils.
+- Apres une action reussie, confirme ce qui a ete fait et donne les identifiants utiles.
+- Pour les sujets medicaux, reste descriptif et prudent : tu aides a organiser les informations, tu ne poses pas de diagnostic veterinaire.`;
 
-function buildInstructions(context?: AppContext) {
+async function buildInstructions(context?: AppContext) {
   const contextPrompt = context ? buildContextPrompt(context) : "";
+  const dataSnapshot =
+    context?.organizationId && context
+      ? await buildAssistantDataSnapshot(context, context.organizationId).catch(
+          (error) => {
+            console.error("[Assistant] Failed to build data snapshot", error);
+            return "";
+          },
+        )
+      : "";
 
-  if (!contextPrompt) {
+  if (!contextPrompt && !dataSnapshot) {
     return baseInstructions;
   }
 
-  return `${baseInstructions}
-
-Contexte actuel de l'utilisateur :
-${contextPrompt}`;
+  return [
+    baseInstructions,
+    contextPrompt
+      ? `Contexte actuel de l'utilisateur :\n${contextPrompt}`
+      : null,
+    dataSnapshot ? `Donnees utiles deja chargees :\n${dataSnapshot}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function buildAuthenticatedContext(
@@ -163,10 +181,7 @@ export async function handleChatRequest(request: Request) {
 
   const parsedBody = chatRequestSchema.safeParse(parsedJson);
   if (!parsedBody.success) {
-    return Response.json(
-      { error: "Invalid chat request" },
-      { status: 400 },
-    );
+    return Response.json({ error: "Invalid chat request" }, { status: 400 });
   }
 
   const body = parsedBody.data;
@@ -174,12 +189,21 @@ export async function handleChatRequest(request: Request) {
     body.context,
     session.session.activeOrganizationId,
   );
+  const tools = createAssistantTools(session.session.activeOrganizationId);
 
   const result = streamText({
     model: openai("gpt-5.4-mini"),
-    instructions: buildInstructions(context),
-    messages: await convertToModelMessages(body.messages),
+    instructions: await buildInstructions(context),
+    messages: await convertToModelMessages(body.messages, {
+      tools,
+      ignoreIncompleteToolCalls: true,
+    }),
+    tools,
+    stopWhen: isStepCount(6),
     maxOutputTokens: MAX_OUTPUT_TOKENS,
+    onError: ({ error }) => {
+      console.error("[Assistant] Stream error", error);
+    },
   });
 
   return result.toUIMessageStreamResponse();

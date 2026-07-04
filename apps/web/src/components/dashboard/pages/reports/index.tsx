@@ -86,8 +86,6 @@ export function AdvancedReportsTable({
 
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <ReportsHeader total={stats.total} drafts={stats.brouillons} />
-
       <ReportsStats
         total={stats.total}
         brouillons={stats.brouillons}
@@ -103,8 +101,11 @@ export function AdvancedReportsTable({
               Comptes rendus de consultation.
             </h2>
           </div>
-          <div className="text-sm text-slate-500">
-            {reports.length} rapport{pluralSuffix} trouvé{pluralSuffix}
+          <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+            <div className="text-sm text-slate-500">
+              {reports.length} rapport{pluralSuffix} trouvé{pluralSuffix}
+            </div>
+            <ReportsHeader />
           </div>
         </div>
 

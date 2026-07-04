@@ -1,6 +1,5 @@
 import {
   buildDashboardOverviewModel,
-  type DashboardOverviewModel,
   type RecentActivityInput,
 } from "#/lib/dashboard/dashboard-overview";
 import type { AgendaAppointmentInput } from "#/lib/dashboard/day-agenda";
@@ -39,8 +38,6 @@ export function DashboardOverviewView({
 
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <DashboardOverviewHeader model={model} />
-
       <DashboardSummaryStrip items={model.summary} />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -61,33 +58,4 @@ export function DashboardOverviewView({
       />
     </div>
   );
-}
-
-function DashboardOverviewHeader({ model }: { model: DashboardOverviewModel }) {
-  return (
-    <header className="grid gap-3 border-b border-slate-200 pb-5 pt-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-emerald-700">Activité</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">
-          Vue d'ensemble
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-          Aujourd'hui, vos séances, les comptes rendus à terminer et les suivis
-          utiles au même endroit.
-        </p>
-      </div>
-      <p className="w-fit rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600">
-        {formatSelectedDate(model.selectedDate)}
-      </p>
-    </header>
-  );
-}
-
-function formatSelectedDate(value: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(value);
 }
