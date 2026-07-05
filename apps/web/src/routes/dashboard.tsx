@@ -1,8 +1,14 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
 import { DashboardSidebar } from "#/components/dashboard/layout/dashboard-sidebar";
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header";
 import { DashboardPageBanner } from "#/components/dashboard/layout/dashboard-page-banner";
+import { cn } from "@biume/ui/lib/utils";
 import {
   getCurrentOrganization,
   getOrganizations,
@@ -85,6 +91,8 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
   const { session, organizations, sidebarDefaultOpen } =
     Route.useRouteContext();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
 
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
@@ -95,7 +103,14 @@ function RouteComponent() {
         />
         <SidebarInset>
           <DashboardHeader />
-          <div className="mb-4 min-h-0 w-full flex-1 overflow-y-auto p-4">
+          <div
+            className={cn(
+              "min-h-0 w-full flex-1 p-4",
+              isAssistantRoute
+                ? "mb-0 flex flex-col overflow-hidden"
+                : "mb-4 overflow-y-auto",
+            )}
+          >
             <DashboardPageBanner />
             <Outlet />
           </div>

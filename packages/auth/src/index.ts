@@ -20,6 +20,12 @@ export function createAuth() {
     trustedOrigins: [env.CORS_ORIGIN],
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["google"],
+      },
+    },
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID,

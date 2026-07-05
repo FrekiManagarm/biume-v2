@@ -127,29 +127,6 @@ export const AnimalCredenza = ({
                       </div>
                     </div>
                   </div>
-
-                  {pet.owner && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 md:min-w-[260px]">
-                      <Avatar className="size-10">
-                        <AvatarImage
-                          src={pet.owner.image || ""}
-                          alt={pet.owner.name || "Propriétaire"}
-                        />
-                        <AvatarFallback className="bg-white text-sm font-semibold text-primary">
-                          {pet.owner.name?.substring(0, 2).toUpperCase() ||
-                            "PR"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-950">
-                          {pet.owner.name || "Propriétaire non renseigné"}
-                        </p>
-                        <p className="truncate text-xs font-medium text-slate-500">
-                          {pet.owner.email || `Propriétaire de ${pet.name}`}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <nav className="mt-4 flex gap-6 overflow-x-auto border-t border-slate-100 pt-3">
@@ -176,9 +153,7 @@ export const AnimalCredenza = ({
               </header>
 
               <div className="min-h-0 flex-1 overflow-y-auto">
-                {activeTab === "info" && (
-                  <InfoTab animal={pet} setActiveTab={setActiveTab} />
-                )}
+                {activeTab === "info" && <InfoTab animal={pet} />}
                 {activeTab === "medical-documents" && (
                   <MedicalDocumentsTab animal={pet} client={client} />
                 )}

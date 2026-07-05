@@ -53,13 +53,13 @@ function RootDocument() {
   const queryClient = getContext();
 
   return (
-    <QueryClientProvider client={queryClient.queryClient}>
-      <AutumnProvider>
-        <html lang="fr">
-          <head>
-            <HeadContent />
-          </head>
-          <body>
+    <html lang="fr">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <QueryClientProvider client={queryClient.queryClient}>
+          <AutumnProvider pathPrefix="/api/autumn" includeCredentials>
             <TooltipProvider>
               <Outlet />
             </TooltipProvider>
@@ -76,10 +76,10 @@ function RootDocument() {
                 TanStackQueryDevtools,
               ]}
             />
-            <Scripts />
-          </body>
-        </html>
-      </AutumnProvider>
-    </QueryClientProvider>
+          </AutumnProvider>
+        </QueryClientProvider>
+        <Scripts />
+      </body>
+    </html>
   );
 }

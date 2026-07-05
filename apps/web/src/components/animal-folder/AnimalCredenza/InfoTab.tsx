@@ -1,6 +1,5 @@
 import {
   CalendarDaysIcon,
-  ChevronRight,
   FingerprintIcon,
   MailIcon,
   PawPrintIcon,
@@ -11,16 +10,13 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/style";
 
-import type { ActiveTab } from "../types";
 import type { Pet } from "@/lib/schemas";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
 interface InfoTabProps {
   animal: Pet;
-  setActiveTab: (tab: ActiveTab) => void;
 }
 
 type DetailRowProps = {
@@ -57,7 +53,7 @@ const SummaryTile = ({ icon, label, value }: SummaryTileProps) => (
   </div>
 );
 
-export const InfoTab = ({ animal, setActiveTab }: InfoTabProps) => {
+export const InfoTab = ({ animal }: InfoTabProps) => {
   const formatDate = (date: Date | string | undefined | null) => {
     if (!date) return "Non défini";
 
@@ -85,6 +81,13 @@ export const InfoTab = ({ animal, setActiveTab }: InfoTabProps) => {
 
   return (
     <div className="space-y-4 p-4 md:p-5">
+      <div>
+        <h3 className="text-base font-semibold text-slate-950">Synthèse</h3>
+        <p className="mt-1 text-sm font-medium text-slate-500">
+          Informations principales de {animal.name}
+        </p>
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <SummaryTile
           icon={<PawPrintIcon className="size-5" />}
@@ -188,30 +191,14 @@ export const InfoTab = ({ animal, setActiveTab }: InfoTabProps) => {
         </section>
       </div>
 
-      <div
-        className={cn(
-          "grid gap-4",
-          animal.description && "lg:grid-cols-[minmax(0,1fr)_280px]",
-        )}
-      >
-        {animal.description && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-950">Notes</h3>
-            <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
-              {animal.description}
-            </p>
-          </section>
-        )}
-
-        <Button
-          variant="outline"
-          className="h-auto min-h-14 justify-between rounded-2xl border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50"
-          onClick={() => setActiveTab("medical-documents")}
-        >
-          <span>Dossier médical & comptes rendus</span>
-          <ChevronRight className="size-5 text-slate-400" />
-        </Button>
-      </div>
+      {animal.description && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-950">Notes</h3>
+          <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
+            {animal.description}
+          </p>
+        </section>
+      )}
     </div>
   );
 };

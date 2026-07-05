@@ -7,15 +7,23 @@ export const autumnApiHandler = autumnHandler({
   identify: async (request) => {
     const session = await auth.api.getSession({ headers: request.headers });
 
-    if (!session) {
+    if (!session?.session.activeOrganizationId) {
       return null;
     }
 
+    const organization = await auth.api.getFullOrganization({
+      headers: request.headers,
+    });
+
     return {
-      customerId: session.user.id,
+      customerId: session.session.activeOrganizationId,
       customerData: {
         email: session.user.email,
-        name: session.user.name,
+        name: organization?.name ?? session.user.name,
+        metadata: {
+          organizationId: session.session.activeOrganizationId,
+          ownerUserId: session.user.id,
+        },
       },
     };
   },

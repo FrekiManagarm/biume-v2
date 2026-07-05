@@ -105,6 +105,13 @@ function SignUp() {
             type="button"
             variant="outline"
           >
+            <img
+              alt=""
+              aria-hidden="true"
+              className="size-4"
+              data-icon="inline-start"
+              src="/assets/svg/google-icon.svg"
+            />
             S'inscrire avec Google
             <LoaderCircle
               className={isGooglePending ? "size-4 animate-spin" : "hidden"}
