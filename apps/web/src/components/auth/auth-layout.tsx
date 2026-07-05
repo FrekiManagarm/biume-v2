@@ -56,7 +56,7 @@ export function AuthShell({ children }: AuthShellProps) {
               Espace sécurisé
             </div>
             <h1 className="text-4xl font-semibold leading-tight">
-              Retrouvez vos opérations sans friction.
+              Retrouvez vos suivis animaux en toute sérénité.
             </h1>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Accédez à vos dossiers, propriétaires et rapports depuis un point
