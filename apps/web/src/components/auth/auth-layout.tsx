@@ -13,7 +13,7 @@ type AuthShellProps = {
 
 const MARKETING_APP_URL =
   import.meta.env.VITE_MARKETING_APP_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
+  "https://biume.com";
 
 function BiumeLogo({ className = "size-8" }: { className?: string }) {
   return (

@@ -30,7 +30,8 @@
         "TRIGGER_SECRET_KEY",
         "AUTUMN_PROD_SECRET_KEY",
         "AUTUMN_SECRET_KEY",
-        "UPLOADTHING_TOKEN"
+        "UPLOADTHING_TOKEN",
+        "VITE_MARKETING_APP_URL"
       ]
     },
     "lint": {
