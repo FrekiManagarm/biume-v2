@@ -1,9 +1,4 @@
-import {
-  Link,
-  createFileRoute,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -57,7 +52,6 @@ export const Route = createFileRoute("/create-organization")({
 });
 
 function CreateOrganization() {
-  const navigate = useNavigate();
   const { session } = Route.useRouteContext();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -174,7 +168,7 @@ function CreateOrganization() {
       return;
     }
 
-    await navigate({ to: "/dashboard" });
+    window.location.replace("/dashboard");
   }
 
   return (

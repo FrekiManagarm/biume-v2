@@ -1,6 +1,11 @@
 import { auth } from "@biume/auth";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
+import { z } from "zod";
+
+const switchOrganizationSchema = z.object({
+  organizationId: z.string().min(1),
+});
 
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
@@ -45,3 +50,21 @@ export const getCurrentOrganization = createServerFn({ method: "GET" }).handler(
     return organization;
   },
 );
+
+export const switchActiveOrganization = createServerFn({ method: "POST" })
+  .validator(switchOrganizationSchema)
+  .handler(async ({ data }) => {
+    const headers = getRequestHeaders();
+    const organization = await auth.api.setActiveOrganization({
+      headers,
+      body: {
+        organizationId: data.organizationId,
+      },
+    });
+
+    if (!organization) {
+      throw new Error("Impossible d'activer cette organisation.");
+    }
+
+    return organization;
+  });

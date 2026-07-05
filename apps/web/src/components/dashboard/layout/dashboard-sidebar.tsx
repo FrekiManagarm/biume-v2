@@ -1,11 +1,8 @@
 "use client";
 
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import {
-  organization,
-  signOut,
-  useActiveOrganization,
-} from "#/lib/auth-client";
+import { signOut, useActiveOrganization } from "#/lib/auth-client";
+import { switchActiveOrganization } from "#/functions/auth.function";
 import { proMenuList, type Menu, type Submenu } from "#/lib/menu-list";
 import {
   AlertCircle,
@@ -43,7 +40,6 @@ import {
 } from "@biume/ui/components/collapsible";
 import type { AuthSession } from "@biume/auth";
 import type { Organization, User as UserType } from "@biume/db/schema/index";
-import { useCustomer } from "autumn-js/react";
 import { UserProfileDialog } from "../dialogs/user-profile-dialog";
 
 interface DashboardSidebarProps {
@@ -60,6 +56,8 @@ const itemActiveClassName =
 const iconClassName =
   "size-4 shrink-0 text-sidebar-foreground/62 transition-colors group-hover/nav:text-sidebar-accent-foreground group-data-[active=true]/nav:text-sidebar-primary";
 
+const ACCOUNT_SWITCH_SUCCESS_DELAY_MS = 2200;
+
 export function DashboardSidebar({
   session,
   organizations,
@@ -73,34 +71,38 @@ export function DashboardSidebar({
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { refetch } = useCustomer();
 
   const menuGroups = proMenuList(pathname || "");
   const isCollapsed = state === "collapsed" && !isMobile;
+  const activeOrganizationId =
+    activeOrganization?.id ?? session.session.activeOrganizationId ?? null;
+  const displayedActiveOrganizationId = switchingOrg ?? activeOrganizationId;
 
   const handleOrganizationSwitch = async (orgId: string) => {
+    if (switchingOrg || orgId === activeOrganizationId) {
+      return;
+    }
+
     setSwitchingOrg(orgId);
     setActiveOrgId(orgId);
     setIsLoading(true);
     setShowProfessionalDialog(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      const result = await organization.setActive({
-        organizationId: orgId,
+      await switchActiveOrganization({
+        data: {
+          organizationId: orgId,
+        },
       });
 
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-
-      await refetch();
-
-      await navigate({ to: "/dashboard" });
       setIsLoading(false);
+      await new Promise((resolve) =>
+        setTimeout(resolve, ACCOUNT_SWITCH_SUCCESS_DELAY_MS),
+      );
+      window.location.replace("/dashboard");
     } catch (error) {
       console.error("Error changing organization:", error);
+      setIsLoading(false);
       toast.error("Erreur lors du changement de compte", {
         description: "Veuillez réessayer",
         icon: <AlertCircle className="h-5 w-5 text-white" />,
@@ -153,10 +155,7 @@ export function DashboardSidebar({
         )}
       >
         <Icon
-          className={cn(
-            iconClassName,
-            menu.active && "text-sidebar-primary",
-          )}
+          className={cn(iconClassName, menu.active && "text-sidebar-primary")}
         />
         <span className="truncate group-data-[collapsible=icon]:hidden">
           {menu.label}
@@ -203,7 +202,10 @@ export function DashboardSidebar({
               type="button"
               title={menu.label}
               data-active={menu.active ? true : undefined}
-              className={cn(itemBaseClassName, menu.active && itemActiveClassName)}
+              className={cn(
+                itemBaseClassName,
+                menu.active && itemActiveClassName,
+              )}
             >
               <Icon
                 className={cn(
@@ -253,7 +255,10 @@ export function DashboardSidebar({
             <button
               type="button"
               data-active={menu.active ? true : undefined}
-              className={cn(itemBaseClassName, menu.active && itemActiveClassName)}
+              className={cn(
+                itemBaseClassName,
+                menu.active && itemActiveClassName,
+              )}
             >
               <Icon
                 className={cn(
@@ -341,19 +346,20 @@ export function DashboardSidebar({
                           key={org.id}
                           className={cn(
                             "group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200",
-                            activeOrganization?.id === org.id
+                            displayedActiveOrganizationId === org.id
                               ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                               : "hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm",
-                            switchingOrg === org.id && "animate-pulse opacity-70",
+                            switchingOrg === org.id &&
+                              "animate-pulse opacity-70",
                           )}
-                          onSelect={() => handleOrganizationSwitch(org.id)}
+                          onClick={() => handleOrganizationSwitch(org.id)}
                           disabled={switchingOrg !== null}
                         >
                           {org.logo ? (
                             <div
                               className={cn(
                                 "size-8 shrink-0 overflow-hidden rounded-md shadow-sm transition-all duration-300",
-                                activeOrganization?.id === org.id
+                                displayedActiveOrganizationId === org.id
                                   ? "ring-2 ring-sidebar-primary/30"
                                   : "ring-1 ring-sidebar-border/50 hover:ring-sidebar-primary/20",
                               )}
@@ -365,7 +371,7 @@ export function DashboardSidebar({
                                 height={32}
                                 className={cn(
                                   "size-full object-cover transition-transform duration-300",
-                                  activeOrganization?.id !== org.id &&
+                                  displayedActiveOrganizationId !== org.id &&
                                     "hover:scale-110",
                                 )}
                               />
@@ -383,7 +389,7 @@ export function DashboardSidebar({
                               Compte professionnel
                             </span>
                           </div>
-                          {activeOrganization?.id === org.id && (
+                          {displayedActiveOrganizationId === org.id && (
                             <Check className="ml-auto size-4 text-sidebar-primary animate-in zoom-in-50 duration-300" />
                           )}
                         </DropdownMenuItem>

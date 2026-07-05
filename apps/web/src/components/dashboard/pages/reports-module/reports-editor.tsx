@@ -16,7 +16,6 @@ import { ReportPreview } from "./components/ReportPreview";
 import { ExitConfirmationDialog } from "./components/ExitConfirmationDialog";
 import { ReportSidebarNavigation } from "./components/ReportSidebarNavigation";
 import { PatientCard } from "./components/PatientCard";
-import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
 import {
@@ -47,7 +46,6 @@ import {
   PlusIcon,
   KeyboardIcon,
   AlertTriangle,
-  MessageCircleIcon,
 } from "lucide-react";
 import { cn } from "@/lib/style";
 import { toast } from "sonner";
@@ -193,7 +191,6 @@ export function AdvancedReportEditor({
   );
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isVulgarisationOpen, setIsVulgarisationOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -490,11 +487,17 @@ export function AdvancedReportEditor({
           });
         }
       } else {
-        toast.error("Erreur lors de la mise à jour du rapport");
+        toast.error(
+          data?.error || "Erreur lors de la mise à jour du rapport",
+        );
       }
     },
-    onError: (_) => {
-      toast.error("Erreur lors de la mise à jour du rapport");
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la mise à jour du rapport",
+      );
     },
   });
 
@@ -510,8 +513,6 @@ export function AdvancedReportEditor({
       recommendations,
       status,
     });
-
-    console.log(reportDataToSend, "reportDataToSend");
 
     try {
       await updateReportMutation.mutateAsync(reportDataToSend);
@@ -618,92 +619,6 @@ export function AdvancedReportEditor({
         return 0;
     }
   };
-
-  // Fonction pour générer le texte du rapport à vulgariser
-  const generateReportText = useCallback(() => {
-    const sections: string[] = [];
-
-    // Raison de consultation
-    if (consultationReason) {
-      sections.push(`Raison de consultation : ${consultationReason}`);
-    }
-
-    // Observations cliniques
-    if (observations.length > 0) {
-      sections.push("\nObservations cliniques :");
-      observations.forEach((obs) => {
-        const severityLabel =
-          obs.severity === 1
-            ? "légère"
-            : obs.severity === 2
-              ? "modérée"
-              : obs.severity === 3
-                ? "importante"
-                : obs.severity === 4
-                  ? "sévère"
-                  : "très sévère";
-        const typeLabel = obs.type === "static" ? "statique" : "dynamique";
-        const lateralityLabel =
-          obs.laterality === "left"
-            ? "gauche"
-            : obs.laterality === "right"
-              ? "droite"
-              : "bilatéral";
-        sections.push(
-          `- ${obs.region} (${severityLabel}, ${typeLabel}, ${lateralityLabel})${obs.notes ? ` : ${obs.notes}` : ""}`,
-        );
-      });
-    }
-
-    // Problèmes anatomiques
-    if (anatomicalIssues.length > 0) {
-      sections.push("\nProblèmes anatomiques :");
-      anatomicalIssues.forEach((issue) => {
-        const typeLabel =
-          issue.type === "dysfunction" ? "dysfonction" : "suspicion d'atteinte";
-        const severityLabel =
-          issue.severity === 1
-            ? "légère"
-            : issue.severity === 2
-              ? "modérée"
-              : issue.severity === 3
-                ? "importante"
-                : issue.severity === 4
-                  ? "sévère"
-                  : "très sévère";
-        const lateralityLabel =
-          issue.laterality === "left"
-            ? "gauche"
-            : issue.laterality === "right"
-              ? "droite"
-              : "bilatéral";
-        sections.push(
-          `- ${issue.region} (${typeLabel}, ${severityLabel}, ${lateralityLabel})${issue.notes ? ` : ${issue.notes}` : ""}`,
-        );
-      });
-    }
-
-    // Recommandations
-    if (recommendations.length > 0) {
-      sections.push("\nRecommandations :");
-      recommendations.forEach((rec, index) => {
-        sections.push(`${index + 1}. ${rec.content}`);
-      });
-    }
-
-    // Notes générales
-    if (notes.trim()) {
-      sections.push(`\nNotes générales :\n${notes}`);
-    }
-
-    return sections.join("\n");
-  }, [
-    consultationReason,
-    observations,
-    anatomicalIssues,
-    recommendations,
-    notes,
-  ]);
 
   // Configuration des catégories et de leurs onglets
   const categories = [
@@ -833,14 +748,6 @@ export function AdvancedReportEditor({
                       Nouvelle observation
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsVulgarisationOpen(true)}
-                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
-                  >
-                    <MessageCircleIcon className="size-4" />
-                    Assistant
-                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => setShowPreview(true)}
@@ -1003,7 +910,7 @@ export function AdvancedReportEditor({
             <div
               className={cn(
                 "grid gap-2",
-                activeTab === "clinical" ? "grid-cols-5" : "grid-cols-4",
+                activeTab === "clinical" ? "grid-cols-4" : "grid-cols-3",
               )}
             >
               {activeTab === "clinical" && (
@@ -1016,15 +923,6 @@ export function AdvancedReportEditor({
                   <PlusIcon className="h-4 w-4" />
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsVulgarisationOpen(true)}
-                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
-                aria-label="Assistant"
-              >
-                <MessageCircleIcon className="h-4 w-4" />
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -1296,13 +1194,6 @@ export function AdvancedReportEditor({
         isOpen={isAnimalCredenzaOpen}
         onOpenChange={setIsAnimalCredenzaOpen}
         petId={selectedPetId}
-      />
-
-      <VulgarisationPanel
-        isOpen={isVulgarisationOpen}
-        onOpenChange={setIsVulgarisationOpen}
-        reportId={reportId}
-        initialText={generateReportText()}
       />
 
       {/* Modale des raccourcis clavier */}

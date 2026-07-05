@@ -1,14 +1,17 @@
-
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AlertCircleIcon } from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  ArrowLeftIcon,
+  FilePenLineIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 
 interface ExitConfirmationDialogProps {
   showExitConfirmDialog: boolean;
@@ -22,33 +25,43 @@ export function ExitConfirmationDialog({
   onConfirmExit,
 }: ExitConfirmationDialogProps) {
   return (
-    <Dialog
+    <AlertDialog
       open={showExitConfirmDialog}
       onOpenChange={setShowExitConfirmDialog}
     >
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertCircleIcon className="h-5 w-5 text-amber-500" />
-            Retour au tableau de bord
-          </DialogTitle>
-          <DialogDescription>
-            Vous avez des modifications non enregistrées. Si vous retournez au
-            tableau de bord, toutes vos modifications seront perdues.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0 mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setShowExitConfirmDialog(false)}
-          >
+      <AlertDialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-border/80 bg-popover p-0 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.35)] ring-1 ring-foreground/5 sm:max-w-[26rem]">
+        <div className="grid gap-4 p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-300">
+              <TriangleAlertIcon className="size-5" />
+            </div>
+            <div className="min-w-0 space-y-1.5">
+              <AlertDialogTitle className="text-base font-semibold tracking-tight text-foreground">
+                Quitter sans enregistrer ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="max-w-[32ch] text-sm leading-6 text-muted-foreground">
+                Vous avez des modifications non enregistrées. En retournant au
+                tableau de bord, elles seront définitivement perdues.
+              </AlertDialogDescription>
+            </div>
+          </div>
+        </div>
+
+        <AlertDialogFooter className="mx-0 mb-0 gap-2 border-t bg-muted/40 p-3 sm:grid sm:grid-cols-[1fr_auto] sm:justify-normal">
+          <AlertDialogCancel className="w-full sm:w-auto">
+            <FilePenLineIcon className="size-4" />
             Continuer l&apos;édition
-          </Button>
-          <Button variant="destructive" onClick={onConfirmExit}>
-            Retourner au tableau de bord
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            className="w-full sm:w-auto"
+            onClick={onConfirmExit}
+          >
+            <ArrowLeftIcon className="size-4" />
+            Retour au tableau de bord
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

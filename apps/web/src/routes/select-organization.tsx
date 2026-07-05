@@ -16,8 +16,12 @@ import {
 import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { getOrganizations, getSession } from "#/functions/auth.function";
-import { organization as organizationClient, signOut } from "#/lib/auth-client";
+import {
+  getOrganizations,
+  getSession,
+  switchActiveOrganization,
+} from "#/functions/auth.function";
+import { signOut } from "#/lib/auth-client";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/select-organization")({
@@ -59,20 +63,23 @@ function SelectOrganization() {
     setError(null);
     setPendingOrganizationId(organizationId);
 
-    const result = await organizationClient.setActive({
-      organizationId,
-    });
-
-    if (result.error) {
+    try {
+      await switchActiveOrganization({
+        data: {
+          organizationId,
+        },
+      });
+    } catch (switchError) {
       setError(
-        result.error.message ||
-          "Impossible d'ouvrir cette organisation pour le moment.",
+        switchError instanceof Error
+          ? switchError.message
+          : "Impossible d'ouvrir cette organisation pour le moment.",
       );
       setPendingOrganizationId(null);
       return;
     }
 
-    await navigate({ to: "/dashboard" });
+    window.location.replace("/dashboard");
   }
 
   async function handleSignOut() {

@@ -521,6 +521,36 @@ Rationale:
 - Do not charge per owner or per animal initially; it may create friction exactly where Biume needs usage.
 - Do not sell "AI credits" as the value metric. Practitioners do not buy tokens; they buy professional follow-up and repeat business.
 
+### AI Cost Control
+
+Pricing should protect AI gross margin without making the product feel like a token meter.
+
+Publicly, Biume should sell professional owner follow-up, not AI consumption. Internally, the product should still enforce cost guardrails on the expensive actions:
+
+- Number of AI-generated owner follow-ups per month
+- Number of AI regenerations per follow-up
+- Length of source notes accepted for generation
+- Frequency of automated J+7/J+30 follow-up drafts
+- Use of premium or long-context models only when needed
+
+Recommended V1 approach:
+
+- Keep the public offer simple and avoid "AI credits" language.
+- Include a fair-use policy for normal independent practitioner usage.
+- Set soft internal alerts when an account exceeds expected AI cost or generation volume.
+- Add hard limits only for clearly abusive or non-standard usage.
+- Cache or reuse generated content when a practitioner edits, previews, or exports the same follow-up.
+- Prefer cheaper models for formatting, rewriting, and short owner messages; reserve stronger models for complex synthesis.
+
+If usage becomes meaningfully variable, package around business-friendly limits rather than tokens:
+
+- Starter: limited owner follow-ups per month
+- Pro: higher or unlimited fair-use follow-ups
+- Studio: team usage, shared templates, and higher automation volume
+
+Margin target:
+Biume should track AI cost per active practitioner and AI cost per follow-up sent. Pricing should not be changed until usage data shows whether AI cost is a real margin constraint or only a perceived risk.
+
 ### Pilot Offer
 
 Use a concierge pilot before optimizing pricing:
@@ -678,4 +708,3 @@ Public competitor positioning reviewed from:
 - NeoVoice: https://www.neovoice.fr/l-application-suivi-de-sant-et-de-bien-etre-de-l-animal
 - FFOA x NeoVoice partnership context: https://ffoa.fr/presentation-du-partenariat-neovoice/
 - MyPawScribe veterinary reporting: https://mypawscribe.com/compte-rendu-veterinaire
-
