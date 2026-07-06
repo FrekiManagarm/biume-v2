@@ -4,7 +4,7 @@ import LandingFooter from "../components/footer";
 import { Header } from "../components/header";
 import { HeroSection } from "../components/hero";
 import { PricingSection } from "../components/pricing";
-import { JsonLd, siteName, siteUrl, subscriptionOfferJsonLd } from "../lib/seo";
+import { JsonLd, siteName, siteUrl } from "../lib/seo";
 
 export default function Home() {
   return (
@@ -12,14 +12,17 @@ export default function Home() {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
+          "@type": "Service",
           name: siteName,
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
           url: siteUrl,
           description:
             "Logiciel de compte rendu, suivi post-séance et timeline animal pour ostéopathes animaliers.",
-          offers: subscriptionOfferJsonLd(),
+          provider: {
+            "@type": "Organization",
+            name: siteName,
+            url: siteUrl,
+          },
+          areaServed: "FR",
         }}
       />
       <Header />

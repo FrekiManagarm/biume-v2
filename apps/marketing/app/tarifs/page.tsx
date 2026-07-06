@@ -77,7 +77,6 @@ export default function PricingSeoPage() {
         { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu propriétaire" },
         { href: "/comparatifs", label: "Comparer les outils" },
       ]}
-      schemaType="SoftwareApplication"
     />
   );
 }

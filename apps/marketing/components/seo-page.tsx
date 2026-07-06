@@ -7,7 +7,6 @@ import {
   pageBreadcrumbJsonLd,
   siteName,
   siteUrl,
-  subscriptionOfferJsonLd,
 } from "../lib/seo";
 import LandingFooter from "./footer";
 import { Header } from "./header";
@@ -48,7 +47,7 @@ type SeoPageProps = {
   };
   faq: readonly Faq[];
   internalLinks: readonly LinkItem[];
-  schemaType?: "SoftwareApplication" | "Service" | "Article";
+  schemaType?: "Service" | "Article";
 };
 
 export function SeoPage({
@@ -63,15 +62,6 @@ export function SeoPage({
   internalLinks,
   schemaType = "Service",
 }: SeoPageProps) {
-  const softwareSchema =
-    schemaType === "SoftwareApplication"
-      ? {
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
-          offers: subscriptionOfferJsonLd({ url: absoluteUrl(path) }),
-        }
-      : {};
-
   const schema = {
     "@context": "https://schema.org",
     "@type": schemaType,
@@ -84,7 +74,6 @@ export function SeoPage({
       url: siteUrl,
     },
     areaServed: "FR",
-    ...softwareSchema,
     mainEntity:
       faq.length > 0
         ? faq.map((item) => ({
