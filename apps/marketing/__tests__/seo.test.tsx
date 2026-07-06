@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
+import HomePage from "../app/page";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
 import ReportPage, {
@@ -58,13 +59,10 @@ const pageChecks = [
   },
 ];
 
-function jsonLdBlocks(html: string) {
-  return Array.from(
-    html.matchAll(
-      /<script type="application\/ld\+json">(?<json>.*?)<\/script>/g,
-    ),
-    (match) => JSON.parse(match.groups?.json ?? "{}") as Record<string, unknown>,
-  );
+function getJsonLdSchemas(html: string) {
+  return [
+    ...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g),
+  ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
 describe("marketing SEO", () => {
@@ -120,22 +118,54 @@ describe("marketing SEO", () => {
     expect(html).toContain("patients");
   });
 
-  test("pricing Product structured data includes a visible offer", () => {
+  test("pricing schema uses software offer details instead of product snippets", () => {
     const html = renderToStaticMarkup(<PricingPage />);
-    const productSchemas = jsonLdBlocks(html).filter(
+    const schemas = getJsonLdSchemas(html);
+    const productSchema = schemas.find(
       (schema) => schema["@type"] === "Product",
     );
+    const softwareSchema = schemas.find(
+      (schema) => schema["@type"] === "SoftwareApplication",
+    );
 
-    expect(productSchemas).toHaveLength(1);
-    expect(productSchemas[0]).toMatchObject({
-      "@type": "Product",
-      offers: {
-        "@type": "Offer",
-        url: "https://biume.com/tarifs",
-        price: "24.99",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-      },
+    expect(productSchema).toBeUndefined();
+    expect(softwareSchema).toBeDefined();
+    expect(softwareSchema?.audience).toBeUndefined();
+    expect(softwareSchema?.applicationCategory).toBe("BusinessApplication");
+    expect(softwareSchema?.operatingSystem).toBe("Web");
+
+    const offer = softwareSchema?.offers as Record<string, unknown>;
+    const shippingDetails = offer.shippingDetails as Record<string, unknown>;
+    expect(offer.url).toBe("https://biume.com/tarifs");
+    expect(shippingDetails["@type"]).toBe("OfferShippingDetails");
+    expect(shippingDetails.shippingRate).toEqual({
+      "@type": "MonetaryAmount",
+      value: 0,
+      currency: "EUR",
     });
+    expect(offer.hasMerchantReturnPolicy).toEqual({
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "FR",
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    });
+  });
+
+  test("home software schema reuses complete offer details without unsupported audience", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    const softwareSchema = getJsonLdSchemas(html).find(
+      (schema) => schema["@type"] === "SoftwareApplication",
+    );
+
+    expect(softwareSchema).toBeDefined();
+    expect(softwareSchema?.audience).toBeUndefined();
+    const offer = softwareSchema?.offers as Record<string, unknown>;
+    const shippingDetails = offer.shippingDetails as Record<string, unknown>;
+    const returnPolicy = offer.hasMerchantReturnPolicy as Record<
+      string,
+      unknown
+    >;
+
+    expect(shippingDetails["@type"]).toBe("OfferShippingDetails");
+    expect(returnPolicy["@type"]).toBe("MerchantReturnPolicy");
   });
 });

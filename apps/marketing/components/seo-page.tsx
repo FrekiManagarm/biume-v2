@@ -7,17 +7,10 @@ import {
   pageBreadcrumbJsonLd,
   siteName,
   siteUrl,
+  subscriptionOfferJsonLd,
 } from "../lib/seo";
 import LandingFooter from "./footer";
 import { Header } from "./header";
-
-const productOfferJsonLd = {
-  "@type": "Offer",
-  url: absoluteUrl("/tarifs"),
-  price: "24.99",
-  priceCurrency: "EUR",
-  availability: "https://schema.org/InStock",
-};
 
 type Stat = {
   value: string;
@@ -55,7 +48,7 @@ type SeoPageProps = {
   };
   faq: readonly Faq[];
   internalLinks: readonly LinkItem[];
-  schemaType?: "Product" | "Service" | "Article";
+  schemaType?: "SoftwareApplication" | "Service" | "Article";
 };
 
 export function SeoPage({
@@ -70,6 +63,15 @@ export function SeoPage({
   internalLinks,
   schemaType = "Service",
 }: SeoPageProps) {
+  const softwareSchema =
+    schemaType === "SoftwareApplication"
+      ? {
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          offers: subscriptionOfferJsonLd({ url: absoluteUrl(path) }),
+        }
+      : {};
+
   const schema = {
     "@context": "https://schema.org",
     "@type": schemaType,
@@ -82,15 +84,7 @@ export function SeoPage({
       url: siteUrl,
     },
     areaServed: "FR",
-    audience: {
-      "@type": "Audience",
-      audienceType: "Ostéopathes animaliers et thérapeutes animaliers",
-    },
-    offers: schemaType === "Product" ? productOfferJsonLd : undefined,
-    image:
-      schemaType === "Product"
-        ? absoluteUrl("/brand/biume-logo.png")
-        : undefined,
+    ...softwareSchema,
     mainEntity:
       faq.length > 0
         ? faq.map((item) => ({

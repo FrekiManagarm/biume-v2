@@ -4,7 +4,7 @@ import LandingFooter from "../components/footer";
 import { Header } from "../components/header";
 import { HeroSection } from "../components/hero";
 import { PricingSection } from "../components/pricing";
-import { JsonLd, siteName, siteUrl } from "../lib/seo";
+import { JsonLd, siteName, siteUrl, subscriptionOfferJsonLd } from "../lib/seo";
 
 export default function Home() {
   return (
@@ -19,15 +19,7 @@ export default function Home() {
           url: siteUrl,
           description:
             "Logiciel de compte rendu, suivi post-séance et timeline animal pour ostéopathes animaliers.",
-          offers: {
-            "@type": "Offer",
-            price: "24.99",
-            priceCurrency: "EUR",
-          },
-          audience: {
-            "@type": "Audience",
-            audienceType: "Ostéopathes animaliers et thérapeutes animaliers",
-          },
+          offers: subscriptionOfferJsonLd(),
         }}
       />
       <Header />
