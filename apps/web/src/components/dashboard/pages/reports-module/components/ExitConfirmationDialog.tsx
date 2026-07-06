@@ -47,18 +47,18 @@ export function ExitConfirmationDialog({
           </div>
         </div>
 
-        <AlertDialogFooter className="mx-0 mb-0 gap-2 border-t bg-muted/40 p-3 sm:grid sm:grid-cols-[1fr_auto] sm:justify-normal">
-          <AlertDialogCancel className="w-full sm:w-auto">
+        <AlertDialogFooter className="mx-0 mb-0 grid grid-cols-1 gap-2 border-t bg-muted/40 p-3 min-[420px]:grid-cols-2">
+          <AlertDialogCancel className="w-full min-w-0 max-w-full">
             <FilePenLineIcon className="size-4" />
             Continuer l&apos;édition
           </AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="w-full sm:w-auto"
+            className="w-full min-w-0 max-w-full"
             onClick={onConfirmExit}
           >
             <ArrowLeftIcon className="size-4" />
-            Retour au tableau de bord
+            Retour au tableau
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
