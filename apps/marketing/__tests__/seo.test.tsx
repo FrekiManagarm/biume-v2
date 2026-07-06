@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
+import HomePage from "../app/page";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
 import ReportPage, {
@@ -58,13 +59,10 @@ const pageChecks = [
   },
 ];
 
-function jsonLdBlocks(html: string) {
-  return Array.from(
-    html.matchAll(
-      /<script type="application\/ld\+json">(?<json>.*?)<\/script>/g,
-    ),
-    (match) => JSON.parse(match.groups?.json ?? "{}") as Record<string, unknown>,
-  );
+function getJsonLdSchemas(html: string) {
+  return [
+    ...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g),
+  ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
 describe("marketing SEO", () => {
@@ -120,22 +118,41 @@ describe("marketing SEO", () => {
     expect(html).toContain("patients");
   });
 
-  test("pricing Product structured data includes a visible offer", () => {
+  test("pricing schema avoids product, software app, and merchant listing markup", () => {
     const html = renderToStaticMarkup(<PricingPage />);
-    const productSchemas = jsonLdBlocks(html).filter(
+    const schemas = getJsonLdSchemas(html);
+    const productSchema = schemas.find(
       (schema) => schema["@type"] === "Product",
     );
+    const softwareSchema = schemas.find(
+      (schema) => schema["@type"] === "SoftwareApplication",
+    );
+    const serviceSchema = schemas.find(
+      (schema) => schema["@type"] === "Service",
+    );
 
-    expect(productSchemas).toHaveLength(1);
-    expect(productSchemas[0]).toMatchObject({
-      "@type": "Product",
-      offers: {
-        "@type": "Offer",
-        url: "https://biume.com/tarifs",
-        price: "24.99",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-      },
-    });
+    expect(productSchema).toBeUndefined();
+    expect(softwareSchema).toBeUndefined();
+    expect(serviceSchema).toBeDefined();
+    expect(serviceSchema?.audience).toBeUndefined();
+    expect(serviceSchema?.offers).toBeUndefined();
+    expect(html).not.toContain("OfferShippingDetails");
+    expect(html).not.toContain("MerchantReturnPolicy");
+  });
+
+  test("home schema avoids software app and merchant listing markup", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    const schemas = getJsonLdSchemas(html);
+    const softwareSchema = schemas.find(
+      (schema) => schema["@type"] === "SoftwareApplication",
+    );
+    const serviceSchema = schemas.find((schema) => schema["@type"] === "Service");
+
+    expect(softwareSchema).toBeUndefined();
+    expect(serviceSchema).toBeDefined();
+    expect(serviceSchema?.audience).toBeUndefined();
+    expect(serviceSchema?.offers).toBeUndefined();
+    expect(html).not.toContain("OfferShippingDetails");
+    expect(html).not.toContain("MerchantReturnPolicy");
   });
 });

@@ -12,22 +12,17 @@ export default function Home() {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
+          "@type": "Service",
           name: siteName,
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
           url: siteUrl,
           description:
             "Logiciel de compte rendu, suivi post-séance et timeline animal pour ostéopathes animaliers.",
-          offers: {
-            "@type": "Offer",
-            price: "24.99",
-            priceCurrency: "EUR",
+          provider: {
+            "@type": "Organization",
+            name: siteName,
+            url: siteUrl,
           },
-          audience: {
-            "@type": "Audience",
-            audienceType: "Ostéopathes animaliers et thérapeutes animaliers",
-          },
+          areaServed: "FR",
         }}
       />
       <Header />

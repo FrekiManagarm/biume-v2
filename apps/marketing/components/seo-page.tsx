@@ -11,14 +11,6 @@ import {
 import LandingFooter from "./footer";
 import { Header } from "./header";
 
-const productOfferJsonLd = {
-  "@type": "Offer",
-  url: absoluteUrl("/tarifs"),
-  price: "24.99",
-  priceCurrency: "EUR",
-  availability: "https://schema.org/InStock",
-};
-
 type Stat = {
   value: string;
   label: string;
@@ -55,7 +47,7 @@ type SeoPageProps = {
   };
   faq: readonly Faq[];
   internalLinks: readonly LinkItem[];
-  schemaType?: "Product" | "Service" | "Article";
+  schemaType?: "Service" | "Article";
 };
 
 export function SeoPage({
@@ -82,15 +74,6 @@ export function SeoPage({
       url: siteUrl,
     },
     areaServed: "FR",
-    audience: {
-      "@type": "Audience",
-      audienceType: "Ostéopathes animaliers et thérapeutes animaliers",
-    },
-    offers: schemaType === "Product" ? productOfferJsonLd : undefined,
-    image:
-      schemaType === "Product"
-        ? absoluteUrl("/brand/biume-logo.png")
-        : undefined,
     mainEntity:
       faq.length > 0
         ? faq.map((item) => ({
