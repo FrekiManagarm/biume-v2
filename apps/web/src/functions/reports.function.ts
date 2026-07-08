@@ -17,10 +17,10 @@ import {
   type AdvancedReport,
   advancedReport,
 } from "@biume/db/schema/index";
-// import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
-// import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
-import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
-import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
+import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
+import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
+// import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
+// import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
 
 export type ReportType = "simple" | "advanced";
@@ -360,10 +360,7 @@ export const updateReport = createServerFn({ method: "POST" })
           laterality: observation.laterality as "left" | "right" | "bilateral",
           severity: observation.severity,
           observationType: observation.type as
-            | "dynamic"
-            | "static"
-            | "diagnosticExclusion"
-            | "none",
+            "dynamic" | "static" | "diagnosticExclusion" | "none",
         }));
 
         await db.insert(anatomicalIssue).values(observationsData).execute();
@@ -418,11 +415,11 @@ export const seedAnatomicalParts = createServerFn({ method: "POST" }).handler(
       // Créer les données anatomiques pour chaque région
       console.log(
         "🔍 Création des données anatomiques pour chaque région",
-        anatomicalRegions.length,
+        anatomicalRegionsHorse.length,
       );
-      const anatomicalPartsData = anatomicalRegions
+      const anatomicalPartsData = anatomicalRegionsHorse
         .map((region) => {
-          const regionData = anatomicalRegionPaths[region.value];
+          const regionData = anatomicalHorseRegionPaths[region.value];
 
           if (!regionData) {
             console.warn(`Données manquantes pour la région: ${region.value}`);
@@ -438,7 +435,7 @@ export const seedAnatomicalParts = createServerFn({ method: "POST" }).handler(
             viewboxRight: regionData.right.viewBox,
             pathRight: regionData.right.path,
             transformRight: regionData.right.transform || "",
-            animalType: "DOG" as const,
+            animalType: "HORSE" as const,
           };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -490,7 +487,9 @@ export const deleteReport = createServerFn({ method: "POST" })
 
       await db
         .delete(advancedReportRecommendations)
-        .where(eq(advancedReportRecommendations.advancedReportId, data.reportId))
+        .where(
+          eq(advancedReportRecommendations.advancedReportId, data.reportId),
+        )
         .execute();
 
       await db

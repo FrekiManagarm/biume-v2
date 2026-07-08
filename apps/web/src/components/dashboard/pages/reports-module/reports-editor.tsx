@@ -487,9 +487,7 @@ export function AdvancedReportEditor({
           });
         }
       } else {
-        toast.error(
-          data?.error || "Erreur lors de la mise à jour du rapport",
-        );
+        toast.error(data?.error || "Erreur lors de la mise à jour du rapport");
       }
     },
     onError: (error) => {
@@ -670,9 +668,9 @@ export function AdvancedReportEditor({
     : "Aucun patient sélectionné";
 
   return (
-    <div className="min-h-[100dvh] w-full bg-slate-50 text-slate-950">
+    <div className="min-h-dvh w-full bg-slate-50 text-slate-950">
       {/* Desktop Layout */}
-      <div className="hidden h-[100dvh] lg:block">
+      <div className="hidden h-dvh lg:block">
         <div
           className={cn(
             "grid h-full w-full gap-5 p-4 transition-all duration-200 ease-out",
@@ -719,7 +717,7 @@ export function AdvancedReportEditor({
           </div>
 
           {/* Contenu principal */}
-          <main className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+          <main className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
             <header className="border-b border-slate-200 bg-white px-5 py-4">
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
                 <div className="min-w-0">
@@ -872,7 +870,7 @@ export function AdvancedReportEditor({
       </div>
 
       {/* Mobile/Tablet Layout */}
-      <div className="min-h-[100dvh] bg-slate-50 lg:hidden">
+      <div className="min-h-dvh bg-slate-50 lg:hidden">
         <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="grid gap-4 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -1171,7 +1169,7 @@ export function AdvancedReportEditor({
         newIssue={newAnatomicalIssue}
         setNewIssue={setNewAnatomicalIssue}
         onAdd={handleAddAnatomicalIssue}
-        animalData={selectedPet}
+        animalData={selectedPet?.animal}
         selectedZone={newAnatomicalIssue.interventionZone}
         isTestMode={isTestMode}
         selectedAnimalType={selectedAnimalType}
@@ -1201,7 +1199,7 @@ export function AdvancedReportEditor({
         open={isShortcutsModalOpen}
         onOpenChange={setIsShortcutsModalOpen}
       >
-        <CredenzaContent className="sm:max-w-[600px]">
+        <CredenzaContent className="sm:max-w-150">
           <CredenzaHeader>
             <CredenzaTitle className="flex items-center gap-2">
               <KeyboardIcon className="h-5 w-5" />
