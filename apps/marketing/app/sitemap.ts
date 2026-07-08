@@ -4,6 +4,7 @@ import { absoluteUrl } from "../lib/seo";
 
 const staticRoutes = [
   "/",
+  "/osteopathe-animalier",
   "/logiciel-osteopathe-animalier",
   "/compte-rendu-osteopathe-animalier",
   "/tarifs",

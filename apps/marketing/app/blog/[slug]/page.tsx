@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import defaultMdxComponents from "fumadocs-ui/mdx";
 import LandingFooter from "../../../components/footer";
 import { Header } from "../../../components/header";
-import { blogPosts, getBlogPost } from "../../../lib/blog-posts";
+import {
+  blogPosts,
+  getBlogPage,
+  getBlogPost,
+  getBlogPostContent,
+} from "../../../lib/blog-posts";
 import { JsonLd, pageBreadcrumbJsonLd, siteName, siteUrl } from "../../../lib/seo";
 import { webAppPath } from "../../../lib/web-app-url";
 
@@ -52,10 +58,14 @@ export async function generateMetadata({
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = getBlogPost(slug);
+  const page = getBlogPage(slug);
 
-  if (!post) {
+  if (!post || !page) {
     notFound();
   }
+
+  const Mdx = page.data.body;
+  const mdxFallback = typeof Mdx === "function" ? null : getBlogPostContent(slug);
 
   const schema = {
     "@context": "https://schema.org",
@@ -109,33 +119,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 {post.description}
               </p>
 
-              <div className="landing-reveal landing-reveal-5 mt-8 rounded-[1.5rem] border border-primary/20 bg-primary/10 p-5">
-                <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  À retenir
-                </p>
-                <ul className="mt-4 space-y-3 text-sm leading-6">
-                  {post.takeaways.map((takeaway) => (
-                    <li key={takeaway} className="grid grid-cols-[auto_1fr] gap-3">
-                      <span className="mt-2 size-1.5 rounded-full bg-secondary" />
-                      <span>{takeaway}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {post.takeaways.length > 0 ? (
+                <div className="landing-reveal landing-reveal-5 mt-8 rounded-[1.5rem] border border-primary/20 bg-primary/10 p-5">
+                  <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    À retenir
+                  </p>
+                  <ul className="mt-4 space-y-3 text-sm leading-6">
+                    {post.takeaways.map((takeaway) => (
+                      <li key={takeaway} className="grid grid-cols-[auto_1fr] gap-3">
+                        <span className="mt-2 size-1.5 rounded-full bg-secondary" />
+                        <span>{takeaway}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
-              <div className="mt-10 space-y-10">
-                {post.sections.map((section) => (
-                  <section key={section.heading}>
-                    <h2 className="text-2xl font-semibold leading-tight tracking-tight md:text-3xl">
-                      {section.heading}
-                    </h2>
-                    <div className="mt-4 space-y-4 text-base leading-8 text-muted-foreground">
-                      {section.body.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+              <div className="mt-10 space-y-7 text-base leading-8 text-muted-foreground [&_a]:font-semibold [&_a]:text-primary [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-5 [&_blockquote]:text-foreground [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:tracking-tight [&_h2]:pt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:tracking-tight [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-foreground [&_hr]:border-border [&_li]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-6">
+                {typeof Mdx === "function" ? (
+                  <Mdx components={defaultMdxComponents} />
+                ) : (
+                  <MdxTextFallback content={mdxFallback ?? ""} />
+                )}
               </div>
             </div>
           </article>
@@ -189,4 +194,25 @@ function formatDate(value: string) {
     month: "long",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function MdxTextFallback({ content }: { content: string }) {
+  return (
+    <>
+      {content
+        .split(/\n{2,}/)
+        .filter(Boolean)
+        .map((block) => {
+          if (block.startsWith("## ")) {
+            return <h2 key={block}>{block.replace(/^## /, "")}</h2>;
+          }
+
+          if (block.startsWith("# ")) {
+            return <h1 key={block}>{block.replace(/^# /, "")}</h1>;
+          }
+
+          return <p key={block}>{block}</p>;
+        })}
+    </>
+  );
 }

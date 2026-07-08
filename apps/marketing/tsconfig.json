@@ -9,7 +9,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "collections/*": ["./.source/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"],
       "@biume/ui/*": ["../../packages/ui/src/*"],
     },
   },

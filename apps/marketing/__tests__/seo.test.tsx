@@ -13,16 +13,31 @@ import ComparisonHubPage, {
 import ProductPage, {
   metadata as productMetadata,
 } from "../app/logiciel-osteopathe-animalier/page";
+import OsteopatheAnimalierPage, {
+  metadata as osteopatheAnimalierMetadata,
+} from "../app/osteopathe-animalier/page";
 import PricingPage, { metadata as pricingMetadata } from "../app/tarifs/page";
 import { rootMetadata } from "../lib/metadata";
 
 const pageChecks = [
   {
+    name: "osteopathe-animalier",
+    path: "/osteopathe-animalier",
+    Page: OsteopatheAnimalierPage,
+    metadata: osteopatheAnimalierMetadata,
+    title: "Ostéopathe animalier",
+    keywords: [
+      "ostéopathe animalier",
+      "compte rendu",
+      "suivi post-séance",
+    ],
+  },
+  {
     name: "product",
     path: "/logiciel-osteopathe-animalier",
     Page: ProductPage,
     metadata: productMetadata,
-    title: "Logiciel ostéopathe animalier",
+    title: "Logiciel pour ostéopathe animalier",
     keywords: [
       "logiciel ostéopathe animalier",
       "suivi post-séance",
@@ -102,6 +117,7 @@ describe("marketing SEO", () => {
     const urls = sitemap().map((entry) => entry.url);
     const rules = robots();
 
+    expect(urls).toContain("https://biume.com/osteopathe-animalier");
     expect(urls).toContain("https://biume.com/logiciel-osteopathe-animalier");
     expect(urls).toContain("https://biume.com/compte-rendu-osteopathe-animalier");
     expect(urls).toContain("https://biume.com/tarifs");

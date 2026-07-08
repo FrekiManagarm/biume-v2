@@ -3,9 +3,9 @@ import { SeoPage } from "../../components/seo-page";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Logiciel ostéopathe animalier",
+  title: "Logiciel pour ostéopathe animalier",
   description:
-    "Biume aide les ostéopathes animaliers à gérer agenda, propriétaires, patients, comptes rendus et suivi post-séance clair.",
+    "Biume aide chaque ostéopathe animalier à organiser ses séances, comptes rendus, propriétaires, patients et suivis post-séance.",
   path: "/logiciel-osteopathe-animalier",
 });
 
@@ -16,13 +16,13 @@ export default function ProductSeoPage() {
       eyebrow="Logiciel ostéopathe animalier"
       title={
         <>
-          Le logiciel pour transformer chaque séance en{" "}
+          Le logiciel pour les ostéopathes animaliers qui veulent transformer chaque séance en{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             suivi propriétaire clair
           </span>
         </>
       }
-      description="Biume est un logiciel ostéopathe animalier pensé pour les praticiens manuels de santé animale: agenda, gestion des propriétaires et patients, compte rendu, timeline animal et relance de suivi, sans remplacer votre expertise."
+      description="Biume est un logiciel pour ostéopathe animalier pensé pour les praticiens manuels de santé animale: agenda, propriétaires, patients animaux, compte rendu, timeline animal et relance de suivi, sans remplacer votre expertise."
       stats={[
         { value: "15 j", label: "essai gratuit" },
         { value: "0", label: "carte requise" },
@@ -41,8 +41,8 @@ export default function ProductSeoPage() {
       sections={[
         {
           eyebrow: "Intent",
-          title: "Un logiciel pour les ostéopathes animaliers qui veulent mieux suivre leurs clients.",
-          body: "Après une séance, le propriétaire oublie souvent une partie des explications. Biume structure vos points observés, vos conseils transmis par le praticien et la prochaine étape pour rendre le suivi post-séance plus professionnel.",
+          title: "Un logiciel pour votre pratique, pas pour découvrir le métier.",
+          body: "Biume s'adresse aux ostéopathes animaliers qui veulent organiser leurs séances, garder leurs dossiers à jour et mieux faire comprendre le suivi au propriétaire après chaque rendez-vous.",
         },
         {
           eyebrow: "Gestion",
@@ -83,6 +83,7 @@ export default function ProductSeoPage() {
         },
       ]}
       internalLinks={[
+        { href: "/osteopathe-animalier", label: "Guide ostéopathe animalier" },
         { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu ostéopathe animalier" },
         { href: "/tarifs", label: "Tarifs Biume" },
         { href: "/comparatifs", label: "Comparatifs logiciels" },

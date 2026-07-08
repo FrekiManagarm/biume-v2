@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 const productLinks = [
+  { href: "/osteopathe-animalier", label: "Ostéopathe animalier" },
   { href: "/logiciel-osteopathe-animalier", label: "Logiciel ostéopathe animalier" },
   { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu propriétaire" },
   { href: "/modele-compte-rendu-osteopathe-animalier", label: "Modèle de compte rendu" },

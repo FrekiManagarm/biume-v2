@@ -10,6 +10,7 @@ export const rootMetadata: Metadata = {
   description:
     "Biume aide les ostéopathes animaliers à créer un suivi post-séance clair, des comptes rendus propriétaire et une timeline animal.",
   keywords: [
+    "ostéopathe animalier",
     "logiciel ostéopathe animalier",
     "compte rendu ostéopathe animalier",
     "suivi post-séance animal",

@@ -7,7 +7,7 @@ import BlogPostPage, {
   generateStaticParams,
 } from "../app/blog/[slug]/page";
 import sitemap from "../app/sitemap";
-import { blogPosts } from "../lib/blog-posts";
+import { blogPosts, getFumadocsBlogPages } from "../lib/blog-posts";
 
 describe("marketing blog", () => {
   test("blog index exposes SEO metadata, article cards, and schema", () => {
@@ -63,6 +63,16 @@ describe("marketing blog", () => {
     for (const post of blogPosts) {
       expect(urls).toContain(post.href);
     }
+  });
+
+  test("blog posts are loaded from the Fumadocs MDX source", () => {
+    const pages = getFumadocsBlogPages();
+    const slugs = pages.map((page) => page.slug);
+
+    expect(slugs).toContain("digitalisation-comptes-rendus");
+    expect(slugs).toContain("qu-est-ce-que-biume");
+    expect(slugs).toContain("migrer-depuis-neovoice-pro");
+    expect(blogPosts.map((post) => post.slug)).toEqual(slugs);
   });
 
   test("model report article targets the compte rendu template cluster", async () => {
