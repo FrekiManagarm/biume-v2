@@ -1,13 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+// import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -55,7 +51,7 @@ export function AIDiagnosticPanel({
   anatomicalPartId,
   currentIssue,
   isOpen,
-  onOpenChange,
+  // onOpenChange,
 }: AIDiagnosticPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [autoAnalyzed, setAutoAnalyzed] = useState(false);
@@ -103,20 +99,20 @@ export function AIDiagnosticPanel({
 
   const diagnostic = data?.success ? data.data : null;
 
-  const getSeverityTrendIcon = (trend: string) => {
-    switch (trend) {
-      case "improving":
-        return (
-          <TrendingDownIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
-        );
-      case "worsening":
-        return (
-          <TrendingUpIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
-        );
-      default:
-        return null;
-    }
-  };
+  // const getSeverityTrendIcon = (trend: string) => {
+  //   switch (trend) {
+  //     case "improving":
+  //       return (
+  //         <TrendingDownIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+  //       );
+  //     case "worsening":
+  //       return (
+  //         <TrendingUpIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // };
 
   const getRecurrenceColor = (level: string) => {
     switch (level) {
@@ -143,9 +139,7 @@ export function AIDiagnosticPanel({
               <LoaderIcon className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Analyse en cours...
-          </p>
+          <p className="text-sm text-muted-foreground">Analyse en cours...</p>
         </div>
       ) : error ? (
         <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5">
@@ -174,7 +168,7 @@ export function AIDiagnosticPanel({
       ) : diagnostic ? (
         <>
           {/* En-tête avec résumé */}
-          <div className="p-4 rounded-lg border bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-orange-500/5">
+          <div className="p-4 rounded-lg border bg-linear-to-br from-purple-500/5 via-pink-500/5 to-orange-500/5">
             <div className="flex items-start gap-3">
               <div className="mt-1 shrink-0">
                 <svg
@@ -192,9 +186,21 @@ export function AIDiagnosticPanel({
                       x2="100%"
                       y2="0%"
                     >
-                      <stop offset="0%" stopColor="rgb(147 51 234)" stopOpacity="0.9" />
-                      <stop offset="50%" stopColor="rgb(219 39 119)" stopOpacity="0.9" />
-                      <stop offset="100%" stopColor="rgb(249 115 22)" stopOpacity="0.9" />
+                      <stop
+                        offset="0%"
+                        stopColor="rgb(147 51 234)"
+                        stopOpacity="0.9"
+                      />
+                      <stop
+                        offset="50%"
+                        stopColor="rgb(219 39 119)"
+                        stopOpacity="0.9"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="rgb(249 115 22)"
+                        stopOpacity="0.9"
+                      />
                     </linearGradient>
                   </defs>
                   <path
@@ -211,10 +217,17 @@ export function AIDiagnosticPanel({
                 {/* Indicateurs compacts */}
                 {diagnostic.hasHistory && (
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <Badge variant="secondary" className="h-6 px-2 text-[10px] font-medium">
-                      {diagnostic.totalOccurrences} occurrence{diagnostic.totalOccurrences > 1 ? "s" : ""}
+                    <Badge
+                      variant="secondary"
+                      className="h-6 px-2 text-[10px] font-medium"
+                    >
+                      {diagnostic.totalOccurrences} occurrence
+                      {diagnostic.totalOccurrences > 1 ? "s" : ""}
                     </Badge>
-                    <Badge variant="secondary" className="h-6 px-2 text-[10px] font-medium">
+                    <Badge
+                      variant="secondary"
+                      className="h-6 px-2 text-[10px] font-medium"
+                    >
                       Moy. {diagnostic.averageSeverity.toFixed(1)}/5
                     </Badge>
                     {diagnostic.severityTrend !== "new" && (
@@ -223,9 +236,9 @@ export function AIDiagnosticPanel({
                         className={cn(
                           "h-6 px-2 text-[10px] font-medium flex items-center gap-1",
                           diagnostic.severityTrend === "improving" &&
-                          "border-green-500/50 bg-green-500/5 text-green-700",
+                            "border-green-500/50 bg-green-500/5 text-green-700",
                           diagnostic.severityTrend === "worsening" &&
-                          "border-red-500/50 bg-red-500/5 text-red-700",
+                            "border-red-500/50 bg-red-500/5 text-red-700",
                         )}
                       >
                         {diagnostic.severityTrend === "improving" && (
@@ -249,9 +262,12 @@ export function AIDiagnosticPanel({
                           getRecurrenceColor(diagnostic.recurrenceLevel),
                         )}
                       >
-                        {diagnostic.recurrenceLevel === "high" && "Récurrence élevée"}
-                        {diagnostic.recurrenceLevel === "medium" && "Récurrence moyenne"}
-                        {diagnostic.recurrenceLevel === "low" && "Récurrence faible"}
+                        {diagnostic.recurrenceLevel === "high" &&
+                          "Récurrence élevée"}
+                        {diagnostic.recurrenceLevel === "medium" &&
+                          "Récurrence moyenne"}
+                        {diagnostic.recurrenceLevel === "low" &&
+                          "Récurrence faible"}
                       </Badge>
                     )}
                   </div>
@@ -387,4 +403,3 @@ export function AIDiagnosticPanel({
     </div>
   );
 }
-

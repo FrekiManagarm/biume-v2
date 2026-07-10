@@ -10,7 +10,12 @@ import {
   getBlogPost,
   getBlogPostContent,
 } from "../../../lib/blog-posts";
-import { JsonLd, pageBreadcrumbJsonLd, siteName, siteUrl } from "../../../lib/seo";
+import {
+  JsonLd,
+  pageBreadcrumbJsonLd,
+  siteName,
+  siteUrl,
+} from "../../../lib/seo";
 import { webAppPath } from "../../../lib/web-app-url";
 
 type BlogPostPageProps = {
@@ -65,7 +70,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const Mdx = page.data.body;
-  const mdxFallback = typeof Mdx === "function" ? null : getBlogPostContent(slug);
+  const mdxFallback =
+    typeof Mdx === "function" ? null : getBlogPostContent(slug);
 
   const schema = {
     "@context": "https://schema.org",
@@ -91,11 +97,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   return (
     <>
       <JsonLd data={schema} />
-      <JsonLd data={pageBreadcrumbJsonLd({ path: post.path, name: post.title })} />
+      <JsonLd
+        data={pageBreadcrumbJsonLd({ path: post.path, name: post.title })}
+      />
       <Header />
-      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
+      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
-          <article className="px-4 pb-8 pt-[7.5rem] md:px-6 md:pb-14 md:pt-[8.5rem]">
+          <article className="px-4 pb-8 pt-30 md:px-6 md:pb-14 md:pt-34">
             <div className="mx-auto max-w-3xl">
               <Link
                 href="/blog"
@@ -120,13 +128,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </p>
 
               {post.takeaways.length > 0 ? (
-                <div className="landing-reveal landing-reveal-5 mt-8 rounded-[1.5rem] border border-primary/20 bg-primary/10 p-5">
+                <div className="landing-reveal landing-reveal-5 mt-8 rounded-3xl border border-primary/20 bg-primary/10 p-5">
                   <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                     À retenir
                   </p>
                   <ul className="mt-4 space-y-3 text-sm leading-6">
                     {post.takeaways.map((takeaway) => (
-                      <li key={takeaway} className="grid grid-cols-[auto_1fr] gap-3">
+                      <li
+                        key={takeaway}
+                        className="grid grid-cols-[auto_1fr] gap-3"
+                      >
                         <span className="mt-2 size-1.5 rounded-full bg-secondary" />
                         <span>{takeaway}</span>
                       </li>
@@ -147,7 +158,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
           <section className="px-4 py-8 md:px-6 md:py-14">
             <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-[2rem] border border-border bg-foreground p-6 text-background md:p-8">
+              <div className="rounded-4xl border border-border bg-foreground p-6 text-background md:p-8">
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   Continuer
                 </p>
@@ -159,7 +170,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   comparer ou essayer Biume en situation réelle.
                 </p>
               </div>
-              <div className="rounded-[2rem] border border-border bg-card p-5 md:p-7">
+              <div className="rounded-4xl border border-border bg-card p-5 md:p-7">
                 <div className="flex flex-wrap gap-3">
                   {post.relatedLinks.map((link) => (
                     <Link

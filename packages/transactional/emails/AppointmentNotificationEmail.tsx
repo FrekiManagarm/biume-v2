@@ -1,4 +1,4 @@
-import { Button, Section, Text } from "@react-email/components";
+import { Section, Text } from "@react-email/components";
 
 import { EmailLayout } from "./EmailLayout";
 import { format } from "date-fns";
@@ -94,4 +94,3 @@ const AppointmentNotificationEmail = ({
 };
 
 export default AppointmentNotificationEmail;
-

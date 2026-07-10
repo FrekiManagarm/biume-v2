@@ -273,7 +273,7 @@ export function AddObservationDialog({
       onOpenChange={onOpenChange}
       disablePointerDismissal={isSelectOpen}
     >
-      <CredenzaContent className="flex max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-50 p-0 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.65)] sm:max-w-[640px]">
+      <CredenzaContent className="flex max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-50 p-0 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.65)] sm:max-w-160">
         <CredenzaHeader className="shrink-0 border-b border-slate-200/70 bg-white px-5 py-5 sm:px-6">
           <div className="min-w-0 space-y-1.5 pr-10">
             <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
@@ -479,7 +479,7 @@ export function AddObservationDialog({
                       }
                     />
                     <DropdownMenuContent
-                      className="w-[var(--radix-dropdown-menu-trigger-width)] overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.75)]"
+                      className="w-(--radix-dropdown-menu-trigger-width) overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.75)]"
                       align="start"
                     >
                       <div className="flex flex-col">
@@ -496,7 +496,7 @@ export function AddObservationDialog({
                           />
                         </div>
 
-                        <ScrollArea className="h-[250px]">
+                        <ScrollArea className="h-62.5">
                           <div className="p-1">
                             {regionSearchTerm &&
                               filteredRegions.length === 0 && (
@@ -712,7 +712,7 @@ export function AddObservationDialog({
                     })
                   }
                   placeholder="Décrivez vos observations..."
-                  className="min-h-[128px] resize-none rounded-2xl border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-relaxed text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-slate-950/10"
+                  className="min-h-32 resize-none rounded-2xl border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-relaxed text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-slate-950/10"
                 />
                 {newObservation.notes && (
                   <p className="mt-1.5 text-xs leading-relaxed text-slate-500">

@@ -93,7 +93,7 @@ export function AdvancedReportsTable({
         rapportsCeMois={stats.rapportsCeMois}
       />
 
-      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
         <div className="mb-5 grid gap-4 border-b border-slate-200 pb-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-sm font-medium text-emerald-700">Bibliothèque</p>

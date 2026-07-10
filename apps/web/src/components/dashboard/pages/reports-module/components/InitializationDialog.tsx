@@ -155,7 +155,7 @@ export function InitializationDialog({
         onOpenChange={setShowInitDialog}
         disablePointerDismissal={isSelectOpen}
       >
-        <CredenzaContent className="overflow-hidden rounded-xl border border-border bg-background p-0 sm:max-w-[560px]">
+        <CredenzaContent className="overflow-hidden rounded-xl border border-border bg-background p-0 sm:max-w-140">
           <CredenzaHeader className="border-b px-5 py-4 text-left">
             <CredenzaTitle className="text-lg font-semibold tracking-tight">
               Créer un rapport

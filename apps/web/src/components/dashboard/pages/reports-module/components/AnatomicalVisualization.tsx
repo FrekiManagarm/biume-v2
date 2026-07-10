@@ -1,12 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Scan, ChevronLeft, ChevronRight } from "lucide-react";
 import { AnatomicalImageWithOverlay } from "./AnatomicalImageWithOverlay";
-import { cn } from "@/lib/style";
 import type { AnatomicalIssue as DBAnatomicalIssue } from "@/lib/schemas/advancedReport/anatomicalIssue";
 import type { AnatomicalIssue as UIAnatomicalIssue } from "../types";
 
@@ -60,39 +56,39 @@ export function AnatomicalVisualization({
     return false;
   });
 
-  const getSeverityLabel = (severity: number) => {
-    switch (severity) {
-      case 1:
-        return "Légère";
-      case 2:
-        return "Modérée";
-      case 3:
-        return "Importante";
-      case 4:
-        return "Sévère";
-      case 5:
-        return "Critique";
-      default:
-        return "Modérée";
-    }
-  };
+  // const getSeverityLabel = (severity: number) => {
+  //   switch (severity) {
+  //     case 1:
+  //       return "Légère";
+  //     case 2:
+  //       return "Modérée";
+  //     case 3:
+  //       return "Importante";
+  //     case 4:
+  //       return "Sévère";
+  //     case 5:
+  //       return "Critique";
+  //     default:
+  //       return "Modérée";
+  //   }
+  // };
 
-  const getSeverityColor = (severity: number) => {
-    switch (severity) {
-      case 1:
-        return "text-green-600 bg-green-50 border-green-200";
-      case 2:
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case 3:
-        return "text-orange-600 bg-orange-50 border-orange-200";
-      case 4:
-        return "text-red-600 bg-red-50 border-red-200";
-      case 5:
-        return "text-purple-600 bg-purple-50 border-purple-200";
-      default:
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    }
-  };
+  // const getSeverityColor = (severity: number) => {
+  //   switch (severity) {
+  //     case 1:
+  //       return "text-green-600 bg-green-50 border-green-200";
+  //     case 2:
+  //       return "text-yellow-600 bg-yellow-50 border-yellow-200";
+  //     case 3:
+  //       return "text-orange-600 bg-orange-50 border-orange-200";
+  //     case 4:
+  //       return "text-red-600 bg-red-50 border-red-200";
+  //     case 5:
+  //       return "text-purple-600 bg-purple-50 border-purple-200";
+  //     default:
+  //       return "text-yellow-600 bg-yellow-50 border-yellow-200";
+  //   }
+  // };
 
   const getSeverityFillColor = (severity: number) => {
     switch (severity) {
@@ -111,44 +107,44 @@ export function AnatomicalVisualization({
     }
   };
 
-  const getLateralityLabel = (laterality: "left" | "right" | "bilateral") => {
-    switch (laterality) {
-      case "left":
-        return "Gauche";
-      case "right":
-        return "Droite";
-      case "bilateral":
-        return "Bilatéral";
-      default:
-        return "Gauche";
-    }
-  };
+  // const getLateralityLabel = (laterality: "left" | "right" | "bilateral") => {
+  //   switch (laterality) {
+  //     case "left":
+  //       return "Gauche";
+  //     case "right":
+  //       return "Droite";
+  //     case "bilateral":
+  //       return "Bilatéral";
+  //     default:
+  //       return "Gauche";
+  //   }
+  // };
 
-  const getIssueTypeLabel = (type: string) => {
-    switch (type) {
-      case "dysfunction":
-        return "Dysfonction";
-      case "anatomicalSuspicion":
-        return "Suspicion anatomique";
-      case "observation":
-        return "Observation";
-      default:
-        return type;
-    }
-  };
+  // const getIssueTypeLabel = (type: string) => {
+  //   switch (type) {
+  //     case "dysfunction":
+  //       return "Dysfonction";
+  //     case "anatomicalSuspicion":
+  //       return "Suspicion anatomique";
+  //     case "observation":
+  //       return "Observation";
+  //     default:
+  //       return type;
+  //   }
+  // };
 
-  const getIssueTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "dysfunction":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "anatomicalSuspicion":
-        return "bg-amber-100 text-amber-700 border-amber-200";
-      case "observation":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
-  };
+  // const getIssueTypeBadgeColor = (type: string) => {
+  //   switch (type) {
+  //     case "dysfunction":
+  //       return "bg-red-100 text-red-700 border-red-200";
+  //     case "anatomicalSuspicion":
+  //       return "bg-amber-100 text-amber-700 border-amber-200";
+  //     case "observation":
+  //       return "bg-blue-100 text-blue-700 border-blue-200";
+  //     default:
+  //       return "bg-gray-100 text-gray-700 border-gray-200";
+  //   }
+  // };
 
   const renderAnatomicalSVG = (
     dysfunctions: UIAnatomicalIssue[],

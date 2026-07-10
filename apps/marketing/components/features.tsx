@@ -36,10 +36,7 @@ const signals = [
 export function FeaturesSection() {
   return (
     <>
-      <section
-        id="console"
-        className="px-4 py-8 md:px-6 md:py-14"
-      >
+      <section id="console" className="px-4 py-8 md:px-6 md:py-14">
         <div className="relative mx-auto grid max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background shadow-[0_38px_120px_-84px_rgba(20,18,28,0.62)] lg:grid-cols-[0.82fr_1.18fr]">
           <div
             className="hero-color-wash pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(124,102,238,0.14),rgba(255,255,255,0)_42%,rgba(32,184,100,0.16)_72%,rgba(124,102,238,0.1))]"
@@ -51,9 +48,7 @@ export function FeaturesSection() {
             </p>
             <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
               Conçu pour rendre la séance{" "}
-              <span className="text-secondary">
-                plus mémorable
-              </span>
+              <span className="text-secondary">plus mémorable</span>
             </h2>
             <p className="mt-5 max-w-[58ch] text-base leading-7 text-muted-foreground">
               Ne laissez pas la valeur de votre travail disparaître après le
@@ -160,7 +155,7 @@ export function FeaturesSection() {
       <section id="workflow" className="px-4 py-8 md:px-6 md:py-14">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background p-6 shadow-[0_38px_120px_-84px_rgba(20,18,28,0.58)] md:p-9">
           <div
-            className="hero-field-drift pointer-events-none absolute -right-20 top-10 size-[28rem] rounded-full bg-[radial-gradient(circle,rgba(32,184,100,0.16),rgba(124,102,238,0.14)_42%,transparent_70%)] blur-2xl"
+            className="hero-field-drift pointer-events-none absolute -right-20 top-10 size-112 rounded-full bg-[radial-gradient(circle,rgba(32,184,100,0.16),rgba(124,102,238,0.14)_42%,transparent_70%)] blur-2xl"
             aria-hidden="true"
           />
           <div className="relative grid gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-end">
@@ -170,15 +165,13 @@ export function FeaturesSection() {
               </p>
               <h2 className="mt-4 text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
                 Le suivi post-séance devient{" "}
-                <span className="text-secondary">
-                  votre avantage
-                </span>
+                <span className="text-secondary">votre avantage</span>
               </h2>
             </div>
             <p className="max-w-[62ch] text-base leading-7 text-muted-foreground lg:justify-self-end">
               Pour les ostéopathes animaliers et praticiens manuels, la
-              différenciation se joue aussi après la séance: clarté,
-              continuité et confiance propriétaire.
+              différenciation se joue aussi après la séance: clarté, continuité
+              et confiance propriétaire.
             </p>
           </div>
 

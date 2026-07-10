@@ -130,8 +130,8 @@ export function ReportSidebarNavigation({
     <TooltipProvider delay={300}>
       <aside
         className={cn(
-          "flex min-h-0 flex-col rounded-[1.5rem] border border-border bg-card text-card-foreground shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] transition-all duration-200 ease-out",
-          isCollapsed ? "w-[72px] p-2" : "w-full p-4",
+          "flex min-h-0 flex-col rounded-3xl border border-border bg-card text-card-foreground shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] transition-all duration-200 ease-out",
+          isCollapsed ? "w-18 p-2" : "w-full p-4",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
@@ -412,7 +412,7 @@ export function ReportSidebarNavigation({
                       {isCollapsed && count > 0 && (
                         <span
                           className={cn(
-                            "absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                            "absolute -right-1 -top-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
                             isActive
                               ? "bg-primary-foreground text-primary"
                               : "bg-primary text-primary-foreground",

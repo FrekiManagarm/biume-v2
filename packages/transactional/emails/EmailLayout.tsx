@@ -1,16 +1,39 @@
-import { Body, Container, Head, Html, Img, Link, Preview, Section, Tailwind, Text } from "@react-email/components"
-import * as React from "react"
+import {
+  Body,
+  Container,
+  Head,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Tailwind,
+  Text,
+} from "@react-email/components";
+import * as React from "react";
 
-export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ preview?: string }>) => {
+export const EmailLayout = ({
+  preview,
+  children,
+}: React.PropsWithChildren<{ preview?: string }>) => {
   return (
     <Tailwind>
       <Html>
         <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
           <meta name="x-apple-disable-message-reformatting" />
           <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-          <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
-          <meta name="x-mailer-avatar" content="https://i.imgur.com/Imdhydj.png" />
+          <meta
+            name="format-detection"
+            content="telephone=no, date=no, address=no, email=no"
+          />
+          <meta
+            name="x-mailer-avatar"
+            content="https://i.imgur.com/Imdhydj.png"
+          />
           <style
             dangerouslySetInnerHTML={{
               __html: `
@@ -26,7 +49,7 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
                 .tablet-margin { margin-top: 8px !important; margin-bottom: 8px !important; }
                 .tablet-social { width: 22px !important; height: 22px !important; }
               }
-              
+
               @media only screen and (max-width: 600px) {
                 .mobile-padding { padding-left: 12px !important; padding-right: 12px !important; }
                 .mobile-container { max-width: 100% !important; width: 100% !important; }
@@ -43,7 +66,7 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
                 .mobile-button { padding: 12px 20px !important; font-size: 14px !important; }
                 .mobile-gap { gap: 8px !important; }
               }
-              
+
               @media only screen and (max-width: 480px) {
                 .mobile-padding { padding-left: 8px !important; padding-right: 8px !important; }
                 .mobile-content { padding: 12px !important; }
@@ -57,7 +80,7 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
                 .mobile-social { width: 18px !important; height: 18px !important; }
                 .mobile-gap { gap: 6px !important; }
               }
-              
+
               @media only screen and (max-width: 360px) {
                 .mobile-padding { padding-left: 6px !important; padding-right: 6px !important; }
                 .mobile-content { padding: 10px !important; }
@@ -70,33 +93,33 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
                 .mobile-social { width: 16px !important; height: 16px !important; }
                 .mobile-gap { gap: 4px !important; }
               }
-              
+
               /* Assurer la compatibilité avec tous les clients email */
               table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
               img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-              
+
               /* Amélioration de la lisibilité */
               .email-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
               .email-link { color: #4f46e5; text-decoration: none; }
               .email-link:hover { color: #3730a3; }
-              
+
               /* Optimisations pour les petits écrans */
-              .email-container { 
-                max-width: 600px !important; 
-                margin: 0 auto !important; 
-                padding: 0 20px !important; 
+              .email-container {
+                max-width: 600px !important;
+                margin: 0 auto !important;
+                padding: 0 20px !important;
               }
-              
+
               /* Amélioration des espacements */
-              .content-spacing { 
-                padding: 24px !important; 
-                margin: 0 !important; 
+              .content-spacing {
+                padding: 24px !important;
+                margin: 0 !important;
               }
-              
+
               /* Footer optimisé */
-              .footer-spacing { 
-                margin-top: 24px !important; 
-                padding-top: 16px !important; 
+              .footer-spacing {
+                margin-top: 24px !important;
+                padding-top: 16px !important;
               }
             `,
             }}
@@ -118,7 +141,7 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
           </Section>
 
           {/* Main Content */}
-          <Container className="mx-auto px-6 py-8 max-w-[600px] mobile-padding tablet-padding mobile-container tablet-container email-container">
+          <Container className="mx-auto px-6 py-8 max-w-150 mobile-padding tablet-padding mobile-container tablet-container email-container">
             {/* Content Area */}
             <Section className="bg-white rounded-lg p-8 border border-gray-100 shadow-sm mobile-content tablet-content content-spacing">
               {children}
@@ -176,7 +199,9 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
               </Text>
 
               <div className="text-sm text-gray-400 leading-relaxed mobile-text tablet-text">
-                <Text className="m-0 mobile-margin tablet-margin">Biume SAS</Text>
+                <Text className="m-0 mobile-margin tablet-margin">
+                  Biume SAS
+                </Text>
               </div>
 
               <Section className="mt-4 mobile-margin tablet-margin">
@@ -196,5 +221,5 @@ export const EmailLayout = ({ preview, children }: React.PropsWithChildren<{ pre
         </Body>
       </Html>
     </Tailwind>
-  )
-}
+  );
+};

@@ -1,14 +1,10 @@
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  observationTypes,
-  interventionZones,
-} from "../data/dog/typesDog";
+import { observationTypes, interventionZones } from "../data/dog/typesDog";
 import type { Observation } from "../data/dog/typesDog";
 import type { AnatomicalIssue } from "../types";
 import { Separator } from "@/components/ui/separator";
@@ -223,9 +219,7 @@ export function ReportPreview({
                     key={recommendation.id}
                     className="flex items-start gap-2"
                   >
-                    <span className="font-medium min-w-[24px]">
-                      {index + 1}.
-                    </span>
+                    <span className="font-medium min-w-6">{index + 1}.</span>
                     <p>{recommendation.content}</p>
                   </li>
                 ))}

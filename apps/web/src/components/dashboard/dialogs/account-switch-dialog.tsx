@@ -48,7 +48,7 @@ export function AccountSwitchDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="z-[80] max-w-100 overflow-hidden rounded-2xl border border-border/80 bg-popover p-0 text-popover-foreground shadow-[0_24px_70px_-32px_rgba(15,23,42,0.35)] ring-1 ring-foreground/5">
+      <AlertDialogContent className="z-80 max-w-100 overflow-hidden rounded-2xl border border-border/80 bg-popover p-0 text-popover-foreground shadow-[0_24px_70px_-32px_rgba(15,23,42,0.35)] ring-1 ring-foreground/5">
         <div className="relative p-5">
           <div className="absolute inset-x-0 top-0 h-px bg-foreground/10" />
           <div className="grid grid-cols-[auto_1fr] gap-4">

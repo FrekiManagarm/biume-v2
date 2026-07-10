@@ -248,7 +248,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
 
   return (
     <>
-      <div className="mx-auto grid w-full max-w-[1400px] gap-5 pb-8 text-slate-950">
+      <div className="mx-auto grid w-full max-w-350 gap-5 pb-8 text-slate-950">
         <header className="grid gap-4 border-b border-slate-200 pb-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
           <div className="min-w-0">
             <Button
@@ -289,7 +289,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
             </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-3 xl:w-[21rem]">
+          <div className="grid gap-2 sm:grid-cols-3 xl:w-84">
             <Button
               onClick={handleEdit}
               className="h-10 rounded-lg bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
@@ -381,7 +381,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               />
             )}
 
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
               <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-950">
@@ -507,7 +507,7 @@ function OverviewTab({
           return (
             <article
               key={metric.label}
-              className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]"
+              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -541,7 +541,7 @@ function OverviewTab({
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
           <SectionHeading
             icon={Stethoscope}
             title="Motif de consultation"
@@ -555,7 +555,7 @@ function OverviewTab({
           </div>
         </section>
 
-        <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
           <div className="flex items-center gap-3">
             <div className="flex size-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
               <StatusIcon className="size-5" />
@@ -570,10 +570,17 @@ function OverviewTab({
             </div>
           </div>
           <div className="mt-5 grid gap-3">
-            <InfoLine label="Création" value={formatReportDate(report.createdAt)} />
+            <InfoLine
+              label="Création"
+              value={formatReportDate(report.createdAt)}
+            />
             <InfoLine
               label="Dernière mise à jour"
-              value={report.updatedAt ? formatReportDate(report.updatedAt) : "Non modifié"}
+              value={
+                report.updatedAt
+                  ? formatReportDate(report.updatedAt)
+                  : "Non modifié"
+              }
             />
           </div>
         </section>
@@ -596,7 +603,7 @@ function ClinicalTab({
   return (
     <div className="grid gap-5">
       {hasAnatomy ? (
-        <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
           <AnatomicalVisualization
             anatomicalIssues={report.anatomicalIssues}
             animalData={{
@@ -653,7 +660,7 @@ function IssueList({
   const Icon = icon;
 
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
       <SectionHeading icon={Icon} title={title} description={description} />
 
       {issues.length > 0 ? (
@@ -682,7 +689,9 @@ function IssueList({
                   <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
                     <span className="rounded-md bg-slate-100 px-2 py-1">
                       {issue.type === "observation"
-                        ? getObservationTypeLabel(issue.observationType || "none")
+                        ? getObservationTypeLabel(
+                            issue.observationType || "none",
+                          )
                         : getIssueTypeLabel(issue.type)}
                     </span>
                     <span className="rounded-md bg-slate-100 px-2 py-1">
@@ -719,7 +728,7 @@ function RecommendationsTab({
   recommendations: AdvancedReport["recommendations"];
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
       <SectionHeading
         icon={CheckCircle2}
         title="Recommandations"
@@ -757,7 +766,7 @@ function RecommendationsTab({
 
 function NotesTab({ notes }: { notes: string }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">
       <SectionHeading
         icon={StickyNote}
         title="Notes complémentaires"
@@ -847,7 +856,7 @@ function EmptyState({
   return (
     <div
       className={cn(
-        "grid place-items-center rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 text-center",
+        "grid place-items-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center",
         compact ? "min-h-40 p-5" : "min-h-56 p-8",
       )}
     >

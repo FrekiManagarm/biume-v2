@@ -92,9 +92,9 @@ export function SeoPage({
       <JsonLd data={schema} />
       <JsonLd data={pageBreadcrumbJsonLd({ path, name: eyebrow })} />
       <Header />
-      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
+      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
-          <section className="relative overflow-hidden px-4 pb-10 pt-[7.5rem] md:px-6 md:pb-14 md:pt-[8.5rem]">
+          <section className="relative overflow-hidden px-4 pb-10 pt-30 md:px-6 md:pb-14 md:pt-34">
             <PageBackdrop />
             <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
               <div>
@@ -141,7 +141,7 @@ export function SeoPage({
                 </div>
               </div>
 
-              <aside className="landing-reveal landing-reveal-3 rounded-[2rem] border border-border bg-card p-5 shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)] md:p-7">
+              <aside className="landing-reveal landing-reveal-3 rounded-4xl border border-border bg-card p-5 shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)] md:p-7">
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
                   {panel.eyebrow}
                 </p>
@@ -195,7 +195,7 @@ export function SeoPage({
 
           <section className="px-4 py-8 md:px-6 md:py-14">
             <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-[2rem] border border-border bg-foreground p-6 text-background md:p-8">
+              <div className="rounded-4xl border border-border bg-foreground p-6 text-background md:p-8">
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   FAQ
                 </p>
@@ -207,9 +207,12 @@ export function SeoPage({
                   pratique.
                 </p>
               </div>
-              <div className="divide-y divide-border rounded-[2rem] border border-border bg-card px-5 md:px-7">
+              <div className="divide-y divide-border rounded-4xl border border-border bg-card px-5 md:px-7">
                 {faq.map((item) => (
-                  <div key={item.question} className="py-5 first:pt-6 last:pb-6">
+                  <div
+                    key={item.question}
+                    className="py-5 first:pt-6 last:pb-6"
+                  >
                     <h3 className="text-base font-semibold tracking-tight">
                       {item.question}
                     </h3>

@@ -15,6 +15,7 @@ import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { getContext } from "#/integrations/tanstack-query/root-provider";
 import { AutumnProvider } from "autumn-js/react";
 import { TooltipProvider } from "@biume/ui/components/tooltip";
+import { Toaster } from "@biume/ui/components/sonner";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -49,7 +50,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 });
 
-function RootDocument() {
+export function RootDocument() {
   const queryClient = getContext();
 
   return (
@@ -63,6 +64,7 @@ function RootDocument() {
             <TooltipProvider>
               <Outlet />
             </TooltipProvider>
+            <Toaster />
 
             <TanStackDevtools
               config={{

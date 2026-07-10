@@ -26,7 +26,7 @@ export default function Home() {
         }}
       />
       <Header />
-      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
+      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
           <HeroSection />
           <FeaturesSection />

@@ -1,0 +1,91 @@
+<style>
+  .agenda-directions { max-width: 1180px; margin: 0 auto; }
+  .agenda-directions .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .agenda-directions .card-image { aspect-ratio: auto; min-height: 360px; padding: 16px; align-items: stretch; }
+  .agenda-directions .card { background: var(--bg-secondary); }
+  .mini-dashboard { width: 100%; color: #172033; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .mini-topline { display: flex; justify-content: space-between; color: #758094; font-size: 8px; margin-bottom: 14px; }
+  .mini-title { font-size: 14px; font-weight: 750; letter-spacing: -0.03em; margin-bottom: 4px; }
+  .mini-subtitle { font-size: 8px; color: #7b879a; margin-bottom: 14px; }
+  .agenda-a { border: 1px solid #e3e7ed; border-radius: 12px; background: #fff; overflow: hidden; }
+  .agenda-a-head { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #e9edf2; }
+  .agenda-a-head strong { font-size: 11px; }
+  .agenda-a-head span { font-size: 8px; color: #4a7d68; font-weight: 650; }
+  .agenda-a-row { display: grid; grid-template-columns: 42px 1fr auto; gap: 9px; align-items: center; padding: 11px 12px; border-bottom: 1px solid #edf0f3; }
+  .agenda-a-row:last-child { border-bottom: 0; }
+  .time { font-size: 10px; color: #203148; font-weight: 720; }
+  .person { font-size: 10px; font-weight: 700; }
+  .meta { font-size: 8px; color: #7b879a; margin-top: 2px; }
+  .pill { border-radius: 999px; padding: 4px 6px; font-size: 7px; font-weight: 720; background: #eaf5ef; color: #38694f; }
+  .agenda-b { display: grid; gap: 8px; }
+  .agenda-b-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .agenda-b-head strong { font-size: 12px; }
+  .agenda-b-head span { font-size: 8px; color: #6f7d90; }
+  .agenda-b-row { display: grid; grid-template-columns: 4px 44px 1fr; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 6px 18px rgba(36, 57, 84, .07); }
+  .bar-green { background: #4d9476; } .bar-blue { background: #668ab9; } .bar-amber { background: #c99145; }
+  .agenda-b-time { padding: 12px 4px 12px 10px; font-size: 10px; font-weight: 750; }
+  .agenda-b-main { padding: 11px 11px 10px 0; }
+  .agenda-b-main .person { display: flex; justify-content: space-between; }
+  .action { display: inline-block; margin-top: 7px; padding: 4px 6px; border-radius: 5px; background: #edf6f0; color: #397355; font-size: 7px; font-weight: 720; }
+  .agenda-c { position: relative; display: grid; gap: 0; padding-left: 38px; }
+  .agenda-c:before { content: ''; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 1px; background: #d7dee8; }
+  .timeline-row { position: relative; display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 0 0 13px; }
+  .timeline-row:before { content: ''; position: absolute; left: -25px; top: 4px; width: 9px; height: 9px; border-radius: 999px; background: #fff; border: 2px solid #4d9476; }
+  .timeline-row:nth-child(2):before { border-color: #668ab9; } .timeline-row:nth-child(3):before { border-color: #c99145; }
+  .timeline-time { font-size: 9px; font-weight: 750; color: #526176; padding-top: 2px; }
+  .timeline-content { background: #fff; border: 1px solid #e3e8ee; border-radius: 9px; padding: 9px; }
+  .timeline-content .pill { margin-top: 7px; display: inline-block; }
+  @media (max-width: 850px) { .agenda-directions .cards { grid-template-columns: 1fr; } }
+</style>
+
+<div class="agenda-directions">
+  <h2>Quelle direction te semble la plus juste ?</h2>
+  <p class="subtitle">Je cible les cartes de l’« Agenda du jour » visibles sur le dashboard : plus lisibles, moins répétitives, sans perdre les actions importantes.</p>
+
+  <div class="cards">
+    <div class="card" data-choice="liste-editoriale" onclick="toggleSelect(this)">
+      <div class="card-image">
+        <div class="mini-dashboard">
+          <div class="mini-topline"><span>Vendredi 10 juillet</span><span>3 séances</span></div>
+          <div class="agenda-a">
+            <div class="agenda-a-head"><strong>Agenda du jour</strong><span>Voir l’agenda →</span></div>
+            <div class="agenda-a-row"><div class="time">09:30</div><div><div class="person">Nox · Léa Martin</div><div class="meta">Chien · Berger australien · À domicile</div></div><div class="pill">À préparer</div></div>
+            <div class="agenda-a-row"><div class="time">11:00</div><div><div class="person">Moka · Anaïs Petit</div><div class="meta">Chat · Européen · Cabinet</div></div><div class="pill">Compte rendu</div></div>
+            <div class="agenda-a-row"><div class="time">14:30</div><div><div class="person">Tao · Chloé Morel</div><div class="meta">Chien · Beagle · À domicile</div></div><div class="pill">Prêt à envoyer</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>A — Liste éditoriale</h3><p>Très compacte, structurée par des séparateurs. L’information reste au premier plan.</p></div>
+    </div>
+
+    <div class="card" data-choice="cartes-priorisees" onclick="toggleSelect(this)">
+      <div class="card-image">
+        <div class="mini-dashboard">
+          <div class="mini-topline"><span>Vendredi 10 juillet</span><span>3 séances</span></div>
+          <div class="agenda-b">
+            <div class="agenda-b-head"><strong>Agenda du jour</strong><span>Voir l’agenda →</span></div>
+            <div class="agenda-b-row"><div class="bar-green"></div><div class="agenda-b-time">09:30</div><div class="agenda-b-main"><div class="person"><span>Nox · Léa Martin</span><span>· · ·</span></div><div class="meta">Chien · Berger australien · À domicile</div><span class="action">Préparer la séance</span></div></div>
+            <div class="agenda-b-row"><div class="bar-blue"></div><div class="agenda-b-time">11:00</div><div class="agenda-b-main"><div class="person"><span>Moka · Anaïs Petit</span><span>· · ·</span></div><div class="meta">Chat · Européen · Cabinet</div><span class="action">Créer le compte rendu</span></div></div>
+            <div class="agenda-b-row"><div class="bar-amber"></div><div class="agenda-b-time">14:30</div><div class="agenda-b-main"><div class="person"><span>Tao · Chloé Morel</span><span>· · ·</span></div><div class="meta">Chien · Beagle · À domicile</div><span class="action">Envoyer le compte rendu</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>B — Cartes priorisées</h3><p>Une bande de couleur et une action nette font ressortir ce qui demande ton attention.</p></div>
+    </div>
+
+    <div class="card" data-choice="frise-chronologique" onclick="toggleSelect(this)">
+      <div class="card-image">
+        <div class="mini-dashboard">
+          <div class="mini-topline"><span>Vendredi 10 juillet</span><span>3 séances</span></div>
+          <div class="agenda-b-head" style="margin-bottom:14px"><strong>Agenda du jour</strong><span>Voir l’agenda →</span></div>
+          <div class="agenda-c">
+            <div class="timeline-row"><div class="timeline-time">09:30</div><div class="timeline-content"><div class="person">Nox · Léa Martin</div><div class="meta">Chien · Berger australien · À domicile</div><span class="pill">À préparer</span></div></div>
+            <div class="timeline-row"><div class="timeline-time">11:00</div><div class="timeline-content"><div class="person">Moka · Anaïs Petit</div><div class="meta">Chat · Européen · Cabinet</div><span class="pill">Compte rendu</span></div></div>
+            <div class="timeline-row"><div class="timeline-time">14:30</div><div class="timeline-content"><div class="person">Tao · Chloé Morel</div><div class="meta">Chien · Beagle · À domicile</div><span class="pill">Prêt à envoyer</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>C — Frise de journée</h3><p>La chronologie devient le repère principal : idéale pour lire rapidement le rythme de la journée.</p></div>
+    </div>
+  </div>
+</div>

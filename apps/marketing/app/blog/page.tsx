@@ -47,9 +47,9 @@ export default function BlogIndexPage() {
       <JsonLd data={schema} />
       <JsonLd data={pageBreadcrumbJsonLd({ path: "/blog", name: "Blog" })} />
       <Header />
-      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
+      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
-          <section className="relative overflow-hidden px-4 pb-10 pt-[7.5rem] md:px-6 md:pb-16 md:pt-[8.5rem]">
+          <section className="relative overflow-hidden px-4 pb-10 pt-30 md:px-6 md:pb-16 md:pt-34">
             <BlogBackdrop />
             <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
               <div>
@@ -63,9 +63,9 @@ export default function BlogIndexPage() {
                   Blog ostéopathe animalier
                 </h1>
                 <p className="landing-reveal landing-reveal-3 mt-6 max-w-[64ch] text-base leading-7 text-muted-foreground md:text-lg">
-                  Des guides courts pour améliorer vos comptes rendus, votre suivi
-                  post-séance animal, vos relances propriétaire et votre choix de
-                  logiciel ostéopathe animalier.
+                  Des guides courts pour améliorer vos comptes rendus, votre
+                  suivi post-séance animal, vos relances propriétaire et votre
+                  choix de logiciel ostéopathe animalier.
                 </p>
                 <div className="landing-reveal landing-reveal-4 mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link
@@ -84,7 +84,7 @@ export default function BlogIndexPage() {
                 </div>
               </div>
 
-              <div className="landing-reveal landing-reveal-3 relative min-h-[22rem] overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)]">
+              <div className="landing-reveal landing-reveal-3 relative min-h-88 overflow-hidden rounded-4xl border border-border bg-card shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)]">
                 <Image
                   src="/assets/images/dashboard-image.jpg"
                   alt="Interface Biume avec suivi de séance et informations animal"

@@ -70,7 +70,7 @@ function ThemeIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="size-[1.125rem] text-foreground/72"
+      className="size-4.5 text-foreground/72"
       fill="none"
       aria-hidden="true"
     >

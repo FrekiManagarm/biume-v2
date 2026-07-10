@@ -1,13 +1,37 @@
 {
-  "include": ["**/*.ts", "**/*.tsx", "eslint.config.js", "prettier.config.js", "vite.config.js"],
-  
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "eslint.config.js",
+    "prettier.config.js",
+    "vite.config.js",
+    "../../packages/transactional/emails/UpgradeSubscription.tsx",
+    "../../packages/transactional/emails/index.ts",
+    "../../packages/transactional/emails/TrialEndingOrg.tsx",
+    "../../packages/transactional/emails/AskMedicalRecordAccess.tsx",
+    "../../packages/transactional/emails/AppointmentNotificationEmail.tsx",
+    "../../packages/transactional/emails/TrialStartEmail.tsx",
+    "../../packages/transactional/emails/EmailLayout.tsx",
+    "../../packages/transactional/emails/OrganizationInvitation.tsx",
+    "../../packages/transactional/emails/NewReportClientEmail.tsx",
+    "../../packages/transactional/emails/ResetPassword.tsx",
+    "../../packages/transactional/emails/ContactEmail.tsx",
+    "../../packages/transactional/emails/TrialFollowUpEmail.tsx",
+    "../../packages/transactional/emails/DowngradeSubscription.tsx",
+    "../../packages/transactional/emails/TrialReminderEmail.tsx",
+    "../../packages/transactional/emails/SubscriptionReceiptEmail.tsx",
+    "../../packages/transactional/emails/TrialEndingReminderEmail.tsx",
+    "../../packages/transactional/emails/ReportReminderEmail.tsx",
+    "../../packages/transactional/emails/WelcomeBiumeEmail.tsx",
+  ],
+
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
     "paths": {
       "#/*": ["./src/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
@@ -24,6 +48,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  }
+    "noUncheckedSideEffectImports": true,
+  },
 }

@@ -24,13 +24,8 @@ export const trialWorkflow = schemaTask({
     "Gère le workflow de la période d'essai avec 4 emails programmés",
   schema: trialWorkflowSchema,
   run: async (payload) => {
-    const {
-      organizationId,
-      organizationName,
-      organizationEmail,
-      trialStart,
-      trialEnd,
-    } = payload;
+    const { organizationId, organizationName, organizationEmail, trialEnd } =
+      payload;
 
     const trialEndDate = new Date(trialEnd);
     const contactEmail = "support@biume.com";

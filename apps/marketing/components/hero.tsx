@@ -34,7 +34,7 @@ const animalAssets = [
 
 export function HeroSection() {
   return (
-    <section className="relative flex min-h-[100dvh] items-center overflow-hidden px-4 pb-16 pt-[7.5rem] md:px-6 md:pb-24 md:pt-[8.5rem]">
+    <section className="relative flex min-h-dvh items-center overflow-hidden px-4 pb-16 pt-30 md:px-6 md:pb-24 md:pt-34">
       <GridBackdrop />
       <div className="relative mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
         <div className="max-w-2xl">
@@ -54,8 +54,8 @@ export function HeroSection() {
 
           <p className="landing-reveal landing-reveal-3 mt-5 max-w-[56ch] text-base leading-7 text-muted-foreground md:text-lg">
             Biume génère des comptes rendus professionnels, analyse
-            l&apos;historique de vos patients et vulgarise vos diagnostics pour que
-            vous puissiez vous concentrer sur le soin.
+            l&apos;historique de vos patients et vulgarise vos diagnostics pour
+            que vous puissiez vous concentrer sur le soin.
           </p>
 
           <div className="landing-reveal landing-reveal-4 mt-7 flex flex-col gap-3 sm:flex-row">
@@ -103,20 +103,20 @@ function AtlasMockup() {
   const [horse, dog, cat] = animalAssets;
 
   return (
-    <div className="relative mx-auto min-h-[520px] w-full max-w-3xl sm:min-h-[580px] lg:min-h-[610px]">
+    <div className="relative mx-auto min-h-130 w-full max-w-3xl sm:min-h-145 lg:min-h-152.5">
       <div className="hero-field-drift absolute inset-x-2 bottom-9 top-5 rounded-[2.25rem] border border-white/70 bg-[linear-gradient(135deg,rgba(124,102,238,0.2),rgba(255,255,255,0.78)_38%,rgba(32,184,100,0.22)_72%,rgba(124,102,238,0.14))] shadow-[inset_0_1px_0_rgba(255,255,255,0.76),0_34px_120px_-86px_rgba(20,18,28,0.74)]" />
       <div className="absolute inset-x-2 bottom-9 top-5 overflow-hidden rounded-[2.25rem]">
         <div className="hero-scan-line absolute inset-x-0 top-0 h-24 bg-linear-to-b from-white/0 via-white/55 to-white/0" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(20,18,28,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[46px_46px] opacity-45" />
       </div>
 
-      <div className="absolute left-2 top-0 z-[1] rounded-full border border-border/70 bg-background/88 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground shadow-[0_18px_42px_-32px_rgba(20,18,28,0.42)] backdrop-blur-md">
+      <div className="absolute left-2 top-0 z-1 rounded-full border border-border/70 bg-background/88 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground shadow-[0_18px_42px_-32px_rgba(20,18,28,0.42)] backdrop-blur-md">
         atlas vivant
       </div>
 
       <AtlasPlate
         animal={horse}
-        className="hero-float-a left-0 top-12 w-[96%] rotate-[-2deg] sm:left-1 sm:w-[82%] lg:left-0 lg:top-20 lg:w-[70%]"
+        className="hero-float-a left-0 top-12 w-[96%] -rotate-2 sm:left-1 sm:w-[82%] lg:left-0 lg:top-20 lg:w-[70%]"
         frameClassName="aspect-[3/2]"
         imageClassName="object-contain p-5 contrast-125 sm:p-8"
         markerClassName="left-[38%] top-[36%]"
@@ -124,7 +124,7 @@ function AtlasMockup() {
       />
       <AtlasPlate
         animal={dog}
-        className="hero-float-b right-0 top-[19rem] w-[58%] rotate-[3deg] sm:top-[21rem] sm:w-[44%] lg:right-0 lg:top-8 lg:w-[38%]"
+        className="hero-float-b right-0 top-76 w-[58%] rotate-3 sm:top-84 sm:w-[44%] lg:right-0 lg:top-8 lg:w-[38%]"
         frameClassName="aspect-square"
         imageClassName="object-contain p-4 contrast-125 sm:p-5"
         markerClassName="left-[58%] top-[36%]"
@@ -137,7 +137,7 @@ function AtlasMockup() {
         markerClassName="left-[52%] top-[42%]"
       />
 
-      <div className="absolute bottom-0 left-4 right-4 z-[2] grid gap-3 rounded-[1.35rem] border border-white/70 bg-background/80 p-4 shadow-[0_24px_80px_-62px_rgba(20,18,28,0.7)] backdrop-blur-xl sm:grid-cols-[1fr_auto] sm:items-center">
+      <div className="absolute bottom-0 left-4 right-4 z-2 grid gap-3 rounded-[1.35rem] border border-white/70 bg-background/80 p-4 shadow-[0_24px_80px_-62px_rgba(20,18,28,0.7)] backdrop-blur-xl sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             session.capture
@@ -174,7 +174,7 @@ function AtlasPlate({
 }) {
   return (
     <div
-      className={`group absolute z-[1] overflow-hidden rounded-[1.35rem] border border-white/80 bg-background/92 shadow-[0_28px_90px_-68px_rgba(20,18,28,0.78)] backdrop-blur transition-transform duration-300 ease-out hover:rotate-0 hover:scale-[1.015] ${className}`}
+      className={`group absolute z-1 overflow-hidden rounded-[1.35rem] border border-white/80 bg-background/92 shadow-[0_28px_90px_-68px_rgba(20,18,28,0.78)] backdrop-blur transition-transform duration-300 ease-out hover:rotate-0 hover:scale-[1.015] ${className}`}
     >
       <div className={`relative ${frameClassName}`}>
         <Image
@@ -192,7 +192,9 @@ function AtlasPlate({
 
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-linear-to-t from-background via-background/90 to-transparent p-4 pt-14">
         <div>
-          <p className="text-sm font-semibold text-foreground">{animal.label}</p>
+          <p className="text-sm font-semibold text-foreground">
+            {animal.label}
+          </p>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">
             {animal.note}
           </p>
@@ -209,7 +211,7 @@ function GridBackdrop() {
   return (
     <div className="absolute inset-0 -z-10 overflow-hidden">
       <div className="absolute inset-0 bg-background" />
-      <div className="hero-color-wash absolute inset-x-[-8%] top-[8%] h-[38rem] bg-[linear-gradient(115deg,rgba(124,102,238,0.16),rgba(255,255,255,0)_38%,rgba(32,184,100,0.18)_64%,rgba(124,102,238,0.12))]" />
+      <div className="hero-color-wash absolute inset-x-[-8%] top-[8%] h-152 bg-[linear-gradient(115deg,rgba(124,102,238,0.16),rgba(255,255,255,0)_38%,rgba(32,184,100,0.18)_64%,rgba(124,102,238,0.12))]" />
       <div
         className="absolute inset-0 opacity-[0.5] dark:opacity-[0.18]"
         style={{

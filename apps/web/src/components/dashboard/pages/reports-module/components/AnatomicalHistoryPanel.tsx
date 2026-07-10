@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { getPatientAnatomicalHistory } from "@/lib/api/actions/reports.action";
 import {
@@ -106,7 +105,7 @@ export function AnatomicalHistoryPanel({
 
   return (
     <Credenza open={isOpen} onOpenChange={onOpenChange}>
-      <CredenzaContent className="sm:max-w-[700px]">
+      <CredenzaContent className="sm:max-w-175">
         <CredenzaHeader>
           <CredenzaTitle className="flex items-center gap-2">
             <HistoryIcon className="h-5 w-5" />
@@ -145,7 +144,7 @@ export function AnatomicalHistoryPanel({
               </TabsList>
 
               <TabsContent value="list" className="mt-4">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-100">
                   <div className="space-y-3">
                     {history.map((item, index) => {
                       const evolution = calculateSeverityEvolution(index);
@@ -212,7 +211,7 @@ export function AnatomicalHistoryPanel({
               </TabsContent>
 
               <TabsContent value="details" className="mt-4">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-100">
                   <div className="space-y-4">
                     {history.map((item, index) => {
                       const evolution = calculateSeverityEvolution(index);
@@ -328,4 +327,3 @@ export function AnatomicalHistoryPanel({
     </Credenza>
   );
 }
-

@@ -96,7 +96,7 @@ function RouteComponent() {
 
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-      <div className="flex min-h-[100dvh] w-screen">
+      <div className="flex min-h-dvh w-screen">
         <DashboardSidebar
           session={session}
           organizations={organizations as Organization[]}

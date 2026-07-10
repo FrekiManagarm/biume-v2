@@ -29,7 +29,7 @@ export function ExitConfirmationDialog({
       open={showExitConfirmDialog}
       onOpenChange={setShowExitConfirmDialog}
     >
-      <AlertDialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-border/80 bg-popover p-0 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.35)] ring-1 ring-foreground/5 sm:max-w-[26rem]">
+      <AlertDialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-border/80 bg-popover p-0 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.35)] ring-1 ring-foreground/5 sm:max-w-104">
         <div className="grid gap-4 p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-300">

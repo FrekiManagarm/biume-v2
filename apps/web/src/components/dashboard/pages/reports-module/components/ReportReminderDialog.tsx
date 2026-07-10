@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { BellIcon } from "lucide-react";
@@ -148,7 +147,7 @@ export function ReportReminderDialog({
 
   return (
     <Credenza open={isOpen} onOpenChange={onOpenChange}>
-      <CredenzaContent className="sm:max-w-[500px]">
+      <CredenzaContent className="sm:max-w-125">
         <CredenzaHeader>
           <CredenzaTitle className="flex items-center gap-2">
             <BellIcon className="h-5 w-5" />
@@ -261,10 +260,7 @@ export function ReportReminderDialog({
             </Button>
             <Button
               onClick={handleScheduleReminder}
-              disabled={
-                !reminderDate ||
-                !reminderTime
-              }
+              disabled={!reminderDate || !reminderTime}
               className="flex-1 sm:flex-initial"
             >
               Programmer un rappel
@@ -275,4 +271,3 @@ export function ReportReminderDialog({
     </Credenza>
   );
 }
-

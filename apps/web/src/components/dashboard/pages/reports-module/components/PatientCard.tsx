@@ -24,7 +24,7 @@ export function PatientCard({
       <section
         className={cn(
           "flex flex-col rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm shadow-foreground/5 transition-all duration-200 ease-out",
-          isCollapsed ? "w-[72px] p-2" : "w-full",
+          isCollapsed ? "w-18 p-2" : "w-full",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >

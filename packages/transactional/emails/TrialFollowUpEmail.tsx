@@ -50,7 +50,7 @@ export const TrialFollowUpEmail: React.FC<TrialFollowUpEmailProps> = ({
         </Text>
       </Section>
 
-      <Section className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200 mb-6">
+      <Section className="bg-linear-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200 mb-6">
         <Heading className="text-xl font-bold text-indigo-900 mb-4 text-center">
           💡 Trucs et astuces pour bien utiliser Biume
         </Heading>

@@ -55,7 +55,7 @@ export const TrialStartEmail: React.FC<TrialStartEmailProps> = ({
         </Text>
       </Section>
 
-      <Section className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 mb-6">
+      <Section className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 mb-6">
         <Heading className="text-xl font-bold text-indigo-900 mb-4 text-center">
           💳 Information importante sur le paiement
         </Heading>

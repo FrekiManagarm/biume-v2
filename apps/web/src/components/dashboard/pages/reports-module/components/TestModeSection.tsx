@@ -56,7 +56,7 @@ export function TestModeSection({
       <section
         className={cn(
           "flex flex-col rounded-2xl border border-border bg-card p-2 text-card-foreground shadow-sm shadow-foreground/5 transition-all duration-200 ease-out",
-          isCollapsed ? "w-[72px] p-2" : "w-full",
+          isCollapsed ? "w-18 p-2" : "w-full",
         )}
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
@@ -71,7 +71,7 @@ export function TestModeSection({
                   <div className="flex flex-col items-center gap-2">
                     <div
                       className={cn(
-                        "flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5",
+                        "flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5",
                         isTestMode
                           ? "bg-amber-50 text-amber-800"
                           : "bg-muted text-muted-foreground",

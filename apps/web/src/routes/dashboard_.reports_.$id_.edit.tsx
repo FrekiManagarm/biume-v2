@@ -74,7 +74,7 @@ function RouteComponent() {
   return (
     <AdvancedReportEditor
       reportId={reportId}
-      orgId={org.id}
+      orgId={org?.id!}
       initialData={reportResult.data}
     />
   );

@@ -65,9 +65,9 @@ export function MarketingPage({
     <>
       <JsonLd data={pageBreadcrumbJsonLd({ path, name: breadcrumbName })} />
       <Header />
-      <div className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
+      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
         <main>
-          <section className="relative overflow-hidden px-4 pb-10 pt-[7.5rem] md:px-6 md:pb-14 md:pt-[8.5rem]">
+          <section className="relative overflow-hidden px-4 pb-10 pt-30 md:px-6 md:pb-14 md:pt-34">
             <PageBackdrop />
 
             <div className="relative mx-auto grid w-full max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
@@ -153,7 +153,7 @@ export function MarketingPage({
                 ))}
               </div>
 
-              <aside className="rounded-[2rem] border border-border bg-foreground p-6 text-background shadow-[0_34px_100px_-76px_rgba(20,18,28,0.66)] md:p-8">
+              <aside className="rounded-4xl border border-border bg-foreground p-6 text-background shadow-[0_34px_100px_-76px_rgba(20,18,28,0.66)] md:p-8">
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   {sidePanel.eyebrow}
                 </p>
@@ -203,9 +203,9 @@ function PageVisual({
 }) {
   return (
     <div className="landing-reveal landing-reveal-3 min-w-0">
-      <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-[2rem] border border-border bg-card/95 p-3 shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)] backdrop-blur-xl">
+      <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-4xl border border-border bg-card/95 p-3 shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)] backdrop-blur-xl">
         <div
-          className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[linear-gradient(rgba(20,18,28,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[34px_34px]"
+          className="pointer-events-none absolute inset-0 rounded-4xl bg-[linear-gradient(rgba(20,18,28,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[34px_34px]"
           aria-hidden="true"
         />
 
@@ -219,9 +219,7 @@ function PageVisual({
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">
                   {title}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {subtitle}
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
               </div>
               <div className="hidden rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary sm:block">
                 {badge}
@@ -230,7 +228,7 @@ function PageVisual({
           </div>
 
           <div className="grid gap-0 md:grid-cols-[1.04fr_0.96fr]">
-            <div className="relative min-h-[260px] border-b border-border bg-muted/25 md:border-b-0 md:border-r">
+            <div className="relative min-h-65 border-b border-border bg-muted/25 md:border-b-0 md:border-r">
               <Image
                 src={image.src}
                 alt={image.alt}

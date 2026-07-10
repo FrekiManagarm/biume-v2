@@ -1,22 +1,18 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { getPatientAnatomicalHistory } from "@/lib/api/actions/reports.action";
 import { AIDiagnosticPanel } from "./AIDiagnosticPanel";
 import {
   HistoryIcon,
-  SparklesIcon,
   CalendarIcon,
   TrendingUpIcon,
   TrendingDownIcon,
@@ -108,11 +104,11 @@ export function AnatomicalHistoryAndDiagnosticPanel({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[600px] sm:w-[600px] p-0 flex flex-col gap-0">
+      <SheetContent className="w-full sm:max-w-150 sm:w-150 p-0 flex flex-col gap-0">
         {/* Header épuré */}
         <div className="px-6 py-5 border-b bg-muted/30">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10">
               <svg
                 width="18"
                 height="18"
@@ -128,9 +124,21 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                     x2="100%"
                     y2="0%"
                   >
-                    <stop offset="0%" stopColor="rgb(147 51 234)" stopOpacity="0.9" />
-                    <stop offset="50%" stopColor="rgb(219 39 119)" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="rgb(249 115 22)" stopOpacity="0.9" />
+                    <stop
+                      offset="0%"
+                      stopColor="rgb(147 51 234)"
+                      stopOpacity="0.9"
+                    />
+                    <stop
+                      offset="50%"
+                      stopColor="rgb(219 39 119)"
+                      stopOpacity="0.9"
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="rgb(249 115 22)"
+                      stopOpacity="0.9"
+                    />
                   </linearGradient>
                 </defs>
                 <path
@@ -188,9 +196,21 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                       x2="100%"
                       y2="0%"
                     >
-                      <stop offset="0%" stopColor="rgb(147 51 234)" stopOpacity="0.8" />
-                      <stop offset="50%" stopColor="rgb(219 39 119)" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="rgb(249 115 22)" stopOpacity="0.8" />
+                      <stop
+                        offset="0%"
+                        stopColor="rgb(147 51 234)"
+                        stopOpacity="0.8"
+                      />
+                      <stop
+                        offset="50%"
+                        stopColor="rgb(219 39 119)"
+                        stopOpacity="0.8"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="rgb(249 115 22)"
+                        stopOpacity="0.8"
+                      />
                     </linearGradient>
                   </defs>
                   <path
@@ -203,7 +223,10 @@ export function AnatomicalHistoryAndDiagnosticPanel({
             </TabsList>
           </div>
 
-          <TabsContent value="history" className="flex-1 mt-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
+          <TabsContent
+            value="history"
+            className="flex-1 mt-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          >
             {isLoading ? (
               <div className="flex flex-col items-center justify-center flex-1 py-16">
                 <div className="relative mb-4">
@@ -224,7 +247,7 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                 <p className="text-sm font-medium text-foreground">
                   Erreur de chargement
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 text-center max-w-[240px]">
+                <p className="text-xs text-muted-foreground mt-1 text-center max-w-60">
                   Impossible de récupérer l'historique
                 </p>
               </div>
@@ -236,8 +259,9 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                 <p className="text-sm font-medium text-foreground mb-1.5">
                   Aucun antécédent trouvé
                 </p>
-                <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed">
-                  Cette région n'a pas encore été mentionnée dans les rapports précédents
+                <p className="text-xs text-muted-foreground max-w-70 leading-relaxed">
+                  Cette région n'a pas encore été mentionnée dans les rapports
+                  précédents
                 </p>
               </div>
             ) : (
@@ -248,7 +272,8 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-primary" />
                       <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                        {history.length} Occurrence{history.length > 1 ? "s" : ""}
+                        {history.length} Occurrence
+                        {history.length > 1 ? "s" : ""}
                       </p>
                     </div>
                     <p className="text-[10px] text-muted-foreground">
@@ -261,21 +286,24 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                 <ScrollArea className="flex-1 px-6">
                   <div className="relative pb-4">
                     {/* Ligne verticale de timeline */}
-                    <div className="absolute left-[17px] top-2 bottom-2 w-px bg-linear-to-b from-primary via-primary/50 to-transparent" />
+                    <div className="absolute left-4.25 top-2 bottom-2 w-px bg-linear-to-b from-primary via-primary/50 to-transparent" />
 
                     <div className="space-y-3 relative">
                       {history.map((item, index) => {
                         const evolution = calculateSeverityEvolution(index);
                         const isFirst = index === 0;
-                        const isLast = index === history.length - 1;
 
                         return (
                           <div key={item.id} className="relative pl-9">
                             {/* Dot sur la timeline */}
-                            <div className={cn(
-                              "absolute left-0 top-3 h-[10px] w-[10px] rounded-full border-2 bg-background transition-all",
-                              isFirst ? "border-primary shadow-sm shadow-primary/50" : "border-primary/40"
-                            )} />
+                            <div
+                              className={cn(
+                                "absolute left-0 top-3 h-2.5 w-2.5 rounded-full border-2 bg-background transition-all",
+                                isFirst
+                                  ? "border-primary shadow-sm shadow-primary/50"
+                                  : "border-primary/40",
+                              )}
+                            />
 
                             {/* Card */}
                             <div
@@ -283,17 +311,19 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                                 "group p-3 rounded-lg border transition-all",
                                 isFirst
                                   ? "bg-linear-to-br from-primary/5 via-primary/3 to-transparent border-primary/20 shadow-sm"
-                                  : "bg-card hover:bg-accent/30 hover:border-primary/20"
+                                  : "bg-card hover:bg-accent/30 hover:border-primary/20",
                               )}
                             >
                               <div className="space-y-2">
                                 {/* Header */}
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
-                                    <h4 className={cn(
-                                      "text-sm font-medium leading-tight mb-1 line-clamp-1",
-                                      isFirst && "text-primary"
-                                    )}>
+                                    <h4
+                                      className={cn(
+                                        "text-sm font-medium leading-tight mb-1 line-clamp-1",
+                                        isFirst && "text-primary",
+                                      )}
+                                    >
                                       {item.reportTitle}
                                     </h4>
                                     <time className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
@@ -311,7 +341,7 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "h-6 px-1.5 text-xs font-bold min-w-[28px] justify-center",
+                                        "h-6 px-1.5 text-xs font-bold min-w-7 justify-center",
                                         getSeverityColor(item.severity),
                                       )}
                                     >
@@ -321,8 +351,10 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                                       <div
                                         className={cn(
                                           "h-6 w-6 rounded flex items-center justify-center",
-                                          evolution === "improving" && "bg-green-500/15",
-                                          evolution === "worsening" && "bg-red-500/15",
+                                          evolution === "improving" &&
+                                            "bg-green-500/15",
+                                          evolution === "worsening" &&
+                                            "bg-red-500/15",
                                           evolution === "stable" && "bg-muted",
                                         )}
                                         title={
@@ -349,16 +381,24 @@ export function AnatomicalHistoryAndDiagnosticPanel({
 
                                 {/* Métadonnées inline */}
                                 <div className="flex items-center gap-2 text-[10px]">
-                                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-medium">
+                                  <Badge
+                                    variant="secondary"
+                                    className="h-5 px-1.5 text-[10px] font-medium"
+                                  >
                                     {getLateralityLabel(item.laterality)}
                                   </Badge>
                                   {evolution && (
-                                    <span className={cn(
-                                      "font-medium",
-                                      evolution === "improving" && "text-green-600",
-                                      evolution === "worsening" && "text-red-600",
-                                      evolution === "stable" && "text-muted-foreground"
-                                    )}>
+                                    <span
+                                      className={cn(
+                                        "font-medium",
+                                        evolution === "improving" &&
+                                          "text-green-600",
+                                        evolution === "worsening" &&
+                                          "text-red-600",
+                                        evolution === "stable" &&
+                                          "text-muted-foreground",
+                                      )}
+                                    >
                                       {evolution === "improving"
                                         ? "↓ Amélioration"
                                         : evolution === "worsening"
@@ -367,7 +407,10 @@ export function AnatomicalHistoryAndDiagnosticPanel({
                                     </span>
                                   )}
                                   {isFirst && (
-                                    <Badge variant="default" className="h-5 px-1.5 text-[10px] font-medium bg-primary/10 text-primary border-primary/20">
+                                    <Badge
+                                      variant="default"
+                                      className="h-5 px-1.5 text-[10px] font-medium bg-primary/10 text-primary border-primary/20"
+                                    >
                                       Plus récent
                                     </Badge>
                                   )}
@@ -391,7 +434,10 @@ export function AnatomicalHistoryAndDiagnosticPanel({
             )}
           </TabsContent>
 
-          <TabsContent value="diagnostic" className="flex-1 mt-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
+          <TabsContent
+            value="diagnostic"
+            className="flex-1 mt-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          >
             <div className="flex-1 overflow-hidden px-6 py-4">
               <ScrollArea className="h-full -mx-6 px-6">
                 <div className="pb-4">
@@ -410,4 +456,3 @@ export function AnatomicalHistoryAndDiagnosticPanel({
     </Sheet>
   );
 }
-

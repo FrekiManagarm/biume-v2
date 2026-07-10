@@ -237,7 +237,7 @@ export function AssistantChatWorkspace() {
                       <button
                         key={suggestion.title}
                         type="button"
-                        className="group inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-[0_10px_26px_-22px_rgba(15,23,42,0.5)] transition-[background,border-color,color,transform] duration-300 hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98]"
+                        className="group inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-[0_10px_26px_-22px_rgba(15,23,42,0.5)] transition-[background,border-color,color,transform] duration-300 hover:-translate-y-px hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98]"
                         onClick={() => handleSend(suggestion.prompt)}
                       >
                         <Icon className="size-3.5 text-slate-400 transition-colors group-hover:text-emerald-700" />
