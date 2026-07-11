@@ -5,6 +5,7 @@ import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
+import { MotionReveal } from "../components/landing/motion-reveal";
 import { PricingSection } from "../components/pricing";
 
 mock.module("next/font/google", () => ({
@@ -16,6 +17,18 @@ mock.module("next/font/google", () => ({
 const { default: HomePage } = await import("../app/page");
 
 describe("Biume home landing", () => {
+  test("motion reveal keeps content visible in server markup", () => {
+    const html = renderToStaticMarkup(
+      <MotionReveal delay={0.08}>
+        <p>Contenu visible sans JavaScript</p>
+      </MotionReveal>,
+    );
+
+    expect(html).toContain("Contenu visible sans JavaScript");
+    expect(html).not.toContain("opacity:0");
+    expect(html).not.toContain("visibility:hidden");
+  });
+
   test("hero leads with post-session value and factual reassurance", () => {
     const html = renderToStaticMarkup(<HeroSection />);
 
