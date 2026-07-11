@@ -1,12 +1,17 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 
-import HomePage from "../app/page";
 import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
 import { PricingSection } from "../components/pricing";
+
+mock.module("next/font/google", () => ({
+  Manrope: () => ({ variable: "font-manrope" }),
+}));
+
+const { default: HomePage } = await import("../app/page");
 
 describe("Biume home landing", () => {
   test("hero leads with post-session value and factual reassurance", () => {
@@ -70,15 +75,24 @@ describe("Biume home landing", () => {
 
   test("assembled page preserves the conversion and anti-slop contract", () => {
     const html = renderToStaticMarkup(<HomePage />);
-    const primaryCtaCount = html.match(/Essayer gratuitement/g)?.length ?? 0;
+    const primaryCtaHrefs = Array.from(
+      html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g),
+    )
+      .filter(([, , content]) =>
+        content.replace(/<[^>]+>/g, "").includes("Essayer gratuitement"),
+      )
+      .map(([, attributes]) => attributes.match(/\bhref="([^"]+)"/)?.[1]);
+    const signupHref = "http://localhost:3001/signup";
 
     expect(html).toContain("landing-theme");
     expect(html).toContain("Chaque séance mérite une suite.");
     expect(html).toContain("Un abonnement simple. Une seule offre.");
     expect(html).toContain("Les questions avant de commencer.");
     expect(html).toContain("Hébergé en France, conforme au RGPD");
-    expect(html).toContain("http://localhost:3001/signup");
-    expect(primaryCtaCount).toBeGreaterThanOrEqual(4);
+    expect(primaryCtaHrefs.length).toBeGreaterThanOrEqual(4);
+    expect(primaryCtaHrefs).toEqual(
+      Array(primaryCtaHrefs.length).fill(signupHref),
+    );
     expect(html).not.toMatch(/[—–]/);
     expect(html).not.toContain("4.9/5");
     expect(html).not.toContain("IA au service");

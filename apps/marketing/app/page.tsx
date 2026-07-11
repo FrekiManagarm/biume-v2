@@ -1,3 +1,5 @@
+import { Manrope } from "next/font/google";
+
 import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
@@ -6,6 +8,11 @@ import { Header } from "../components/header";
 import { HeroSection } from "../components/hero";
 import { PricingSection } from "../components/pricing";
 import { JsonLd, siteName, siteUrl } from "../lib/seo";
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
 
 const serviceSchema = {
   "@context": "https://schema.org",
@@ -24,7 +31,9 @@ const serviceSchema = {
 
 export default function Home() {
   return (
-    <div className="landing-theme min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/25">
+    <div
+      className={`${manrope.variable} landing-theme min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/25`}
+    >
       <JsonLd data={serviceSchema} />
       <Header />
       <main>

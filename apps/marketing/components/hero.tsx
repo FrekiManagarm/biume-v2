@@ -40,7 +40,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        <div className="landing-media-reveal relative mx-auto w-full max-w-3xl lg:justify-self-end">
+        <div className="relative mx-auto w-full max-w-3xl lg:justify-self-end">
           <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-muted">
             <Image
               src="/assets/images/landing/hero-practitioner-horse.png"
