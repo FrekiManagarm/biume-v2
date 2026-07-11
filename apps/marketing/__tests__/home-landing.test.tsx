@@ -88,6 +88,13 @@ describe("Biume home landing", () => {
     expect(html).toContain("Timeline animal");
     expect(html).toContain("Biume prépare. Vous décidez.");
     expect(html).toContain("practitioner-dog.png");
+    expect(html).toContain("data-problem-composition");
+    expect(html).toContain("data-product-outcome");
+    expect(html).toContain("data-control-interlude");
+    expect(html.match(/data-journey-step=/g)?.length).toBe(4);
+    expect(html).not.toContain("Après la séance</p>");
+    expect(html).not.toContain("Le parcours</p>");
+    expect(html).not.toContain("Le résultat</p>");
     expect(html).not.toContain("Actions automatiques");
     expect(html).not.toContain("Patient timeline");
   });
