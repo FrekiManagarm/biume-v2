@@ -108,10 +108,15 @@ describe("Biume home landing", () => {
     expect(pricing).toContain("24,99 €");
     expect(pricing).toContain("29,99 €");
     expect(pricing).toContain("Essayer gratuitement");
+    expect(pricing).toContain("data-billing-selector");
+    expect(pricing).toContain("data-billing-price");
     expect(pricing).not.toContain("Plan complet");
     expect(faq.match(/<details/g)?.length).toBe(5);
+    expect(faq.match(/data-faq-item=/g)?.length).toBe(5);
+    expect(faq).toContain("data-faq-indicator");
     expect(faq).toContain("Est-ce que l&#x27;IA écrit à ma place ?");
     expect(faq).toContain("Comment mes données sont-elles protégées ?");
+    expect(cta).toContain("data-final-cta");
     expect(cta).toContain("Donnez une suite claire à chaque séance.");
     expect(cta).toContain("practitioner-owner-animal.png");
     expect(cta).toContain("Essayer gratuitement");

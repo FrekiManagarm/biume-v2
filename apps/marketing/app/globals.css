@@ -1,6 +1,7 @@
 @import "@biume/ui/globals.css";
 
 .landing-theme {
+  interpolate-size: allow-keywords;
   --font-geist-sans: var(--font-manrope);
   --background: #f3f4f6;
   --foreground: #17161a;
@@ -16,6 +17,31 @@
   --landing-surface: #eef0f4;
   --landing-shadow: rgb(53 45 91 / 0.16);
   color-scheme: light;
+}
+
+@supports selector(details::details-content) {
+  .landing-theme details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 360ms cubic-bezier(0.16, 1, 0.3, 1),
+      content-visibility 360ms allow-discrete,
+      opacity 240ms ease;
+  }
+
+  .landing-theme details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+[data-faq-indicator] {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+details[open] [data-faq-indicator] {
+  transform: rotate(45deg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -141,6 +167,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-theme details::details-content,
+  [data-faq-indicator] {
+    transition: none;
+  }
+
   .landing-reveal,
   .landing-journey-card,
   .landing-hero-media img,
