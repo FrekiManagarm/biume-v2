@@ -39,9 +39,12 @@ describe("Biume home landing", () => {
     expect(html).toContain("15 jours");
     expect(html).toContain("Sans carte bancaire");
     expect(html).toContain("Validé par vous");
-    expect(html).toContain("Exemple de suivi");
-    expect(html).toContain("Retour reçu à J+7");
+    expect(html).toContain("landing-hero-media");
+    expect(html).toContain("landing-reassurance");
     expect(html).toContain("hero-practitioner-horse.png");
+    expect(html).not.toContain("Exemple de suivi");
+    expect(html).not.toContain("Naya va mieux depuis la séance");
+    expect(html).not.toContain("Retour reçu à J+7");
     expect(html).not.toContain("4.9/5");
     expect(html).not.toContain("simplifiés par l");
     expect(html).not.toContain("diagnostics");
