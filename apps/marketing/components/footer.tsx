@@ -29,10 +29,10 @@ const legalLinks = [
 
 const LandingFooter = () => {
   return (
-    <footer className="px-4 py-10 md:px-6 md:py-14">
-      <div className="mx-auto max-w-7xl border-t border-border pt-8">
-        <div className="grid gap-10 md:grid-cols-12">
-          <div className="md:col-span-5">
+    <footer className="border-t border-border px-4 py-10 md:px-6 md:py-14">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_auto]">
+          <div>
             <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
               <Image
                 src="/brand/biume-logo.svg"
@@ -49,9 +49,9 @@ const LandingFooter = () => {
             </p>
           </div>
 
-          <div className="md:col-span-3 md:col-start-8">
+          <div>
             <h4 className="text-sm font-semibold">Produit</h4>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
               {productLinks.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -68,7 +68,7 @@ const LandingFooter = () => {
             </ul>
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <h4 className="text-sm font-semibold">Legal</h4>
             <ul className="mt-4 space-y-2.5">
               {legalLinks.map((link) => (
@@ -87,10 +87,7 @@ const LandingFooter = () => {
 
         <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} Biume. Tous droits reserves.</p>
-          <div className="flex items-center gap-2">
-            <span className="size-1.5 rounded-full bg-secondary/70" />
-            <span>Heberge en France, conforme RGPD</span>
-          </div>
+          <p>Hébergé en France, conforme au RGPD</p>
         </div>
       </div>
     </footer>

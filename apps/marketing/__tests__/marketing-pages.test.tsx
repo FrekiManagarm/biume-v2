@@ -34,8 +34,8 @@ describe("marketing sub pages", () => {
   }) => {
     const html = renderToStaticMarkup(<Page />);
 
-    expect(html).toContain("Essai gratuit");
-    expect(html).toContain("Heberge en France, conforme RGPD");
+    expect(html).toContain("Essayer gratuitement");
+    expect(html).toContain("Hébergé en France, conforme au RGPD");
     expect(html).toContain("selection:bg-primary/20");
     expect(html).toContain("landing-reveal");
     expect(html).toContain('"@type":"BreadcrumbList"');
