@@ -24,6 +24,7 @@
         "fumadocs-mdx": "^14.2.11",
         "fumadocs-ui": "^16.7.4",
         "gray-matter": "^4.0.3",
+        "motion": "^12.42.2",
         "next": "16.2.9",
         "react": "catalog:",
         "react-dom": "catalog:",
