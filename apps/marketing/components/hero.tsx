@@ -14,14 +14,14 @@ export function HeroSection() {
   return (
     <section className="px-4 pb-10 pt-6 md:px-6 md:pb-14 md:pt-8">
       <div className="mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-7xl items-center gap-10 lg:grid-cols-12 lg:gap-6">
-        <div className="relative z-10 max-w-2xl lg:col-span-6 lg:py-12">
+        <div className="relative z-10 max-w-2xl lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:py-12">
           <p className="landing-reveal font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Le suivi post-séance des ostéopathes animaliers
           </p>
           <h1 className="landing-reveal landing-reveal-delay-1 mt-5 text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-foreground sm:text-6xl lg:text-[3.5rem] xl:text-[4.75rem]">
             Chaque séance mérite une suite.
           </h1>
-          <p className="landing-reveal landing-reveal-delay-2 mt-6 max-w-[52ch] text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
+          <p className="landing-reveal landing-reveal-delay-2 mt-6 max-w-[52ch] text-base leading-7 text-muted-foreground md:text-lg md:leading-8 lg:max-w-[26rem] xl:max-w-[52ch]">
             Biume transforme vos observations en un suivi clair que les propriétaires comprennent, gardent et utilisent.
           </p>
           <div className="landing-reveal landing-reveal-delay-3 mt-8 flex flex-col gap-3 sm:flex-row">
@@ -47,6 +47,7 @@ export function HeroSection() {
             alt="Une ostéopathe animalière auprès d'un cheval pendant une séance"
             fill
             priority
+            fetchPriority="high"
             sizes="(min-width: 1280px) 670px, (min-width: 1024px) 56vw, 100vw"
             className="object-cover"
           />
