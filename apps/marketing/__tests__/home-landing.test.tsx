@@ -8,6 +8,8 @@ import { HeroSection } from "../components/hero";
 import { PricingSection } from "../components/pricing";
 
 mock.module("next/font/google", () => ({
+  Geist: () => ({ variable: "font-geist-sans" }),
+  Geist_Mono: () => ({ variable: "font-geist-mono" }),
   Manrope: () => ({ variable: "font-manrope" }),
 }));
 

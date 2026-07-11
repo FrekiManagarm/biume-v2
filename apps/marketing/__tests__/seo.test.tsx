@@ -19,6 +19,8 @@ import PricingPage, { metadata as pricingMetadata } from "../app/tarifs/page";
 import { rootMetadata } from "../lib/metadata";
 
 mock.module("next/font/google", () => ({
+  Geist: () => ({ variable: "font-geist-sans" }),
+  Geist_Mono: () => ({ variable: "font-geist-mono" }),
   Manrope: () => ({ variable: "font-manrope" }),
 }));
 
