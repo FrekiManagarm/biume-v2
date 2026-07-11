@@ -5,6 +5,7 @@ import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
+import { JourneyStory } from "../components/landing/journey-story";
 import { MotionReveal } from "../components/landing/motion-reveal";
 import { PricingSection } from "../components/pricing";
 
@@ -27,6 +28,24 @@ describe("Biume home landing", () => {
     expect(html).toContain("Contenu visible sans JavaScript");
     expect(html).not.toContain("opacity:0");
     expect(html).not.toContain("visibility:hidden");
+  });
+
+  test("journey story exposes every step before hydration", () => {
+    const html = renderToStaticMarkup(
+      <JourneyStory
+        steps={[
+          { title: "Observer", body: "Noter l’essentiel." },
+          { title: "Valider", body: "Relire chaque mot." },
+          { title: "Suivre", body: "Recevoir le retour." },
+          { title: "Revoir", body: "Garder l’évolution." },
+        ]}
+      />,
+    );
+
+    expect(html.match(/data-journey-step=/g)?.length).toBe(4);
+    expect(html).toContain("Observer");
+    expect(html).toContain("Revoir");
+    expect(html).not.toContain("opacity:0");
   });
 
   test("hero leads with post-session value and factual reassurance", () => {
