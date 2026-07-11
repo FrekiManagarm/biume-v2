@@ -1,163 +1,109 @@
 @import "@biume/ui/globals.css";
 
+.landing-theme {
+  --font-geist-sans: var(--font-manrope);
+  --background: #f5f5f3;
+  --foreground: #18171a;
+  --card: #ffffff;
+  --card-foreground: #18171a;
+  --muted: #ececea;
+  --muted-foreground: #666369;
+  --border: #dcdadf;
+  --primary: #6b5ac8;
+  --primary-foreground: #ffffff;
+  --secondary: #198754;
+  --secondary-foreground: #ffffff;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-theme {
+    --background: #151417;
+    --foreground: #f3f2ef;
+    --card: #1e1d21;
+    --card-foreground: #f3f2ef;
+    --muted: #29272d;
+    --muted-foreground: #aaa6ae;
+    --border: #38353d;
+    --primary: #9a8ce9;
+    --primary-foreground: #17151f;
+    --secondary: #48bb7d;
+    --secondary-foreground: #102117;
+    color-scheme: dark;
+  }
+}
+
 @layer utilities {
   .landing-reveal {
-    animation: landing-reveal 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: landing-reveal 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .landing-reveal-2 {
+  .landing-reveal-delay-1 {
     animation-delay: 80ms;
   }
 
-  .landing-reveal-3 {
+  .landing-reveal-delay-2 {
     animation-delay: 160ms;
   }
 
-  .landing-reveal-4 {
+  .landing-reveal-delay-3 {
     animation-delay: 240ms;
   }
 
-  .landing-reveal-5 {
-    animation-delay: 320ms;
+  .landing-media-reveal {
+    animation: landing-media-reveal 720ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
   }
 
-  .landing-pulse {
-    animation: landing-pulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  }
-
-  .hero-color-wash {
-    animation: hero-color-wash 16s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
-  }
-
-  .hero-field-drift {
-    animation: hero-field-drift 9s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
-  }
-
-  .hero-float-a {
-    animation: hero-float-a 7.5s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
-  }
-
-  .hero-float-b {
-    animation: hero-float-b 6.8s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
-  }
-
-  .hero-float-c {
-    animation: hero-float-c 8.2s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
-  }
-
-  .hero-scan-line {
-    animation: hero-scan-line 5.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  }
-
-  .hero-marker-ring {
-    animation: hero-marker-ring 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  .landing-journey-card {
+    animation: landing-card-reveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 32%;
   }
 }
 
 @keyframes landing-reveal {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translate3d(0, 18px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-@keyframes landing-pulse {
+@keyframes landing-media-reveal {
   from {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  to {
     opacity: 0;
-    transform: scale(3);
-  }
-}
-
-@keyframes hero-color-wash {
-  from {
-    opacity: 0.68;
-    transform: translate3d(-2%, -1%, 0) skewX(-4deg);
+    clip-path: inset(10% 0 22% 18% round 20px);
+    transform: translate3d(0, 18px, 0);
   }
   to {
-    opacity: 0.96;
-    transform: translate3d(3%, 2%, 0) skewX(3deg);
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 20px);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-@keyframes hero-field-drift {
+@keyframes landing-card-reveal {
   from {
-    transform: translate3d(0, 0, 0) rotate(-1deg);
-  }
-  to {
-    transform: translate3d(0.75rem, -0.5rem, 0) rotate(1deg);
-  }
-}
-
-@keyframes hero-float-a {
-  from {
-    transform: translate3d(0, 0, 0) rotate(-2deg);
-  }
-  to {
-    transform: translate3d(0.25rem, -0.7rem, 0) rotate(-1deg);
-  }
-}
-
-@keyframes hero-float-b {
-  from {
-    transform: translate3d(0, 0, 0) rotate(3deg);
-  }
-  to {
-    transform: translate3d(-0.45rem, 0.55rem, 0) rotate(1.5deg);
-  }
-}
-
-@keyframes hero-float-c {
-  from {
-    transform: translate3d(0, 0, 0) rotate(-4deg);
-  }
-  to {
-    transform: translate3d(0.65rem, -0.35rem, 0) rotate(-2deg);
-  }
-}
-
-@keyframes hero-scan-line {
-  0% {
     opacity: 0;
-    transform: translate3d(0, -8rem, 0);
+    transform: translate3d(0, 20px, 0);
   }
-  18%,
-  62% {
-    opacity: 0.58;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 34rem, 0);
-  }
-}
-
-@keyframes hero-marker-ring {
-  0%,
-  100% {
-    box-shadow: 0 0 0 6px rgba(32, 184, 100, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 0 13px rgba(32, 184, 100, 0.02);
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal,
-  .landing-pulse,
-  .hero-color-wash,
-  .hero-field-drift,
-  .hero-float-a,
-  .hero-float-b,
-  .hero-float-c,
-  .hero-scan-line,
-  .hero-marker-ring {
+  .landing-media-reveal,
+  .landing-journey-card {
     animation: none;
+  }
+
+  html:focus-within {
+    scroll-behavior: auto;
   }
 }
