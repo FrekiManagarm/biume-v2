@@ -7,8 +7,7 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export const headline =
-  "Le compte rendu animalier, clair en quelques minutes.";
+export const headline = "Chaque séance mérite une suite.";
 
 export const brandSubtitle = "";
 

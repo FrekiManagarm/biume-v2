@@ -21,7 +21,7 @@ describe("generated Open Graph image", () => {
     expect(brandLogoSrc.startsWith("data:image/svg+xml;utf8,")).toBe(true);
     expect(brandLogoSrc).toContain("biume-gradient");
     expect(brandSubtitle).toBe("");
-    expect(headline).toBe("Le compte rendu animalier, clair en quelques minutes.");
+    expect(headline).toBe("Chaque séance mérite une suite.");
     expect(headlineStyle.fontSize).toBeLessThanOrEqual(72);
   });
 

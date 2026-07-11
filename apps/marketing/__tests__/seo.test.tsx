@@ -1,7 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 
-import HomePage from "../app/page";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
 import ReportPage, {
@@ -18,6 +17,14 @@ import OsteopatheAnimalierPage, {
 } from "../app/osteopathe-animalier/page";
 import PricingPage, { metadata as pricingMetadata } from "../app/tarifs/page";
 import { rootMetadata } from "../lib/metadata";
+
+mock.module("next/font/google", () => ({
+  Geist: () => ({ variable: "font-geist-sans" }),
+  Geist_Mono: () => ({ variable: "font-geist-mono" }),
+  Manrope: () => ({ variable: "font-manrope" }),
+}));
+
+const { default: HomePage } = await import("../app/page");
 
 const pageChecks = [
   {
