@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
+import HomePage from "../app/page";
 import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
@@ -65,5 +66,26 @@ describe("Biume home landing", () => {
     expect(cta).toContain("Donnez une suite claire à chaque séance.");
     expect(cta).toContain("practitioner-owner-animal.png");
     expect(cta).toContain("Essayer gratuitement");
+  });
+
+  test("assembled page preserves the conversion and anti-slop contract", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    const primaryCtaCount = html.match(/Essayer gratuitement/g)?.length ?? 0;
+
+    expect(html).toContain("landing-theme");
+    expect(html).toContain("Chaque séance mérite une suite.");
+    expect(html).toContain("Un abonnement simple. Une seule offre.");
+    expect(html).toContain("Les questions avant de commencer.");
+    expect(html).toContain("Hébergé en France, conforme au RGPD");
+    expect(html).toContain("http://localhost:3001/signup");
+    expect(primaryCtaCount).toBeGreaterThanOrEqual(4);
+    expect(html).not.toMatch(/[—–]/);
+    expect(html).not.toContain("4.9/5");
+    expect(html).not.toContain("IA au service");
+    expect(html).not.toContain("hero-scan-line");
+    expect(html).not.toContain("hero-field-drift");
+    expect(html).not.toContain("bg-clip-text");
+    expect(html).not.toContain("Commencer gratuitement");
+    expect(html).not.toContain("Démarrer l");
   });
 });

@@ -14,7 +14,7 @@ export function HeroSection() {
     <section className="px-4 pb-16 pt-10 md:px-6 md:pb-22 md:pt-14">
       <div className="mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-7xl items-center gap-10 lg:grid-cols-[0.86fr_1.14fr]">
         <div className="max-w-2xl">
-          <p className="landing-reveal font-mono text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+          <p className="landing-reveal font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Le suivi post-séance des ostéopathes animaliers
           </p>
           <h1 className="landing-reveal landing-reveal-delay-1 mt-5 text-5xl font-semibold leading-[0.98] tracking-[-0.045em] text-foreground sm:text-6xl lg:text-7xl">

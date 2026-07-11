@@ -50,7 +50,7 @@ const LandingFooter = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold">Produit</h4>
+            <h2 className="text-sm font-semibold">Produit</h2>
             <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
               {productLinks.map((link) => (
                 <li key={link.href}>
@@ -69,7 +69,7 @@ const LandingFooter = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold">Legal</h4>
+            <h2 className="text-sm font-semibold">Legal</h2>
             <ul className="mt-4 space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
