@@ -1,5 +1,8 @@
 import Image from "next/image";
 
+import { JourneyStory } from "./landing/journey-story";
+import { MotionReveal } from "./landing/motion-reveal";
+
 const journey = [
   {
     title: "Observer",
@@ -34,149 +37,106 @@ const outcomes = [
   },
 ] as const;
 
-const sectionClass = "px-4 py-16 md:px-6 md:py-24";
-const containerClass = "mx-auto max-w-7xl";
-
 export function FeaturesSection() {
   return (
     <>
-      <section id="probleme" className={sectionClass}>
+      <section id="probleme" className="px-4 py-20 md:px-6 md:py-28">
         <div
-          className={`${containerClass} grid items-center gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16`}
+          data-problem-composition
+          className="mx-auto grid max-w-7xl items-end gap-8 lg:grid-cols-12 lg:gap-0"
         >
-          <div className="max-w-xl">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Après la séance
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
-              La séance ne s&apos;arrête pas au rendez-vous.
-            </h2>
-            <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Le propriétaire doit encore comprendre vos observations, savoir
-              quoi surveiller et reconnaître le bon moment pour reprendre
-              contact.
-            </p>
-          </div>
-
-          <div className="relative aspect-[3/2] overflow-hidden rounded-[20px] bg-muted">
+          <MotionReveal className="landing-media-frame relative aspect-[3/2] overflow-hidden rounded-[24px] bg-muted lg:col-span-7 lg:col-start-6 lg:row-start-1">
             <Image
               src="/assets/images/landing/practitioner-dog.png"
               alt="Une praticienne accompagne un chien pendant une séance manuelle"
               fill
-              sizes="(min-width: 1280px) 700px, (min-width: 1024px) 56vw, 100vw"
+              sizes="(min-width: 1280px) 720px, (min-width: 1024px) 58vw, 100vw"
               className="object-cover"
             />
-          </div>
-        </div>
-      </section>
+          </MotionReveal>
 
-      <section id="parcours" className={`${sectionClass} border-y border-border`}>
-        <div className={containerClass}>
-          <div className="max-w-3xl">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Le parcours
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
-              Un fil clair, du rendez-vous au prochain échange.
+          <MotionReveal
+            delay={0.08}
+            className="relative z-10 max-w-2xl rounded-2xl border border-border bg-background/95 p-6 backdrop-blur-sm lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:mb-12 lg:p-10"
+          >
+            <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-foreground md:text-6xl">
+              La séance ne s&apos;arrête pas au rendez-vous.
             </h2>
-          </div>
-
-          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-2 md:overflow-visible md:snap-none md:pb-0 lg:grid-cols-4">
-            {journey.map((step) => (
-              <article
-                key={step.title}
-                className="landing-journey-card w-[82vw] max-w-sm shrink-0 snap-start rounded-2xl border border-border bg-card p-6 text-card-foreground md:w-auto md:max-w-none"
-              >
-                <h3 className="text-xl font-semibold tracking-tight">
-                  {step.title}
-                </h3>
-                <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                  {step.body}
-                </p>
-              </article>
-            ))}
-          </div>
+            <p className="mt-6 max-w-[52ch] text-lg leading-8 text-muted-foreground">
+              Le propriétaire doit encore comprendre vos observations, savoir quoi surveiller et reconnaître le bon moment pour reprendre contact.
+            </p>
+          </MotionReveal>
         </div>
       </section>
 
-      <section id="resultat" className={sectionClass}>
-        <div className={containerClass}>
-          <div className="max-w-3xl">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Le résultat
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
+      <JourneyStory steps={journey} />
+
+      <section id="resultat" className="px-4 py-20 md:px-6 md:py-28">
+        <div data-product-outcome className="mx-auto max-w-7xl">
+          <MotionReveal className="max-w-4xl">
+            <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-foreground md:text-6xl">
               Le propriétaire comprend. Vous gardez le fil.
             </h2>
-          </div>
+          </MotionReveal>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
-            <article
-              className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-[0_24px_60px_-48px_rgba(24,23,26,0.42)] md:p-8"
-              aria-label="Exemple de résumé"
-            >
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                Exemple de résumé
+          <div className="mt-12 grid gap-8 lg:grid-cols-12 lg:items-start">
+            <MotionReveal className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-[0_28px_80px_-58px_var(--landing-shadow)] md:p-10 lg:col-span-8">
+              <p className="font-mono text-xs font-semibold text-primary">
+                Résumé propriétaire
               </p>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight">
+              <h3 className="mt-5 text-3xl font-semibold tracking-[-0.035em]">
                 Après la séance
               </h3>
-              <dl className="mt-8 divide-y divide-border border-y border-border">
-                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
-                  <dt className="text-sm font-semibold text-foreground">
-                    Points observés
-                  </dt>
-                  <dd className="text-sm leading-6 text-muted-foreground">
+              <dl className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="rounded-xl bg-[var(--landing-surface)] p-5">
+                  <dt className="text-sm font-semibold">Points observés</dt>
+                  <dd className="mt-3 text-sm leading-6 text-muted-foreground">
                     Vos observations, présentées dans un langage accessible.
                   </dd>
                 </div>
-                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
-                  <dt className="text-sm font-semibold text-foreground">
-                    Conseils transmis
-                  </dt>
-                  <dd className="text-sm leading-6 text-muted-foreground">
+                <div className="rounded-xl bg-[var(--landing-surface)] p-5">
+                  <dt className="text-sm font-semibold">Conseils transmis</dt>
+                  <dd className="mt-3 text-sm leading-6 text-muted-foreground">
                     Vos recommandations, relues et validées avant l&apos;envoi.
                   </dd>
                 </div>
-                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
-                  <dt className="text-sm font-semibold text-foreground">
-                    Prochaine étape
-                  </dt>
-                  <dd className="text-sm leading-6 text-muted-foreground">
+                <div className="rounded-xl bg-[var(--landing-surface)] p-5">
+                  <dt className="text-sm font-semibold">Prochaine étape</dt>
+                  <dd className="mt-3 text-sm leading-6 text-muted-foreground">
                     Les repères que vous choisissez pour la suite.
                   </dd>
                 </div>
               </dl>
-            </article>
+            </MotionReveal>
 
-            <div className="divide-y divide-border border-y border-border">
-              {outcomes.map((outcome) => (
-                <article key={outcome.title} className="py-6 first:pt-0 lg:py-8">
-                  <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                    {outcome.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {outcome.body}
-                  </p>
-                </article>
+            <div className="grid gap-4 lg:col-span-4 lg:pt-16">
+              {outcomes.map((outcome, index) => (
+                <MotionReveal key={outcome.title} delay={index * 0.06}>
+                  <article className="rounded-2xl border border-border bg-card p-6">
+                    <h3 className="text-xl font-semibold tracking-tight text-foreground">
+                      {outcome.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {outcome.body}
+                    </p>
+                  </article>
+                </MotionReveal>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section id="controle" className={sectionClass}>
-        <div
-          className={`${containerClass} grid gap-5 rounded-2xl border border-primary/20 bg-primary/10 px-6 py-8 md:px-10 md:py-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-center lg:gap-12`}
-        >
-          <h2 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-foreground md:text-4xl">
-            Biume prépare. Vous décidez.
-          </h2>
-          <p className="text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
-            Vous relisez, corrigez et validez chaque message avant l&apos;envoi.
-            Biume n&apos;établit aucun diagnostic et ne parle jamais à votre
-            place.
-          </p>
+      <section id="controle" className="px-4 py-12 md:px-6 md:py-20">
+        <div data-control-interlude className="mx-auto max-w-7xl">
+          <MotionReveal className="grid gap-6 overflow-hidden rounded-2xl bg-primary px-6 py-10 text-primary-foreground md:px-12 md:py-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.045em] md:text-6xl">
+              Biume prépare. Vous décidez.
+            </h2>
+            <p className="max-w-[62ch] text-base leading-7 opacity-80 md:text-lg md:leading-8">
+              Vous relisez, corrigez et validez chaque message avant l&apos;envoi. Biume n&apos;établit aucun diagnostic et ne parle jamais à votre place.
+            </p>
+          </MotionReveal>
         </div>
       </section>
     </>
