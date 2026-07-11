@@ -1,8 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
+import { CTASection } from "../components/cta";
+import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
+import { PricingSection } from "../components/pricing";
 
 describe("Biume home landing", () => {
   test("hero leads with post-session value and factual reassurance", () => {
@@ -44,5 +47,23 @@ describe("Biume home landing", () => {
     expect(html).toContain("practitioner-dog.png");
     expect(html).not.toContain("Actions automatiques");
     expect(html).not.toContain("Patient timeline");
+  });
+
+  test("decision sections present one offer, real objections and the final CTA", () => {
+    const pricing = renderToStaticMarkup(<PricingSection />);
+    const faq = renderToStaticMarkup(<LandingFaq />);
+    const cta = renderToStaticMarkup(<CTASection />);
+
+    expect(pricing).toContain("Un abonnement simple. Une seule offre.");
+    expect(pricing).toContain("24,99 €");
+    expect(pricing).toContain("29,99 €");
+    expect(pricing).toContain("Essayer gratuitement");
+    expect(pricing).not.toContain("Plan complet");
+    expect(faq.match(/<details/g)?.length).toBe(5);
+    expect(faq).toContain("Est-ce que l&#x27;IA écrit à ma place ?");
+    expect(faq).toContain("Comment mes données sont-elles protégées ?");
+    expect(cta).toContain("Donnez une suite claire à chaque séance.");
+    expect(cta).toContain("practitioner-owner-animal.png");
+    expect(cta).toContain("Essayer gratuitement");
   });
 });
