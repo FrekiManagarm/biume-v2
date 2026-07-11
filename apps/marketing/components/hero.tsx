@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { webAppPath } from "../lib/web-app-url";
 
@@ -11,69 +12,64 @@ const reassurance = [
 
 export function HeroSection() {
   return (
-    <section className="px-4 pb-16 pt-10 md:px-6 md:pb-22 md:pt-14">
-      <div className="mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-7xl items-center gap-10 lg:grid-cols-[0.86fr_1.14fr]">
-        <div className="max-w-2xl">
+    <section className="px-4 pb-10 pt-6 md:px-6 md:pb-14 md:pt-8">
+      <div className="mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-7xl items-center gap-10 lg:grid-cols-12 lg:gap-6">
+        <div className="relative z-10 max-w-2xl lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:py-12">
           <p className="landing-reveal font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Le suivi post-séance des ostéopathes animaliers
           </p>
-          <h1 className="landing-reveal landing-reveal-delay-1 mt-5 text-5xl font-semibold leading-[0.98] tracking-[-0.045em] text-foreground sm:text-6xl lg:text-7xl">
+          <h1 className="landing-reveal landing-reveal-delay-1 mt-5 text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-foreground sm:text-6xl lg:text-[3.5rem] xl:text-[4.75rem]">
             Chaque séance mérite une suite.
           </h1>
-          <p className="landing-reveal landing-reveal-delay-2 mt-6 max-w-[58ch] text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
+          <p className="landing-reveal landing-reveal-delay-2 mt-6 max-w-[52ch] text-base leading-7 text-muted-foreground md:text-lg md:leading-8 lg:max-w-[26rem] xl:max-w-[52ch]">
             Biume transforme vos observations en un suivi clair que les propriétaires comprennent, gardent et utilisent.
           </p>
           <div className="landing-reveal landing-reveal-delay-3 mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href={webAppPath("/signup")}
               prefetch={false}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="landing-button inline-flex min-h-12 items-center justify-center whitespace-nowrap rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Essayer gratuitement
             </Link>
             <Link
               href="#parcours"
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="landing-button inline-flex min-h-12 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card px-6 text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Voir le parcours
             </Link>
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-3xl lg:justify-self-end">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-muted">
-            <Image
-              src="/assets/images/landing/hero-practitioner-horse.png"
-              alt="Une ostéopathe animalière auprès d'un cheval pendant une séance"
-              fill
-              priority
-              sizes="(min-width: 1280px) 700px, (min-width: 1024px) 55vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-
-          <div className="relative -mt-8 ml-auto mr-4 w-[min(24rem,calc(100%-2rem))] rounded-xl border border-border bg-card p-4 text-card-foreground shadow-[0_20px_50px_-32px_rgba(24,23,26,0.45)] sm:-mt-12 sm:mr-8 sm:p-5">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Exemple de suivi
-            </p>
-            <p className="mt-2 text-base font-semibold">Naya va mieux depuis la séance</p>
-            <p className="mt-3 text-sm font-medium text-secondary">Retour reçu à J+7</p>
-          </div>
+        <div className="landing-hero-media landing-media-frame relative mx-auto aspect-[4/5] w-full max-w-[42rem] overflow-hidden rounded-[24px] bg-muted lg:col-span-7 lg:col-start-6 lg:row-start-1 lg:justify-self-end lg:aspect-[5/6] lg:-mr-8 xl:-mr-16">
+          <Image
+            src="/assets/images/landing/hero-practitioner-horse.png"
+            alt="Une ostéopathe animalière auprès d'un cheval pendant une séance"
+            fill
+            priority
+            fetchPriority="high"
+            quality={65}
+            sizes="(min-width: 1280px) 670px, (min-width: 1024px) 56vw, 100vw"
+            className="object-cover"
+          />
         </div>
       </div>
 
-      <div className="mx-auto mt-10 grid max-w-7xl border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">
-        {reassurance.map((item) => (
-          <div
-            key={item.value}
-            className="border-b border-border px-2 py-5 last:border-b-0 sm:border-b-0 sm:px-6 sm:first:pl-0 sm:last:pr-0"
-          >
-            <p className="font-mono text-sm font-semibold text-foreground md:text-base">
-              {item.value}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
-          </div>
-        ))}
+      <div className="landing-reassurance mx-auto mt-6 max-w-7xl border-t border-border">
+        <div className="grid sm:grid-cols-3">
+          {reassurance.map((item, index) => (
+            <div
+              key={item.value}
+              className="landing-reassurance-item border-b border-border py-5 sm:border-b-0 sm:px-6 sm:first:pl-0 sm:last:pr-0"
+              style={{ "--reassurance-index": index } as CSSProperties}
+            >
+              <p className="font-mono text-sm font-semibold text-foreground md:text-base">
+                {item.value}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

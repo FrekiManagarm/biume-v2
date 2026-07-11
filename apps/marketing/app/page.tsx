@@ -32,7 +32,7 @@ const serviceSchema = {
 export default function Home() {
   return (
     <div
-      className={`${manrope.variable} landing-theme min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/25`}
+      className={`${manrope.variable} landing-theme min-h-dvh overflow-x-clip bg-background text-foreground selection:bg-primary/25`}
     >
       <JsonLd data={serviceSchema} />
       <Header />

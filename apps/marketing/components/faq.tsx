@@ -28,10 +28,10 @@ const faqItems = [
 
 export function LandingFaq() {
   return (
-    <section id="faq" className="px-4 py-16 md:px-6 md:py-24">
+    <section id="faq" className="px-4 py-20 md:px-6 md:py-28">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
         <div className="max-w-xl">
-          <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
+          <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-foreground md:text-6xl">
             Les questions avant de commencer.
           </h2>
           <p className="mt-5 text-base leading-7 text-muted-foreground">
@@ -39,15 +39,28 @@ export function LandingFaq() {
           </p>
         </div>
 
-        <div className="divide-y divide-border border-y border-border">
+        <div className="border-t border-border">
           {faqItems.map((item) => (
-            <details key={item.question} className="group py-5">
-              <summary className="min-h-11 cursor-pointer rounded-sm py-2 pr-4 text-base font-semibold leading-7 text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-                {item.question}
+            <details
+              key={item.question}
+              data-faq-item={item.question}
+              className="group border-b border-border py-5"
+            >
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-2 text-base font-semibold leading-7 text-foreground marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                <span>{item.question}</span>
+                <span
+                  data-faq-indicator
+                  aria-hidden="true"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border text-lg font-medium"
+                >
+                  +
+                </span>
               </summary>
-              <p className="max-w-[68ch] pb-2 pt-3 text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-                {item.answer}
-              </p>
+              <div className="faq-disclosure">
+                <p className="max-w-[68ch] pb-2 pt-3 text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
+                  {item.answer}
+                </p>
+              </div>
             </details>
           ))}
         </div>

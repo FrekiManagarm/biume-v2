@@ -1,10 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, mock, test } from "bun:test";
+import { ImageConfigContext } from "next/dist/shared/lib/image-config-context.shared-runtime";
+import { imageConfigDefault } from "next/dist/shared/lib/image-config";
+import type { ReactNode } from "react";
 
 import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
+import { JourneyStory } from "../components/landing/journey-story";
+import { KineticHeader } from "../components/landing/kinetic-header";
+import { MotionReveal } from "../components/landing/motion-reveal";
 import { PricingSection } from "../components/pricing";
 
 mock.module("next/font/google", () => ({
@@ -15,9 +21,64 @@ mock.module("next/font/google", () => ({
 
 const { default: HomePage } = await import("../app/page");
 
+const exactZeroOpacity =
+  /\bopacity\s*:\s*(?:0+(?:\.0*)?|\.(?:0)+)(?![\d.eE+-])/;
+
+function renderWithLandingImageConfig(children: ReactNode) {
+  return renderToStaticMarkup(
+    <ImageConfigContext.Provider
+      value={{ ...imageConfigDefault, qualities: [65, 75] }}
+    >
+      {children}
+    </ImageConfigContext.Provider>,
+  );
+}
+
 describe("Biume home landing", () => {
+  test("motion reveal keeps content visible in server markup", () => {
+    const html = renderToStaticMarkup(
+      <MotionReveal delay={0.08}>
+        <p>Contenu visible sans JavaScript</p>
+      </MotionReveal>,
+    );
+
+    expect(html).toContain("Contenu visible sans JavaScript");
+    expect(html).not.toMatch(exactZeroOpacity);
+    expect(html).not.toContain("visibility:hidden");
+  });
+
+  test("header surface stays visible while retaining progressive scroll opacity", () => {
+    const html = renderToStaticMarkup(
+      <KineticHeader>
+        <span>Navigation</span>
+      </KineticHeader>,
+    );
+
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('style="opacity:0.5"');
+    expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("journey story exposes every step before hydration", () => {
+    const html = renderToStaticMarkup(
+      <JourneyStory
+        steps={[
+          { title: "Observer", body: "Noter l’essentiel." },
+          { title: "Valider", body: "Relire chaque mot." },
+          { title: "Suivre", body: "Recevoir le retour." },
+          { title: "Revoir", body: "Garder l’évolution." },
+        ]}
+      />,
+    );
+
+    expect(html.match(/data-journey-step=/g)?.length).toBe(4);
+    expect(html).toContain("Observer");
+    expect(html).toContain("Revoir");
+    expect(html).not.toMatch(exactZeroOpacity);
+  });
+
   test("hero leads with post-session value and factual reassurance", () => {
-    const html = renderToStaticMarkup(<HeroSection />);
+    const html = renderWithLandingImageConfig(<HeroSection />);
 
     expect(html).toContain("Le suivi post-séance des ostéopathes animaliers");
     expect(html).toContain("Chaque séance mérite une suite.");
@@ -26,9 +87,13 @@ describe("Biume home landing", () => {
     expect(html).toContain("15 jours");
     expect(html).toContain("Sans carte bancaire");
     expect(html).toContain("Validé par vous");
-    expect(html).toContain("Exemple de suivi");
-    expect(html).toContain("Retour reçu à J+7");
+    expect(html).toContain("landing-hero-media");
+    expect(html).toContain("landing-reassurance");
     expect(html).toContain("hero-practitioner-horse.png");
+    expect(html).toContain("q=65");
+    expect(html).not.toContain("Exemple de suivi");
+    expect(html).not.toContain("Naya va mieux depuis la séance");
+    expect(html).not.toContain("Retour reçu à J+7");
     expect(html).not.toContain("4.9/5");
     expect(html).not.toContain("simplifiés par l");
     expect(html).not.toContain("diagnostics");
@@ -53,6 +118,13 @@ describe("Biume home landing", () => {
     expect(html).toContain("Timeline animal");
     expect(html).toContain("Biume prépare. Vous décidez.");
     expect(html).toContain("practitioner-dog.png");
+    expect(html).toContain("data-problem-composition");
+    expect(html).toContain("data-product-outcome");
+    expect(html).toContain("data-control-interlude");
+    expect(html.match(/data-journey-step=/g)?.length).toBe(4);
+    expect(html).not.toContain("Après la séance</p>");
+    expect(html).not.toContain("Le parcours</p>");
+    expect(html).not.toContain("Le résultat</p>");
     expect(html).not.toContain("Actions automatiques");
     expect(html).not.toContain("Patient timeline");
   });
@@ -66,17 +138,22 @@ describe("Biume home landing", () => {
     expect(pricing).toContain("24,99 €");
     expect(pricing).toContain("29,99 €");
     expect(pricing).toContain("Essayer gratuitement");
+    expect(pricing).toContain("data-billing-selector");
+    expect(pricing).toContain("data-billing-price");
     expect(pricing).not.toContain("Plan complet");
     expect(faq.match(/<details/g)?.length).toBe(5);
+    expect(faq.match(/data-faq-item=/g)?.length).toBe(5);
+    expect(faq).toContain("data-faq-indicator");
     expect(faq).toContain("Est-ce que l&#x27;IA écrit à ma place ?");
     expect(faq).toContain("Comment mes données sont-elles protégées ?");
+    expect(cta).toContain("data-final-cta");
     expect(cta).toContain("Donnez une suite claire à chaque séance.");
     expect(cta).toContain("practitioner-owner-animal.png");
     expect(cta).toContain("Essayer gratuitement");
   });
 
   test("assembled page preserves the conversion and anti-slop contract", () => {
-    const html = renderToStaticMarkup(<HomePage />);
+    const html = renderWithLandingImageConfig(<HomePage />);
     const primaryCtaHrefs = Array.from(
       html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g),
     )
@@ -87,6 +164,14 @@ describe("Biume home landing", () => {
     const signupHref = "http://localhost:3001/signup";
 
     expect(html).toContain("landing-theme");
+    expect(html).toContain("landing-hero-media");
+    expect(html).toContain("landing-reassurance");
+    expect(html).toContain("data-problem-composition");
+    expect(html).toContain("data-journey-step");
+    expect(html).toContain("data-product-outcome");
+    expect(html).toContain("data-control-interlude");
+    expect(html).toContain("data-billing-selector");
+    expect(html).toContain("data-final-cta");
     expect(html).toContain("Chaque séance mérite une suite.");
     expect(html).toContain("Un abonnement simple. Une seule offre.");
     expect(html).toContain("Les questions avant de commencer.");
@@ -103,5 +188,27 @@ describe("Biume home landing", () => {
     expect(html).not.toContain("bg-clip-text");
     expect(html).not.toContain("Commencer gratuitement");
     expect(html).not.toContain("Démarrer l");
+    expect(html).not.toContain("Exemple de suivi");
+    expect(html).not.toContain("Naya va mieux depuis la séance");
+    expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("motion islands avoid unsafe scroll and perpetual animation patterns", async () => {
+    const files = [
+      "../components/landing/motion-reveal.tsx",
+      "../components/landing/kinetic-header.tsx",
+      "../components/landing/journey-story.tsx",
+    ];
+    const source = (
+      await Promise.all(
+        files.map((path) => Bun.file(new URL(path, import.meta.url)).text()),
+      )
+    ).join("\n");
+
+    expect(source).not.toContain('addEventListener("scroll"');
+    expect(source).not.toContain("window.scrollY");
+    expect(source).not.toContain("requestAnimationFrame");
+    expect(source).not.toContain("repeat: Infinity");
+    expect(source).toContain("useReducedMotion");
   });
 });

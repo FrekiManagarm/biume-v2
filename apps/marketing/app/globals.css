@@ -1,59 +1,127 @@
 @import "@biume/ui/globals.css";
 
 .landing-theme {
+  interpolate-size: allow-keywords;
   --font-geist-sans: var(--font-manrope);
-  --background: #f5f5f3;
-  --foreground: #18171a;
-  --card: #ffffff;
-  --card-foreground: #18171a;
-  --muted: #ececea;
-  --muted-foreground: #666369;
-  --border: #dcdadf;
+  --background: #f3f4f6;
+  --foreground: #17161a;
+  --card: #fbfbfc;
+  --card-foreground: #17161a;
+  --muted: #e8e9ed;
+  --muted-foreground: #626067;
+  --border: #d8d9df;
   --primary: #6b5ac8;
   --primary-foreground: #ffffff;
   --secondary: #198754;
   --secondary-foreground: #ffffff;
+  --landing-surface: #eef0f4;
+  --landing-shadow: rgb(53 45 91 / 0.16);
   color-scheme: light;
+}
+
+@supports selector(details::details-content) {
+  .landing-theme details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 360ms cubic-bezier(0.16, 1, 0.3, 1),
+      content-visibility 360ms allow-discrete,
+      opacity 240ms ease;
+  }
+
+  .landing-theme details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+[data-faq-indicator] {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+details[open] [data-faq-indicator] {
+  transform: rotate(45deg);
 }
 
 @media (prefers-color-scheme: dark) {
   .landing-theme {
-    --background: #151417;
-    --foreground: #f3f2ef;
-    --card: #1e1d21;
-    --card-foreground: #f3f2ef;
-    --muted: #29272d;
-    --muted-foreground: #aaa6ae;
-    --border: #38353d;
+    --background: #141318;
+    --foreground: #f2f1f5;
+    --card: #1c1b21;
+    --card-foreground: #f2f1f5;
+    --muted: #27262d;
+    --muted-foreground: #aaa7b0;
+    --border: #37353e;
     --primary: #9a8ce9;
     --primary-foreground: #17151f;
     --secondary: #48bb7d;
     --secondary-foreground: #102117;
+    --landing-surface: #201f27;
+    --landing-shadow: rgb(0 0 0 / 0.38);
     color-scheme: dark;
   }
 }
 
 @layer utilities {
   .landing-reveal {
-    animation: landing-reveal 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: landing-reveal 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .landing-reveal-delay-1 {
-    animation-delay: 80ms;
+    animation-delay: 90ms;
   }
 
   .landing-reveal-delay-2 {
-    animation-delay: 160ms;
+    animation-delay: 180ms;
   }
 
   .landing-reveal-delay-3 {
-    animation-delay: 240ms;
+    animation-delay: 270ms;
   }
 
-  .landing-journey-card {
-    animation: landing-card-reveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-timeline: view();
-    animation-range: entry 5% cover 32%;
+  .landing-reassurance {
+    animation: landing-line-reveal 760ms cubic-bezier(0.16, 1, 0.3, 1) 320ms
+      both;
+    transform-origin: left;
+  }
+
+  .landing-reassurance-item {
+    animation: landing-reveal 580ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(380ms + var(--reassurance-index) * 80ms);
+  }
+
+  .landing-button {
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease;
+  }
+
+  .landing-button:hover {
+    transform: translate3d(0, -2px, 0);
+  }
+
+  .landing-button:active {
+    transform: translate3d(0, 0, 0) scale(0.98);
+  }
+
+  .landing-media-frame {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.24),
+      0 32px 90px -56px var(--landing-shadow);
+  }
+}
+
+@keyframes landing-line-reveal {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
   }
 }
 
@@ -68,21 +136,25 @@
   }
 }
 
-@keyframes landing-card-reveal {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
+  .landing-theme details::details-content,
+  [data-faq-indicator] {
+    transition: none;
+  }
+
   .landing-reveal,
-  .landing-journey-card {
+  .landing-reassurance,
+  .landing-reassurance-item {
     animation: none;
+  }
+
+  .landing-button {
+    transition: none;
+  }
+
+  .landing-button:hover,
+  .landing-button:active {
+    transform: none;
   }
 
   html:focus-within {
