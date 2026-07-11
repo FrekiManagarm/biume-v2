@@ -134,6 +134,14 @@ describe("Biume home landing", () => {
     const signupHref = "http://localhost:3001/signup";
 
     expect(html).toContain("landing-theme");
+    expect(html).toContain("landing-hero-media");
+    expect(html).toContain("landing-reassurance");
+    expect(html).toContain("data-problem-composition");
+    expect(html).toContain("data-journey-step");
+    expect(html).toContain("data-product-outcome");
+    expect(html).toContain("data-control-interlude");
+    expect(html).toContain("data-billing-selector");
+    expect(html).toContain("data-final-cta");
     expect(html).toContain("Chaque séance mérite une suite.");
     expect(html).toContain("Un abonnement simple. Une seule offre.");
     expect(html).toContain("Les questions avant de commencer.");
@@ -150,5 +158,27 @@ describe("Biume home landing", () => {
     expect(html).not.toContain("bg-clip-text");
     expect(html).not.toContain("Commencer gratuitement");
     expect(html).not.toContain("Démarrer l");
+    expect(html).not.toContain("Exemple de suivi");
+    expect(html).not.toContain("Naya va mieux depuis la séance");
+    expect(html).not.toContain("opacity:0");
+  });
+
+  test("motion islands avoid unsafe scroll and perpetual animation patterns", async () => {
+    const files = [
+      "../components/landing/motion-reveal.tsx",
+      "../components/landing/kinetic-header.tsx",
+      "../components/landing/journey-story.tsx",
+    ];
+    const source = (
+      await Promise.all(
+        files.map((path) => Bun.file(new URL(path, import.meta.url)).text()),
+      )
+    ).join("\n");
+
+    expect(source).not.toContain('addEventListener("scroll"');
+    expect(source).not.toContain("window.scrollY");
+    expect(source).not.toContain("requestAnimationFrame");
+    expect(source).not.toContain("repeat: Infinity");
+    expect(source).toContain("useReducedMotion");
   });
 });
