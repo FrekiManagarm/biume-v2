@@ -1,11 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, mock, test } from "bun:test";
+import { ImageConfigContext } from "next/dist/shared/lib/image-config-context.shared-runtime";
+import { imageConfigDefault } from "next/dist/shared/lib/image-config";
+import type { ReactNode } from "react";
 
 import { CTASection } from "../components/cta";
 import { LandingFaq } from "../components/faq";
 import { FeaturesSection } from "../components/features";
 import { HeroSection } from "../components/hero";
 import { JourneyStory } from "../components/landing/journey-story";
+import { KineticHeader } from "../components/landing/kinetic-header";
 import { MotionReveal } from "../components/landing/motion-reveal";
 import { PricingSection } from "../components/pricing";
 
@@ -17,6 +21,19 @@ mock.module("next/font/google", () => ({
 
 const { default: HomePage } = await import("../app/page");
 
+const exactZeroOpacity =
+  /\bopacity\s*:\s*(?:0+(?:\.0*)?|\.(?:0)+)(?![\d.eE+-])/;
+
+function renderWithLandingImageConfig(children: ReactNode) {
+  return renderToStaticMarkup(
+    <ImageConfigContext.Provider
+      value={{ ...imageConfigDefault, qualities: [65, 75] }}
+    >
+      {children}
+    </ImageConfigContext.Provider>,
+  );
+}
+
 describe("Biume home landing", () => {
   test("motion reveal keeps content visible in server markup", () => {
     const html = renderToStaticMarkup(
@@ -26,8 +43,20 @@ describe("Biume home landing", () => {
     );
 
     expect(html).toContain("Contenu visible sans JavaScript");
-    expect(html).not.toContain("opacity:0");
+    expect(html).not.toMatch(exactZeroOpacity);
     expect(html).not.toContain("visibility:hidden");
+  });
+
+  test("header surface stays visible while retaining progressive scroll opacity", () => {
+    const html = renderToStaticMarkup(
+      <KineticHeader>
+        <span>Navigation</span>
+      </KineticHeader>,
+    );
+
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('style="opacity:0.5"');
+    expect(html).not.toMatch(exactZeroOpacity);
   });
 
   test("journey story exposes every step before hydration", () => {
@@ -45,11 +74,11 @@ describe("Biume home landing", () => {
     expect(html.match(/data-journey-step=/g)?.length).toBe(4);
     expect(html).toContain("Observer");
     expect(html).toContain("Revoir");
-    expect(html).not.toContain("opacity:0");
+    expect(html).not.toMatch(exactZeroOpacity);
   });
 
   test("hero leads with post-session value and factual reassurance", () => {
-    const html = renderToStaticMarkup(<HeroSection />);
+    const html = renderWithLandingImageConfig(<HeroSection />);
 
     expect(html).toContain("Le suivi post-séance des ostéopathes animaliers");
     expect(html).toContain("Chaque séance mérite une suite.");
@@ -61,6 +90,7 @@ describe("Biume home landing", () => {
     expect(html).toContain("landing-hero-media");
     expect(html).toContain("landing-reassurance");
     expect(html).toContain("hero-practitioner-horse.png");
+    expect(html).toContain("q=65");
     expect(html).not.toContain("Exemple de suivi");
     expect(html).not.toContain("Naya va mieux depuis la séance");
     expect(html).not.toContain("Retour reçu à J+7");
@@ -123,7 +153,7 @@ describe("Biume home landing", () => {
   });
 
   test("assembled page preserves the conversion and anti-slop contract", () => {
-    const html = renderToStaticMarkup(<HomePage />);
+    const html = renderWithLandingImageConfig(<HomePage />);
     const primaryCtaHrefs = Array.from(
       html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g),
     )
@@ -160,7 +190,7 @@ describe("Biume home landing", () => {
     expect(html).not.toContain("Démarrer l");
     expect(html).not.toContain("Exemple de suivi");
     expect(html).not.toContain("Naya va mieux depuis la séance");
-    expect(html).not.toContain("opacity:0");
+    expect(html).not.toMatch(exactZeroOpacity);
   });
 
   test("motion islands avoid unsafe scroll and perpetual animation patterns", async () => {

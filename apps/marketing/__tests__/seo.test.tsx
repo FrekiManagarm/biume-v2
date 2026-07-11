@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, mock, test } from "bun:test";
+import { ImageConfigContext } from "next/dist/shared/lib/image-config-context.shared-runtime";
+import { imageConfigDefault } from "next/dist/shared/lib/image-config";
 
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
@@ -164,7 +166,13 @@ describe("marketing SEO", () => {
   });
 
   test("home schema avoids software app and merchant listing markup", () => {
-    const html = renderToStaticMarkup(<HomePage />);
+    const html = renderToStaticMarkup(
+      <ImageConfigContext.Provider
+        value={{ ...imageConfigDefault, qualities: [65, 75] }}
+      >
+        <HomePage />
+      </ImageConfigContext.Provider>,
+    );
     const schemas = getJsonLdSchemas(html);
     const softwareSchema = schemas.find(
       (schema) => schema["@type"] === "SoftwareApplication",
