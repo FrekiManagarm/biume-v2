@@ -1,201 +1,93 @@
-const workflowSteps = [
+import Image from "next/image";
+
+const journey = [
   {
-    number: "01",
-    label: "Séance",
+    title: "Observer",
+    body: "Vous notez l’essentiel pendant ou juste après la séance.",
+  },
+  {
+    title: "Valider",
+    body: "Biume structure. Vous relisez chaque mot avant l’envoi.",
+  },
+  {
+    title: "Suivre",
+    body: "Le propriétaire répond simplement à J+7.",
+  },
+  {
+    title: "Revoir",
+    body: "L’évolution reste lisible au fil des rendez-vous.",
+  },
+] as const;
+
+const outcomes = [
+  {
     title: "Résumé propriétaire",
-    body: "Transformez vos points observés en compte rendu propriétaire clair, relu et validé par vous avant tout partage.",
+    body: "Une version courte et claire, validée par vous.",
   },
   {
-    number: "02",
-    label: "Timeline",
-    title: "Évolution visible",
-    body: "Conservez l'historique de chaque animal: confort, mobilité, zones suivies, retours propriétaire et documents utiles.",
+    title: "Retour à J+7",
+    body: "Le propriétaire partage ce qu’il observe sans friction.",
   },
   {
-    number: "03",
-    label: "Relance",
-    title: "Suivi post-séance",
-    body: "Préparez les messages J+7 et J+30 pour recueillir un retour, rappeler les points à surveiller et proposer la prochaine étape.",
+    title: "Timeline animal",
+    body: "Séances, retours et évolution restent dans le même fil.",
   },
 ] as const;
 
-const featureRows = [
-  ["session.summary", "résumé propriétaire", "1 clic"],
-  ["followup.j7", "relance de suivi", "J+7"],
-  ["animal.timeline", "timeline animal", "42 fiches"],
-  ["owner.reply", "retour propriétaire", "J+30"],
-] as const;
-
-const signals = [
-  ["Diagnostic", "T12-L1 et bassin droit"],
-  ["Conseil", "Repos relatif, 48 heures"],
-  ["Document", "PDF signe, logo cabinet"],
-  ["Client", "Resume simple envoye"],
-] as const;
+const sectionClass = "px-4 py-16 md:px-6 md:py-24";
+const containerClass = "mx-auto max-w-7xl";
 
 export function FeaturesSection() {
   return (
     <>
-      <section id="console" className="px-4 py-8 md:px-6 md:py-14">
-        <div className="relative mx-auto grid max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background shadow-[0_38px_120px_-84px_rgba(20,18,28,0.62)] lg:grid-cols-[0.82fr_1.18fr]">
-          <div
-            className="hero-color-wash pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(124,102,238,0.14),rgba(255,255,255,0)_42%,rgba(32,184,100,0.16)_72%,rgba(124,102,238,0.1))]"
-            aria-hidden="true"
-          />
-          <div className="relative border-b border-border/80 p-6 md:p-9 lg:border-b-0 lg:border-r">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
-              Suivi propriétaire
+      <section id="probleme" className={sectionClass}>
+        <div
+          className={`${containerClass} grid items-center gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16`}
+        >
+          <div className="max-w-xl">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              Après la séance
             </p>
-            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-              Conçu pour rendre la séance{" "}
-              <span className="text-secondary">plus mémorable</span>
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
+              La séance ne s&apos;arrête pas au rendez-vous.
             </h2>
-            <p className="mt-5 max-w-[58ch] text-base leading-7 text-muted-foreground">
-              Ne laissez pas la valeur de votre travail disparaître après le
-              rendez-vous. Biume aide le propriétaire à comprendre, suivre et
-              revenir au bon moment.
+            <p className="mt-6 text-lg leading-8 text-muted-foreground">
+              Le propriétaire doit encore comprendre vos observations, savoir
+              quoi surveiller et reconnaître le bon moment pour reprendre
+              contact.
             </p>
-
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              {[
-                ["1", "résumé clair"],
-                ["J+7", "retour simple"],
-                ["J+30", "prochaine étape"],
-                ["0", "diagnostic IA"],
-              ].map(([value, label]) => (
-                <div key={label} className="border-t border-border pt-3">
-                  <p className="font-mono text-2xl font-semibold tracking-tight text-foreground">
-                    {value}
-                  </p>
-                  <p className="mt-1 text-xs font-medium text-muted-foreground">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
 
-          <div className="relative bg-background/42 p-4 backdrop-blur-sm md:p-8">
-            <GridLines />
-            <div className="relative mx-auto max-w-2xl rounded-[1.7rem] border border-white/70 bg-background/86 p-4 shadow-[0_26px_80px_-62px_rgba(20,18,28,0.62)] backdrop-blur-xl md:p-5">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Patient timeline
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-                    Dossier Oslo
-                  </h3>
-                </div>
-                <span className="rounded-full bg-secondary/12 px-3 py-1 text-xs font-semibold text-secondary">
-                  complet
-                </span>
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-[0.78fr_1.22fr]">
-                <div className="space-y-3">
-                  {signals.map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-[1.15rem] border border-white/70 bg-background/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                    >
-                      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                        {label}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">
-                        {value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="relative overflow-hidden rounded-[1.35rem] bg-foreground p-4 text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-white/10">
-                  <div className="hero-scan-line absolute inset-x-0 top-0 h-20 bg-linear-to-b from-transparent via-secondary/18 to-transparent" />
-                  <div className="flex items-center justify-between">
-                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-background/45">
-                      Actions automatiques
-                    </p>
-                    <span className="rounded-full bg-secondary/25 px-2.5 py-1 text-[10px] font-semibold text-background">
-                      3 pretes
-                    </span>
-                  </div>
-                  <div className="mt-5 divide-y divide-background/10">
-                    {featureRows.map(([event, label, value], index) => (
-                      <div
-                        key={event}
-                        className="grid grid-cols-[1fr_auto] gap-3 py-3 first:pt-0 last:pb-0"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-mono text-xs font-semibold text-background/80">
-                            {event}
-                          </p>
-                          <p className="mt-1 text-xs text-background/45">
-                            {label}
-                          </p>
-                        </div>
-                        <span
-                          className={
-                            index < 2
-                              ? "rounded-full bg-secondary/20 px-2.5 py-1 text-xs font-semibold text-background"
-                              : "rounded-full bg-background/10 px-2.5 py-1 text-xs font-semibold text-background/60"
-                          }
-                        >
-                          {value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="relative aspect-[3/2] overflow-hidden rounded-[20px] bg-muted">
+            <Image
+              src="/assets/images/landing/practitioner-dog.png"
+              alt="Une praticienne accompagne un chien pendant une séance manuelle"
+              fill
+              sizes="(min-width: 1280px) 700px, (min-width: 1024px) 56vw, 100vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>
 
-      <section id="workflow" className="px-4 py-8 md:px-6 md:py-14">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.25rem] border border-border bg-background p-6 shadow-[0_38px_120px_-84px_rgba(20,18,28,0.58)] md:p-9">
-          <div
-            className="hero-field-drift pointer-events-none absolute -right-20 top-10 size-112 rounded-full bg-[radial-gradient(circle,rgba(32,184,100,0.16),rgba(124,102,238,0.14)_42%,transparent_70%)] blur-2xl"
-            aria-hidden="true"
-          />
-          <div className="relative grid gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-end">
-            <div>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
-                Fonctionnalités
-              </p>
-              <h2 className="mt-4 text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-                Le suivi post-séance devient{" "}
-                <span className="text-secondary">votre avantage</span>
-              </h2>
-            </div>
-            <p className="max-w-[62ch] text-base leading-7 text-muted-foreground lg:justify-self-end">
-              Pour les ostéopathes animaliers et praticiens manuels, la
-              différenciation se joue aussi après la séance: clarté, continuité
-              et confiance propriétaire.
+      <section id="parcours" className={`${sectionClass} border-y border-border`}>
+        <div className={containerClass}>
+          <div className="max-w-3xl">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              Le parcours
             </p>
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
+              Un fil clair, du rendez-vous au prochain échange.
+            </h2>
           </div>
 
-          <div className="relative mt-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr_1.25fr]">
-            {workflowSteps.map((step, index) => (
+          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-2 md:overflow-visible md:snap-none md:pb-0 lg:grid-cols-4">
+            {journey.map((step) => (
               <article
-                key={step.number}
-                className={
-                  index === 1
-                    ? "rounded-[1.7rem] border border-secondary/25 bg-secondary/10 p-6 shadow-[0_28px_80px_-66px_rgba(20,18,28,0.5)] md:p-7 lg:mt-14"
-                    : index === 2
-                      ? "rounded-[1.7rem] border border-primary/20 bg-primary/10 p-6 md:p-7"
-                      : "rounded-[1.7rem] border border-white/70 bg-background/82 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] md:p-7"
-                }
+                key={step.title}
+                className="landing-journey-card w-[82vw] max-w-sm shrink-0 snap-start rounded-2xl border border-border bg-card p-6 text-card-foreground md:w-auto md:max-w-none"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="font-mono text-sm font-semibold text-muted-foreground">
-                    {step.number}
-                  </span>
-                  <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    {step.label}
-                  </span>
-                </div>
-                <h3 className="mt-7 text-2xl font-semibold leading-tight tracking-tight text-foreground">
+                <h3 className="text-xl font-semibold tracking-tight">
                   {step.title}
                 </h3>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -206,15 +98,87 @@ export function FeaturesSection() {
           </div>
         </div>
       </section>
-    </>
-  );
-}
 
-function GridLines() {
-  return (
-    <div
-      className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(20,18,28,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[52px_52px]"
-      aria-hidden="true"
-    />
+      <section id="resultat" className={sectionClass}>
+        <div className={containerClass}>
+          <div className="max-w-3xl">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              Le résultat
+            </p>
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground md:text-5xl">
+              Le propriétaire comprend. Vous gardez le fil.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
+            <article
+              className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-[0_24px_60px_-48px_rgba(24,23,26,0.42)] md:p-8"
+              aria-label="Exemple de résumé"
+            >
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                Exemple de résumé
+              </p>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight">
+                Après la séance
+              </h3>
+              <dl className="mt-8 divide-y divide-border border-y border-border">
+                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
+                  <dt className="text-sm font-semibold text-foreground">
+                    Points observés
+                  </dt>
+                  <dd className="text-sm leading-6 text-muted-foreground">
+                    Vos observations, présentées dans un langage accessible.
+                  </dd>
+                </div>
+                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
+                  <dt className="text-sm font-semibold text-foreground">
+                    Conseils transmis
+                  </dt>
+                  <dd className="text-sm leading-6 text-muted-foreground">
+                    Vos recommandations, relues et validées avant l&apos;envoi.
+                  </dd>
+                </div>
+                <div className="grid gap-2 py-5 sm:grid-cols-[0.42fr_0.58fr] sm:gap-6">
+                  <dt className="text-sm font-semibold text-foreground">
+                    Prochaine étape
+                  </dt>
+                  <dd className="text-sm leading-6 text-muted-foreground">
+                    Les repères que vous choisissez pour la suite.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+
+            <div className="divide-y divide-border border-y border-border">
+              {outcomes.map((outcome) => (
+                <article key={outcome.title} className="py-6 first:pt-0 lg:py-8">
+                  <h3 className="text-xl font-semibold tracking-tight text-foreground">
+                    {outcome.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {outcome.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="controle" className={sectionClass}>
+        <div
+          className={`${containerClass} grid gap-5 rounded-2xl border border-primary/20 bg-primary/10 px-6 py-8 md:px-10 md:py-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-center lg:gap-12`}
+        >
+          <h2 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-foreground md:text-4xl">
+            Biume prépare. Vous décidez.
+          </h2>
+          <p className="text-base leading-7 text-muted-foreground md:text-lg md:leading-8">
+            Vous relisez, corrigez et validez chaque message avant l&apos;envoi.
+            Biume n&apos;établit aucun diagnostic et ne parle jamais à votre
+            place.
+          </p>
+        </div>
+      </section>
+    </>
   );
 }
