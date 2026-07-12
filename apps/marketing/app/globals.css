@@ -458,6 +458,16 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
   background: transparent;
 }
 
+.cinematic-epilogue {
+  border-top: 1px solid var(--carnet-line);
+  background: var(--cinematic-paper);
+}
+
+.cinematic-epilogue-copy {
+  position: relative;
+  z-index: 1;
+}
+
 .cinematic-pricing-offer
   button[aria-pressed="true"]
   > span[aria-hidden="true"] {
@@ -465,6 +475,10 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
 }
 
 @media (min-width: 1024px) {
+  .cinematic-epilogue-copy {
+    margin-left: -4rem;
+  }
+
   .cinematic-pricing-offer {
     border-top: 0;
     border-left: 1px solid var(--carnet-line);

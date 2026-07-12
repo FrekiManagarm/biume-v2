@@ -44,6 +44,9 @@ export default function Home() {
           className="px-4 py-10 sm:px-6 md:py-20 lg:px-8"
         >
           <div className="mx-auto max-w-[90rem]">
+            <p className="cinematic-scene-label mb-8 md:mb-12">
+              Scène 05 · La suite
+            </p>
             <LandingFaq />
             <FinalCta />
           </div>

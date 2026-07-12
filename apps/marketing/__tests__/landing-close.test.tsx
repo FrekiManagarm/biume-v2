@@ -7,6 +7,7 @@ import { LandingFaq } from "../components/landing/landing-faq";
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
+  exactZeroOpacity,
   renderWithLandingImageConfig,
   textOnly,
 } from "./landing-test-utils";
@@ -62,11 +63,13 @@ describe("landing objection handling and close", () => {
     const signupAnchors = conversionAnchors(html, "final-signup");
 
     expect(html).toContain("Votre prochain compte rendu");
+    expect(html).toContain('data-epilogue="human-followup"');
     expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
     expect(text).toContain(
       "Créez votre espace et préparez un premier document.",
     );
     expect(html).toContain("practitioner-owner-animal.png");
+    expect(html).not.toMatch(exactZeroOpacity);
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html.match(/<a\b/g)).toHaveLength(1);

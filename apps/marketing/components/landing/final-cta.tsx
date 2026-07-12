@@ -7,7 +7,8 @@ export function FinalCta() {
   return (
     <aside
       data-final-cta
-      className="mt-10 grid overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] md:mt-16 lg:grid-cols-[1.08fr_0.92fr]"
+      data-epilogue="human-followup"
+      className="cinematic-epilogue mt-10 grid md:mt-16 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)]"
     >
       <div className="relative min-h-52 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
         <Image
@@ -18,7 +19,7 @@ export function FinalCta() {
           className="object-cover"
         />
       </div>
-      <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
+      <div className="cinematic-epilogue-copy flex flex-col justify-center bg-[color:var(--cinematic-paper)] p-6 sm:p-10 lg:p-12">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
           Votre prochain compte rendu
         </p>

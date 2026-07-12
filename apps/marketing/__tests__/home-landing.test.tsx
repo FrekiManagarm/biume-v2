@@ -80,6 +80,15 @@ describe("Biume cinematic plan-sequence homepage", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
+    for (const label of [
+      "Scène 01 · Le geste",
+      "Scène 02 · La trace",
+      "Scène 03 · Le document",
+      "Scène 04 · Le choix",
+      "Scène 05 · La suite",
+    ]) {
+      expect(text).toContain(label);
+    }
     expect(text).toContain("Vos observations, dans des mots qui restent.");
     expect(text).toContain(
       "Une note devient un document que le propriétaire peut comprendre.",
@@ -94,6 +103,7 @@ describe("Biume cinematic plan-sequence homepage", () => {
     expect(html.match(/<details/g)).toHaveLength(6);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
     expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
+    expect(html).toContain('data-epilogue="human-followup"');
     expect(html).not.toMatch(exactZeroOpacity);
   });
 

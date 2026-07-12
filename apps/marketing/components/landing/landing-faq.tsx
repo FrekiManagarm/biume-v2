@@ -75,7 +75,7 @@ export function LandingFaq() {
               <span
                 data-faq-indicator
                 aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--carnet-line)] text-lg font-medium"
+                className="shrink-0 font-[family-name:var(--font-newsreader)] text-2xl font-normal leading-none"
               >
                 +
               </span>
