@@ -69,7 +69,7 @@ export function ProductProof() {
             <div className="grid md:grid-cols-[11rem_1fr]">
               <aside
                 aria-label="Rubriques illustrées du compte rendu"
-                className="hidden border-b border-[color:var(--carnet-line)] bg-[color:var(--carnet-muted-surface)] p-4 md:block md:border-b-0 md:border-r"
+                className="border-b border-[color:var(--carnet-line)] bg-[color:var(--carnet-muted-surface)] p-4 md:border-b-0 md:border-r"
               >
                 <ol className="grid grid-cols-2 gap-2 md:grid-cols-1">
                   {editorFields.map((field, index) => (

@@ -51,4 +51,36 @@ describe("product proof", () => {
       expect(html).not.toContain(forbidden);
     }
   });
+
+  test("keeps the labelled rubric navigation visible on mobile", () => {
+    const html = renderToStaticMarkup(<ProductProof />);
+    const rubricAside = html.match(
+      /<aside\b(?=[^>]*aria-label="Rubriques illustrées du compte rendu")[^>]*>/,
+    )?.[0];
+
+    expect(rubricAside).toBeDefined();
+    expect(rubricAside).not.toMatch(/\b(?:hidden|sr-only)\b/);
+  });
+
+  test("stacks the desktop connector above the editor surface", async () => {
+    const css = await Bun.file(
+      new URL("../app/globals.css", import.meta.url),
+    ).text();
+    const editorRule = css.match(
+      /\.cinematic-product-stage \[data-product-editor\]\s*\{([^}]*)\}/,
+    )?.[1];
+    const outcomesRule = css.match(
+      /\.cinematic-product-stage \[data-product-outcomes="true"\]\s*\{([^}]*)\}/,
+    )?.[1];
+    const connectorRule = css.match(
+      /\.cinematic-product-stage \[data-product-outcomes="true"\]::before\s*\{([^}]*)\}/,
+    )?.[1];
+    const editorZIndex = Number(editorRule?.match(/z-index:\s*(\d+)/)?.[1]);
+    const outcomesZIndex = Number(
+      outcomesRule?.match(/z-index:\s*(\d+)/)?.[1],
+    );
+
+    expect(outcomesZIndex).toBeGreaterThan(editorZIndex);
+    expect(connectorRule).toContain("pointer-events: none");
+  });
 });

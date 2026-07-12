@@ -450,6 +450,7 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
 
 .cinematic-product-stage [data-product-outcomes="true"] {
   position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 1024px) {
@@ -461,6 +462,7 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
     width: 4rem;
     height: 1px;
     background: var(--carnet-line);
+    pointer-events: none;
   }
 }
 
