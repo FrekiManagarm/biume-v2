@@ -1,6 +1,5 @@
 import { getImageProps } from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
 import { CinematicHeroMedia } from "./cinematic-hero-media";
@@ -11,9 +10,6 @@ const reassurance = [
   "Sans carte bancaire",
   "Partagé par vous",
 ] as const;
-
-const entryStyle = (delay: number) =>
-  ({ "--hero-delay": `${delay}ms` }) as CSSProperties;
 
 export function LandingHero({
   adaptedProposal,
@@ -55,37 +51,21 @@ export function LandingHero({
       <div className="relative mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-[90rem] content-end gap-8 px-4 pb-2 pt-20 sm:px-6 sm:pb-6 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,25rem)] lg:items-end lg:gap-12 lg:px-8 lg:pb-10 lg:pt-24">
         <div className="max-w-[46rem]">
           <p className="cinematic-scene-label">Scène 01 · Le geste</p>
-          <p
-            data-hero-entry
-            style={entryStyle(0)}
-            className="landing-hero-entry mt-4 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.17em] text-[#fffaf2]/75"
-          >
+          <p className="mt-4 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.17em] text-[#fffaf2]/75">
             Le compte rendu propriétaire des ostéopathes animaliers
           </p>
-          <h1
-            data-hero-entry
-            style={entryStyle(80)}
-            className="carnet-hero-sans landing-hero-entry mt-4 text-[clamp(3rem,6.5vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[#fffaf2]"
-          >
+          <h1 className="carnet-hero-sans mt-4 text-[clamp(3rem,6.5vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[#fffaf2]">
             Vos observations,{" "}
             <span className="carnet-hero-serif font-normal italic tracking-[-0.045em]">
               dans des mots qui restent.
             </span>
           </h1>
-          <p
-            data-hero-entry
-            style={entryStyle(160)}
-            className="landing-hero-entry mt-5 max-w-[56ch] text-base leading-7 text-[#fffaf2]/80 md:text-lg md:leading-8"
-          >
+          <p className="mt-5 max-w-[56ch] text-base leading-7 text-[#fffaf2]/80 md:text-lg md:leading-8">
             Biume structure vos notes et prépare un compte rendu clair pour le
             propriétaire. Vous relisez, corrigez et choisissez quand le
             partager.
           </p>
-          <div
-            data-hero-entry
-            style={entryStyle(240)}
-            className="landing-hero-entry mt-7 flex flex-col gap-3 sm:flex-row"
-          >
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
               href={webAppPath("/signup")}
               prefetch={false}
@@ -101,11 +81,7 @@ export function LandingHero({
               Voir un exemple de compte rendu
             </Link>
           </div>
-          <ul
-            data-hero-entry
-            style={entryStyle(320)}
-            className="landing-hero-entry mt-6 grid grid-cols-3 border-y border-[#fffaf2]/20"
-          >
+          <ul className="mt-6 grid grid-cols-3 border-y border-[#fffaf2]/20">
             {reassurance.map((item) => (
               <li
                 key={item}

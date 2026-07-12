@@ -30,6 +30,54 @@ function landingSectionTag(html: string, id: string) {
   )?.[0];
 }
 
+async function homepageClientIslands() {
+  const marketingRoot = new URL("../", import.meta.url);
+  const pending = [new URL("app/page.tsx", marketingRoot)];
+  const visited = new Set<string>();
+  const clients: string[] = [];
+
+  while (pending.length > 0) {
+    const moduleUrl = pending.pop()!;
+    const modulePath = moduleUrl.pathname;
+
+    if (visited.has(modulePath)) continue;
+    visited.add(modulePath);
+
+    const source = await Bun.file(moduleUrl).text();
+    if (/^\s*["']use client["'];/.test(source)) {
+      clients.push(modulePath.slice(marketingRoot.pathname.length));
+    }
+
+    for (const match of source.matchAll(
+      /^\s*import\s+(?!type\b)(?:[^"']*?\sfrom\s*)?["']([^"']+)["'];?/gm,
+    )) {
+      const specifier = match[1];
+      if (!specifier?.startsWith(".")) continue;
+
+      const candidates = /\.[cm]?[jt]sx?$/.test(specifier)
+        ? [new URL(specifier, moduleUrl)]
+        : [
+            new URL(`${specifier}.tsx`, moduleUrl),
+            new URL(`${specifier}.ts`, moduleUrl),
+            new URL(`${specifier}/index.tsx`, moduleUrl),
+            new URL(`${specifier}/index.ts`, moduleUrl),
+          ];
+      const dependency = (
+        await Promise.all(
+          candidates.map(async (candidate) => ({
+            candidate,
+            exists: await Bun.file(candidate).exists(),
+          })),
+        )
+      ).find(({ exists }) => exists)?.candidate;
+
+      if (dependency) pending.push(dependency);
+    }
+  }
+
+  return clients.sort();
+}
+
 describe("Biume cinematic plan-sequence homepage", () => {
   test("assembles five ordered conversion moments", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
@@ -105,6 +153,9 @@ describe("Biume cinematic plan-sequence homepage", () => {
     expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
     expect(html).toContain('data-epilogue="human-followup"');
     expect(html).not.toMatch(exactZeroOpacity);
+    expect(html).not.toMatch(/style="[^"]*opacity:\s*0(?:[;\s"])/i);
+    expect(html).not.toContain("visibility:hidden");
+    expect(html).not.toContain('aria-hidden="true" data-report-state');
   });
 
   test("maps every stable conversion hook to the signup application", () => {
@@ -161,30 +212,27 @@ describe("Biume cinematic plan-sequence homepage", () => {
   });
 
   test("limits client hydration to the three interactive islands", async () => {
-    const clientIslands = [
-      "../components/landing/cinematic-scene-controller.tsx",
-      "../components/landing/cinematic-hero-media.tsx",
-      "../components/landing/pricing-selector.tsx",
-    ];
-    const serverComponents = [
-      "../components/landing/landing-header.tsx",
-      "../components/landing/header-motion.tsx",
-      "../components/landing/landing-hero.tsx",
-      "../components/landing/report-transformation-story.tsx",
-      "../components/landing/product-proof.tsx",
-      "../components/landing/pricing-decision.tsx",
-      "../components/landing/landing-faq.tsx",
-      "../components/landing/final-cta.tsx",
-    ];
+    expect(await homepageClientIslands()).toEqual([
+      "components/landing/cinematic-hero-media.tsx",
+      "components/landing/cinematic-scene-controller.tsx",
+      "components/landing/pricing-selector.tsx",
+    ]);
+  });
 
-    for (const path of clientIslands) {
-      const source = await Bun.file(new URL(path, import.meta.url)).text();
-      expect(source).toMatch(/^"use client";/);
-    }
-    for (const path of serverComponents) {
-      const source = await Bun.file(new URL(path, import.meta.url)).text();
-      expect(source).not.toContain('"use client"');
-    }
+  test("keeps cinematic CSS progressively enhanced and motion-safe", async () => {
+    const css = await Bun.file(
+      new URL("../app/globals.css", import.meta.url),
+    ).text();
+
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(css).toMatch(
+      /\.cinematic-hero-media__depth[^}]*transform:\s*none\s*!important/s,
+    );
+    expect(css).not.toContain("scroll-snap-type");
+    expect(css).not.toContain("cursor: none");
+    expect(css).not.toContain("background-clip: text");
+    expect(css).not.toContain("@keyframes landing-hero-enter");
+    expect(css).not.toContain("@keyframes landing-hero-photo-enter");
   });
 
   test("uses stable system font stacks without delaying first paint", async () => {

@@ -117,19 +117,13 @@ describe("Carnet vivant header and hero", () => {
     expect(html).not.toMatch(exactZeroOpacity);
   });
 
-  test("hero animation is transform-only and the hero stays server-side", async () => {
+  test("hero media motion is progressive and the hero stays server-side", async () => {
     const heroSource = await Bun.file(
       new URL("../components/landing/landing-hero.tsx", import.meta.url),
     ).text();
     const css = await Bun.file(
       new URL("../app/globals.css", import.meta.url),
     ).text();
-    const entryKeyframes = css.match(
-      /@keyframes landing-hero-enter\s*{([\s\S]*?)\n}/,
-    )?.[1];
-    const photoKeyframes = css.match(
-      /@keyframes landing-hero-photo-enter\s*{([\s\S]*?)\n}/,
-    )?.[1];
 
     expect(heroSource).not.toContain('"use client"');
     expect(heroSource).not.toContain('from "motion/react"');
@@ -141,18 +135,12 @@ describe("Carnet vivant header and hero", () => {
     expect(css).toMatch(
       /\.carnet-hero-serif\s*{[^}]*font-family:[^}]*Iowan Old Style/s,
     );
-    expect(entryKeyframes).toBeDefined();
-    expect(entryKeyframes).not.toContain("opacity");
-    expect(photoKeyframes).toContain("scale(1.02)");
-    expect(photoKeyframes).not.toContain("opacity");
+    expect(heroSource).not.toContain("landing-hero-entry");
+    expect(heroSource).not.toContain("landing-hero-photo");
+    expect(css).not.toContain("landing-hero-entry");
+    expect(css).not.toContain("landing-hero-photo");
     expect(css).toMatch(
-      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-entry\s*\{[^}]*animation:/,
-    );
-    expect(css).toMatch(
-      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-photo\s*\{[^}]*animation:/,
-    );
-    expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.landing-hero-entry/,
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cinematic-hero-media__depth[^}]*transform:\s*none\s*!important/,
     );
   });
 });

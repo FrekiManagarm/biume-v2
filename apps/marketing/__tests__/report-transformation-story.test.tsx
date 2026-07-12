@@ -41,6 +41,7 @@ describe("report transformation story", () => {
     );
     expect(html).not.toMatch(exactZeroOpacity);
     expect(html).not.toContain("visibility:hidden");
+    expect(html).not.toContain('aria-hidden="true" data-report-state');
   });
 
   test("renders the editorial story entirely on the server", async () => {

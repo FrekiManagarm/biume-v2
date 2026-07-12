@@ -332,22 +332,6 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
     "Iowan Old Style", Baskerville, "Times New Roman", serif;
 }
 
-.landing-hero-photo {
-  box-shadow: 0 42px 110px -72px rgb(29 29 33 / 0.45);
-}
-
-@media (min-width: 768px) {
-  .landing-hero-entry {
-    animation: landing-hero-enter 400ms cubic-bezier(0.16, 1, 0.3, 1)
-      var(--hero-delay, 0ms) both;
-  }
-
-  .landing-hero-photo {
-    animation: landing-hero-photo-enter 720ms cubic-bezier(0.16, 1, 0.3, 1)
-      both;
-  }
-}
-
 .carnet-action {
   transition:
     transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -378,24 +362,6 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
   .carnet-theme details[open]::details-content {
     block-size: auto;
     opacity: 1;
-  }
-}
-
-@keyframes landing-hero-enter {
-  from {
-    transform: translate3d(0, 14px, 0);
-  }
-  to {
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes landing-hero-photo-enter {
-  from {
-    transform: scale(1.02);
-  }
-  to {
-    transform: scale(1);
   }
 }
 
@@ -504,11 +470,6 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
     transform: none !important;
   }
 
-  .landing-hero-entry,
-  .landing-hero-photo {
-    animation: none;
-  }
-
   .carnet-action {
     transition: none;
   }
@@ -521,5 +482,4 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
   .carnet-theme details::details-content {
     transition: none;
   }
-
 }
