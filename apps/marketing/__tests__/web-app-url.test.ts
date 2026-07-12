@@ -17,6 +17,8 @@ describe("web application URL", () => {
 
   test.each([
     "http://localhost:3001",
+    "//localhost:3001",
+    "http://localhost.:3001",
     "http://127.0.0.1:3001",
     "http://[::1]:3001",
   ])("rejects %s as a production destination", (configuredUrl) => {
@@ -24,6 +26,20 @@ describe("web application URL", () => {
       "https://app.biume.com",
     );
   });
+
+  test.each([
+    "//preview.biume.com",
+    "/sign-in",
+    "not a valid URL",
+    "localhost:3001",
+  ])(
+    "fails closed for non-absolute or invalid production URL %s",
+    (configuredUrl) => {
+      expect(resolveWebAppUrl(configuredUrl, "production")).toBe(
+        "https://app.biume.com",
+      );
+    },
+  );
 
   test.each(["development", "test", undefined])(
     "keeps the local fallback in %s",

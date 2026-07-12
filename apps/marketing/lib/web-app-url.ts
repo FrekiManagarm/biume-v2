@@ -2,10 +2,13 @@ const PRODUCTION_WEB_APP_URL = "https://app.biume.com";
 const LOCAL_WEB_APP_URL = "http://localhost:3001";
 const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
 
-function isLocalUrl(value: string) {
+function isSafeProductionUrl(value: string) {
   try {
-    const hostname = new URL(value).hostname.replace(/^\[|\]$/g, "");
-    return localHostnames.has(hostname);
+    const hostname = new URL(value).hostname
+      .replace(/^\[|\]$/g, "")
+      .replace(/\.+$/, "");
+
+    return Boolean(hostname) && !localHostnames.has(hostname);
   } catch {
     return false;
   }
@@ -17,7 +20,10 @@ export function resolveWebAppUrl(
 ) {
   const normalized = configuredUrl?.trim().replace(/\/+$/, "");
 
-  if (normalized && !(nodeEnv === "production" && isLocalUrl(normalized))) {
+  if (
+    normalized &&
+    (nodeEnv !== "production" || isSafeProductionUrl(normalized))
+  ) {
     return normalized;
   }
 
