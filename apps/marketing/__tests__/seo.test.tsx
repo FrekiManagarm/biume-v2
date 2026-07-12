@@ -1,7 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, mock, test } from "bun:test";
-import { ImageConfigContext } from "next/dist/shared/lib/image-config-context.shared-runtime";
-import { imageConfigDefault } from "next/dist/shared/lib/image-config";
 
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
@@ -19,6 +17,7 @@ import OsteopatheAnimalierPage, {
 } from "../app/osteopathe-animalier/page";
 import PricingPage, { metadata as pricingMetadata } from "../app/tarifs/page";
 import { rootMetadata } from "../lib/metadata";
+import { renderWithLandingImageConfig } from "./landing-test-utils";
 
 mock.module("next/font/google", () => ({
   Geist: () => ({ variable: "font-geist-sans" }),
@@ -168,13 +167,7 @@ describe("marketing SEO", () => {
   });
 
   test("home schema avoids software app and merchant listing markup", () => {
-    const html = renderToStaticMarkup(
-      <ImageConfigContext.Provider
-        value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
-      >
-        <HomePage />
-      </ImageConfigContext.Provider>,
-    );
+    const html = renderWithLandingImageConfig(<HomePage />);
     const schemas = getJsonLdSchemas(html);
     const softwareSchema = schemas.find(
       (schema) => schema["@type"] === "SoftwareApplication",

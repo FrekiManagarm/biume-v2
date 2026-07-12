@@ -14,6 +14,35 @@ import {
 } from "./landing-test-utils";
 
 describe("Carnet vivant header and hero", () => {
+  test("SSR renders inject and restore the production image options", () => {
+    const environment = process.env as unknown as Record<string, unknown>;
+    const key = "__NEXT_IMAGE_OPTS";
+    const hadPreviousValue = Object.hasOwn(environment, key);
+    const previousValue = environment[key];
+    const sentinel = { qualities: [99] };
+
+    environment[key] = sentinel;
+
+    function ImageOptionsProbe() {
+      const options = environment[key] as { qualities?: number[] };
+
+      return <span>{options.qualities?.join(",")}</span>;
+    }
+
+    try {
+      const html = renderWithLandingImageConfig(<ImageOptionsProbe />);
+
+      expect(html).toContain("48,55,65,75");
+      expect(environment[key]).toBe(sentinel);
+    } finally {
+      if (hadPreviousValue) {
+        environment[key] = previousValue;
+      } else {
+        delete environment[key];
+      }
+    }
+  });
+
   test("header motion is visible in server markup", () => {
     const html = renderToStaticMarkup(
       <HeaderMotion>

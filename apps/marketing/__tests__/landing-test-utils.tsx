@@ -3,6 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { imageConfigDefault } from "next/dist/shared/lib/image-config";
 import { ImageConfigContext } from "next/dist/shared/lib/image-config-context.shared-runtime";
 
+const landingImageConfig = {
+  ...imageConfigDefault,
+  qualities: [48, 55, 65, 75],
+};
+
 export const exactZeroOpacity =
   /\bopacity\s*:\s*(?:0+(?:\.0*)?|\.(?:0)+)(?![\d.eE+-])/;
 
@@ -20,13 +25,26 @@ export function textOnly(html: string) {
 }
 
 export function renderWithLandingImageConfig(children: ReactNode) {
-  return renderToStaticMarkup(
-    <ImageConfigContext.Provider
-      value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
-    >
-      {children}
-    </ImageConfigContext.Provider>,
-  );
+  const environment = process.env as unknown as Record<string, unknown>;
+  const key = "__NEXT_IMAGE_OPTS";
+  const hadPreviousValue = Object.hasOwn(environment, key);
+  const previousValue = environment[key];
+
+  environment[key] = landingImageConfig;
+
+  try {
+    return renderToStaticMarkup(
+      <ImageConfigContext.Provider value={landingImageConfig}>
+        {children}
+      </ImageConfigContext.Provider>,
+    );
+  } finally {
+    if (hadPreviousValue) {
+      environment[key] = previousValue;
+    } else {
+      delete environment[key];
+    }
+  }
 }
 
 export function conversionAnchors(html: string, id: string) {
