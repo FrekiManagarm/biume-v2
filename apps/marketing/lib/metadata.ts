@@ -8,7 +8,7 @@ export const rootMetadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description:
-    "Biume aide les ostéopathes animaliers à créer un suivi post-séance clair, des comptes rendus propriétaire et une timeline animal.",
+    "Biume aide les ostéopathes animaliers à structurer leurs observations, préparer des comptes rendus propriétaire clairs et organiser le suivi post-séance.",
   keywords: [
     "ostéopathe animalier",
     "logiciel ostéopathe animalier",
@@ -23,7 +23,7 @@ export const rootMetadata: Metadata = {
   openGraph: {
     title: "Logiciel de compte rendu pour ostéopathe animalier | Biume",
     description:
-      "Créez des résumés propriétaire, une timeline animal et des relances de suivi validées par le praticien.",
+      "Structurez vos observations et préparez un compte rendu propriétaire clair, relu et partagé par vous.",
     url: siteUrl,
     siteName,
     locale: "fr_FR",

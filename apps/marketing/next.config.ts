@@ -2,8 +2,11 @@ import type { NextConfig } from "next";
 import { createMDX } from "fumadocs-mdx/next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    inlineCss: true,
+  },
   images: {
-    qualities: [65, 75],
+    qualities: [55, 65, 75],
   },
 };
 

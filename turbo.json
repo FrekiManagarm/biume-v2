@@ -25,6 +25,7 @@
         "NITRO_PRESET",
         "CRON_SECRET",
         "NODE_ENV",
+        "NEXT_PUBLIC_WEB_APP_URL",
         "VERCEL",
         "TRIGGER_PROJECT_ID",
         "TRIGGER_SECRET_KEY",

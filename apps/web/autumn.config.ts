@@ -72,7 +72,11 @@ export const allInclusiveMonthly = plan({
       included: 0,
     }),
   ],
-  freeTrial: { durationLength: 15, durationType: "day", cardRequired: true },
+  freeTrial: {
+    durationLength: 15,
+    durationType: "day",
+    cardRequired: false,
+  },
 });
 
 export const allInclusiveYearly = plan({
@@ -108,5 +112,9 @@ export const allInclusiveYearly = plan({
       included: 0,
     }),
   ],
-  freeTrial: { durationLength: 15, durationType: "day", cardRequired: true },
+  freeTrial: {
+    durationLength: 15,
+    durationType: "day",
+    cardRequired: false,
+  },
 });

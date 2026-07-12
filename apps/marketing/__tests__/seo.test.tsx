@@ -24,6 +24,7 @@ mock.module("next/font/google", () => ({
   Geist: () => ({ variable: "font-geist-sans" }),
   Geist_Mono: () => ({ variable: "font-geist-mono" }),
   Manrope: () => ({ variable: "font-manrope" }),
+  Newsreader: () => ({ variable: "font-newsreader" }),
 }));
 
 const { default: HomePage } = await import("../app/page");
@@ -35,11 +36,7 @@ const pageChecks = [
     Page: OsteopatheAnimalierPage,
     metadata: osteopatheAnimalierMetadata,
     title: "Ostéopathe animalier",
-    keywords: [
-      "ostéopathe animalier",
-      "compte rendu",
-      "suivi post-séance",
-    ],
+    keywords: ["ostéopathe animalier", "compte rendu", "suivi post-séance"],
   },
   {
     name: "product",
@@ -96,31 +93,33 @@ describe("marketing SEO", () => {
       default: "Logiciel de compte rendu pour ostéopathe animalier | Biume",
       template: "%s | Biume",
     });
-    expect(rootMetadata.description).toContain("suivi post-séance");
+    expect(rootMetadata.description).toBe(
+      "Biume aide les ostéopathes animaliers à structurer leurs observations, préparer des comptes rendus propriétaire clairs et organiser le suivi post-séance.",
+    );
+    expect(JSON.stringify(rootMetadata).toLowerCase()).not.toContain(
+      "timeline animal",
+    );
     expect(rootMetadata.openGraph?.locale).toBe("fr_FR");
   });
 
-  test.each(pageChecks)("$name page has unique metadata and keyword-focused copy", ({
-    path,
-    Page,
-    metadata,
-    title,
-    keywords,
-  }) => {
-    const html = renderToStaticMarkup(<Page />);
+  test.each(pageChecks)(
+    "$name page has unique metadata and keyword-focused copy",
+    ({ path, Page, metadata, title, keywords }) => {
+      const html = renderToStaticMarkup(<Page />);
 
-    expect(metadata.title).toBe(title);
-    expect(metadata.description).toBeString();
-    expect(String(metadata.description).length).toBeGreaterThan(120);
-    expect(String(metadata.description).length).toBeLessThanOrEqual(170);
-    expect(html).toContain("application/ld+json");
-    expect(html).toContain('"@type":"BreadcrumbList"');
-    expect(html).toContain('"name":"Accueil"');
-    expect(html).toContain(`"item":"https://biume.com${path}"`);
-    for (const keyword of keywords) {
-      expect(html.toLowerCase()).toContain(keyword.toLowerCase());
-    }
-  });
+      expect(metadata.title).toBe(title);
+      expect(metadata.description).toBeString();
+      expect(String(metadata.description).length).toBeGreaterThan(120);
+      expect(String(metadata.description).length).toBeLessThanOrEqual(170);
+      expect(html).toContain("application/ld+json");
+      expect(html).toContain('"@type":"BreadcrumbList"');
+      expect(html).toContain('"name":"Accueil"');
+      expect(html).toContain(`"item":"https://biume.com${path}"`);
+      for (const keyword of keywords) {
+        expect(html.toLowerCase()).toContain(keyword.toLowerCase());
+      }
+    },
+  );
 
   test("sitemap and robots expose the public marketing acquisition routes", () => {
     const urls = sitemap().map((entry) => entry.url);
@@ -128,7 +127,9 @@ describe("marketing SEO", () => {
 
     expect(urls).toContain("https://biume.com/osteopathe-animalier");
     expect(urls).toContain("https://biume.com/logiciel-osteopathe-animalier");
-    expect(urls).toContain("https://biume.com/compte-rendu-osteopathe-animalier");
+    expect(urls).toContain(
+      "https://biume.com/compte-rendu-osteopathe-animalier",
+    );
     expect(urls).toContain("https://biume.com/tarifs");
     expect(urls).toContain("https://biume.com/comparatifs");
     expect(rules.sitemap).toBe("https://biume.com/sitemap.xml");
@@ -138,6 +139,7 @@ describe("marketing SEO", () => {
   test("product page mentions agenda and owner patient management", () => {
     const html = renderToStaticMarkup(<ProductPage />);
 
+    expect(html).toContain("landing-theme");
     expect(html).toContain("agenda");
     expect(html).toContain("propriétaires");
     expect(html).toContain("patients");
@@ -168,7 +170,7 @@ describe("marketing SEO", () => {
   test("home schema avoids software app and merchant listing markup", () => {
     const html = renderToStaticMarkup(
       <ImageConfigContext.Provider
-        value={{ ...imageConfigDefault, qualities: [65, 75] }}
+        value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
       >
         <HomePage />
       </ImageConfigContext.Provider>,
@@ -177,7 +179,9 @@ describe("marketing SEO", () => {
     const softwareSchema = schemas.find(
       (schema) => schema["@type"] === "SoftwareApplication",
     );
-    const serviceSchema = schemas.find((schema) => schema["@type"] === "Service");
+    const serviceSchema = schemas.find(
+      (schema) => schema["@type"] === "Service",
+    );
 
     expect(softwareSchema).toBeUndefined();
     expect(serviceSchema).toBeDefined();
