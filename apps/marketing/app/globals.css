@@ -453,7 +453,23 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
   z-index: 2;
 }
 
+.cinematic-pricing-offer {
+  border-top: 1px solid var(--carnet-line);
+  background: transparent;
+}
+
+.cinematic-pricing-offer
+  button[aria-pressed="true"]
+  > span[aria-hidden="true"] {
+  background: var(--carnet-violet);
+}
+
 @media (min-width: 1024px) {
+  .cinematic-pricing-offer {
+    border-top: 0;
+    border-left: 1px solid var(--carnet-line);
+  }
+
   .cinematic-product-stage [data-product-outcomes="true"]::before {
     content: "";
     position: absolute;

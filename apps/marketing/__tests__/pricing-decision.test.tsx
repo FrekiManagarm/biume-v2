@@ -18,6 +18,10 @@ describe("pricing decision", () => {
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "pricing-signup");
 
+    expect(html).toContain("Scène 04 · Le choix");
+    expect(html).toContain('data-pricing-stage="decision"');
+    expect(html).toContain('data-pricing-offer="single"');
+    expect(html.match(/data-conversion="pricing-signup"/g)).toHaveLength(1);
     expect(text).toContain("Biume prépare. Vous décidez.");
     expect(text).toContain(
       "Biume ne partage rien automatiquement. Vous relisez, corrigez et déclenchez vous-même le partage.",

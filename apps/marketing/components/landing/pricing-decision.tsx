@@ -35,17 +35,25 @@ export function PricingDecision() {
       data-landing-section="pricing"
       className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-10 sm:px-6 md:py-20 lg:px-8"
     >
-      <div className="mx-auto max-w-[90rem]">
+      <div
+        data-pricing-stage="decision"
+        className="mx-auto max-w-[90rem]"
+      >
         <div
           data-control-interlude
           className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-10 md:pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
         >
-          <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-            Biume prépare.{" "}
-            <span className="font-[family-name:var(--font-newsreader)] font-normal italic text-[color:var(--carnet-violet)]">
-              Vous décidez.
-            </span>
-          </h2>
+          <div>
+            <p className="cinematic-scene-label mb-4 text-[color:var(--carnet-muted)]">
+              Scène 04 · Le choix
+            </p>
+            <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
+              Biume prépare.{" "}
+              <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
+                Vous décidez.
+              </span>
+            </h2>
+          </div>
           <p className="max-w-[60ch] text-base leading-7 text-[color:var(--carnet-muted)] md:text-lg md:leading-8 lg:justify-self-end">
             Biume ne partage rien automatiquement. Vous relisez, corrigez et
             déclenchez vous-même le partage.
@@ -54,7 +62,7 @@ export function PricingDecision() {
 
         <div className="mt-10 grid gap-10 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
           <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-muted)]">
               Une offre, deux rythmes
             </p>
             <h3 className="mt-4 text-3xl font-semibold leading-[1] tracking-[-0.045em] text-[color:var(--carnet-ink)] md:text-5xl">
@@ -73,7 +81,7 @@ export function PricingDecision() {
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-2 size-1.5 shrink-0 rounded-full bg-[color:var(--carnet-green)]"
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-[color:var(--carnet-ink)]"
                   />
                   {item}
                 </li>
@@ -81,7 +89,10 @@ export function PricingDecision() {
             </ul>
           </div>
 
-          <div className="rounded-[0.8rem_0.8rem_2rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] p-6 shadow-[0_36px_90px_-62px_rgba(29,29,33,0.38)] sm:p-8 lg:p-10">
+          <div
+            data-pricing-offer="single"
+            className="cinematic-pricing-offer p-6 sm:p-8 lg:p-10"
+          >
             <PricingSelector options={billingOptions} />
             <Link
               href={webAppPath("/signup")}
