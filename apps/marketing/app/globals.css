@@ -278,6 +278,15 @@ details[open] [data-faq-indicator] {
   }
 }
 
+.report-document-layers {
+  display: grid;
+}
+
+.report-document-layer {
+  grid-area: 1 / 1;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-hero-entry,
   .landing-hero-photo {
