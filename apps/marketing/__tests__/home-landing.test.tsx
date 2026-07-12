@@ -1,4 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { webAppPath } from "../lib/web-app-url";
@@ -17,6 +20,10 @@ mock.module("next/font/google", () => ({
 }));
 
 const { default: HomePage } = await import("../app/page");
+const clientGraphFixtureRoot = new URL(
+  "./fixtures/homepage-client-graph/",
+  import.meta.url,
+);
 
 function getJsonLdSchemas(html: string) {
   return [
@@ -30,48 +37,115 @@ function landingSectionTag(html: string, id: string) {
   )?.[0];
 }
 
-async function homepageClientIslands() {
-  const marketingRoot = new URL("../", import.meta.url);
-  const pending = [new URL("app/page.tsx", marketingRoot)];
+async function homepageClientIslands(
+  entryUrl = new URL("../app/page.tsx", import.meta.url),
+  moduleRoot = new URL("../", import.meta.url),
+) {
+  const rootPath = fileURLToPath(moduleRoot);
+  const configPath = fileURLToPath(new URL("tsconfig.json", moduleRoot));
+  const config = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (config.error) {
+    throw new Error(
+      ts.flattenDiagnosticMessageText(config.error.messageText, "\n"),
+    );
+  }
+  const { options } = ts.parseJsonConfigFileContent(
+    config.config,
+    ts.sys,
+    path.dirname(configPath),
+    undefined,
+    configPath,
+  );
+  const pending = [fileURLToPath(entryUrl)];
   const visited = new Set<string>();
   const clients: string[] = [];
 
   while (pending.length > 0) {
-    const moduleUrl = pending.pop()!;
-    const modulePath = moduleUrl.pathname;
+    const modulePath = pending.pop()!;
 
     if (visited.has(modulePath)) continue;
     visited.add(modulePath);
 
-    const source = await Bun.file(moduleUrl).text();
-    if (/^\s*["']use client["'];/.test(source)) {
-      clients.push(modulePath.slice(marketingRoot.pathname.length));
+    const source = await Bun.file(modulePath).text();
+    const sourceFile = ts.createSourceFile(
+      modulePath,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    const firstStatement = sourceFile.statements[0];
+    if (
+      firstStatement &&
+      ts.isExpressionStatement(firstStatement) &&
+      ts.isStringLiteral(firstStatement.expression) &&
+      firstStatement.expression.text === "use client"
+    ) {
+      clients.push(path.relative(rootPath, modulePath));
     }
 
-    for (const match of source.matchAll(
-      /^\s*import\s+(?!type\b)(?:[^"']*?\sfrom\s*)?["']([^"']+)["'];?/gm,
-    )) {
-      const specifier = match[1];
-      if (!specifier?.startsWith(".")) continue;
+    const runtimeSpecifiers: string[] = [];
+    const visit = (node: ts.Node) => {
+      if (
+        ts.isImportDeclaration(node) &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      ) {
+        const importClause = node.importClause;
+        const namedBindings = importClause?.namedBindings;
+        const hasRuntimeBinding =
+          !importClause ||
+          (!importClause.isTypeOnly &&
+            (Boolean(importClause.name) ||
+              (namedBindings && ts.isNamespaceImport(namedBindings)) ||
+              (namedBindings &&
+                ts.isNamedImports(namedBindings) &&
+                namedBindings.elements.some((element) => !element.isTypeOnly))));
 
-      const candidates = /\.[cm]?[jt]sx?$/.test(specifier)
-        ? [new URL(specifier, moduleUrl)]
-        : [
-            new URL(`${specifier}.tsx`, moduleUrl),
-            new URL(`${specifier}.ts`, moduleUrl),
-            new URL(`${specifier}/index.tsx`, moduleUrl),
-            new URL(`${specifier}/index.ts`, moduleUrl),
-          ];
-      const dependency = (
-        await Promise.all(
-          candidates.map(async (candidate) => ({
-            candidate,
-            exists: await Bun.file(candidate).exists(),
-          })),
-        )
-      ).find(({ exists }) => exists)?.candidate;
+        if (hasRuntimeBinding) runtimeSpecifiers.push(node.moduleSpecifier.text);
+      } else if (
+        ts.isExportDeclaration(node) &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      ) {
+        const exportClause = node.exportClause;
+        const hasRuntimeExport =
+          !node.isTypeOnly &&
+          (!exportClause ||
+            ts.isNamespaceExport(exportClause) ||
+            exportClause.elements.some((element) => !element.isTypeOnly));
 
-      if (dependency) pending.push(dependency);
+        if (hasRuntimeExport) runtimeSpecifiers.push(node.moduleSpecifier.text);
+      } else if (
+        ts.isCallExpression(node) &&
+        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+        node.arguments.length === 1 &&
+        ts.isStringLiteral(node.arguments[0]!)
+      ) {
+        runtimeSpecifiers.push(node.arguments[0]!.text);
+      }
+
+      ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+
+    for (const specifier of runtimeSpecifiers) {
+      const resolved = ts.resolveModuleName(
+        specifier,
+        modulePath,
+        options,
+        ts.sys,
+      ).resolvedModule;
+      if (!resolved || resolved.isExternalLibraryImport) continue;
+
+      const dependency = path.resolve(resolved.resolvedFileName);
+      const relativeDependency = path.relative(rootPath, dependency);
+      const isLocalRuntimeModule =
+        relativeDependency !== "" &&
+        !relativeDependency.startsWith(`..${path.sep}`) &&
+        !path.isAbsolute(relativeDependency) &&
+        /\.[cm]?[jt]sx?$/.test(dependency) &&
+        !dependency.endsWith(".d.ts");
+
+      if (isLocalRuntimeModule) pending.push(dependency);
     }
   }
 
@@ -217,6 +291,33 @@ describe("Biume cinematic plan-sequence homepage", () => {
       "components/landing/cinematic-scene-controller.tsx",
       "components/landing/pricing-selector.tsx",
     ]);
+  });
+
+  test("discovers a client island reached through a re-export", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-re-export.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("discovers a client island reached through a dynamic import", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-dynamic-import.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("discovers a client island reached through a local alias", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-alias.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
   });
 
   test("keeps cinematic CSS progressively enhanced and motion-safe", async () => {
