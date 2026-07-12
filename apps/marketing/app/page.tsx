@@ -1,4 +1,5 @@
 import LandingFooter from "../components/footer";
+import { CinematicSceneController } from "../components/landing/cinematic-scene-controller";
 import { FinalCta } from "../components/landing/final-cta";
 import { LandingFaq } from "../components/landing/landing-faq";
 import { LandingHeader } from "../components/landing/landing-header";
@@ -26,7 +27,8 @@ const serviceSchema = {
 
 export default function Home() {
   return (
-    <div className="carnet-theme min-h-dvh overflow-x-clip bg-[color:var(--carnet-canvas)] text-[color:var(--carnet-ink)] selection:bg-[color:var(--carnet-violet-soft)]">
+    <div className="carnet-theme cinematic-theme min-h-dvh overflow-x-clip bg-[color:var(--carnet-canvas)] text-[color:var(--carnet-ink)] selection:bg-[color:var(--carnet-violet-soft)]">
+      <CinematicSceneController />
       <JsonLd data={serviceSchema} />
       <LandingHeader />
       <main id="contenu">

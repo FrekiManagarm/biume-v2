@@ -30,7 +30,7 @@ function landingSectionTag(html: string, id: string) {
   )?.[0];
 }
 
-describe("Biume Carnet vivant homepage", () => {
+describe("Biume cinematic plan-sequence homepage", () => {
   test("assembles five ordered conversion moments", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
@@ -42,6 +42,7 @@ describe("Biume Carnet vivant homepage", () => {
     ];
 
     expect(html).toContain("carnet-theme");
+    expect(html).toContain("cinematic-theme");
     expect(html.match(/data-landing-section=/g)).toHaveLength(5);
     for (const marker of markers) {
       expect(html).toContain(marker);
