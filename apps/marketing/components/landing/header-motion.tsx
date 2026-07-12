@@ -4,10 +4,12 @@ export function HeaderMotion({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <header
       data-header-motion
+      data-cinematic-header
       className="sticky inset-x-0 top-0 z-40 isolate border-b border-[color:var(--carnet-line)]"
     >
       <div
         data-header-surface
+        data-cinematic-header-surface
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[color:var(--carnet-canvas)] opacity-[0.96] backdrop-blur-xl"
       />

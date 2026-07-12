@@ -59,7 +59,9 @@ describe("Biume cinematic plan-sequence homepage", () => {
     const hero = landingSectionTag(html, "hero");
 
     expect(hero).toBeDefined();
-    expect(hero).toContain("pb-10");
+    expect(hero).toBe(
+      '<section data-landing-section="hero" class="cinematic-hero relative isolate min-h-[calc(100svh-4.5rem)] overflow-hidden">',
+    );
     for (const id of [
       "transformation",
       "product-proof",
