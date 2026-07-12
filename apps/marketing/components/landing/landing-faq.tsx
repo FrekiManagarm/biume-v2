@@ -48,14 +48,14 @@ export function LandingFaq() {
           Pour la confidentialité, consultez notre{" "}
           <Link
             href="/privacy"
-            className="font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
           >
             politique de confidentialité
           </Link>
           . Les conditions contractuelles sont détaillées dans nos{" "}
           <Link
             href="/cgu"
-            className="font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
           >
             CGU
           </Link>

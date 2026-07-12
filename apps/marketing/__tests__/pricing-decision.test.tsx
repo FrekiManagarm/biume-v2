@@ -52,7 +52,7 @@ describe("pricing decision", () => {
     expect(html).not.toMatch(exactZeroOpacity);
   });
 
-  test("keeps motion inside the price selector", async () => {
+  test("keeps lightweight interaction inside the price selector", async () => {
     const selectorSource = await Bun.file(
       new URL("../components/landing/pricing-selector.tsx", import.meta.url),
     ).text();
@@ -62,14 +62,15 @@ describe("pricing decision", () => {
 
     expect(selectorSource).toContain('"use client"');
     expect(selectorSource).toContain("useState");
-    expect(selectorSource).toContain("LazyMotion");
-    expect(selectorSource).toContain("useReducedMotion");
+    expect(selectorSource).not.toContain('from "motion/react"');
+    expect(selectorSource).not.toContain("LazyMotion");
+    expect(selectorSource).not.toContain("AnimatePresence");
     expect(selectorSource).not.toContain("repeat: Infinity");
     expect(decisionSource).not.toContain('"use client"');
     expect(decisionSource).not.toContain('from "motion/react"');
   });
 
-  test("keeps the live region mounted around animated price changes", async () => {
+  test("keeps the live region mounted around keyed price changes", async () => {
     const selectorSource = await Bun.file(
       new URL("../components/landing/pricing-selector.tsx", import.meta.url),
     ).text();
@@ -80,20 +81,15 @@ describe("pricing decision", () => {
       liveRegionTagStart,
       liveRegionTagEnd + 1,
     );
-    const animatedPriceIndex = selectorSource.indexOf(
-      '<AnimatePresence mode="wait" initial={false}>',
-      liveRegionIndex,
-    );
     const keyedPriceIndex = selectorSource.indexOf(
       "key={cycle}",
-      animatedPriceIndex,
+      liveRegionIndex,
     );
 
     expect(liveRegionIndex).toBeGreaterThan(-1);
     expect(liveRegionOpenTag).toMatch(/^<div\b/);
     expect(liveRegionOpenTag).not.toContain("key={cycle}");
-    expect(animatedPriceIndex).toBeGreaterThan(liveRegionIndex);
-    expect(keyedPriceIndex).toBeGreaterThan(animatedPriceIndex);
+    expect(keyedPriceIndex).toBeGreaterThan(liveRegionIndex);
   });
 
   test("disables prefetch for the pricing conversion link", async () => {

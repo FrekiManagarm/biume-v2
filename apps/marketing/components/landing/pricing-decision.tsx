@@ -33,12 +33,12 @@ export function PricingDecision() {
     <section
       id="tarifs"
       data-landing-section="pricing"
-      className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-12 sm:px-6 md:py-20 lg:px-8"
+      className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-10 sm:px-6 md:py-20 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
         <div
           data-control-interlude
-          className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
+          className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-10 md:pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
         >
           <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
             Biume prépare.{" "}
@@ -52,7 +52,7 @@ export function PricingDecision() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
+        <div className="mt-10 grid gap-10 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
               Une offre, deux rythmes

@@ -7,9 +7,9 @@ export function FinalCta() {
   return (
     <aside
       data-final-cta
-      className="mt-12 grid overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] md:mt-16 lg:grid-cols-[1.08fr_0.92fr]"
+      className="mt-10 grid overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] md:mt-16 lg:grid-cols-[1.08fr_0.92fr]"
     >
-      <div className="relative min-h-56 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
+      <div className="relative min-h-52 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
         <Image
           src="/assets/images/landing/practitioner-owner-animal.png"
           alt="Une praticienne échange avec la propriétaire d’un animal après une séance"

@@ -21,7 +21,7 @@ export function ProductProof() {
     <section
       id="comment-ca-marche"
       data-landing-section="product-proof"
-      className="scroll-mt-18 px-4 py-12 sm:px-6 md:py-20 lg:px-8"
+      className="scroll-mt-18 px-4 py-10 sm:px-6 md:py-20 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
         <div className="grid gap-6 lg:grid-cols-[0.76fr_1.24fr] lg:items-end">
@@ -43,7 +43,7 @@ export function ProductProof() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-[1.42fr_0.58fr] lg:items-start">
+        <div className="mt-10 grid gap-5 md:mt-12 lg:grid-cols-[1.42fr_0.58fr] lg:items-start">
           <article
             data-product-editor
             className="overflow-hidden rounded-[0.75rem_0.75rem_2rem_0.75rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] shadow-[0_36px_90px_-62px_rgba(29,29,33,0.38)]"

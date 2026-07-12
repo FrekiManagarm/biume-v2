@@ -24,6 +24,12 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
+function landingSectionTag(html: string, id: string) {
+  return html.match(
+    new RegExp(`<section\\b[^>]*data-landing-section="${id}"[^>]*>`),
+  )?.[0];
+}
+
 describe("Biume Carnet vivant homepage", () => {
   test("assembles five ordered conversion moments", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
@@ -44,6 +50,26 @@ describe("Biume Carnet vivant homepage", () => {
       expect(html.indexOf(markers[index - 1]!)).toBeLessThan(
         html.indexOf(markers[index]!),
       );
+    }
+  });
+
+  test("keeps the mobile narrative inside the approved height budget", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const hero = landingSectionTag(html, "hero");
+
+    expect(hero).toBeDefined();
+    expect(hero).toContain("pb-10");
+    for (const id of [
+      "transformation",
+      "product-proof",
+      "pricing",
+      "faq-cta",
+    ]) {
+      const section = landingSectionTag(html, id);
+
+      expect(section).toBeDefined();
+      expect(section).toContain("py-10");
+      expect(section).toContain("md:py-20");
     }
   });
 
@@ -121,14 +147,14 @@ describe("Biume Carnet vivant homepage", () => {
     expect(service?.offers).toBeUndefined();
   });
 
-  test("limits new client boundaries to the three approved islands", async () => {
+  test("limits client hydration to the two interactive islands", async () => {
     const clientIslands = [
-      "../components/landing/header-motion.tsx",
       "../components/landing/report-transformation-story.tsx",
       "../components/landing/pricing-selector.tsx",
     ];
     const serverComponents = [
       "../components/landing/landing-header.tsx",
+      "../components/landing/header-motion.tsx",
       "../components/landing/landing-hero.tsx",
       "../components/landing/product-proof.tsx",
       "../components/landing/pricing-decision.tsx",
@@ -144,5 +170,52 @@ describe("Biume Carnet vivant homepage", () => {
       const source = await Bun.file(new URL(path, import.meta.url)).text();
       expect(source).not.toContain('"use client"');
     }
+  });
+
+  test("uses stable system font stacks without delaying first paint", async () => {
+    const [source, layoutSource, css] = await Promise.all([
+      Bun.file(new URL("../app/page.tsx", import.meta.url)).text(),
+      Bun.file(new URL("../app/layout.tsx", import.meta.url)).text(),
+      Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
+    ]);
+
+    expect(source).not.toContain("next/font/google");
+    expect(layoutSource).not.toContain("next/font/google");
+    expect(css).toMatch(/--font-geist-sans:\s*ui-sans-serif/);
+    expect(css).toMatch(/--font-geist-mono:\s*ui-monospace/);
+    expect(css).toMatch(/--font-newsreader:[^;]*Iowan Old Style/s);
+  });
+
+  test("scopes Tailwind discovery to each owning application", async () => {
+    const [sharedCss, marketingCss, webCss] = await Promise.all([
+      Bun.file(
+        new URL(
+          "../../../packages/ui/src/styles/globals.css",
+          import.meta.url,
+        ),
+      ).text(),
+      Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
+      Bun.file(new URL("../../web/src/styles.css", import.meta.url)).text(),
+    ]);
+
+    expect(sharedCss).toContain('@import "tailwindcss" source(none)');
+    expect(sharedCss).not.toContain('@source "../../../apps/**/*.{ts,tsx}"');
+    expect(sharedCss).not.toContain('@source "../**/*.{ts,tsx}"');
+    expect(marketingCss).toContain('@source "../**/*.{ts,tsx,mdx}"');
+    expect(marketingCss).toContain(
+      '@source "../../../packages/ui/src/components/{button,dropdown-menu,tooltip}.tsx"',
+    );
+    expect(webCss).toContain('@source "./**/*.{ts,tsx}"');
+    expect(webCss).toContain(
+      '@source "../../../packages/ui/src/**/*.{ts,tsx}"',
+    );
+  });
+
+  test("inlines the route CSS on the critical render path", async () => {
+    const config = await Bun.file(
+      new URL("../next.config.ts", import.meta.url),
+    ).text();
+
+    expect(config).toContain("inlineCss: true");
   });
 });

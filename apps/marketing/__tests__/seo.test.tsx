@@ -139,6 +139,7 @@ describe("marketing SEO", () => {
   test("product page mentions agenda and owner patient management", () => {
     const html = renderToStaticMarkup(<ProductPage />);
 
+    expect(html).toContain("landing-theme");
     expect(html).toContain("agenda");
     expect(html).toContain("propriétaires");
     expect(html).toContain("patients");
@@ -169,7 +170,7 @@ describe("marketing SEO", () => {
   test("home schema avoids software app and merchant listing markup", () => {
     const html = renderToStaticMarkup(
       <ImageConfigContext.Provider
-        value={{ ...imageConfigDefault, qualities: [65, 75] }}
+        value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
       >
         <HomePage />
       </ImageConfigContext.Provider>,

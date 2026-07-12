@@ -43,7 +43,7 @@ const LandingFooter = () => {
           <div>
             <Link
               href="/"
-              className="flex items-center gap-2 text-lg font-semibold"
+              className="flex min-h-11 items-center gap-2 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image
                 src="/brand/biume-logo.svg"
@@ -62,12 +62,12 @@ const LandingFooter = () => {
 
           <div>
             <h2 className="text-sm font-semibold">Produit</h2>
-            <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+            <ul className="mt-4 grid gap-x-8 sm:grid-cols-2">
               {productLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     {...(link.href.startsWith("http")
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
@@ -81,12 +81,12 @@ const LandingFooter = () => {
 
           <div>
             <h2 className="text-sm font-semibold">Légal</h2>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-4">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
                     {link.label}
                   </Link>

@@ -22,7 +22,7 @@ export function textOnly(html: string) {
 export function renderWithLandingImageConfig(children: ReactNode) {
   return renderToStaticMarkup(
     <ImageConfigContext.Provider
-      value={{ ...imageConfigDefault, qualities: [65, 75] }}
+      value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
     >
       {children}
     </ImageConfigContext.Provider>,

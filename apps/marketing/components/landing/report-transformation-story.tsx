@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  domAnimation,
-  LazyMotion,
-  m,
-  type MotionValue,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
-import { useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 
 import type {
   ReportTransformationDemo,
@@ -17,49 +8,79 @@ import type {
 } from "./report-transformation-demo";
 
 const desktopMediaQuery = "(min-width: 768px)";
+const reducedMotionMediaQuery = "(prefers-reduced-motion: reduce)";
 
-const stepRanges: Array<{
-  input: number[];
-  opacity: number[];
-  y: number[];
-}> = [
-  { input: [0, 0.08, 0.28], opacity: [1, 1, 0.54], y: [0, 0, -8] },
-  { input: [0.12, 0.34, 0.54], opacity: [0.54, 1, 0.54], y: [12, 0, -8] },
-  { input: [0.4, 0.66, 0.84], opacity: [0.54, 1, 0.54], y: [12, 0, -8] },
-  { input: [0.7, 0.92, 1], opacity: [0.54, 1, 1], y: [12, 0, 0] },
-];
+function useReportEnhancement(sectionRef: {
+  readonly current: HTMLElement | null;
+}) {
+  useEffect(() => {
+    const section = sectionRef.current;
+    const canEnhance = window.matchMedia(desktopMediaQuery).matches;
+    const reduceMotion = window.matchMedia(reducedMotionMediaQuery).matches;
 
-const layerRanges: Array<{
-  input: number[];
-  opacity: number[];
-  y: number[];
-}> = [
-  { input: [0, 0.18, 0.3], opacity: [1, 1, 0], y: [0, 0, -10] },
-  { input: [0.18, 0.34, 0.5], opacity: [0, 1, 0], y: [10, 0, -10] },
-  { input: [0.44, 0.66, 0.8], opacity: [0, 1, 0], y: [10, 0, -10] },
-  { input: [0.72, 0.9, 1], opacity: [0, 1, 1], y: [10, 0, 0] },
-];
+    if (!section || !canEnhance || reduceMotion) {
+      return;
+    }
 
-function subscribeToDesktop(update: () => void) {
-  const query = window.matchMedia(desktopMediaQuery);
-  query.addEventListener("change", update);
-  return () => query.removeEventListener("change", update);
-}
+    const steps = Array.from(
+      section.querySelectorAll<HTMLElement>("[data-report-state]"),
+    );
 
-function getDesktopSnapshot() {
-  return window.matchMedia(desktopMediaQuery).matches;
-}
+    if (steps.length === 0 || !("IntersectionObserver" in window)) {
+      return;
+    }
 
-function getServerDesktopSnapshot() {
-  return false;
-}
+    section.dataset.reportEnhanced = "true";
+    section.dataset.reportActive = steps[0]?.dataset.reportState ?? "note";
+    const intersectionRatios = new Map<HTMLElement, number>();
 
-function useDesktopEnhancement() {
-  return useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getServerDesktopSnapshot,
-  );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          intersectionRatios.set(
+            entry.target as HTMLElement,
+            entry.isIntersecting ? entry.intersectionRatio : 0,
+          );
+        }
+
+        const focusLine = window.innerHeight * 0.38;
+        const activeStep = steps
+          .map((step) => {
+            const rect = step.getBoundingClientRect();
+
+            return {
+              step,
+              ratio: intersectionRatios.get(step) ?? 0,
+              distance: Math.abs(rect.top + rect.height / 2 - focusLine),
+            };
+          })
+          .filter(({ ratio }) => ratio > 0)
+          .sort(
+            (left, right) =>
+              right.ratio - left.ratio || left.distance - right.distance,
+          )[0]?.step;
+        const activeState = activeStep?.dataset.reportState;
+
+        if (activeState) {
+          section.dataset.reportActive = activeState;
+        }
+      },
+      {
+        rootMargin: "-28% 0px -52% 0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+
+    for (const step of steps) {
+      observer.observe(step);
+    }
+
+    return () => {
+      observer.disconnect();
+      delete section.dataset.reportEnhanced;
+      delete section.dataset.reportActive;
+    };
+  }, [sectionRef]);
 }
 
 function StepStateContent({
@@ -119,7 +140,15 @@ function StepStateContent({
     case "final":
       return (
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs">
-          <span className="text-[color:var(--carnet-green)]">
+          <span
+            data-report-final-status
+            className="inline-flex items-center gap-2 text-white/78"
+          >
+            <span
+              data-report-final-dot
+              aria-hidden="true"
+              className="size-1.5 rounded-full bg-[color:var(--carnet-green)]"
+            />
             {demo.finalStatus}
           </span>
           <span className="text-white/55">{demo.fileName}</span>
@@ -131,25 +160,16 @@ function StepStateContent({
 function TransformationStep({
   step,
   index,
-  progress,
-  enhanced,
   demo,
 }: {
   step: ReportTransformationStep;
   index: number;
-  progress: MotionValue<number>;
-  enhanced: boolean;
   demo: ReportTransformationDemo;
 }) {
-  const range = stepRanges[index] ?? stepRanges[0]!;
-  const opacity = useTransform(progress, range.input, range.opacity);
-  const y = useTransform(progress, range.input, range.y);
-
   return (
-    <m.li
+    <li
       data-report-state={step.id}
       className="border-t border-white/14 py-8 md:min-h-72 md:py-12"
-      style={enhanced ? { opacity, y } : undefined}
     >
       <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr]">
         <span className="font-mono text-xs text-white/60">0{index + 1}</span>
@@ -163,7 +183,7 @@ function TransformationStep({
           <StepStateContent step={step} demo={demo} />
         </div>
       </div>
-    </m.li>
+    </li>
   );
 }
 
@@ -252,25 +272,16 @@ function DocumentBody({
 function ReportDocumentLayer({
   step,
   index,
-  progress,
-  enhanced,
   demo,
 }: {
   step: ReportTransformationStep;
   index: number;
-  progress: MotionValue<number>;
-  enhanced: boolean;
   demo: ReportTransformationDemo;
 }) {
-  const range = layerRanges[index] ?? layerRanges[0]!;
-  const opacity = useTransform(progress, range.input, range.opacity);
-  const y = useTransform(progress, range.input, range.y);
-
   return (
-    <m.article
+    <article
       data-report-layer={step.id}
       className="report-document-layer overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-black/10 bg-[color:var(--carnet-surface)] text-[color:var(--carnet-ink)] shadow-[0_42px_100px_-58px_rgba(0,0,0,0.65)]"
-      style={enhanced ? { opacity, y } : undefined}
     >
       <div className="flex items-center justify-between border-b border-[color:var(--carnet-line)] px-6 py-5">
         <div>
@@ -286,29 +297,22 @@ function ReportDocumentLayer({
       <div className="min-h-72 px-6 py-7">
         <DocumentBody step={step} demo={demo} />
       </div>
-    </m.article>
+    </article>
   );
 }
 
-function ReportDocumentSequence({
-  demo,
-  progress,
-  enhanced,
-}: {
-  demo: ReportTransformationDemo;
-  progress: MotionValue<number>;
-  enhanced: boolean;
-}) {
+function ReportDocumentSequence({ demo }: { demo: ReportTransformationDemo }) {
   return (
     <div
       aria-hidden="true"
-      className={enhanced ? "hidden md:sticky md:top-28 md:block" : "hidden"}
+      data-report-document
+      className="report-document-sequence hidden md:sticky md:top-28 md:block"
     >
       <div className="relative pl-6">
         <div className="absolute bottom-4 left-0 top-4 w-px overflow-hidden bg-white/16">
-          <m.div
+          <div
+            data-report-progress
             className="h-full w-full origin-top bg-[linear-gradient(to_bottom,#6b5ac8,#5d9bb8,#2e9866)]"
-            style={{ scaleY: progress }}
           />
         </div>
         <div className="report-document-layers">
@@ -317,8 +321,6 @@ function ReportDocumentSequence({
               key={step.id}
               step={step}
               index={index}
-              progress={progress}
-              enhanced={enhanced}
               demo={demo}
             />
           ))}
@@ -332,64 +334,42 @@ export function ReportTransformationStory({
   demo,
 }: Readonly<{ demo: ReportTransformationDemo }>) {
   const sectionRef = useRef<HTMLElement>(null);
-  const isDesktop = useDesktopEnhancement();
-  const reduceMotion = useReducedMotion();
-  const enhanced = isDesktop && reduceMotion === false;
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
+  useReportEnhancement(sectionRef);
 
   return (
-    <LazyMotion features={domAnimation} strict>
-      <section
-        ref={sectionRef}
-        id="produit"
-        data-landing-section="transformation"
-        className={`scroll-mt-18 bg-[color:var(--carnet-anthracite)] px-4 py-12 text-white sm:px-6 md:py-20 lg:px-8 ${
-          enhanced ? "md:min-h-[160svh]" : ""
-        }`}
-      >
-        <div className="mx-auto max-w-[90rem]">
-          <div className="max-w-4xl">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-blue)]">
-              Du geste au document
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] md:text-6xl lg:text-7xl">
-              Une note devient un document que le propriétaire peut{" "}
-              <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-                comprendre.
-              </span>
-            </h2>
-          </div>
-
-          <div
-            className={`mt-12 gap-14 lg:mt-16 ${
-              enhanced
-                ? "md:grid md:grid-cols-[0.84fr_1.16fr] md:items-start"
-                : ""
-            }`}
-          >
-            <ol>
-              {demo.steps.map((step, index) => (
-                <TransformationStep
-                  key={step.id}
-                  step={step}
-                  index={index}
-                  progress={scrollYProgress}
-                  enhanced={enhanced}
-                  demo={demo}
-                />
-              ))}
-            </ol>
-            <ReportDocumentSequence
-              demo={demo}
-              progress={scrollYProgress}
-              enhanced={enhanced}
-            />
-          </div>
+    <section
+      ref={sectionRef}
+      id="produit"
+      data-landing-section="transformation"
+      className="report-story-section scroll-mt-18 bg-[color:var(--carnet-anthracite)] px-4 py-10 text-white sm:px-6 md:min-h-[160svh] md:py-20 lg:px-8"
+    >
+      <div className="mx-auto max-w-[90rem]">
+        <div className="max-w-4xl">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-blue)]">
+            Du geste au document
+          </p>
+          <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] md:text-6xl lg:text-7xl">
+            Une note devient un document que le propriétaire peut{" "}
+            <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
+              comprendre.
+            </span>
+          </h2>
         </div>
-      </section>
-    </LazyMotion>
+
+        <div className="mt-10 gap-14 md:mt-12 md:grid md:grid-cols-[0.84fr_1.16fr] md:items-start lg:mt-16">
+          <ol>
+            {demo.steps.map((step, index) => (
+              <TransformationStep
+                key={step.id}
+                step={step}
+                index={index}
+                demo={demo}
+              />
+            ))}
+          </ol>
+          <ReportDocumentSequence demo={demo} />
+        </div>
+      </div>
+    </section>
   );
 }

@@ -74,7 +74,12 @@ describe("Carnet vivant header and hero", () => {
     expect(html).toContain("Vous pouvez encore modifier ce texte");
     expect(html).toContain("Partager le PDF");
     expect(html).toContain("hero-practitioner-horse.png");
-    expect(html).toContain("q=65");
+    expect(html).toContain("q=55");
+    expect(html).toContain('loading="lazy"');
+    expect(html.toLowerCase()).not.toContain('fetchpriority="high"');
+    expect(html).not.toContain('rel="preload" as="image"');
+    expect(html).toMatch(/data-hero-photo[^>]*class="[^"]*hidden[^"]*md:block/);
+    expect(html).toMatch(/data-hero-product[^>]*class="[^"]*mt-0[^"]*md:-mt-20/);
     expect(html.match(/data-hero-product=/g)).toHaveLength(1);
     expect(text).not.toContain(REPORT_TRANSFORMATION_DEMO.observation);
     expect(signupAnchors).toHaveLength(1);
@@ -98,10 +103,24 @@ describe("Carnet vivant header and hero", () => {
 
     expect(heroSource).not.toContain('"use client"');
     expect(heroSource).not.toContain('from "motion/react"');
+    expect(heroSource).toContain("carnet-hero-sans");
+    expect(heroSource).toContain("carnet-hero-serif");
+    expect(css).toMatch(
+      /\.carnet-hero-sans\s*{[^}]*font-family:\s*ui-sans-serif/s,
+    );
+    expect(css).toMatch(
+      /\.carnet-hero-serif\s*{[^}]*font-family:[^}]*Iowan Old Style/s,
+    );
     expect(entryKeyframes).toBeDefined();
     expect(entryKeyframes).not.toContain("opacity");
     expect(photoKeyframes).toContain("scale(1.02)");
     expect(photoKeyframes).not.toContain("opacity");
+    expect(css).toMatch(
+      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-entry\s*\{[^}]*animation:/,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-photo\s*\{[^}]*animation:/,
+    );
     expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.landing-hero-entry/,
     );

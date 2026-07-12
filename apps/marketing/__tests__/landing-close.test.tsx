@@ -42,6 +42,20 @@ describe("landing objection handling and close", () => {
     expect(html).not.toContain("conforme au RGPD");
   });
 
+  test("gives the inline legal links a 44-pixel minimum target", () => {
+    const html = renderToStaticMarkup(<LandingFaq />);
+
+    for (const href of ["/privacy", "/cgu"]) {
+      const anchor = html.match(
+        new RegExp(`<a\\b[^>]*href="${href}"[^>]*>`),
+      )?.[0];
+
+      expect(anchor).toBeDefined();
+      expect(anchor).toContain("inline-flex");
+      expect(anchor).toContain("min-h-11");
+    }
+  });
+
   test("final moment presents one signup action and no competing demo", () => {
     const html = renderWithLandingImageConfig(<FinalCta />);
     const text = textOnly(html);
@@ -61,6 +75,7 @@ describe("landing objection handling and close", () => {
 
   test("shared footer keeps legal and demo links without unsupported claims", () => {
     const html = renderWithLandingImageConfig(<LandingFooter />);
+    const anchors = html.match(/<a\b[^>]*>/g) ?? [];
 
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/cgu"');
@@ -68,5 +83,9 @@ describe("landing objection handling and close", () => {
     expect(html).not.toContain('href="/contact"');
     expect(html).not.toContain("Hébergé en France");
     expect(html).not.toContain("conforme au RGPD");
+    expect(anchors.length).toBeGreaterThan(0);
+    for (const anchor of anchors) {
+      expect(anchor).toContain("min-h-11");
+    }
   });
 });

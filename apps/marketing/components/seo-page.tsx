@@ -88,12 +88,11 @@ export function SeoPage({
   };
 
   return (
-    <>
+    <div className="landing-theme min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
       <JsonLd data={schema} />
       <JsonLd data={pageBreadcrumbJsonLd({ path, name: eyebrow })} />
       <Header />
-      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
-        <main>
+      <main>
           <section className="relative overflow-hidden px-4 pb-10 pt-30 md:px-6 md:pb-14 md:pt-34">
             <PageBackdrop />
             <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
@@ -243,10 +242,9 @@ export function SeoPage({
               </div>
             </div>
           </section>
-        </main>
-        <LandingFooter />
-      </div>
-    </>
+      </main>
+      <LandingFooter />
+    </div>
   );
 }
 

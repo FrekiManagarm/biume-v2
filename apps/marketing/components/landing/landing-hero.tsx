@@ -20,14 +20,14 @@ export function LandingHero({
   return (
     <section
       data-landing-section="hero"
-      className="relative px-4 pb-12 pt-6 sm:px-6 sm:pb-16 lg:px-8 lg:pb-20 lg:pt-10"
+      className="relative px-4 pb-10 pt-6 sm:px-6 sm:pb-16 lg:px-8 lg:pb-20 lg:pt-10"
     >
       <div
         aria-hidden="true"
         className="carnet-construction absolute inset-x-0 top-0 -z-10 h-[78%]"
       />
-      <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-[90rem] items-center gap-10 lg:grid-cols-[0.86fr_1.14fr] lg:gap-12 xl:gap-16">
-        <div className="max-w-[42rem] py-4 lg:py-12">
+      <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-[90rem] items-center gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:gap-12 xl:gap-16">
+        <div className="max-w-[42rem] py-0 lg:py-12">
           <p
             data-hero-entry
             style={entryStyle(0)}
@@ -38,10 +38,10 @@ export function LandingHero({
           <h1
             data-hero-entry
             style={entryStyle(80)}
-            className="landing-hero-entry mt-5 text-[clamp(3.25rem,6.5vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[color:var(--carnet-ink)]"
+            className="carnet-hero-sans landing-hero-entry mt-5 text-[clamp(3.25rem,6.5vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[color:var(--carnet-ink)]"
           >
             Vos observations,{" "}
-            <span className="font-[family-name:var(--font-newsreader)] font-normal italic tracking-[-0.045em]">
+            <span className="carnet-hero-serif font-normal italic tracking-[-0.045em]">
               dans des mots qui restent.
             </span>
           </h1>
@@ -77,7 +77,7 @@ export function LandingHero({
           <ul
             data-hero-entry
             style={entryStyle(320)}
-            className="landing-hero-entry mt-9 grid grid-cols-3 border-y border-[color:var(--carnet-line)]"
+            className="landing-hero-entry mt-8 grid grid-cols-3 border-y border-[color:var(--carnet-line)]"
           >
             {reassurance.map((item) => (
               <li
@@ -97,15 +97,14 @@ export function LandingHero({
         <div className="relative mx-auto w-full max-w-[48rem] lg:justify-self-end">
           <div
             data-hero-photo
-            className="landing-hero-photo relative aspect-[5/4] overflow-hidden rounded-[2rem_0.75rem_2rem_0.75rem] bg-[color:var(--carnet-muted-surface)] sm:aspect-[4/5]"
+            className="landing-hero-photo relative hidden aspect-[5/4] overflow-hidden rounded-[2rem_0.75rem_2rem_0.75rem] bg-[color:var(--carnet-muted-surface)] sm:aspect-[4/5] md:block"
           >
             <Image
               src="/assets/images/landing/hero-practitioner-horse.png"
               alt="Une ostéopathe animalière observe un cheval pendant une séance"
               fill
-              priority
-              fetchPriority="high"
-              quality={65}
+              loading="lazy"
+              quality={55}
               sizes="(min-width: 1280px) 720px, (min-width: 1024px) 52vw, 100vw"
               className="object-cover"
             />
@@ -114,7 +113,7 @@ export function LandingHero({
           <article
             data-hero-product
             aria-label="Exemple de proposition adaptée dans Biume"
-            className="relative z-10 mx-auto -mt-14 w-[calc(100%-1.5rem)] overflow-hidden rounded-[0.8rem_0.8rem_2rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] shadow-[0_36px_90px_-52px_rgba(29,29,33,0.45)] sm:-mt-20 sm:w-[88%] lg:mr-5"
+            className="relative z-10 mx-auto mt-0 w-[calc(100%-1.5rem)] overflow-hidden rounded-[0.8rem_0.8rem_2rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] shadow-[0_36px_90px_-52px_rgba(29,29,33,0.45)] sm:w-[88%] md:-mt-20 lg:mr-5"
           >
             <div className="flex items-center justify-between gap-4 border-b border-[color:var(--carnet-line)] px-5 py-4 sm:px-6">
               <div>
