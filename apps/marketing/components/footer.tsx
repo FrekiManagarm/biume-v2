@@ -1,11 +1,20 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 const productLinks = [
   { href: "/osteopathe-animalier", label: "Ostéopathe animalier" },
-  { href: "/logiciel-osteopathe-animalier", label: "Logiciel ostéopathe animalier" },
-  { href: "/compte-rendu-osteopathe-animalier", label: "Compte rendu propriétaire" },
-  { href: "/modele-compte-rendu-osteopathe-animalier", label: "Modèle de compte rendu" },
+  {
+    href: "/logiciel-osteopathe-animalier",
+    label: "Logiciel ostéopathe animalier",
+  },
+  {
+    href: "/compte-rendu-osteopathe-animalier",
+    label: "Compte rendu propriétaire",
+  },
+  {
+    href: "/modele-compte-rendu-osteopathe-animalier",
+    label: "Modèle de compte rendu",
+  },
   { href: "/suivi-post-seance-animal", label: "Suivi post-séance" },
   { href: "/blog", label: "Blog ostéopathe animalier" },
   { href: "/tarifs", label: "Tarifs" },
@@ -17,15 +26,14 @@ const productLinks = [
   { href: "/alternatives/neovoice", label: "Alternative NeoVoice" },
   {
     href: "https://cal.com/mathieu-chambaud-biume",
-    label: "Demo",
+    label: "Démo",
   },
-];
+] as const;
 
 const legalLinks = [
-  { href: "/privacy", label: "Confidentialite" },
+  { href: "/privacy", label: "Confidentialité" },
   { href: "/cgu", label: "CGU" },
-  { href: "/contact", label: "Contact" },
-];
+] as const;
 
 const LandingFooter = () => {
   return (
@@ -33,7 +41,10 @@ const LandingFooter = () => {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_auto]">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-lg font-semibold"
+            >
               <Image
                 src="/brand/biume-logo.svg"
                 alt=""
@@ -44,7 +55,7 @@ const LandingFooter = () => {
               Biume
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
-              Le suivi post-séance et les comptes rendus propriétaire pour les
+              Le compte rendu propriétaire et le suivi post-séance pour les
               ostéopathes animaliers.
             </p>
           </div>
@@ -69,7 +80,7 @@ const LandingFooter = () => {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold">Legal</h2>
+            <h2 className="text-sm font-semibold">Légal</h2>
             <ul className="mt-4 space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
@@ -85,9 +96,8 @@ const LandingFooter = () => {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Biume. Tous droits reserves.</p>
-          <p>Hébergé en France, conforme au RGPD</p>
+        <div className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} Biume. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

@@ -103,16 +103,12 @@ describe("Biume home landing", () => {
     const html = renderToStaticMarkup(<FeaturesSection />);
 
     expect(html).toContain("La séance ne s&#x27;arrête pas au rendez-vous.");
-    expect(html).toContain(
-      "Un fil clair, du rendez-vous au prochain échange.",
-    );
+    expect(html).toContain("Un fil clair, du rendez-vous au prochain échange.");
     expect(html).toContain("Observer");
     expect(html).toContain("Valider");
     expect(html).toContain("Suivre");
     expect(html).toContain("Revoir");
-    expect(html).toContain(
-      "Le propriétaire comprend. Vous gardez le fil.",
-    );
+    expect(html).toContain("Le propriétaire comprend. Vous gardez le fil.");
     expect(html).toContain("Résumé propriétaire");
     expect(html).toContain("Retour à J+7");
     expect(html).toContain("Timeline animal");
@@ -175,7 +171,9 @@ describe("Biume home landing", () => {
     expect(html).toContain("Chaque séance mérite une suite.");
     expect(html).toContain("Un abonnement simple. Une seule offre.");
     expect(html).toContain("Les questions avant de commencer.");
-    expect(html).toContain("Hébergé en France, conforme au RGPD");
+    expect(html).not.toContain("Hébergé en France");
+    expect(html).not.toContain("conforme au RGPD");
+    expect(html).not.toContain('href="/contact"');
     expect(primaryCtaHrefs.length).toBeGreaterThanOrEqual(4);
     expect(primaryCtaHrefs).toEqual(
       Array(primaryCtaHrefs.length).fill(signupHref),

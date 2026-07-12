@@ -27,22 +27,26 @@ const pages = [
 ];
 
 describe("marketing sub pages", () => {
-  test.each(pages)("$name page uses the landing design system", ({
-    Page,
-    path,
-    titleParts,
-  }) => {
-    const html = renderToStaticMarkup(<Page />);
+  test.each(pages)(
+    "$name page uses the landing design system",
+    ({ Page, path, titleParts }) => {
+      const html = renderToStaticMarkup(<Page />);
 
-    expect(html).toContain("Essayer gratuitement");
-    expect(html).toContain("Hébergé en France, conforme au RGPD");
-    expect(html).toContain("selection:bg-primary/20");
-    expect(html).toContain("landing-reveal");
-    expect(html).toContain('"@type":"BreadcrumbList"');
-    expect(html).toContain('"name":"Accueil"');
-    expect(html).toContain(`"item":"https://biume.com${path}"`);
-    for (const titlePart of titleParts) {
-      expect(html).toContain(titlePart);
-    }
-  });
+      expect(html).toContain("Essayer gratuitement");
+      expect(html).toContain('href="/privacy"');
+      expect(html).toContain('href="/cgu"');
+      expect(html).toContain('href="https://cal.com/mathieu-chambaud-biume"');
+      expect(html).not.toContain('href="/contact"');
+      expect(html).not.toContain("Hébergé en France");
+      expect(html).not.toContain("conforme au RGPD");
+      expect(html).toContain("selection:bg-primary/20");
+      expect(html).toContain("landing-reveal");
+      expect(html).toContain('"@type":"BreadcrumbList"');
+      expect(html).toContain('"name":"Accueil"');
+      expect(html).toContain(`"item":"https://biume.com${path}"`);
+      for (const titlePart of titleParts) {
+        expect(html).toContain(titlePart);
+      }
+    },
+  );
 });
