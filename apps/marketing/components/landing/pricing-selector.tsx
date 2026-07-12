@@ -85,36 +85,41 @@ export function PricingSelector({
           })}
         </div>
 
-        <AnimatePresence mode="wait" initial={false}>
-          <m.div
-            key={cycle}
-            data-billing-price
-            aria-live="polite"
-            aria-atomic="true"
-            initial={reduceMotion === true ? false : { opacity: 0.72, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={
-              reduceMotion === true ? { opacity: 1 } : { opacity: 0.72, y: -6 }
-            }
-            transition={{
-              duration: reduceMotion === true ? 0 : 0.24,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="mt-8"
-          >
-            <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-              <span className="font-mono text-5xl font-semibold leading-none tracking-[-0.055em] text-[color:var(--carnet-ink)] md:text-7xl">
-                {selected.price}
-              </span>
-              <span className="max-w-52 pb-1 text-sm leading-5 text-[color:var(--carnet-muted)]">
-                {selected.suffix}
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-[color:var(--carnet-muted)]">
-              {selected.detail}
-            </p>
-          </m.div>
-        </AnimatePresence>
+        <div
+          data-billing-price
+          aria-live="polite"
+          aria-atomic="true"
+          className="mt-8"
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <m.div
+              key={cycle}
+              initial={reduceMotion === true ? false : { opacity: 0.72, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={
+                reduceMotion === true
+                  ? { opacity: 1 }
+                  : { opacity: 0.72, y: -6 }
+              }
+              transition={{
+                duration: reduceMotion === true ? 0 : 0.24,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+                <span className="font-mono text-5xl font-semibold leading-none tracking-[-0.055em] text-[color:var(--carnet-ink)] md:text-7xl">
+                  {selected.price}
+                </span>
+                <span className="max-w-52 pb-1 text-sm leading-5 text-[color:var(--carnet-muted)]">
+                  {selected.suffix}
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-[color:var(--carnet-muted)]">
+                {selected.detail}
+              </p>
+            </m.div>
+          </AnimatePresence>
+        </div>
       </div>
     </LazyMotion>
   );

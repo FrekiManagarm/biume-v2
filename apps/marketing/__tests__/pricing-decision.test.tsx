@@ -43,9 +43,10 @@ describe("pricing decision", () => {
     expect(text).toContain(
       "15 jours pour tester l'ensemble du parcours, sans carte bancaire.",
     );
-    expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain('aria-pressed="false"');
+    expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
+    expect(html.match(/aria-pressed="false"/g)).toHaveLength(1);
     expect(html).toContain('aria-live="polite"');
+    expect(html).toContain('aria-atomic="true"');
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html).not.toMatch(exactZeroOpacity);
@@ -66,5 +67,40 @@ describe("pricing decision", () => {
     expect(selectorSource).not.toContain("repeat: Infinity");
     expect(decisionSource).not.toContain('"use client"');
     expect(decisionSource).not.toContain('from "motion/react"');
+  });
+
+  test("keeps the live region mounted around animated price changes", async () => {
+    const selectorSource = await Bun.file(
+      new URL("../components/landing/pricing-selector.tsx", import.meta.url),
+    ).text();
+    const liveRegionIndex = selectorSource.indexOf("data-billing-price");
+    const liveRegionTagStart = selectorSource.lastIndexOf("<", liveRegionIndex);
+    const liveRegionTagEnd = selectorSource.indexOf(">", liveRegionIndex);
+    const liveRegionOpenTag = selectorSource.slice(
+      liveRegionTagStart,
+      liveRegionTagEnd + 1,
+    );
+    const animatedPriceIndex = selectorSource.indexOf(
+      '<AnimatePresence mode="wait" initial={false}>',
+      liveRegionIndex,
+    );
+    const keyedPriceIndex = selectorSource.indexOf(
+      "key={cycle}",
+      animatedPriceIndex,
+    );
+
+    expect(liveRegionIndex).toBeGreaterThan(-1);
+    expect(liveRegionOpenTag).toMatch(/^<div\b/);
+    expect(liveRegionOpenTag).not.toContain("key={cycle}");
+    expect(animatedPriceIndex).toBeGreaterThan(liveRegionIndex);
+    expect(keyedPriceIndex).toBeGreaterThan(animatedPriceIndex);
+  });
+
+  test("disables prefetch for the pricing conversion link", async () => {
+    const decisionSource = await Bun.file(
+      new URL("../components/landing/pricing-decision.tsx", import.meta.url),
+    ).text();
+
+    expect(decisionSource).toContain("prefetch={false}");
   });
 });
