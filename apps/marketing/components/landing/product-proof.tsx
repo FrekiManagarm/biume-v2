@@ -26,7 +26,8 @@ export function ProductProof() {
       <div className="mx-auto max-w-[90rem]">
         <div className="grid gap-6 lg:grid-cols-[0.76fr_1.24fr] lg:items-end">
           <div>
-            <p className="border-l-2 border-[color:var(--carnet-blue)] pl-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-ink)]">
+            <p className="cinematic-scene-label">Scène 03 · Le document</p>
+            <p className="mt-4 border-l-2 border-[color:var(--carnet-blue)] pl-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-ink)]">
               Ce qui existe aujourd&apos;hui
             </p>
             <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
@@ -43,7 +44,10 @@ export function ProductProof() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:mt-12 lg:grid-cols-[1.42fr_0.58fr] lg:items-start">
+        <div
+          data-product-stage="editor"
+          className="cinematic-product-stage mt-10 grid gap-0 md:mt-14 lg:grid-cols-[minmax(0,1.42fr)_minmax(18rem,0.58fr)] lg:items-center"
+        >
           <article
             data-product-editor
             className="overflow-hidden rounded-[0.75rem_0.75rem_2rem_0.75rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] shadow-[0_36px_90px_-62px_rgba(29,29,33,0.38)]"
@@ -121,10 +125,13 @@ export function ProductProof() {
             </div>
           </article>
 
-          <div className="grid gap-5 lg:pt-16">
+          <div
+            data-product-outcomes="true"
+            className="grid border-x border-b border-[color:var(--carnet-line)] lg:border-y lg:border-l-0"
+          >
             <article
               data-product-output="pdf"
-              className="rounded-[0.75rem_0.75rem_1.5rem_0.75rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] p-5"
+              className="border-b border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] p-5"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -147,7 +154,7 @@ export function ProductProof() {
 
             <article
               data-product-output="reminder"
-              className="rounded-[1.5rem_0.75rem_0.75rem_0.75rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-blue-soft)] p-5"
+              className="bg-[color:var(--carnet-surface)] p-5"
             >
               <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-ink)]">
                 Relance de rendez-vous

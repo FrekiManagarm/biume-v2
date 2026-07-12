@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import { ProductProof } from "../components/landing/product-proof";
-import { textOnly } from "./landing-test-utils";
+import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
 describe("product proof", () => {
   test("shows the supported editor and two factual outputs", () => {
@@ -27,7 +27,12 @@ describe("product proof", () => {
     expect(html).toContain("Compte-rendu-seance.pdf");
     expect(html).toContain("Relance de rendez-vous");
     expect(html).toContain("Échéance choisie par le praticien : dans 30 jours");
+    expect(html).toContain("Scène 03 · Le document");
+    expect(html).toContain('data-product-stage="editor"');
+    expect(html).toContain('data-product-outcomes="true"');
+    expect(html.match(/data-product-editor=/g)).toHaveLength(1);
     expect(html.match(/data-product-output=/g)).toHaveLength(2);
+    expect(html).not.toMatch(exactZeroOpacity);
   });
 
   test("does not sell unsupported results or owner-response features", () => {

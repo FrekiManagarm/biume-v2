@@ -439,6 +439,31 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
   background: var(--cinematic-rust);
 }
 
+.cinematic-product-stage {
+  position: relative;
+}
+
+.cinematic-product-stage [data-product-editor] {
+  position: relative;
+  z-index: 1;
+}
+
+.cinematic-product-stage [data-product-outcomes="true"] {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .cinematic-product-stage [data-product-outcomes="true"]::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    width: 4rem;
+    height: 1px;
+    background: var(--carnet-line);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-cinematic-header],
   [data-cinematic-header-surface],
