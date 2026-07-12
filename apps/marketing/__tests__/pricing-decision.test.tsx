@@ -70,6 +70,7 @@ describe("pricing decision", () => {
     expect(selectorSource).not.toContain("LazyMotion");
     expect(selectorSource).not.toContain("AnimatePresence");
     expect(selectorSource).not.toContain("repeat: Infinity");
+    expect(selectorSource).not.toContain("text-white/70");
     expect(decisionSource).not.toContain('"use client"');
     expect(decisionSource).not.toContain('from "motion/react"');
   });

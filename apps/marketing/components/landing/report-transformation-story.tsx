@@ -99,7 +99,7 @@ function TransformationStep({
   return (
     <li
       data-report-state={step.id}
-      className="border-t border-[color:var(--cinematic-trace-line)] py-8 first:border-[color:var(--cinematic-rust)] md:py-10"
+      className="border-t border-[color:var(--cinematic-trace-line)] py-5 first:border-[color:var(--cinematic-rust)] md:py-10"
     >
       <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr]">
         <span className="font-mono text-xs text-[color:var(--cinematic-trace-muted)]">
@@ -132,7 +132,7 @@ function DocumentState({
     return (
       <article
         data-report-layer={step.id}
-        className="grid gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9"
+        className="hidden gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9 md:grid"
       >
         <span className="font-mono text-[0.65rem] text-[color:var(--carnet-muted)]">
           0{index + 1}
@@ -156,7 +156,7 @@ function DocumentState({
     return (
       <article
         data-report-layer={step.id}
-        className="grid gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9"
+        className="hidden gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9 md:grid"
       >
         <span className="font-mono text-[0.65rem] text-[color:var(--carnet-muted)]">
           0{index + 1}
@@ -195,7 +195,7 @@ function DocumentState({
     return (
       <article
         data-report-layer={step.id}
-        className="grid gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9"
+        className="hidden gap-4 border-b border-[color:var(--carnet-muted)]/25 py-7 sm:grid-cols-[3rem_1fr] sm:py-9 md:grid"
       >
         <span className="font-mono text-[0.65rem] text-[color:var(--carnet-muted)]">
           0{index + 1}
@@ -253,7 +253,11 @@ function DocumentState({
 
 function ReportPaper({ demo }: { demo: ReportTransformationDemo }) {
   return (
-    <div data-report-document className="cinematic-report-paper px-5 sm:px-8">
+    <div
+      data-report-document
+      aria-hidden="true"
+      className="cinematic-report-paper px-5 sm:px-8"
+    >
       <div className="flex items-center justify-between gap-4 border-b border-[color:var(--carnet-muted)]/25 py-5">
         <div>
           <p className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-[color:var(--carnet-muted)]">
@@ -285,7 +289,7 @@ export function ReportTransformationStory({
       id="produit"
       data-landing-section="transformation"
       data-report-raccord="gesture-to-document"
-      className="cinematic-trace scroll-mt-18 px-4 py-10 sm:px-6 md:py-20 lg:px-8"
+      className="cinematic-trace scroll-mt-18 px-4 py-6 sm:px-6 md:py-20 lg:px-8"
     >
       <div className="relative mx-auto max-w-[90rem]">
         <div className="max-w-4xl">

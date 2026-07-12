@@ -10,7 +10,7 @@ export function FinalCta() {
       data-epilogue="human-followup"
       className="cinematic-epilogue mt-10 grid md:mt-16 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)]"
     >
-      <div className="relative min-h-52 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
+      <div className="relative min-h-36 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
         <Image
           src="/assets/images/landing/practitioner-owner-animal.png"
           alt="Une praticienne échange avec la propriétaire d’un animal après une séance"

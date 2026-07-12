@@ -33,7 +33,7 @@ export function PricingDecision() {
     <section
       id="tarifs"
       data-landing-section="pricing"
-      className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-10 sm:px-6 md:py-20 lg:px-8"
+      className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-6 sm:px-6 md:py-20 lg:px-8"
     >
       <div
         data-pricing-stage="decision"
@@ -41,7 +41,7 @@ export function PricingDecision() {
       >
         <div
           data-control-interlude
-          className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-10 md:pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
+          className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-6 md:pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
         >
           <div>
             <p className="cinematic-scene-label mb-4 text-[color:var(--carnet-muted)]">
@@ -60,7 +60,7 @@ export function PricingDecision() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-10 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
+        <div className="mt-6 grid gap-6 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-muted)]">
               Une offre, deux rythmes

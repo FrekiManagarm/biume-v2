@@ -198,9 +198,16 @@ describe("Biume cinematic plan-sequence homepage", () => {
       const section = landingSectionTag(html, id);
 
       expect(section).toBeDefined();
-      expect(section).toContain("py-10");
+      expect(section).toContain("py-6");
       expect(section).toContain("md:py-20");
     }
+
+    expect(html).toMatch(/data-report-document="true" aria-hidden="true"/);
+    expect(
+      html.match(
+        /data-report-layer="(?:note|structure|language)" class="hidden /g,
+      ),
+    ).toHaveLength(3);
   });
 
   test("renders the approved promise, report story, proof, price and close", () => {

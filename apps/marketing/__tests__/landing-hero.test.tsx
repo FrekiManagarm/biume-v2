@@ -127,6 +127,10 @@ describe("Carnet vivant header and hero", () => {
 
     expect(heroSource).not.toContain('"use client"');
     expect(heroSource).not.toContain('from "motion/react"');
+    expect(heroSource).toContain('rel="preload"');
+    expect(heroSource).toContain("imageSrcSet={mobileImage.props.srcSet}");
+    expect(heroSource).toContain('media="(max-width: 767px)"');
+    expect(heroSource).toContain('media="(min-width: 768px)"');
     expect(heroSource).toContain("carnet-hero-sans");
     expect(heroSource).toContain("carnet-hero-serif");
     expect(css).toMatch(
@@ -139,6 +143,9 @@ describe("Carnet vivant header and hero", () => {
     expect(heroSource).not.toContain("landing-hero-photo");
     expect(css).not.toContain("landing-hero-entry");
     expect(css).not.toContain("landing-hero-photo");
+    expect(css).toMatch(
+      /@media \(min-width: 768px\)[\s\S]*html\[data-cinematic-scene="hero"\] \[data-cinematic-header\]/,
+    );
     expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cinematic-hero-media__depth[^}]*transform:\s*none\s*!important/,
     );

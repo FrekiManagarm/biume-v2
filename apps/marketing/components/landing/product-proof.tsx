@@ -21,7 +21,7 @@ export function ProductProof() {
     <section
       id="comment-ca-marche"
       data-landing-section="product-proof"
-      className="scroll-mt-18 px-4 py-10 sm:px-6 md:py-20 lg:px-8"
+      className="scroll-mt-18 px-4 py-6 sm:px-6 md:py-20 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
         <div className="grid gap-6 lg:grid-cols-[0.76fr_1.24fr] lg:items-end">
@@ -69,13 +69,13 @@ export function ProductProof() {
             <div className="grid md:grid-cols-[11rem_1fr]">
               <aside
                 aria-label="Rubriques illustrées du compte rendu"
-                className="border-b border-[color:var(--carnet-line)] bg-[color:var(--carnet-muted-surface)] p-4 md:border-b-0 md:border-r"
+                className="border-b border-[color:var(--carnet-line)] bg-[color:var(--carnet-muted-surface)] p-3 md:border-b-0 md:border-r md:p-4"
               >
-                <ol className="grid grid-cols-2 gap-2 md:grid-cols-1">
+                <ol className="grid grid-cols-4 gap-1 md:grid-cols-1 md:gap-2">
                   {editorFields.map((field, index) => (
                     <li
                       key={field.label}
-                      className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
+                      className={`rounded-lg px-1 py-2 text-center text-xs font-medium md:px-3 md:py-2.5 md:text-left md:text-sm ${
                         index === 0
                           ? "bg-[color:var(--carnet-surface)] text-[color:var(--carnet-ink)]"
                           : "text-[color:var(--carnet-muted)]"

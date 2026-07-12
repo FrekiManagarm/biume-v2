@@ -38,6 +38,24 @@ export function LandingHero({
       data-landing-section="hero"
       className="cinematic-hero relative isolate min-h-[calc(100svh-4.5rem)] overflow-hidden"
     >
+      <link
+        rel="preload"
+        as="image"
+        href={mobileImage.props.src}
+        imageSrcSet={mobileImage.props.srcSet}
+        imageSizes={mobileImage.props.sizes}
+        media="(max-width: 767px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href={desktopImage.props.src}
+        imageSrcSet={desktopImage.props.srcSet}
+        imageSizes={desktopImage.props.sizes}
+        media="(min-width: 768px)"
+        fetchPriority="high"
+      />
       <CinematicHeroMedia
         alt={alt}
         desktop={{
