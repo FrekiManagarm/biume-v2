@@ -400,9 +400,19 @@ html[data-cinematic-scene="hero"] [data-cinematic-header-surface] {
 }
 
 .cinematic-trace {
+  --cinematic-trace-muted: color-mix(
+    in srgb,
+    var(--cinematic-paper) 64%,
+    transparent
+  );
+  --cinematic-trace-line: color-mix(
+    in srgb,
+    var(--cinematic-paper) 18%,
+    transparent
+  );
   position: relative;
   background: var(--cinematic-night);
-  color: #fffaf2;
+  color: var(--cinematic-paper);
 }
 
 .cinematic-trace::before {

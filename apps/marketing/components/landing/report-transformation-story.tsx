@@ -14,10 +14,10 @@ function RailStateContent({
     case "note":
       return (
         <div className="mt-5 border-l-2 border-[color:var(--cinematic-rust)] pl-4">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/70">
+          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--cinematic-trace-muted)]">
             Note technique
           </p>
-          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-white/78">
+          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-[color:var(--cinematic-paper)]">
             {demo.observation}
           </p>
         </div>
@@ -26,22 +26,26 @@ function RailStateContent({
       return (
         <dl className="mt-5 grid max-w-xl grid-cols-2 gap-x-5 gap-y-3 text-sm">
           <div>
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
+            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[color:var(--cinematic-trace-muted)]">
               Zone
             </dt>
-            <dd className="mt-1 text-white/78">Thorax</dd>
+            <dd className="mt-1 text-[color:var(--cinematic-paper)]">
+              Thorax
+            </dd>
           </div>
           <div>
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
+            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[color:var(--cinematic-trace-muted)]">
               Côté
             </dt>
-            <dd className="mt-1 text-white/78">Gauche</dd>
+            <dd className="mt-1 text-[color:var(--cinematic-paper)]">
+              Gauche
+            </dd>
           </div>
           <div className="col-span-2">
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
-              Observation structurée
+            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[color:var(--cinematic-trace-muted)]">
+              Mobilité
             </dt>
-            <dd className="mt-1 leading-6 text-white/78">
+            <dd className="mt-1 leading-6 text-[color:var(--cinematic-paper)]">
               {demo.observation}
             </dd>
           </div>
@@ -50,13 +54,15 @@ function RailStateContent({
     case "language":
       return (
         <div className="mt-5 border-l-2 border-[color:var(--cinematic-rust)] pl-4">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/70">
+          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--cinematic-trace-muted)]">
             Proposition adaptée
           </p>
-          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-white/78">
+          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-[color:var(--cinematic-paper)]">
             {demo.adaptedProposal}
           </p>
-          <p className="mt-2 text-xs leading-5 text-white/65">{demo.help}</p>
+          <p className="mt-2 text-xs leading-5 text-[color:var(--cinematic-trace-muted)]">
+            {demo.help}
+          </p>
         </div>
       );
     case "final":
@@ -64,7 +70,7 @@ function RailStateContent({
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs">
           <span
             data-report-final-status
-            className="inline-flex items-center gap-2 text-white/78"
+            className="inline-flex items-center gap-2 text-[color:var(--cinematic-paper)]"
           >
             <span
               data-report-final-dot
@@ -73,7 +79,9 @@ function RailStateContent({
             />
             {demo.finalStatus}
           </span>
-          <span className="text-white/55">{demo.fileName}</span>
+          <span className="text-[color:var(--cinematic-trace-muted)]">
+            {demo.fileName}
+          </span>
         </div>
       );
   }
@@ -91,15 +99,17 @@ function TransformationStep({
   return (
     <li
       data-report-state={step.id}
-      className="border-t border-white/14 py-8 first:border-[color:var(--cinematic-rust)] md:py-10"
+      className="border-t border-[color:var(--cinematic-trace-line)] py-8 first:border-[color:var(--cinematic-rust)] md:py-10"
     >
       <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr]">
-        <span className="font-mono text-xs text-white/60">0{index + 1}</span>
+        <span className="font-mono text-xs text-[color:var(--cinematic-trace-muted)]">
+          0{index + 1} / 04
+        </span>
         <div>
-          <h3 className="text-2xl font-semibold tracking-[-0.035em] text-white md:text-3xl">
+          <h3 className="text-2xl font-semibold tracking-[-0.035em] text-[color:var(--cinematic-paper)] md:text-3xl">
             {step.label}
           </h3>
-          <p className="mt-2 max-w-[44ch] text-sm leading-6 text-white/60 md:text-base md:leading-7">
+          <p className="mt-2 max-w-[44ch] text-sm leading-6 text-[color:var(--cinematic-trace-muted)] md:text-base md:leading-7">
             {step.body}
           </p>
           <RailStateContent step={step} demo={demo} />
@@ -168,6 +178,12 @@ function DocumentState({
               </dt>
               <dd className="mt-1">Gauche</dd>
             </div>
+            <div className="col-span-2">
+              <dt className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[color:var(--carnet-muted)]">
+                Mobilité
+              </dt>
+              <dd className="mt-1">Améliorée pendant la séance</dd>
+            </div>
           </dl>
           <p className="mt-5 text-base leading-7">{demo.observation}</p>
         </div>
@@ -226,7 +242,7 @@ function DocumentState({
           <span className="font-mono text-xs text-[color:var(--carnet-muted)]">
             {demo.fileName}
           </span>
-          <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-[color:var(--carnet-ink)] px-4 text-xs font-semibold text-white">
+          <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-[color:var(--carnet-ink)] px-4 text-xs font-semibold text-[color:var(--cinematic-paper)]">
             Partager le PDF
           </span>
         </div>
