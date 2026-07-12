@@ -39,46 +39,23 @@ describe("report transformation story", () => {
     expect(html).not.toContain("visibility:hidden");
   });
 
-  test("enhances the sticky story without shipping the motion runtime", async () => {
-    const [source, css] = await Promise.all([
-      Bun.file(
-        new URL(
-          "../components/landing/report-transformation-story.tsx",
-          import.meta.url,
-        ),
-      ).text(),
-      Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
-    ]);
+  test("renders the editorial story entirely on the server", async () => {
+    const source = await Bun.file(
+      new URL(
+        "../components/landing/report-transformation-story.tsx",
+        import.meta.url,
+      ),
+    ).text();
+    const html = renderToStaticMarkup(
+      <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />,
+    );
 
-    expect(source).toContain("useEffect");
-    expect(source).toContain("IntersectionObserver");
-    expect(source).toContain("new Map<HTMLElement, number>()");
-    expect(source).toContain("intersectionRatios.set");
-    expect(source).toContain("matchMedia");
-    expect(source).toContain("reportActive");
+    expect(source).not.toContain('"use client"');
+    expect(source).not.toContain("useEffect");
+    expect(source).not.toContain("IntersectionObserver");
     expect(source).not.toContain('from "motion/react"');
-    expect(source).not.toContain("LazyMotion");
-    expect(source).not.toContain("useScroll");
-    expect(source).not.toContain("useTransform");
-    expect(source).not.toContain("useReducedMotion");
-    expect(source).not.toContain("useSyncExternalStore");
-    expect(source).not.toContain("useState(");
-    expect(source).not.toContain('addEventListener("scroll"');
-    expect(source).not.toContain("window.scrollY");
-    expect(source).not.toContain("requestAnimationFrame");
-    expect(source).not.toContain("repeat: Infinity");
-    expect(source).not.toContain("28vh");
-    expect(source).not.toContain("22vh");
-    expect(css).toContain('[data-report-enhanced="true"]');
-    expect(css).toContain(".report-document-sequence");
-    expect(css).toMatch(
-      /\.report-document-layer\s*{[^}]*visibility:\s*hidden/s,
-    );
-    expect(css).not.toMatch(
-      /\.report-document-layer[^}]*opacity:\s*0/s,
-    );
-    expect(css).not.toMatch(
-      /\[data-report-enhanced="true"\]\s+\[data-report-state\][^}]*opacity:/s,
-    );
+    expect(html).toContain("Scène 02 · La trace");
+    expect(html).toContain('data-report-raccord="gesture-to-document"');
+    expect(html).not.toMatch(exactZeroOpacity);
   });
 });

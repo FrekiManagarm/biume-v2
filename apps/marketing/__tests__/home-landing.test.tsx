@@ -150,15 +150,17 @@ describe("Biume cinematic plan-sequence homepage", () => {
     expect(service?.offers).toBeUndefined();
   });
 
-  test("limits client hydration to the two interactive islands", async () => {
+  test("limits client hydration to the three interactive islands", async () => {
     const clientIslands = [
-      "../components/landing/report-transformation-story.tsx",
+      "../components/landing/cinematic-scene-controller.tsx",
+      "../components/landing/cinematic-hero-media.tsx",
       "../components/landing/pricing-selector.tsx",
     ];
     const serverComponents = [
       "../components/landing/landing-header.tsx",
       "../components/landing/header-motion.tsx",
       "../components/landing/landing-hero.tsx",
+      "../components/landing/report-transformation-story.tsx",
       "../components/landing/product-proof.tsx",
       "../components/landing/pricing-decision.tsx",
       "../components/landing/landing-faq.tsx",
