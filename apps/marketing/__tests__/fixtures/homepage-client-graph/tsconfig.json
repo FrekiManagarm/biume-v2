@@ -2,6 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@fixture/declaration-mts": ["./declaration-client.d.mts"],
+      "@fixture/declaration-cts": ["./declaration-client.d.cts"],
       "@fixture/*": ["./*"]
     }
   }

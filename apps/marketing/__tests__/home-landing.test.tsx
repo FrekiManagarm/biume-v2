@@ -98,7 +98,10 @@ async function homepageClientIslands(
               (namedBindings && ts.isNamespaceImport(namedBindings)) ||
               (namedBindings &&
                 ts.isNamedImports(namedBindings) &&
-                namedBindings.elements.some((element) => !element.isTypeOnly))));
+                (namedBindings.elements.length === 0 ||
+                  namedBindings.elements.some(
+                    (element) => !element.isTypeOnly,
+                  )))));
 
         if (hasRuntimeBinding) runtimeSpecifiers.push(node.moduleSpecifier.text);
       } else if (
@@ -111,6 +114,7 @@ async function homepageClientIslands(
           !node.isTypeOnly &&
           (!exportClause ||
             ts.isNamespaceExport(exportClause) ||
+            exportClause.elements.length === 0 ||
             exportClause.elements.some((element) => !element.isTypeOnly));
 
         if (hasRuntimeExport) runtimeSpecifiers.push(node.moduleSpecifier.text);
@@ -118,7 +122,7 @@ async function homepageClientIslands(
         ts.isCallExpression(node) &&
         node.expression.kind === ts.SyntaxKind.ImportKeyword &&
         node.arguments.length === 1 &&
-        ts.isStringLiteral(node.arguments[0]!)
+        ts.isStringLiteralLike(node.arguments[0]!)
       ) {
         runtimeSpecifiers.push(node.arguments[0]!.text);
       }
@@ -138,12 +142,13 @@ async function homepageClientIslands(
 
       const dependency = path.resolve(resolved.resolvedFileName);
       const relativeDependency = path.relative(rootPath, dependency);
+      const isDeclaration = /\.d\.(?:ts|mts|cts)$/i.test(dependency);
       const isLocalRuntimeModule =
         relativeDependency !== "" &&
         !relativeDependency.startsWith(`..${path.sep}`) &&
         !path.isAbsolute(relativeDependency) &&
         /\.[cm]?[jt]sx?$/.test(dependency) &&
-        !dependency.endsWith(".d.ts");
+        !isDeclaration;
 
       if (isLocalRuntimeModule) pending.push(dependency);
     }
@@ -318,6 +323,42 @@ describe("Biume cinematic plan-sequence homepage", () => {
         clientGraphFixtureRoot,
       ),
     ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("discovers a client island reached through an empty import", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-empty-import.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("discovers a client island reached through an empty export", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-empty-export.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("discovers a client island reached through a template import", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-template-import.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual(["fourth-client.tsx"]);
+  });
+
+  test("excludes modern TypeScript declaration modules", async () => {
+    expect(
+      await homepageClientIslands(
+        new URL("via-declarations.ts", clientGraphFixtureRoot),
+        clientGraphFixtureRoot,
+      ),
+    ).toEqual([]);
   });
 
   test("keeps cinematic CSS progressively enhanced and motion-safe", async () => {
