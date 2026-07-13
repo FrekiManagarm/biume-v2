@@ -86,8 +86,12 @@ describe("Biume Carnet vivant homepage", () => {
     expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
     expect(html).not.toContain("Pas une promesse abstraite.");
     expect(html).not.toContain("Les outils réellement disponibles.");
-    expect(html).not.toContain(">PDF professionnel<");
-    expect(html).not.toContain(">Relance de rendez-vous<");
+    expect(text).not.toContain(
+      "PDF professionnel Compte-rendu-seance.pdf",
+    );
+    expect(text).not.toContain(
+      "Relance de rendez-vous Échéance choisie par le praticien : dans 30 jours",
+    );
     expect(html).toContain("24,99 €");
     expect(html).toContain("29,99 € / mois");
     expect(html.match(/<details/g)).toHaveLength(6);
@@ -197,6 +201,14 @@ describe("Biume Carnet vivant homepage", () => {
     expect(css).toMatch(/--font-geist-sans:\s*ui-sans-serif/);
     expect(css).toMatch(/--font-geist-mono:\s*ui-monospace/);
     expect(css).toMatch(/--font-newsreader:[^;]*Iowan Old Style/s);
+  });
+
+  test("does not assemble the standalone product proof", async () => {
+    const source = await Bun.file(
+      new URL("../app/page.tsx", import.meta.url),
+    ).text();
+
+    expect(source).not.toContain("ProductProof");
   });
 
   test("scopes Tailwind discovery to each owning application", async () => {
