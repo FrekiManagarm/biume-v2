@@ -236,6 +236,10 @@ describe("report transformation story", () => {
     expect(source).not.toContain("useState(");
     expect(source).not.toContain('addEventListener("scroll"');
     expect(source).not.toContain("requestAnimationFrame");
+    expect(source).not.toContain("as CSSProperties");
+    expect(source).toMatch(
+      /satisfies\s+CSSProperties\s*&\s*{\s*"--token-index":\s*number;\s*}/s,
+    );
     expect(source).not.toMatch(/data-report-note[\s\S]{0,240}min-h/);
     expect(source).not.toMatch(/data-report-document[\s\S]{0,240}min-h/);
 

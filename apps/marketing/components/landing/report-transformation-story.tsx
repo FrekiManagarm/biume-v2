@@ -157,7 +157,11 @@ function TransformationBridge() {
             <span
               key={token}
               data-report-token
-              style={{ "--token-index": index } as CSSProperties}
+              style={
+                { "--token-index": index } satisfies CSSProperties & {
+                  "--token-index": number;
+                }
+              }
               className="rounded-full border border-white/12 bg-[color:var(--carnet-anthracite)] px-2.5 py-1 font-mono text-[0.6rem] text-white/64"
             >
               {token}
