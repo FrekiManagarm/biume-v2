@@ -22,6 +22,9 @@ export type ReportTransformationDemo = Readonly<{
   ];
 }>;
 
+export const REPORT_NOTE_SUMMARY =
+  "Mobilité réduite à gauche · thorax. Amélioration pendant la séance.";
+
 export const REPORT_TRANSFORMATION_DEMO = {
   observation:
     "Mobilité réduite à gauche et tension modérée observée au niveau thoracique. La mobilité s'est améliorée pendant la séance.",

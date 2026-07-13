@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import {
+  REPORT_NOTE_SUMMARY,
+  REPORT_TRANSFORMATION_DEMO,
+} from "../components/landing/report-transformation-demo";
 
 describe("report transformation demo", () => {
   test("keeps the approved four-state factual content", () => {
@@ -21,6 +24,9 @@ describe("report transformation demo", () => {
     );
     expect(REPORT_TRANSFORMATION_DEMO.fileName).toBe("Compte-rendu-seance.pdf");
     expect(REPORT_TRANSFORMATION_DEMO.finalStatus).toBe("Finalisé par vous");
+    expect(REPORT_NOTE_SUMMARY).toBe(
+      "Mobilité réduite à gauche · thorax. Amélioration pendant la séance.",
+    );
   });
 
   test("contains no unsupported outcome or diagnosis claim", () => {

@@ -4,7 +4,10 @@ import { describe, expect, test } from "bun:test";
 import { HeaderMotion } from "../components/landing/header-motion";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
-import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import {
+  REPORT_NOTE_SUMMARY,
+  REPORT_TRANSFORMATION_DEMO,
+} from "../components/landing/report-transformation-demo";
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
@@ -49,7 +52,7 @@ describe("Carnet vivant header and hero", () => {
     }
   });
 
-  test("hero renders approved copy and one integrated product surface", () => {
+  test("hero renders the approved living-report composition", () => {
     const html = renderWithLandingImageConfig(
       <LandingHero
         adaptedProposal={REPORT_TRANSFORMATION_DEMO.adaptedProposal}
@@ -58,30 +61,42 @@ describe("Carnet vivant header and hero", () => {
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "hero-signup");
 
-    expect(html).toContain(
-      "Le compte rendu propriétaire des ostéopathes animaliers",
+    expect(html).toContain("Le lien après la séance");
+    expect(text).toContain(
+      "Vos observations restent précises. Le propriétaire, lui, comprend.",
     );
-    expect(text).toContain("Vos observations, dans des mots qui restent.");
     expect(html).toContain(
-      "Biume structure vos notes et prépare un compte rendu clair pour le propriétaire. Vous relisez, corrigez et choisissez quand le partager.",
+      "Biume part de vos mots, structure un compte rendu clair, puis vous aide à garder le fil après la séance. Vous relisez et décidez de chaque envoi.",
     );
-    expect(html).toContain("Voir un exemple de compte rendu");
-    expect(html).toContain("15 jours d&#x27;essai");
+    expect(html).toContain("Voir le parcours");
+    expect(html).toContain("15 jours d’essai");
     expect(html).toContain("Sans carte bancaire");
-    expect(html).toContain("Partagé par vous");
-    expect(html).toContain("Proposition adaptée");
+    expect(html).toContain("Rien ne part sans vous");
+    expect(text).toContain(REPORT_NOTE_SUMMARY);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.adaptedProposal);
+    expect(html).toContain("Compte rendu propriétaire");
+    expect(html).toContain("Prêt à relire");
     expect(html).toContain("Vous pouvez encore modifier ce texte");
-    expect(html).toContain("Partager le PDF");
+    expect(html).not.toContain("Partager le PDF");
     expect(html).toContain("hero-practitioner-horse.png");
     expect(html).toContain("q=55");
     expect(html).toContain('loading="lazy"');
     expect(html.toLowerCase()).not.toContain('fetchpriority="high"');
     expect(html).not.toContain('rel="preload" as="image"');
-    expect(html).toMatch(/data-hero-photo[^>]*class="[^"]*hidden[^"]*md:block/);
-    expect(html).toMatch(/data-hero-product[^>]*class="[^"]*mt-0[^"]*md:-mt-20/);
-    expect(html.match(/data-hero-product=/g)).toHaveLength(1);
-    expect(text).not.toContain(REPORT_TRANSFORMATION_DEMO.observation);
+    expect(html.match(/data-hero-note=/g)).toHaveLength(1);
+    expect(html.match(/data-hero-report=/g)).toHaveLength(1);
+    expect(html.match(/data-hero-brand-rail=/g)).toHaveLength(1);
+    expect(html.match(/data-hero-journey=/g)).toHaveLength(1);
+    expect(html).toContain('aria-label="Parcours : séance, PDF, suivi"');
+    expect(text).toContain("SÉANCE");
+    expect(text).toContain("PDF");
+    expect(text).toContain("SUIVI");
+    expect(text).not.toContain("Notes → compte rendu → suivi");
+    const photoClass = html.match(
+      /data-hero-photo[^>]*class="([^"]*)"/,
+    )?.[1];
+    expect(photoClass).toBeDefined();
+    expect(photoClass).not.toMatch(/(?:^|\s)hidden(?:\s|$)/);
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html).not.toMatch(exactZeroOpacity);
@@ -100,11 +115,26 @@ describe("Carnet vivant header and hero", () => {
     const photoKeyframes = css.match(
       /@keyframes landing-hero-photo-enter\s*{([\s\S]*?)\n}/,
     )?.[1];
+    const noteKeyframes = css.match(
+      /@keyframes landing-hero-note\s*{([\s\S]*?)\n}/,
+    )?.[1];
+    const reportKeyframes = css.match(
+      /@keyframes landing-hero-report\s*{([\s\S]*?)\n}/,
+    )?.[1];
 
     expect(heroSource).not.toContain('"use client"');
     expect(heroSource).not.toContain('from "motion/react"');
+    expect(heroSource).toContain("REPORT_NOTE_SUMMARY");
+    expect(heroSource).toContain("data-hero-brand-rail");
+    expect(heroSource).toContain("linear-gradient");
+    expect(heroSource).toContain("var(--carnet-logo-violet)");
+    expect(heroSource).toContain("var(--carnet-logo-blue)");
+    expect(heroSource).toContain("var(--carnet-logo-green)");
     expect(heroSource).toContain("carnet-hero-sans");
     expect(heroSource).toContain("carnet-hero-serif");
+    expect(css).toMatch(/--carnet-logo-violet:\s*#8e82e8;/);
+    expect(css).toMatch(/--carnet-logo-blue:\s*#62a8c8;/);
+    expect(css).toMatch(/--carnet-logo-green:\s*#28c978;/);
     expect(css).toMatch(
       /\.carnet-hero-sans\s*{[^}]*font-family:\s*ui-sans-serif/s,
     );
@@ -115,6 +145,20 @@ describe("Carnet vivant header and hero", () => {
     expect(entryKeyframes).not.toContain("opacity");
     expect(photoKeyframes).toContain("scale(1.02)");
     expect(photoKeyframes).not.toContain("opacity");
+    expect(noteKeyframes).toContain(
+      "translate3d(-14px, 12px, 0) rotate(-1deg)",
+    );
+    expect(noteKeyframes).toContain("translate3d(0, 0, 0) rotate(0deg)");
+    expect(reportKeyframes).toContain(
+      "translate3d(18px, 16px, 0) scale(0.985)",
+    );
+    expect(reportKeyframes).toContain(
+      "translate3d(0, 0, 0) scale(1)",
+    );
+    for (const keyframes of [noteKeyframes, reportKeyframes]) {
+      expect(keyframes).toBeDefined();
+      expect(keyframes).not.toMatch(/opacity|\btop\b|\bleft\b|\bwidth\b|\bheight\b/);
+    }
     expect(css).toMatch(
       /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-entry\s*\{[^}]*animation:/,
     );
@@ -122,7 +166,16 @@ describe("Carnet vivant header and hero", () => {
       /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-photo\s*\{[^}]*animation:/,
     );
     expect(css).toMatch(
+      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-note\s*\{[^}]*animation:\s*landing-hero-note 620ms[^;}]*260ms\s+both;/,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 768px\) \{[\s\S]*?\.landing-hero-report\s*\{[^}]*animation:\s*landing-hero-report 720ms[^;}]*360ms\s+both;/,
+    );
+    expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.landing-hero-entry/,
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.landing-hero-note,[\s\S]*\.landing-hero-report\s*\{[^}]*animation:\s*none;/,
     );
   });
 });
