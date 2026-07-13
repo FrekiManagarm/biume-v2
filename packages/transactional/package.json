@@ -4,7 +4,7 @@
   "private": true,
   "version": "1.0.0",
   "exports": {
-    "./*": "./emails/*.ts"
+    "./*": "./emails/*.tsx"
   },
   "scripts": {
     "dev": "email dev --port 3002",
