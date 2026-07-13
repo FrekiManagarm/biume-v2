@@ -86,12 +86,7 @@ describe("Biume Carnet vivant homepage", () => {
     expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
     expect(html).not.toContain("Pas une promesse abstraite.");
     expect(html).not.toContain("Les outils réellement disponibles.");
-    expect(text).not.toContain(
-      "PDF professionnel Compte-rendu-seance.pdf",
-    );
-    expect(text).not.toContain(
-      "Relance de rendez-vous Échéance choisie par le praticien : dans 30 jours",
-    );
+    expect(html).not.toContain("data-product-output=");
     expect(html).toContain("24,99 €");
     expect(html).toContain("29,99 € / mois");
     expect(html.match(/<details/g)).toHaveLength(6);
