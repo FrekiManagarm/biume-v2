@@ -19,6 +19,12 @@ const reportTokens = ["Thorax", "Gauche", "Évolution"] as const;
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+type ReportTokenStyle = CSSProperties & { "--token-index": number };
+
+export function getReportTokenStyle(tokenIndex: number): ReportTokenStyle {
+  return { "--token-index": tokenIndex };
+}
+
 type ReportIntersectionEntry = Pick<
   IntersectionObserverEntry,
   "isIntersecting" | "intersectionRatio"
@@ -157,11 +163,7 @@ function TransformationBridge() {
             <span
               key={token}
               data-report-token
-              style={
-                { "--token-index": index } satisfies CSSProperties & {
-                  "--token-index": number;
-                }
-              }
+              style={getReportTokenStyle(index)}
               className="rounded-full border border-white/12 bg-[color:var(--carnet-anthracite)] px-2.5 py-1 font-mono text-[0.6rem] text-white/64"
             >
               {token}

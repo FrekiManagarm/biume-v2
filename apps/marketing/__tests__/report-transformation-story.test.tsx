@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import {
+  getReportTokenStyle,
   ReportTransformationStory,
   setupReportEnhancement,
   shouldEnhanceReport,
@@ -13,6 +14,10 @@ import {
 import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
 describe("report transformation story", () => {
+  test("creates a typed custom-property style outside JSX context", () => {
+    expect(getReportTokenStyle(2)).toEqual({ "--token-index": 2 });
+  });
+
   test("reveals only at the configured intersection ratio", () => {
     expect(shouldEnhanceReport(undefined)).toBe(false);
     expect(
@@ -238,7 +243,13 @@ describe("report transformation story", () => {
     expect(source).not.toContain("requestAnimationFrame");
     expect(source).not.toContain("as CSSProperties");
     expect(source).toMatch(
-      /satisfies\s+CSSProperties\s*&\s*{\s*"--token-index":\s*number;\s*}/s,
+      /type\s+ReportTokenStyle\s*=\s*CSSProperties\s*&\s*{\s*"--token-index":\s*number;?\s*}/s,
+    );
+    expect(source).toMatch(
+      /function\s+getReportTokenStyle\([^)]*\):\s*ReportTokenStyle/,
+    );
+    expect(source).not.toMatch(
+      /style=\{\s*\{[^}]*"--token-index"[^}]*satisfies/s,
     );
     expect(source).not.toMatch(/data-report-note[\s\S]{0,240}min-h/);
     expect(source).not.toMatch(/data-report-document[\s\S]{0,240}min-h/);
