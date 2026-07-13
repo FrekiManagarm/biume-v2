@@ -4,7 +4,6 @@ import { LandingFaq } from "../components/landing/landing-faq";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
 import { PricingDecision } from "../components/landing/pricing-decision";
-import { ProductProof } from "../components/landing/product-proof";
 import { ReportTransformationStory } from "../components/landing/report-transformation-story";
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { JsonLd, siteName, siteUrl } from "../lib/seo";
@@ -34,7 +33,6 @@ export default function Home() {
           adaptedProposal={REPORT_TRANSFORMATION_DEMO.adaptedProposal}
         />
         <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />
-        <ProductProof />
         <PricingDecision />
         <section
           id="questions"

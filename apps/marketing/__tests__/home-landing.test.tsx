@@ -1,6 +1,9 @@
 import { describe, expect, mock, test } from "bun:test";
 
-import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import {
+  REPORT_NOTE_SUMMARY,
+  REPORT_TRANSFORMATION_DEMO,
+} from "../components/landing/report-transformation-demo";
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
@@ -31,18 +34,18 @@ function landingSectionTag(html: string, id: string) {
 }
 
 describe("Biume Carnet vivant homepage", () => {
-  test("assembles five ordered conversion moments", () => {
+  test("assembles four ordered conversion moments", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
       'data-landing-section="hero"',
       'data-landing-section="transformation"',
-      'data-landing-section="product-proof"',
       'data-landing-section="pricing"',
       'data-landing-section="faq-cta"',
     ];
 
     expect(html).toContain("carnet-theme");
-    expect(html.match(/data-landing-section=/g)).toHaveLength(5);
+    expect(html.match(/data-landing-section=/g)).toHaveLength(4);
+    expect(html).not.toContain('data-landing-section="product-proof"');
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
@@ -59,12 +62,7 @@ describe("Biume Carnet vivant homepage", () => {
 
     expect(hero).toBeDefined();
     expect(hero).toContain("pb-10");
-    for (const id of [
-      "transformation",
-      "product-proof",
-      "pricing",
-      "faq-cta",
-    ]) {
+    for (const id of ["transformation", "pricing", "faq-cta"]) {
       const section = landingSectionTag(html, id);
 
       expect(section).toBeDefined();
@@ -73,25 +71,43 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
-  test("renders the approved promise, report story, proof, price and close", () => {
+  test("renders the approved promise, compact report story, price and close", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain("Vos observations, dans des mots qui restent.");
     expect(text).toContain(
-      "Une note devient un document que le propriétaire peut comprendre.",
+      "Vos observations restent précises. Le propriétaire, lui, comprend.",
     );
-    expect(html.match(/data-report-state=/g)).toHaveLength(4);
-    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.observation);
+    expect(text).toContain("Le même fond. Une forme enfin lisible.");
+    expect(text).toContain(REPORT_NOTE_SUMMARY);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.adaptedProposal);
-    expect(html).toContain("PDF professionnel");
-    expect(html).toContain("Relance de rendez-vous");
+    expect(html.match(/data-report-note(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html).not.toContain("Pas une promesse abstraite.");
+    expect(html).not.toContain("Les outils réellement disponibles.");
+    expect(html).not.toContain("data-product-output=");
     expect(html).toContain("24,99 €");
     expect(html).toContain("29,99 € / mois");
     expect(html.match(/<details/g)).toHaveLength(6);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
     expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
     expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("keeps homepage ids unique and every navigation anchor live", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!);
+    const navigationTargets = [
+      ...html.matchAll(/\shref="#([^"]+)"/g),
+    ].map((match) => match[1]!);
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(navigationTargets).toContain("produit");
+    expect(navigationTargets).toContain("comment-ca-marche");
+    for (const target of new Set(navigationTargets)) {
+      expect(ids.filter((id) => id === target)).toHaveLength(1);
+    }
   });
 
   test("maps every stable conversion hook to the signup application", () => {
@@ -184,6 +200,14 @@ describe("Biume Carnet vivant homepage", () => {
     expect(css).toMatch(/--font-geist-sans:\s*ui-sans-serif/);
     expect(css).toMatch(/--font-geist-mono:\s*ui-monospace/);
     expect(css).toMatch(/--font-newsreader:[^;]*Iowan Old Style/s);
+  });
+
+  test("does not assemble the standalone product proof", async () => {
+    const source = await Bun.file(
+      new URL("../app/page.tsx", import.meta.url),
+    ).text();
+
+    expect(source).not.toContain("ProductProof");
   });
 
   test("scopes Tailwind discovery to each owning application", async () => {
