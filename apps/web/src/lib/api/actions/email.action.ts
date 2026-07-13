@@ -3,7 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
-import NewReportClientEmail from "#/emails/NewReportClientEmail";
+import NewReportClientEmail from "@biume/emails/NewReportClientEmail";
 import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
 import { resend } from "#/lib/utils/resend";
 import type { AdvancedReport } from "#/lib/schemas/advancedReport/advancedReport";

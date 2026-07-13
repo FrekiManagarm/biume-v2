@@ -3,7 +3,7 @@ import z from "zod";
 import React from "react";
 import { resend } from "@/lib/utils/resend";
 import { render } from "@react-email/components";
-import { ReportReminderEmail } from "@/emails/ReportReminderEmail";
+import { ReportReminderEmail } from "@biume/emails/ReportReminderEmail";
 import { db } from "@/lib/utils/db";
 import { advancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import { organization as organizationSchema } from "@/lib/schemas";

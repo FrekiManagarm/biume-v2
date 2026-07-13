@@ -1,8 +1,11 @@
 {
-  "name": "@biume/transactional",
+  "name": "@biume/emails",
   "type": "module",
   "private": true,
   "version": "1.0.0",
+  "exports": {
+    "./*": "./emails/*.ts"
+  },
   "scripts": {
     "dev": "email dev --port 3002",
     "test": "bun test",
