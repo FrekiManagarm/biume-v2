@@ -164,12 +164,14 @@ export function LandingHero({
             </div>
           </article>
 
-          <nav
+          <div
             data-hero-journey
-            aria-label="Parcours : séance, PDF, suivi"
-            className="absolute bottom-7 left-5 z-20 hidden rounded-full border border-white/45 bg-[color:var(--carnet-anthracite)]/90 px-4 py-2.5 text-white shadow-[0_18px_48px_-30px_rgb(0_0_0/0.75)] backdrop-blur-sm sm:block"
+            className="absolute bottom-7 left-5 z-20 hidden rounded-full border border-white/45 bg-[color:var(--carnet-anthracite)]/90 px-4 py-2.5 text-white shadow-[0_18px_48px_-30px_rgb(0_0_0/0.75)] backdrop-blur-sm xl:block"
           >
-            <ol className="flex items-center gap-2 font-mono text-[0.58rem] font-semibold tracking-[0.12em]">
+            <ol
+              aria-label="Parcours : séance, PDF, suivi"
+              className="flex items-center gap-2 font-mono text-[0.58rem] font-semibold tracking-[0.12em]"
+            >
               {["SÉANCE", "PDF", "SUIVI"].map((step, index) => (
                 <li key={step} className="flex items-center gap-2">
                   {index > 0 ? (
@@ -182,7 +184,7 @@ export function LandingHero({
                 </li>
               ))}
             </ol>
-          </nav>
+          </div>
         </div>
       </div>
     </section>

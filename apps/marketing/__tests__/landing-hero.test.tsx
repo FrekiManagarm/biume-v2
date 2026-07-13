@@ -97,6 +97,17 @@ describe("Carnet vivant header and hero", () => {
     )?.[1];
     expect(photoClass).toBeDefined();
     expect(photoClass).not.toMatch(/(?:^|\s)hidden(?:\s|$)/);
+    const journeyClass = html.match(
+      /data-hero-journey[^>]*class="([^"]*)"/,
+    )?.[1];
+    expect(journeyClass).toBeDefined();
+    expect(journeyClass).toMatch(/(?:^|\s)hidden(?:\s|$)/);
+    expect(journeyClass).toMatch(/(?:^|\s)xl:block(?:\s|$)/);
+    expect(journeyClass).not.toMatch(/(?:^|\s)(?:sm|lg):block(?:\s|$)/);
+    expect(html).toMatch(/<div[^>]*data-hero-journey/);
+    expect(html).toMatch(
+      /<ol[^>]*aria-label="Parcours : séance, PDF, suivi"/,
+    );
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html).not.toMatch(exactZeroOpacity);
@@ -122,8 +133,8 @@ describe("Carnet vivant header and hero", () => {
       /@keyframes landing-hero-report\s*{([\s\S]*?)\n}/,
     )?.[1];
 
-    expect(heroSource).not.toContain('"use client"');
-    expect(heroSource).not.toContain('from "motion/react"');
+    expect(heroSource).not.toMatch(/^\s*["']use client["'];/m);
+    expect(heroSource).not.toMatch(/from\s+["']motion\/react["']/);
     expect(heroSource).toContain("REPORT_NOTE_SUMMARY");
     expect(heroSource).toContain("data-hero-brand-rail");
     expect(heroSource).toContain("linear-gradient");
