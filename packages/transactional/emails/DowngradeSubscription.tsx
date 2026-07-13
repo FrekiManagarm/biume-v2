@@ -1,52 +1,7 @@
-import { Button, Heading, Hr, Section, Text } from "@react-email/components";
-
+import { Text } from "@react-email/components";
+import { EmailAction, EmailInfoCard, EmailSupportNote, EmailTitle, bodyText } from "./EmailComponents";
 import { EmailLayout } from "./EmailLayout";
 
-const DowngradeSubscription = ({ plan }: { plan: string }) => {
-  return (
-    <EmailLayout>
-      <Section>
-        <Heading className="text-2xl font-bold text-gray-800 mb-6">
-          Your Biume Pro Subscription Has Been Updated
-        </Heading>
-
-        <Text className="text-gray-700 mb-4">
-          We wanted to confirm that your subscription has been successfully
-          changed to the {plan} plan. This change is effective immediately.
-        </Text>
-
-        <Text className="text-gray-700 mb-4">
-          What this means for you: • Your billing will be adjusted to reflect
-          your new plan • You'll maintain access to your data and core features
-          • Some premium features may be limited based on your new plan
-        </Text>
-
-        <Hr className="my-6 border-gray-300" />
-
-        <Text className="text-gray-700 mb-4">
-          Need to make changes or have questions? Our support team is here to
-          help:
-        </Text>
-
-        <Button
-          href="https://biume.com/support"
-          className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium"
-        >
-          Contact Support
-        </Button>
-
-        <Text className="text-gray-700 mt-6">
-          Thank you for being a valued member of the Biume community.
-        </Text>
-
-        <Text className="text-gray-700 mt-4">
-          Best regards,
-          <br />
-          The Biume Team
-        </Text>
-      </Section>
-    </EmailLayout>
-  );
-};
+const DowngradeSubscription = ({ plan }: { plan: string }) => <EmailLayout preview="Votre abonnement Biume a été mis à jour"><EmailTitle eyebrow="Abonnement">Votre offre a été modifiée.</EmailTitle><Text style={bodyText}>Votre abonnement a été modifié pour l’offre {plan}. Ce changement est effectif immédiatement.</Text><EmailInfoCard title="CE QUI CHANGE">Votre facturation sera ajustée. Vos données et les fonctionnalités incluses dans votre nouvelle offre restent disponibles.</EmailInfoCard><EmailAction href="https://biume.com/support">Contacter le support</EmailAction><EmailSupportNote>Merci de faire confiance à Biume.</EmailSupportNote></EmailLayout>;
 
 export default DowngradeSubscription;

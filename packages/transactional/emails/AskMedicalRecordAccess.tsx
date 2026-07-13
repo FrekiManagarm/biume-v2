@@ -1,59 +1,10 @@
-import { EmailLayout } from "./EmailLayout"
-import { Button, Heading, Section, Text } from "@react-email/components"
+import { Text } from "@react-email/components";
 
-interface AskMedicalRecordAccessProps {
-  ownerName: string
-  animalName: string
-  accessLink: string
-  proName: string
-  justification: string
-}
+import { EmailAction, EmailCard, EmailFallbackUrl, EmailSupportNote, EmailTitle, bodyText } from "./EmailComponents";
+import { EmailLayout } from "./EmailLayout";
 
-const AskMedicalRecordAccess = ({
-  ownerName,
-  animalName,
-  accessLink,
-  proName,
-  justification,
-}: AskMedicalRecordAccessProps) => {
-  return (
-    <EmailLayout preview={`Demande d'accès au dossier médical de ${animalName}`}>
-      <Section className="text-center mb-8">
-        <Heading className="text-2xl font-bold text-indigo-600 mb-2">Demande d'accès au dossier médical</Heading>
-      </Section>
+interface AskMedicalRecordAccessProps { ownerName: string; animalName: string; accessLink: string; proName: string; justification: string; }
 
-      <Section className="bg-indigo-50 rounded-lg p-6 mb-8">
-        <Heading className="text-xl font-semibold text-gray-900 mb-4">Bonjour {ownerName},</Heading>
-        <Text className="text-gray-700 mb-4 leading-relaxed">
-          {proName} a besoin de votre autorisation pour accéder au dossier médical complet de{" "}
-          <span className="font-semibold text-indigo-600">{animalName}</span>.
-        </Text>
-        <Text className="text-gray-700 leading-relaxed">
-          Cette autorisation nous permettra de mieux prendre soin de votre animal et d'assurer un suivi médical optimal.
-        </Text>
-      </Section>
+const AskMedicalRecordAccess = ({ ownerName, animalName, accessLink, proName, justification }: AskMedicalRecordAccessProps) => <EmailLayout tone="security" preview={`Demande d’accès au dossier médical de ${animalName}`}><EmailTitle eyebrow="Accès au dossier">Autorisez l’accès au dossier médical.</EmailTitle><Text style={bodyText}>Bonjour {ownerName},</Text><Text style={bodyText}>{proName} demande votre autorisation pour consulter le dossier médical complet de {animalName} afin d’assurer un suivi adapté.</Text><EmailCard title="MOTIF DE LA DEMANDE">{justification}</EmailCard><EmailAction href={accessLink} tone="ink">Autoriser l’accès au dossier</EmailAction><EmailFallbackUrl href={accessLink} /><EmailSupportNote>Vous ne souhaitez pas autoriser cet accès ? Ignorez simplement cet email.</EmailSupportNote></EmailLayout>;
 
-      <Section className="bg-gray-50 rounded-lg p-4 mb-6">
-        <Heading className="text-lg font-semibold text-gray-900 mb-2">Motif de la demande :</Heading>
-        <Text className="text-gray-700 leading-relaxed italic">"{justification}"</Text>
-      </Section>
-
-      <Section className="text-center my-8">
-        <Button
-          href={accessLink}
-          className="bg-indigo-600 text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-indigo-700 transition-colors"
-        >
-          Autoriser l'accès au dossier
-        </Button>
-      </Section>
-
-      <Section className="border-t border-gray-200 pt-6 mt-8">
-        <Text className="text-gray-600 text-sm text-center">
-          Si vous ne souhaitez pas autoriser l'accès, vous pouvez simplement ignorer cet email.
-        </Text>
-      </Section>
-    </EmailLayout>
-  )
-}
-
-export default AskMedicalRecordAccess
+export default AskMedicalRecordAccess;

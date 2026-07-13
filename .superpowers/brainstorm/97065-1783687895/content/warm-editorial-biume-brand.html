@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biume — direction retenue</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin:0; padding:42px 24px 60px; background:#f4f3f5; color:#3a3a3a; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      main { max-width:1040px; margin:auto; }
+      h1 { margin:0; font-size:30px; letter-spacing:-.055em; }
+      .intro { max-width:720px; margin:10px 0 30px; color:#676569; font-size:15px; line-height:1.55; }
+      .principles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
+      .principle { border:1px solid #e7e3f4; border-radius:12px; background:#fff; padding:12px 14px; }
+      .principle b { display:block; margin-bottom:3px; font-size:12px; }
+      .principle span { color:#737076; font-size:11px; line-height:1.4; }
+      .mails { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+      .case { min-width:0; }
+      .case h2 { margin:0 0 4px; font-size:15px; letter-spacing:-.025em; }
+      .case > p { margin:0 0 9px; color:#77737a; font-size:11px; }
+      .stage { min-height:468px; padding:13px; display:flex; justify-content:center; background:radial-gradient(circle at 8% 0%,#e9e4fa,transparent 39%),linear-gradient(145deg,#f7f6f9,#f0edf6); border-radius:16px; }
+      .email { width:100%; max-width:330px; overflow:hidden; border-radius:16px; background:white; box-shadow:0 13px 30px rgba(58,58,58,.10); font-size:11px; line-height:1.48; }
+      .email-header { min-height:145px; padding:22px 21px; color:#fff; background:linear-gradient(135deg,#8e82e8 0%,#a093ed 62%,#b2a9f2 100%); }
+      .logo-row { display:flex; align-items:center; justify-content:space-between; }
+      .logo { width:112px; height:auto; display:block; }
+      .tag { border:1px solid rgba(255,255,255,.46); border-radius:999px; padding:4px 7px; color:#fff; font-size:8px; font-weight:650; letter-spacing:.045em; text-transform:uppercase; }
+      .email-header h3 { max-width:245px; margin:29px 0 0; color:#fff; font-size:22px; line-height:1.05; letter-spacing:-.06em; }
+      .content { padding:21px; }
+      .content p { margin:0 0 12px; }
+      .card { margin:16px 0; padding:12px; border-radius:10px; background:#f3f0fc; color:#45404e; }
+      .card strong { display:block; margin-bottom:3px; color:#6155ad; font-size:9px; letter-spacing:.075em; }
+      .button { display:inline-block; border-radius:7px; padding:10px 14px; background:#8e82e8; color:white; text-decoration:none; font-size:11px; font-weight:700; }
+      .green { background:#2bdc8f; color:#113526; }
+      .rule { height:1px; margin:17px 0 12px; background:#e8e7e9; }
+      .small { color:#767279; font-size:10px; }
+      .footer { padding:15px 21px; border-top:1px solid #eceaef; background:#fbfbfb; }
+      .utility .email-header { min-height:94px; padding-bottom:18px; }
+      .utility .email-header h3 { margin:18px 0 0; font-size:17px; }
+      .utility .amount { display:flex; justify-content:space-between; align-items:baseline; margin:12px 0 2px; padding:11px 0; border-bottom:1px solid #e7e4f0; }
+      .utility .amount b { font-size:16px; }
+      .utility .card { background:#f7f6f9; }
+      .security .email-header { background:linear-gradient(135deg,#3a3a3a,#57535a); }
+      .security .card { border:1px solid #dfd8f6; background:#faf9fd; }
+      .security .button { background:#3a3a3a; }
+      .note { margin:28px auto 0; max-width:680px; color:#69656d; font-size:12px; line-height:1.5; text-align:center; }
+      @media(max-width:780px){ .principles,.mails{grid-template-columns:1fr;max-width:390px;margin-left:auto;margin-right:auto}.stage{min-height:auto}.email{max-width:350px} }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Direction retenue : chaleureux, éditorial, Biume.</h1>
+      <p class="intro">La base prend sa source dans le logo officiel et la palette de l’application : lavande <b>#8E82E8</b>, encre <b>#3A3A3A</b>, fond lilas <b>#F3F0FC</b> et vert signature <b>#2BDC8F</b>, réservé aux confirmations.</p>
+      <section class="principles">
+        <div class="principle"><b>Logo officiel</b><span>Le logo Biume complet est placé dans chaque en-tête, sans le redessiner ni le remplacer par un emoji.</span></div>
+        <div class="principle"><b>Une grammaire commune</b><span>Hero, bloc d’information, CTA et pied de page identiques ; seul le ton s’adapte à l’événement.</span></div>
+        <div class="principle"><b>Couleur fonctionnelle</b><span>Lavande pour l’action et la marque ; vert pour une réussite ; encre sombre pour les actions sensibles.</span></div>
+      </section>
+      <section class="mails">
+        <article class="case"><h2>Onboarding &amp; engagement</h2><p>Accueils, essai, changement d’offre.</p><div class="stage"><div class="email"><header class="email-header"><div class="logo-row"><img class="logo" src="https://biume.com/brand/biume-logo.svg" alt="Biume" /><span class="tag">Votre espace</span></div><h3>Tout est prêt pour prendre soin de votre activité.</h3></header><div class="content"><p>Bonjour Camille, bienvenue dans votre espace professionnel.</p><div class="card"><strong>VOTRE ESSAI GRATUIT</strong>15 jours pour découvrir Biume, sans engagement.</div><a class="button" href="#">Découvrir mon espace</a><div class="rule"></div><p class="small">Nous sommes ravis de vous accompagner au quotidien.</p></div><footer class="footer"><span class="small">Biume · Simplifier le soin animal</span></footer></div></div></article>
+        <article class="case utility"><h2>Notifications &amp; reçus</h2><p>Rapports, rendez-vous, facturation.</p><div class="stage"><div class="email"><header class="email-header"><div class="logo-row"><img class="logo" src="https://biume.com/brand/biume-logo.svg" alt="Biume" /><span class="tag">Facturation</span></div><h3>Votre reçu est disponible.</h3></header><div class="content"><p>Bonjour Camille, votre abonnement Biume a bien été renouvelé.</p><div class="amount"><span class="small">Montant réglé</span><b>29,00 €</b></div><div class="card"><strong>RÉFÉRENCE</strong>Facture BIU-2026-0710</div><a class="button" href="#">Voir le reçu</a><div class="rule"></div><p class="small">Cet email confirme votre paiement.</p></div><footer class="footer"><span class="small">Biume · contact@biume.com</span></footer></div></div></article>
+        <article class="case security"><h2>Sécurité &amp; action sensible</h2><p>Réinitialisation, invitation, accès médical.</p><div class="stage"><div class="email"><header class="email-header"><div class="logo-row"><img class="logo" src="https://biume.com/brand/biume-logo.svg" alt="Biume" /><span class="tag">Sécurité</span></div><h3>Réinitialisez votre mot de passe.</h3></header><div class="content"><p>Une demande vient d’être reçue pour votre compte Biume.</p><div class="card"><strong>POUR VOTRE SÉCURITÉ</strong>Ce lien est personnel et expire dans une heure.</div><a class="button" href="#">Réinitialiser mon mot de passe</a><div class="rule"></div><p class="small">Vous n’êtes pas à l’origine de cette demande&nbsp;? Ignorez cet email.</p></div><footer class="footer"><span class="small">Biume · L’outil des professionnels du soin animal</span></footer></div></div></article>
+      </section>
+      <p class="note">Cette déclinaison couvre toutes les familles d’emails sans transformer les messages transactionnels en emails marketing.</p>
+    </main>
+  </body>
+</html>

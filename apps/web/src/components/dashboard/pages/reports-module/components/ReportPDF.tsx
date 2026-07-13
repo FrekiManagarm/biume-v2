@@ -39,51 +39,44 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica",
     fontSize: 10,
     lineHeight: 1.45,
-    paddingBottom: 62,
-    paddingHorizontal: 34,
-    paddingTop: 30,
+    paddingBottom: 56,
+    paddingHorizontal: 38,
+    paddingTop: 34,
   },
   pageWash: {
-    backgroundColor: reportPalette.surface,
-    borderColor: reportPalette.line,
-    borderRadius: 18,
-    borderWidth: 1,
-    minHeight: 720,
-    paddingBottom: 28,
-    paddingHorizontal: 28,
-    paddingTop: 24,
+    paddingBottom: 2,
   },
   topBar: {
     alignItems: "center",
-    borderBottomColor: reportPalette.faint,
+    borderBottomColor: reportPalette.line,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 28,
-    paddingBottom: 14,
+    marginBottom: 22,
+    paddingBottom: 12,
   },
   brandBlock: {
     flexDirection: "row",
   },
   brandMark: {
     backgroundColor: reportPalette.ink,
-    borderRadius: 10,
-    height: 34,
-    marginRight: 10,
-    width: 34,
+    borderRadius: 6,
+    height: 28,
+    marginRight: 9,
+    width: 28,
   },
   brandInitial: {
     color: reportPalette.surface,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 700,
-    paddingTop: 8,
+    paddingTop: 6,
     textAlign: "center",
   },
   brandName: {
     color: reportPalette.ink,
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 700,
-    letterSpacing: 0.7,
+    letterSpacing: 0.3,
     marginBottom: 2,
     textTransform: "uppercase",
   },
@@ -92,66 +85,66 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   logo: {
-    height: 34,
+    height: 28,
     objectFit: "contain",
-    width: 72,
+    width: 64,
   },
   hero: {
     flexDirection: "row",
-    marginBottom: 26,
+    marginBottom: 20,
   },
   heroCopy: {
-    paddingRight: 26,
-    width: "64%",
+    paddingRight: 22,
+    width: "68%",
   },
   eyebrow: {
     color: reportPalette.accent,
     fontSize: 9,
     fontWeight: 700,
-    letterSpacing: 1.2,
-    marginBottom: 10,
+    letterSpacing: 0.7,
+    marginBottom: 7,
     textTransform: "uppercase",
   },
   title: {
     color: reportPalette.ink,
-    fontSize: 28,
+    fontSize: 21,
     fontWeight: 700,
-    letterSpacing: -0.7,
-    lineHeight: 1.04,
-    marginBottom: 14,
+    letterSpacing: -0.25,
+    lineHeight: 1.15,
+    marginBottom: 8,
   },
   lead: {
     color: reportPalette.muted,
-    fontSize: 11,
-    lineHeight: 1.55,
-    maxWidth: 305,
+    fontSize: 10,
+    lineHeight: 1.5,
+    maxWidth: 330,
   },
   heroRail: {
-    borderLeftColor: reportPalette.accent,
-    borderLeftWidth: 3,
-    paddingLeft: 16,
+    borderLeftColor: reportPalette.line,
+    borderLeftWidth: 1,
+    paddingLeft: 14,
     paddingTop: 2,
-    width: "36%",
+    width: "32%",
   },
   railLabel: {
     color: reportPalette.muted,
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 700,
-    letterSpacing: 0.9,
-    marginBottom: 5,
+    letterSpacing: 0.55,
+    marginBottom: 3,
     textTransform: "uppercase",
   },
   railValue: {
     color: reportPalette.ink,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   railSmall: {
     color: reportPalette.muted,
-    fontSize: 9,
+    fontSize: 8.5,
     lineHeight: 1.35,
-    marginBottom: 11,
+    marginBottom: 9,
   },
   metricStrip: {
     borderBottomColor: reportPalette.line,
@@ -159,34 +152,30 @@ const styles = StyleSheet.create({
     borderTopColor: reportPalette.line,
     borderTopWidth: 1,
     flexDirection: "row",
-    marginBottom: 24,
-    paddingVertical: 12,
+    marginBottom: 20,
+    paddingVertical: 10,
   },
   metric: {
     borderRightColor: reportPalette.faint,
     borderRightWidth: 1,
-    paddingRight: 12,
+    paddingLeft: 11,
+    paddingRight: 10,
     width: "25%",
   },
   metricLast: {
     borderRightWidth: 0,
   },
   metricNumberWrap: {
-    alignItems: "center",
-    borderRadius: 10,
-    height: 34,
-    justifyContent: "center",
-    marginBottom: 6,
-    width: 44,
+    marginBottom: 3,
   },
   metricNumber: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: 700,
     lineHeight: 1,
   },
   metricLabel: {
     color: reportPalette.muted,
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 700,
     letterSpacing: 0.5,
     textTransform: "uppercase",
@@ -194,34 +183,37 @@ const styles = StyleSheet.create({
   identityGrid: {
     borderBottomColor: reportPalette.line,
     borderBottomWidth: 1,
+    borderTopColor: reportPalette.line,
+    borderTopWidth: 1,
     flexDirection: "row",
-    marginBottom: 24,
-    paddingBottom: 18,
+    marginBottom: 20,
+    paddingBottom: 14,
+    paddingTop: 14,
   },
   identityMain: {
-    paddingRight: 22,
-    width: "58%",
+    paddingRight: 18,
+    width: "60%",
   },
   identitySide: {
-    borderLeftColor: reportPalette.faint,
+    borderLeftColor: reportPalette.line,
     borderLeftWidth: 1,
-    paddingLeft: 18,
-    width: "42%",
+    paddingLeft: 16,
+    width: "40%",
   },
   sectionKicker: {
     color: reportPalette.accent,
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 700,
-    letterSpacing: 1,
-    marginBottom: 7,
+    letterSpacing: 0.6,
+    marginBottom: 5,
     textTransform: "uppercase",
   },
   patientName: {
     color: reportPalette.ink,
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: 700,
     letterSpacing: -0.2,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   mutedText: {
     color: reportPalette.muted,
@@ -230,10 +222,12 @@ const styles = StyleSheet.create({
   },
   reasonBox: {
     backgroundColor: reportPalette.faint,
-    borderRadius: 12,
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: reportPalette.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   reasonText: {
     color: reportPalette.ink,
@@ -243,7 +237,7 @@ const styles = StyleSheet.create({
   infoRow: {
     borderTopColor: reportPalette.faint,
     borderTopWidth: 1,
-    paddingVertical: 7,
+    paddingVertical: 6,
   },
   infoLabel: {
     color: reportPalette.muted,
@@ -258,23 +252,23 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionHeader: {
     alignItems: "flex-end",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 9,
   },
   sectionTitle: {
     color: reportPalette.ink,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 700,
     letterSpacing: -0.2,
   },
   sectionCaption: {
     color: reportPalette.muted,
-    fontSize: 8.5,
+    fontSize: 8,
   },
   anatomyGrid: {
     flexDirection: "row",
@@ -289,14 +283,14 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   anatomyFrame: {
-    backgroundColor: "#FBF8F2",
+    backgroundColor: reportPalette.faint,
     borderColor: reportPalette.line,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1,
     height: 190,
-    marginBottom: 8,
+    marginBottom: 6,
     overflow: "hidden",
-    padding: 8,
+    padding: 7,
     position: "relative",
   },
   anatomyImage: {
@@ -306,7 +300,7 @@ const styles = StyleSheet.create({
   },
   anatomyLabel: {
     color: reportPalette.muted,
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 700,
     letterSpacing: 0.8,
     textAlign: "center",
@@ -316,54 +310,53 @@ const styles = StyleSheet.create({
     borderTopColor: reportPalette.line,
     borderTopWidth: 1,
     flexDirection: "row",
-    paddingVertical: 11,
+    paddingVertical: 9,
   },
   issueIndex: {
     color: reportPalette.muted,
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 700,
     letterSpacing: 0.7,
     paddingTop: 2,
     width: 30,
   },
   issueBody: {
-    paddingRight: 14,
-    width: "67%",
+    paddingRight: 12,
+    width: "68%",
   },
   issueMetaColumn: {
-    width: "24%",
+    width: "23%",
   },
   issueTitleLine: {
     flexDirection: "row",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   issueTitle: {
     color: reportPalette.ink,
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: 700,
     marginRight: 8,
   },
   badge: {
-    borderRadius: 8,
-    color: reportPalette.surface,
+    borderRadius: 6,
     fontSize: 7.5,
     fontWeight: 700,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 2.5,
     textTransform: "uppercase",
   },
   issueDescription: {
     color: reportPalette.muted,
-    fontSize: 9.5,
+    fontSize: 9,
     lineHeight: 1.45,
   },
   severityPill: {
-    borderRadius: 10,
-    fontSize: 8,
+    borderRadius: 6,
+    fontSize: 7.5,
     fontWeight: 700,
-    marginBottom: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    marginBottom: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 3.5,
     textAlign: "center",
   },
   issueTinyMeta: {
@@ -375,15 +368,15 @@ const styles = StyleSheet.create({
     borderTopColor: reportPalette.line,
     borderTopWidth: 1,
     flexDirection: "row",
-    paddingVertical: 11,
+    paddingVertical: 9,
   },
   recommendationMarker: {
-    backgroundColor: reportPalette.forest,
-    borderRadius: 7,
-    height: 14,
+    backgroundColor: reportPalette.accent,
+    borderRadius: 3,
+    height: 12,
     marginRight: 10,
     marginTop: 1,
-    width: 14,
+    width: 3,
   },
   recommendationText: {
     color: reportPalette.ink,
@@ -393,18 +386,20 @@ const styles = StyleSheet.create({
   },
   notePanel: {
     backgroundColor: reportPalette.faint,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: reportPalette.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   emptyState: {
     alignItems: "center",
     borderColor: reportPalette.line,
-    borderRadius: 14,
+    borderRadius: 8,
     borderStyle: "dashed",
     borderWidth: 1,
     paddingHorizontal: 24,
-    paddingVertical: 22,
+    paddingVertical: 18,
   },
   emptyTitle: {
     color: reportPalette.ink,
@@ -421,7 +416,7 @@ const styles = StyleSheet.create({
   },
   footerLeft: {
     bottom: 28,
-    left: 34,
+    left: 38,
     position: "absolute",
     color: reportPalette.muted,
     fontSize: 8,
@@ -466,7 +461,7 @@ function MetricBlock({
 
   return (
     <View style={isLast ? [styles.metric, styles.metricLast] : styles.metric}>
-      <View style={[styles.metricNumberWrap, { backgroundColor: tone.soft }]}>
+      <View style={styles.metricNumberWrap}>
         <Text style={[styles.metricNumber, { color: tone.color }]}>
           {metric.value}
         </Text>
@@ -552,7 +547,7 @@ function AnatomicalOverlay({
               stroke={tone.stroke}
               strokeOpacity={0.78}
               strokeWidth="2"
-              transform={transform || ""}
+              transform={transform || undefined}
             />
           </G>
         );
@@ -599,7 +594,12 @@ function IssueRow({ issue, index }: { issue: ReportPdfIssue; index: number }) {
       <View style={styles.issueBody}>
         <View style={styles.issueTitleLine}>
           <Text style={styles.issueTitle}>{anatomicalName}</Text>
-          <Text style={[styles.badge, { backgroundColor: severity.fill }]}>
+          <Text
+            style={[
+              styles.badge,
+              { backgroundColor: severity.soft, color: severity.fill },
+            ]}
+          >
             {getIssueTypeLabel(issue.type)}
           </Text>
         </View>
@@ -723,15 +723,6 @@ export function ReportPDF(props: ReportPDFProps) {
             </View>
           </View>
 
-          {model.practitionerNotes ? (
-            <View style={styles.section}>
-              <SectionHeader title="Notes de seance" />
-              <View style={styles.notePanel}>
-                <Text style={styles.reasonText}>{model.practitionerNotes}</Text>
-              </View>
-            </View>
-          ) : null}
-
           {props.type === "advanced_report" ? (
             <View style={styles.section} wrap={false}>
               <SectionHeader
@@ -755,7 +746,7 @@ export function ReportPDF(props: ReportPDFProps) {
             </View>
           ) : null}
 
-          <View style={styles.section}>
+          <View style={styles.section} wrap={issues.length > 4}>
             <SectionHeader
               caption={`${issues.length} point${issues.length > 1 ? "s" : ""}`}
               title="Observations"
@@ -794,6 +785,15 @@ export function ReportPDF(props: ReportPDFProps) {
               />
             )}
           </View>
+
+          {model.practitionerNotes ? (
+            <View style={styles.section}>
+              <SectionHeader title="Notes de seance" />
+              <View style={styles.notePanel}>
+                <Text style={styles.reasonText}>{model.practitionerNotes}</Text>
+              </View>
+            </View>
+          ) : null}
 
         </View>
 

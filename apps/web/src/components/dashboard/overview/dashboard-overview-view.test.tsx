@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, test, vi } from "vitest";
 
@@ -106,12 +106,56 @@ describe("DashboardOverviewView", () => {
     expect(screen.getAllByText("Annulée").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Annulée" })).toBeNull();
     expect(
-      screen.getAllByRole("link", { name: "Finaliser" }).every((link) =>
-        link.getAttribute("href")?.includes("/dashboard/reports/report-1/edit"),
-      ),
+      screen
+        .getAllByRole("link", { name: "Finaliser" })
+        .every((link) =>
+          link
+            .getAttribute("href")
+            ?.includes("/dashboard/reports/report-1/edit"),
+        ),
     ).toBe(true);
     expect(screen.getByText("Compte rendu envoyé")).toBeTruthy();
     expect(screen.getByText("Animaux ajoutés")).toBeTruthy();
     expect(screen.getByText("4")).toBeTruthy();
+  });
+
+  test("presents today’s appointments as an accessible priority list", () => {
+    cleanup();
+
+    render(
+      <DashboardOverviewView
+        selectedDate={new Date(2026, 6, 2, 0, 0)}
+        now={new Date(2026, 6, 2, 12, 0)}
+        metrics={{ newAnimals: 0, newOwners: 0, sentReports: 0 }}
+        appointments={[
+          {
+            id: "appointment-priority",
+            beginAt: new Date(2026, 6, 2, 10, 30),
+            endAt: new Date(2026, 6, 2, 11, 30),
+            status: "COMPLETED",
+            atHome: false,
+            reports: [
+              { id: "report-priority", status: "draft", updatedAt: null },
+            ],
+            patient: {
+              id: "patient-priority",
+              name: "Tao",
+              owner: { id: "owner-priority", name: "Manon Dupont" },
+            },
+          },
+        ]}
+        recentActivity={[]}
+      />,
+    );
+
+    const agenda = screen.getByRole("list", { name: "Séances du jour" });
+
+    expect(agenda).toBeTruthy();
+    expect(within(agenda).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(agenda).getByText("10:30")).toBeTruthy();
+    expect(within(agenda).getByText("Tao")).toBeTruthy();
+    expect(
+      within(agenda).getByRole("link", { name: "Finaliser" }),
+    ).toBeTruthy();
   });
 });

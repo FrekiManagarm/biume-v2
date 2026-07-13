@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biume — lavande & vert signature</title>
+    <style>
+      * { box-sizing:border-box; }
+      body { margin:0; min-height:100vh; padding:44px 24px 60px; color:#3a3a3a; background:radial-gradient(circle at 10% 0,#ebe6fb,transparent 32rem),#f5f4f6; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      main { max-width:930px; margin:auto; }
+      h1 { margin:0; font-size:30px; letter-spacing:-.055em; }
+      .intro { max-width:690px; margin:10px 0 29px; color:#716d75; font-size:15px; line-height:1.55; }
+      .layout { display:grid; grid-template-columns:1fr 1.1fr; gap:25px; align-items:center; }
+      .stage { padding:15px; border-radius:18px; background:linear-gradient(145deg,#ede9fa,#f9f8fb); }
+      .mail { width:100%; max-width:375px; overflow:hidden; margin:auto; border-radius:16px; background:#fff; box-shadow:0 18px 35px rgba(58,58,58,.12); }
+      .header { padding:17px 23px 25px; color:#fff; background:linear-gradient(135deg,#8e82e8,#9c91e9 66%,#aaa1f0); }
+      .topline { display:flex; align-items:center; justify-content:space-between; }
+      .logo { display:block; width:56px; height:auto; }
+      .tag { display:flex; align-items:center; gap:5px; border:1px solid rgba(255,255,255,.48); border-radius:999px; padding:4px 7px; color:#fff; font-size:8px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+      .tag i { width:5px; height:5px; border-radius:50%; background:#2bdc8f; box-shadow:0 0 0 2px rgba(43,220,143,.22); }
+      h2 { max-width:255px; margin:25px 0 0; color:#fff; font-size:23px; line-height:1.04; letter-spacing:-.065em; }
+      .body { padding:22px 23px; font-size:12px; line-height:1.5; }
+      .body p { margin:0 0 14px; }
+      .notice { display:flex; gap:10px; margin:18px 0; padding:12px; border-radius:10px; background:#f3f0fc; color:#4c4757; }
+      .notice-mark { flex:none; width:20px; height:20px; border-radius:50%; background:#2bdc8f; color:#0d4c43; font-size:13px; font-weight:900; line-height:20px; text-align:center; }
+      .notice b { display:block; margin-bottom:3px; color:#6f63bb; font-size:9px; letter-spacing:.08em; }
+      .button { display:inline-block; padding:10px 14px; border-radius:7px; color:#fff; background:#8e82e8; font-size:11px; font-weight:700; text-decoration:none; }
+      .footer { display:flex; align-items:center; gap:7px; padding:15px 23px; border-top:1px solid #eceaf0; background:#fcfcfc; color:#7b7680; font-size:10px; }
+      .footer i { width:6px; height:6px; flex:none; border-radius:50%; background:#2bdc8f; }
+      .panel { border:1px solid #e6e2ee; border-radius:16px; background:#fff; padding:23px; }
+      .panel h3 { margin:0 0 10px; font-size:17px; letter-spacing:-.035em; }
+      .panel p { margin:0 0 16px; color:#6c6870; font-size:13px; line-height:1.5; }
+      .usage { display:grid; gap:10px; }
+      .usage div { padding:11px 12px; border-radius:9px; background:#faf9fb; }
+      .usage b { display:block; margin-bottom:3px; font-size:12px; }
+      .usage span { color:#77727c; font-size:11px; line-height:1.4; }
+      .lavender { color:#7064bb; }.green { color:#087252; }
+      @media(max-width:700px){.layout{grid-template-columns:1fr;max-width:410px;margin:auto}.panel{order:-1}}
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Logo encore plus discret, vert mieux distribué.</h1>
+      <p class="intro">Le logo passe à 56 px. Le vert signature Biume ne devient pas une couleur décorative : il identifie les états positifs, les confirmations et les éléments de réassurance.</p>
+      <section class="layout">
+        <div class="stage"><article class="mail"><header class="header"><div class="topline"><img class="logo" src="https://biume.com/brand/biume-logo.svg" alt="Biume" /><span class="tag"><i></i>Votre espace</span></div><h2>Tout est prêt pour prendre soin de votre activité.</h2></header><div class="body"><p>Bonjour Camille, bienvenue dans votre espace professionnel.</p><div class="notice"><span class="notice-mark">✓</span><div><b>VOTRE ESSAI GRATUIT</b>15 jours pour découvrir Biume, sans engagement.</div></div><a class="button" href="#">Découvrir mon espace</a></div><footer class="footer"><i></i>Biume · Simplifier le soin animal</footer></article></div>
+        <aside class="panel"><h3>Rôle précis des couleurs</h3><p>La lavande reste la couleur de marque et d’action. Le vert du logo enrichit l’ensemble sans alourdir la lecture.</p><div class="usage"><div><b class="lavender">Lavande Biume</b><span>En-tête, CTA primaire et informations de premier plan.</span></div><div><b class="green">Vert Biume</b><span>Confirmation, succès, essai actif, paiement reçu ou état rassurant.</span></div><div><b>Encre &amp; gris chaud</b><span>Actions sensibles, texte principal et détails utilitaires.</span></div></div></aside>
+      </section>
+    </main>
+  </body>
+</html>

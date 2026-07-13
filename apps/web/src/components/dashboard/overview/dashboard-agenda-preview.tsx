@@ -22,33 +22,39 @@ type DashboardAgendaPreviewProps = {
 
 const reportStatusConfig: Record<
   AgendaReportStatus,
-  { label: string; className: string }
+  { label: string; indicatorClassName: string; labelClassName: string }
 > = {
   none: {
     label: "À préparer",
-    className: "border-slate-200 bg-slate-50 text-slate-600",
+    indicatorClassName: "bg-slate-400",
+    labelClassName: "text-slate-500",
   },
   to_create: {
     label: "Compte rendu à créer",
-    className: "border-blue-200 bg-blue-50 text-blue-800",
+    indicatorClassName: "bg-sky-500",
+    labelClassName: "text-sky-700",
   },
   draft: {
     label: "Brouillon",
-    className: "border-amber-200 bg-amber-50 text-amber-800",
+    indicatorClassName: "bg-amber-500",
+    labelClassName: "text-amber-700",
   },
   ready_to_send: {
     label: "Prêt à envoyer",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    indicatorClassName: "bg-emerald-500",
+    labelClassName: "text-emerald-700",
   },
   sent: {
     label: "Envoyé",
-    className: "border-slate-200 bg-slate-50 text-slate-600",
+    indicatorClassName: "bg-slate-300",
+    labelClassName: "text-slate-500",
   },
 };
 
 const cancelledStatusConfig = {
   label: "Annulée",
-  className: "border-rose-200 bg-rose-50 text-rose-700",
+  indicatorClassName: "bg-rose-400",
+  labelClassName: "text-rose-700",
 };
 
 export function DashboardAgendaPreview({
@@ -58,8 +64,8 @@ export function DashboardAgendaPreview({
   const visibleAppointments = appointments.slice(0, 6);
 
   return (
-    <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
+      <div className="grid gap-3 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:px-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
             <CalendarDays className="size-4 text-emerald-700" />
@@ -83,13 +89,16 @@ export function DashboardAgendaPreview({
       </div>
 
       {visibleAppointments.length > 0 ? (
-        <div className="grid gap-2">
+        <ul
+          aria-label="Séances du jour"
+          className="divide-y divide-slate-100 border-t border-slate-100"
+        >
           {visibleAppointments.map((appointment) => (
             <AgendaPreviewRow key={appointment.id} appointment={appointment} />
           ))}
-        </div>
+        </ul>
       ) : (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+        <p className="m-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
           {emptyLabel}
         </p>
       )}
@@ -113,63 +122,70 @@ function AgendaPreviewRow({
       : reportStatusConfig[appointment.reportStatus];
 
   return (
-    <article className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3 md:grid-cols-[5.5rem_minmax(0,1fr)_minmax(8rem,auto)_auto] md:items-center">
-      <div className="flex items-center gap-2 text-sm font-semibold text-slate-950 md:block">
-        <Clock className="size-4 text-slate-400 md:mb-1" />
-        <span className="whitespace-nowrap">
+    <li className="group relative grid gap-x-4 gap-y-3 px-4 py-4 transition-colors duration-200 hover:bg-slate-50/80 sm:grid-cols-[4.75rem_minmax(0,1fr)_auto] sm:items-center sm:px-5">
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-y-0 left-0 w-1 rounded-r-full",
+          status.indicatorClassName,
+        )}
+      />
+
+      <div className="flex items-center gap-2 sm:block">
+        <Clock className="size-3.5 text-slate-400 sm:mb-1" />
+        <time
+          dateTime={new Date(appointment.beginAt).toISOString()}
+          className="whitespace-nowrap text-base font-semibold tracking-tight tabular-nums text-slate-950"
+        >
           {formatTime(appointment.beginAt)}
-        </span>
+        </time>
       </div>
 
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-950">
-          {animalName}
-        </p>
-        <p className="mt-1 truncate text-xs text-slate-500">{ownerName}</p>
-        <div className="mt-2 grid gap-1 text-xs text-slate-500 sm:grid-cols-2">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <PawPrint className="size-3.5 shrink-0 text-slate-400" />
-            <span className="truncate">
-              {breed ? `${species} · ${breed}` : species}
-            </span>
-          </span>
-          <span className="flex min-w-0 items-center gap-1.5">
-            <Clock className="size-3.5 shrink-0 text-slate-400" />
-            <span className="truncate">{appointment.durationLabel}</span>
-          </span>
-          <span className="flex min-w-0 items-center gap-1.5">
-            {appointment.atHome ? (
-              <Home className="size-3.5 shrink-0 text-slate-400" />
-            ) : (
-              <MapPin className="size-3.5 shrink-0 text-slate-400" />
-            )}
-            <span className="truncate">{locationLabel}</span>
-          </span>
-          {appointment.note ? (
-            <span className="truncate">{appointment.note}</span>
-          ) : null}
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <p className="truncate text-sm font-semibold text-slate-950">
+            {animalName}
+          </p>
+          <p className="truncate text-sm text-slate-500">{ownerName}</p>
         </div>
+        <p className="mt-1 flex min-w-0 items-center gap-1.5 truncate text-xs text-slate-500">
+          <PawPrint className="size-3.5 shrink-0 text-slate-400" />
+          <span className="truncate">
+            {breed ? `${species} · ${breed}` : species}
+          </span>
+          <span aria-hidden="true" className="text-slate-300">
+            ·
+          </span>
+          <Clock className="size-3.5 shrink-0 text-slate-400" />
+          <span className="truncate">{appointment.durationLabel}</span>
+          <span aria-hidden="true" className="text-slate-300">
+            ·
+          </span>
+          {appointment.atHome ? (
+            <Home className="size-3.5 shrink-0 text-slate-400" />
+          ) : (
+            <MapPin className="size-3.5 shrink-0 text-slate-400" />
+          )}
+          <span className="truncate">{locationLabel}</span>
+        </p>
+        {appointment.note ? (
+          <p className="mt-1 truncate text-xs text-slate-400">
+            {appointment.note}
+          </p>
+        ) : null}
       </div>
 
-      <span
-        className={cn(
-          "inline-flex w-fit rounded-md border px-2 py-1 text-xs font-semibold",
-          status.className,
-        )}
-      >
-        {status.label}
-      </span>
-
-      <AgendaAction appointment={appointment} />
-    </article>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:justify-end">
+        <span className={cn("text-xs font-medium", status.labelClassName)}>
+          {status.label}
+        </span>
+        <AgendaAction appointment={appointment} />
+      </div>
+    </li>
   );
 }
 
-function AgendaAction({
-  appointment,
-}: {
-  appointment: DayAgendaAppointment;
-}) {
+function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   const reportId = appointment.primaryAction.reportId;
   if (appointment.primaryAction.kind === "cancelled") {
     return (

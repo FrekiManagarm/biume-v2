@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Directions — emails Biume</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 42px 24px 60px; background: #f5f5f5; color: #111; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      main { max-width: 1180px; margin: 0 auto; }
+      h1 { margin: 0; font-size: 30px; letter-spacing: -0.055em; }
+      .intro { max-width: 700px; margin: 10px 0 32px; color: #666; font-size: 15px; line-height: 1.55; }
+      .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+      .choice { cursor: pointer; border: 1px solid #e4e4e4; border-radius: 18px; background: white; padding: 13px; transition: transform .18s, border-color .18s, box-shadow .18s; }
+      .choice:hover { transform: translateY(-3px); border-color: #b8a8f4; box-shadow: 0 16px 34px rgba(26, 22, 44, .11); }
+      .choice:focus-visible { outline: 3px solid #aa94ff; outline-offset: 3px; }
+      .choice-head { display: flex; align-items: flex-start; gap: 10px; padding: 5px 5px 12px; }
+      .letter { display:flex; align-items:center; justify-content:center; flex: 0 0 25px; height:25px; border-radius:50%; background:#161616; color:white; font-size:12px; font-weight:700; }
+      .choice h2 { margin: 1px 0 4px; font-size: 15px; letter-spacing: -0.02em; }
+      .choice p { margin: 0; color: #6b6b6b; font-size: 12px; line-height: 1.4; }
+      .mail-wrap { min-height: 515px; display:flex; justify-content:center; align-items:flex-start; padding: 10px; border-radius: 12px; }
+      .mail { width:100%; max-width: 335px; overflow: hidden; background: #fff; font-size: 11px; line-height: 1.5; }
+      .mail p { margin:0 0 13px; }
+      .mark { width: 31px; height:31px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,#b49cf6,#8673dd); font-size:14px; }
+      .brand { font-size:18px; font-weight:750; letter-spacing:-.06em; }
+      .button { display:inline-block; padding: 10px 15px; border-radius: 7px; color:#fff; background:#a78bfa; font-size:11px; font-weight:650; text-decoration:none; }
+      .small { font-size: 10px; color:#727272; }
+      .rule { height:1px; background:#e6e6e6; margin:18px 0; }
+      .a-bg { background: radial-gradient(circle at 5% 0%, #efeaff, transparent 38%), #f7f7f7; }
+      .a-mail { box-shadow: 0 8px 32px rgba(30, 24, 54, .08); border:1px solid #ecebf0; border-radius: 12px; }
+      .a-header { display:flex; align-items:center; gap:8px; padding:19px 22px; border-bottom:1px solid #ecebf0; }
+      .a-content { padding: 25px 22px 23px; }
+      .a-kicker { margin-bottom:11px; color:#816cdc; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+      .a-title { margin:0 0 12px; font-size:21px; line-height:1.08; letter-spacing:-.055em; }
+      .a-note { margin: 18px 0; padding:11px 12px; border:1px solid #e5ddff; border-radius:8px; background:#f8f6ff; color:#4f4969; }
+      .a-footer { padding: 17px 22px; background:#fbfbfc; border-top:1px solid #ecebf0; }
+      .b-bg { background: #20201f; padding-top: 23px; }
+      .b-mail { border-radius: 0 0 13px 13px; }
+      .b-header { min-height: 105px; padding: 25px 23px; background:#1e1e1d; color:#fff; }
+      .b-header .mark { background:#98db6d; color:#183318; border-radius:50%; }
+      .b-header-row { display:flex; align-items:center; gap:8px; }
+      .b-header strong { font-size:17px; letter-spacing:-.055em; }
+      .b-header p { margin-top:14px; color:#deded8; font-size:11px; }
+      .b-content { padding:25px 23px 22px; }
+      .b-title { margin:0 0 12px; font-size:20px; line-height:1.1; letter-spacing:-.05em; }
+      .b-details { padding:12px; border-left:3px solid #98db6d; background:#f3f5ef; color:#3e4237; }
+      .b-button { background:#1e1e1d; border-radius: 999px; }
+      .b-footer { padding: 17px 23px; background:#f5f5f2; }
+      .c-bg { background: linear-gradient(145deg, #f1edff, #f5f5f5 48%, #fff1eb); }
+      .c-mail { border-radius: 20px; box-shadow:0 14px 34px rgba(40, 30, 66, .10); }
+      .c-hero { padding: 26px 23px 23px; background: linear-gradient(135deg,#a78bfa,#c7b6ff 60%,#dfd2ff); color:#1f1739; }
+      .c-hero-row { display:flex; justify-content:space-between; align-items:center; }
+      .c-hero .mark { background:#fff; color:#987be7; border-radius:11px; }
+      .c-hero strong { font-size:17px; letter-spacing:-.055em; }
+      .c-hero h3 { margin: 28px 0 0; max-width:250px; font-size:24px; line-height:1.03; letter-spacing:-.07em; }
+      .c-content { padding:24px 23px; }
+      .c-card { margin:18px 0; padding:12px; border-radius:11px; background:#f7f5ff; }
+      .c-card strong { display:block; margin-bottom:3px; font-size:10px; }
+      .c-button { background:#8d70e5; }
+      .c-footer { padding: 16px 23px; text-align:center; background:#fcfbff; }
+      .note { margin-top: 27px; color:#777; font-size:12px; text-align:center; }
+      @media(max-width: 800px) { .choices { grid-template-columns:1fr; max-width:430px; margin:auto; } .mail-wrap { min-height:auto; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Quelle personnalité pour les emails Biume&nbsp;?</h1>
+      <p class="intro">Les trois pistes reprennent la palette actuelle (lavande Biume, gris chaud, vert de confirmation) mais changent la place accordée à la marque et à l’information. Cliquez sur une carte pour enregistrer votre préférence.</p>
+      <section class="choices">
+        <article class="choice" data-choice="a" tabindex="0" onclick="toggleSelect(this)">
+          <div class="choice-head"><span class="letter">A</span><div><h2>Produit sobre</h2><p>Le prolongement naturel de l’espace connecté : calme, précis, très lisible.</p></div></div>
+          <div class="mail-wrap a-bg"><div class="mail a-mail"><header class="a-header"><span class="mark">✦</span><span class="brand">biume</span></header><div class="a-content"><div class="a-kicker">Votre espace Biume</div><h3 class="a-title">Votre rapport est prêt à être consulté.</h3><p>Bonjour Camille, le compte rendu de Nala est maintenant disponible dans votre espace.</p><div class="a-note"><strong>Rapport de consultation</strong><br />Nala · 10 juillet 2026</div><a class="button" href="#">Voir le rapport</a><div class="rule"></div><p class="small">Une question&nbsp;? Notre équipe vous accompagne.</p></div><footer class="a-footer"><span class="small">Biume · L’outil des professionnels du soin animal</span></footer></div></div>
+        </article>
+        <article class="choice" data-choice="b" tabindex="0" onclick="toggleSelect(this)">
+          <div class="choice-head"><span class="letter">B</span><div><h2>Professionnel affirmé</h2><p>Une en-tête sombre et une touche végétale, pour une communication plus institutionnelle.</p></div></div>
+          <div class="mail-wrap b-bg"><div class="mail b-mail"><header class="b-header"><div class="b-header-row"><span class="mark">✦</span><strong>biume</strong></div><p>Outils de gestion pour les praticiens animaliers</p></header><div class="b-content"><h3 class="b-title">Votre période d’essai commence aujourd’hui.</h3><p>Bonjour Camille, profitez dès maintenant de l’ensemble des fonctionnalités Biume.</p><div class="b-details"><strong>15 jours d’essai inclus</strong><br />Aucun prélèvement avant le 25 juillet.</div><p style="margin-top:18px"><a class="button b-button" href="#">Accéder à mon espace</a></p><div class="rule"></div><p class="small">Besoin d’un coup de main&nbsp;? Répondez simplement à cet email.</p></div><footer class="b-footer"><span class="small">© Biume · contact@biume.com</span></footer></div></div>
+        </article>
+        <article class="choice" data-choice="c" tabindex="0" onclick="toggleSelect(this)">
+          <div class="choice-head"><span class="letter">C</span><div><h2>Chaleureux &amp; éditorial</h2><p>Plus de présence de marque pour les séquences d’onboarding et les annonces positives.</p></div></div>
+          <div class="mail-wrap c-bg"><div class="mail c-mail"><header class="c-hero"><div class="c-hero-row"><span class="mark">✦</span><strong>biume</strong></div><h3>Tout est prêt pour prendre soin de votre activité.</h3></header><div class="c-content"><p>Bonjour Camille, bienvenue dans votre espace professionnel.</p><div class="c-card"><strong>VOTRE ESSAI GRATUIT</strong>15 jours pour découvrir Biume, sans engagement.</div><a class="button c-button" href="#">Découvrir mon espace</a><div class="rule"></div><p class="small">Nous sommes ravis de vous accompagner au quotidien.</p></div><footer class="c-footer"><span class="small">Biume · Simplifier le soin animal</span></footer></div></div>
+        </article>
+      </section>
+      <p class="note">Ce choix fixe la base de tous les emails. Les reçus, rappels et emails sensibles garderont la même grammaire, avec une hiérarchie plus utilitaire.</p>
+    </main>
+  </body>
+</html>

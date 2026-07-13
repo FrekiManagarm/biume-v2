@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biume — logo discret</title>
+    <style>
+      * { box-sizing:border-box; }
+      body { margin:0; min-height:100vh; padding:44px 24px 60px; color:#3a3a3a; background:radial-gradient(circle at 12% 0,#ebe6fb,transparent 32rem),#f5f4f6; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      main { max-width:860px; margin:auto; }
+      h1 { margin:0; letter-spacing:-.055em; font-size:30px; }
+      .intro { max-width:630px; margin:10px 0 28px; color:#716d75; font-size:15px; line-height:1.55; }
+      .comparison { display:grid; grid-template-columns:1fr 1.25fr; gap:22px; align-items:center; }
+      .mail-shell { padding:15px; border-radius:18px; background:linear-gradient(145deg,#ede9fa,#f9f8fb); }
+      .mail { overflow:hidden; width:100%; max-width:375px; margin:auto; border-radius:16px; background:white; box-shadow:0 18px 35px rgba(58,58,58,.12); }
+      .header { padding:18px 23px 25px; color:#fff; background:linear-gradient(135deg,#8e82e8,#9b90e9 65%,#aaa1f0); }
+      .topline { display:flex; align-items:center; justify-content:space-between; }
+      .logo { display:block; width:72px; height:auto; }
+      .tag { border:1px solid rgba(255,255,255,.48); border-radius:999px; padding:4px 7px; color:#fff; font-size:8px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+      h2 { max-width:255px; margin:24px 0 0; color:white; font-size:23px; line-height:1.04; letter-spacing:-.065em; }
+      .body { padding:22px 23px; font-size:12px; line-height:1.5; }
+      .body p { margin:0 0 14px; }
+      .detail { margin:18px 0; padding:12px; border-radius:10px; background:#f3f0fc; color:#4c4757; }
+      .detail b { display:block; margin-bottom:3px; color:#6f63bb; font-size:9px; letter-spacing:.08em; }
+      .button { display:inline-block; padding:10px 14px; border-radius:7px; color:#fff; background:#8e82e8; font-size:11px; font-weight:700; text-decoration:none; }
+      .footer { padding:15px 23px; border-top:1px solid #eceaf0; background:#fcfcfc; color:#7b7680; font-size:10px; }
+      .panel { border:1px solid #e6e2ee; border-radius:16px; background:#fff; padding:23px; }
+      .panel h3 { margin:0 0 10px; font-size:17px; letter-spacing:-.035em; }
+      .panel p { margin:0 0 14px; color:#6c6870; font-size:13px; line-height:1.5; }
+      .point { display:flex; gap:9px; margin:14px 0; padding-top:14px; border-top:1px solid #efedf1; }
+      .dot { width:8px; height:8px; flex:none; margin-top:5px; border-radius:50%; background:#8e82e8; }
+      .point b { display:block; margin-bottom:2px; font-size:12px; }
+      .point span { color:#77727c; font-size:11px; line-height:1.4; }
+      @media(max-width:700px){.comparison{grid-template-columns:1fr;max-width:410px;margin:auto}.panel{order:-1}}
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Logo réduit, message mis en avant.</h1>
+      <p class="intro">Le logo devient une signature de 72 px, alignée avec le libellé de contexte. L’en-tête conserve sa présence Biume, sans concurrencer le titre de l’email.</p>
+      <section class="comparison">
+        <div class="mail-shell"><article class="mail"><header class="header"><div class="topline"><img class="logo" src="https://biume.com/brand/biume-logo.svg" alt="Biume" /><span class="tag">Votre espace</span></div><h2>Tout est prêt pour prendre soin de votre activité.</h2></header><div class="body"><p>Bonjour Camille, bienvenue dans votre espace professionnel.</p><div class="detail"><b>VOTRE ESSAI GRATUIT</b>15 jours pour découvrir Biume, sans engagement.</div><a class="button" href="#">Découvrir mon espace</a></div><footer class="footer">Biume · Simplifier le soin animal</footer></article></div>
+        <aside class="panel"><h3>Ce qui change</h3><p>La structure reste éditoriale et chaleureuse, mais elle est désormais plus proche de l’équilibre du produit.</p><div class="point"><i class="dot"></i><div><b>Signature, pas bannière</b><span>Le logo passe de 112 px à 72 px et n’est plus l’élément dominant.</span></div></div><div class="point"><i class="dot"></i><div><b>Hiérarchie utile</b><span>Le regard arrive directement sur le titre et l’action à réaliser.</span></div></div><div class="point"><i class="dot"></i><div><b>Déclinaison systématique</b><span>La même taille de logo sera conservée dans toutes les familles d’emails.</span></div></div></aside>
+      </section>
+    </main>
+  </body>
+</html>
