@@ -2,44 +2,51 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import { ReportTransformationStory } from "../components/landing/report-transformation-story";
-import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import {
+  REPORT_NOTE_SUMMARY,
+  REPORT_TRANSFORMATION_DEMO,
+} from "../components/landing/report-transformation-demo";
 import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
 describe("report transformation story", () => {
-  test("exposes every state and factual field before hydration", () => {
+  test("renders the compact note-to-owner transformation before hydration", () => {
     const demo = REPORT_TRANSFORMATION_DEMO;
     const html = renderToStaticMarkup(
       <ReportTransformationStory demo={demo} />,
     );
     const text = textOnly(html);
 
-    expect(html.match(/data-report-state=/g)).toHaveLength(4);
-    expect(html.match(/data-report-layer=/g)).toHaveLength(4);
-    for (const label of [
-      "Noter",
-      "Structurer",
-      "Adapter le langage",
-      "Finaliser",
+    for (const copy of [
+      "De vos notes au propriétaire",
+      "Le même fond.",
+      "Une forme enfin lisible.",
+      "Vous notez librement. Biume organise. Vous relisez.",
+      REPORT_NOTE_SUMMARY,
+      demo.adaptedProposal,
+      "Thorax",
+      "Gauche",
+      "Évolution",
+      "Vous notez",
+      "Biume organise",
+      "Vous décidez",
+      "Prêt à relire",
     ]) {
-      expect(html).toContain(label);
+      expect(text).toContain(copy);
     }
-    expect(text).toContain(demo.observation);
-    expect(text).toContain(demo.adaptedProposal);
-    expect(text).toContain(demo.help);
-    expect(html).toContain(demo.fileName);
-    expect(html).toContain(demo.finalStatus);
-    expect(html).toContain("Note technique");
-    expect(html).toContain("Proposition adaptée");
-    expect(html).toContain("data-report-final-status");
-    expect(html).toContain("data-report-final-dot");
-    expect(html).toMatch(
-      /data-report-final-status[^>]*class="[^"]*text-white/,
-    );
+
+    expect(html.match(/data-report-note(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
+    expect(html.match(/data-report-token(?:=|\s|>)/g)).toHaveLength(3);
+    expect(html).toContain('id="comment-ca-marche"');
+    expect(html).not.toContain("data-report-state");
+    expect(html).not.toContain("data-report-layer");
+    expect(html).not.toContain("md:min-h-[160svh]");
     expect(html).not.toMatch(exactZeroOpacity);
     expect(html).not.toContain("visibility:hidden");
   });
 
-  test("enhances the sticky story without shipping the motion runtime", async () => {
+  test("adds one-shot progressive enhancement without hiding SSR content", async () => {
     const [source, css] = await Promise.all([
       Bun.file(
         new URL(
@@ -52,33 +59,33 @@ describe("report transformation story", () => {
 
     expect(source).toContain("useEffect");
     expect(source).toContain("IntersectionObserver");
-    expect(source).toContain("new Map<HTMLElement, number>()");
-    expect(source).toContain("intersectionRatios.set");
+    expect(source).toContain('section.dataset.reportMotion = "ready"');
+    expect(source).toContain('section.dataset.reportEnhanced = "true"');
+    expect(source).toContain("observer.disconnect()");
     expect(source).toContain("matchMedia");
-    expect(source).toContain("reportActive");
+    expect(source).not.toContain("new Map<");
+    expect(source).not.toContain("intersectionRatios");
+    expect(source).not.toContain("reportActive");
     expect(source).not.toContain('from "motion/react"');
-    expect(source).not.toContain("LazyMotion");
-    expect(source).not.toContain("useScroll");
-    expect(source).not.toContain("useTransform");
-    expect(source).not.toContain("useReducedMotion");
-    expect(source).not.toContain("useSyncExternalStore");
     expect(source).not.toContain("useState(");
     expect(source).not.toContain('addEventListener("scroll"');
-    expect(source).not.toContain("window.scrollY");
     expect(source).not.toContain("requestAnimationFrame");
-    expect(source).not.toContain("repeat: Infinity");
-    expect(source).not.toContain("28vh");
-    expect(source).not.toContain("22vh");
+    expect(source).not.toMatch(/data-report-note[\s\S]{0,240}min-h/);
+    expect(source).not.toMatch(/data-report-document[\s\S]{0,240}min-h/);
+
+    expect(css).toContain('[data-report-motion="ready"]');
     expect(css).toContain('[data-report-enhanced="true"]');
-    expect(css).toContain(".report-document-sequence");
     expect(css).toMatch(
-      /\.report-document-layer\s*{[^}]*visibility:\s*hidden/s,
+      /\[data-report-motion="ready"\][^{]*\.report-bridge-line\s*{[^}]*transform:\s*scaleX\(0\)/s,
     );
-    expect(css).not.toMatch(
-      /\.report-document-layer[^}]*opacity:\s*0/s,
+    expect(css).toMatch(
+      /\[data-report-enhanced="true"\][^{]*\.report-bridge-line\s*{[^}]*transform:\s*scaleX\(1\)/s,
     );
-    expect(css).not.toMatch(
-      /\[data-report-enhanced="true"\]\s+\[data-report-state\][^}]*opacity:/s,
+    expect(css).toMatch(
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.report-bridge-line[^{]*{[^}]*transition:\s*none/s,
     );
+    expect(css).not.toContain(".report-document-layer");
+    expect(css).not.toContain("[data-report-active=");
+    expect(css).not.toContain("[data-report-progress]");
   });
 });

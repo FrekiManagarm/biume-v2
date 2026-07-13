@@ -1,332 +1,148 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 
-import type {
-  ReportTransformationDemo,
-  ReportTransformationStep,
+import {
+  REPORT_NOTE_SUMMARY,
+  type ReportTransformationDemo,
 } from "./report-transformation-demo";
 
-const desktopMediaQuery = "(min-width: 768px)";
 const reducedMotionMediaQuery = "(prefers-reduced-motion: reduce)";
+const reportTokens = ["Thorax", "Gauche", "Évolution"] as const;
 
-function useReportEnhancement(sectionRef: {
-  readonly current: HTMLElement | null;
-}) {
+function useReportEnhancement(sectionRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const section = sectionRef.current;
-    const canEnhance = window.matchMedia(desktopMediaQuery).matches;
     const reduceMotion = window.matchMedia(reducedMotionMediaQuery).matches;
 
-    if (!section || !canEnhance || reduceMotion) {
+    if (!section || reduceMotion || !("IntersectionObserver" in window)) {
       return;
     }
 
-    const steps = Array.from(
-      section.querySelectorAll<HTMLElement>("[data-report-state]"),
-    );
-
-    if (steps.length === 0 || !("IntersectionObserver" in window)) {
-      return;
-    }
-
-    section.dataset.reportEnhanced = "true";
-    section.dataset.reportActive = steps[0]?.dataset.reportState ?? "note";
-    const intersectionRatios = new Map<HTMLElement, number>();
+    section.dataset.reportMotion = "ready";
 
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          intersectionRatios.set(
-            entry.target as HTMLElement,
-            entry.isIntersecting ? entry.intersectionRatio : 0,
-          );
-        }
-
-        const focusLine = window.innerHeight * 0.38;
-        const activeStep = steps
-          .map((step) => {
-            const rect = step.getBoundingClientRect();
-
-            return {
-              step,
-              ratio: intersectionRatios.get(step) ?? 0,
-              distance: Math.abs(rect.top + rect.height / 2 - focusLine),
-            };
-          })
-          .filter(({ ratio }) => ratio > 0)
-          .sort(
-            (left, right) =>
-              right.ratio - left.ratio || left.distance - right.distance,
-          )[0]?.step;
-        const activeState = activeStep?.dataset.reportState;
-
-        if (activeState) {
-          section.dataset.reportActive = activeState;
+        if (entries.some((entry) => entry.isIntersecting)) {
+          section.dataset.reportEnhanced = "true";
+          observer.disconnect();
         }
       },
-      {
-        rootMargin: "-28% 0px -52% 0px",
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      },
+      { threshold: 0.24 },
     );
 
-    for (const step of steps) {
-      observer.observe(step);
-    }
+    observer.observe(section);
 
     return () => {
       observer.disconnect();
+      delete section.dataset.reportMotion;
       delete section.dataset.reportEnhanced;
-      delete section.dataset.reportActive;
     };
   }, [sectionRef]);
 }
 
-function StepStateContent({
-  step,
-  demo,
-}: {
-  step: ReportTransformationStep;
-  demo: ReportTransformationDemo;
-}) {
-  switch (step.id) {
-    case "note":
-      return (
-        <div className="mt-5 border-l-2 border-[color:var(--carnet-blue)] pl-4">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/70">
-            Note technique
-          </p>
-          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-white/78">
-            {demo.observation}
-          </p>
-        </div>
-      );
-    case "structure":
-      return (
-        <dl className="mt-5 grid max-w-xl grid-cols-2 gap-x-5 gap-y-3 text-sm">
-          <div>
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
-              Zone
-            </dt>
-            <dd className="mt-1 text-white/78">Thorax</dd>
-          </div>
-          <div>
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
-              Côté
-            </dt>
-            <dd className="mt-1 text-white/78">Gauche</dd>
-          </div>
-          <div className="col-span-2">
-            <dt className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-white/65">
-              Observation structurée
-            </dt>
-            <dd className="mt-1 leading-6 text-white/78">{demo.observation}</dd>
-          </div>
-        </dl>
-      );
-    case "language":
-      return (
-        <div className="mt-5 border-l-2 border-[color:var(--carnet-blue)] pl-4">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/70">
-            Proposition adaptée
-          </p>
-          <p className="mt-2 max-w-[48ch] text-sm leading-6 text-white/78">
-            {demo.adaptedProposal}
-          </p>
-          <p className="mt-2 text-xs leading-5 text-white/65">{demo.help}</p>
-        </div>
-      );
-    case "final":
-      return (
-        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs">
-          <span
-            data-report-final-status
-            className="inline-flex items-center gap-2 text-white/78"
-          >
-            <span
-              data-report-final-dot
-              aria-hidden="true"
-              className="size-1.5 rounded-full bg-[color:var(--carnet-green)]"
-            />
-            {demo.finalStatus}
-          </span>
-          <span className="text-white/55">{demo.fileName}</span>
-        </div>
-      );
-  }
-}
-
-function TransformationStep({
-  step,
-  index,
-  demo,
-}: {
-  step: ReportTransformationStep;
-  index: number;
-  demo: ReportTransformationDemo;
-}) {
-  return (
-    <li
-      data-report-state={step.id}
-      className="border-t border-white/14 py-8 md:min-h-72 md:py-12"
-    >
-      <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr]">
-        <span className="font-mono text-xs text-white/60">0{index + 1}</span>
-        <div>
-          <h3 className="text-2xl font-semibold tracking-[-0.035em] text-white md:text-3xl">
-            {step.label}
-          </h3>
-          <p className="mt-2 max-w-[44ch] text-sm leading-6 text-white/60 md:text-base md:leading-7">
-            {step.body}
-          </p>
-          <StepStateContent step={step} demo={demo} />
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function DocumentBody({
-  step,
-  demo,
-}: {
-  step: ReportTransformationStep;
-  demo: ReportTransformationDemo;
-}) {
-  if (step.id === "note") {
-    return (
-      <div>
-        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-muted)]">
-          Note technique
-        </p>
-        <p className="mt-3 text-base leading-7 text-[color:var(--carnet-ink)]">
-          {demo.observation}
-        </p>
-      </div>
-    );
-  }
-
-  if (step.id === "structure") {
-    return (
-      <div>
-        <p className="border-l-2 border-[color:var(--carnet-blue)] pl-2 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-ink)]">
-          Observation structurée
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {["Thorax", "Côté gauche", "Mobilité"].map((item) => (
-            <span
-              key={item}
-              className="rounded-full bg-[color:var(--carnet-blue-soft)] px-3 py-1.5 font-mono text-[0.65rem] font-semibold text-[color:var(--carnet-ink)]"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        <p className="mt-4 text-base leading-7 text-[color:var(--carnet-ink)]">
-          {demo.observation}
-        </p>
-      </div>
-    );
-  }
-
-  if (step.id === "language") {
-    return (
-      <div>
-        <p className="border-l-2 border-[color:var(--carnet-blue)] pl-2 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-ink)]">
-          Proposition adaptée
-        </p>
-        <p className="mt-3 text-base leading-7 text-[color:var(--carnet-ink)]">
-          {demo.adaptedProposal}
-        </p>
-        <p className="mt-4 border-t border-[color:var(--carnet-line)] pt-4 text-xs leading-5 text-[color:var(--carnet-muted)]">
-          {demo.help}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-4">
-        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-ink)]">
-          {demo.finalStatus}
-        </p>
-        <span className="size-2 rounded-full bg-[color:var(--carnet-green)]" />
-      </div>
-      <p className="mt-4 text-base leading-7 text-[color:var(--carnet-ink)]">
-        {demo.adaptedProposal}
-      </p>
-      <div className="mt-6 flex items-center justify-between gap-4 border-t border-[color:var(--carnet-line)] pt-4">
-        <span className="font-mono text-xs text-[color:var(--carnet-muted)]">
-          {demo.fileName}
-        </span>
-        <span className="rounded-full bg-[color:var(--carnet-ink)] px-4 py-2 text-xs font-semibold text-white">
-          Partager le PDF
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function ReportDocumentLayer({
-  step,
-  index,
-  demo,
-}: {
-  step: ReportTransformationStep;
-  index: number;
-  demo: ReportTransformationDemo;
-}) {
+function SourceNote() {
   return (
     <article
-      data-report-layer={step.id}
-      className="report-document-layer overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-black/10 bg-[color:var(--carnet-surface)] text-[color:var(--carnet-ink)] shadow-[0_42px_100px_-58px_rgba(0,0,0,0.65)]"
+      data-report-note
+      className="report-note-card self-center rounded-[0.75rem_0.75rem_2rem_0.75rem] border border-white/12 bg-white/[0.045] p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_28px_70px_-52px_rgb(0_0_0/0.8)]"
     >
-      <div className="flex items-center justify-between border-b border-[color:var(--carnet-line)] px-6 py-5">
-        <div>
-          <p className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-[color:var(--carnet-muted)]">
-            Compte rendu propriétaire
-          </p>
-          <p className="mt-1 text-sm font-semibold">Séance · Cheval</p>
-        </div>
-        <span className="font-mono text-[0.65rem] text-[color:var(--carnet-muted)]">
-          0{index + 1} / 04
-        </span>
+      <div className="flex items-center justify-between gap-4">
+        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-violet)]">
+          Votre note de séance
+        </p>
+        <span className="font-mono text-xs text-white/42">01</span>
       </div>
-      <div className="min-h-72 px-6 py-7">
-        <DocumentBody step={step} demo={demo} />
+      <p className="mt-6 border-l-2 border-[color:var(--carnet-violet)] pl-4 text-base leading-7 text-white/82">
+        {REPORT_NOTE_SUMMARY}
+      </p>
+      <div className="mt-7 flex items-center gap-2 border-t border-white/10 pt-4 font-mono text-[0.65rem] text-white/55">
+        <span
+          aria-hidden="true"
+          className="size-1.5 rounded-full bg-[color:var(--carnet-violet)]"
+        />
+        Vos mots restent la source
       </div>
     </article>
   );
 }
 
-function ReportDocumentSequence({ demo }: { demo: ReportTransformationDemo }) {
+function TransformationBridge() {
   return (
     <div
-      aria-hidden="true"
-      data-report-document
-      className="report-document-sequence hidden md:sticky md:top-28 md:block"
+      data-report-bridge
+      className="relative flex min-h-52 items-center justify-center py-8 md:min-h-0 md:py-0"
     >
-      <div className="relative pl-6">
-        <div className="absolute bottom-4 left-0 top-4 w-px overflow-hidden bg-white/16">
-          <div
-            data-report-progress
-            className="h-full w-full origin-top bg-[linear-gradient(to_bottom,#6b5ac8,#5d9bb8,#2e9866)]"
-          />
+      <span
+        aria-hidden="true"
+        className="report-bridge-line absolute inset-y-4 left-1/2 w-px md:inset-x-0 md:top-1/2 md:h-px md:w-auto"
+      />
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2 rounded-xl bg-[color:var(--carnet-anthracite)] px-4 py-3">
+          <span aria-hidden="true" className="flex items-center gap-1">
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-violet)]" />
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-blue)]" />
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-green)]" />
+          </span>
+          <span className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/78">
+            Biume organise
+          </span>
         </div>
-        <div className="report-document-layers">
-          {demo.steps.map((step, index) => (
-            <ReportDocumentLayer
-              key={step.id}
-              step={step}
-              index={index}
-              demo={demo}
-            />
+        <div className="flex max-w-44 flex-wrap justify-center gap-2">
+          {reportTokens.map((token, index) => (
+            <span
+              key={token}
+              data-report-token
+              style={{ "--token-index": index } as CSSProperties}
+              className="rounded-full border border-white/12 bg-[color:var(--carnet-anthracite)] px-2.5 py-1 font-mono text-[0.6rem] text-white/64"
+            >
+              {token}
+            </span>
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+function OwnerDocument({ demo }: { demo: ReportTransformationDemo }) {
+  return (
+    <article
+      data-report-document
+      className="report-owner-document self-center rounded-[0.75rem_0.75rem_0.75rem_2rem] border border-black/8 bg-[color:var(--carnet-surface)] p-6 text-[color:var(--carnet-ink)] shadow-[0_38px_90px_-54px_rgb(0_0_0/0.72)]"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-muted)]">
+          Proposition propriétaire
+        </p>
+        <span className="font-mono text-xs text-[color:var(--carnet-muted)]">
+          02
+        </span>
+      </div>
+      <div className="mt-6">
+        <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--carnet-green)]">
+          Ce que le propriétaire peut lire
+        </p>
+        <p className="mt-3 text-base leading-7">{demo.adaptedProposal}</p>
+      </div>
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--carnet-line)] pt-4 font-mono text-[0.65rem]">
+        <span className="text-[color:var(--carnet-muted)]">
+          Texte encore modifiable
+        </span>
+        <span className="inline-flex items-center gap-2 font-semibold text-[color:var(--carnet-green)]">
+          <span
+            aria-hidden="true"
+            className="size-1.5 rounded-full bg-[color:var(--carnet-green)]"
+          />
+          Prêt à relire
+        </span>
+      </div>
+    </article>
   );
 }
 
@@ -341,34 +157,48 @@ export function ReportTransformationStory({
       ref={sectionRef}
       id="produit"
       data-landing-section="transformation"
-      className="report-story-section scroll-mt-18 bg-[color:var(--carnet-anthracite)] px-4 py-10 text-white sm:px-6 md:min-h-[160svh] md:py-20 lg:px-8"
+      className="report-story-section scroll-mt-18 bg-[color:var(--carnet-anthracite)] px-4 py-10 text-white sm:px-6 md:py-20 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
-        <div className="max-w-4xl">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-blue)]">
-            Du geste au document
+        <div className="grid gap-5 md:grid-cols-[0.72fr_1.28fr] md:gap-10">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-green)]">
+            De vos notes au propriétaire
           </p>
-          <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] md:text-6xl lg:text-7xl">
-            Une note devient un document que le propriétaire peut{" "}
-            <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-              comprendre.
-            </span>
-          </h2>
+          <div>
+            <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.05em] md:text-6xl">
+              Le même fond.{" "}
+              <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
+                Une forme enfin lisible.
+              </span>
+            </h2>
+            <p className="mt-5 max-w-[48ch] text-sm leading-6 text-white/60 md:text-base md:leading-7">
+              Vous notez librement. Biume organise. Vous relisez.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-10 gap-14 md:mt-12 md:grid md:grid-cols-[0.84fr_1.16fr] md:items-start lg:mt-16">
-          <ol>
-            {demo.steps.map((step, index) => (
-              <TransformationStep
-                key={step.id}
-                step={step}
-                index={index}
-                demo={demo}
-              />
-            ))}
-          </ol>
-          <ReportDocumentSequence demo={demo} />
+        <div
+          id="comment-ca-marche"
+          className="mt-10 scroll-mt-24 md:mt-14 md:grid md:grid-cols-[0.78fr_0.46fr_1.18fr] md:items-center"
+        >
+          <SourceNote />
+          <TransformationBridge />
+          <OwnerDocument demo={demo} />
         </div>
+
+        <ol className="mt-8 grid grid-cols-3 border-t border-white/12 pt-4 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-white/52 md:mt-10 md:text-xs">
+          {["Vous notez", "Biume organise", "Vous décidez"].map(
+            (label, index) => (
+              <li
+                key={label}
+                className="flex items-center gap-2 border-r border-white/10 px-2 first:pl-0 last:border-r-0 last:pr-0 md:px-4"
+              >
+                <span className="text-white/28">0{index + 1}</span>
+                {label}
+              </li>
+            ),
+          )}
+        </ol>
       </div>
     </section>
   );
