@@ -12,7 +12,7 @@ import { RecommendationsTab } from "./components/tabs/RecommendationsTab";
 import { AnatomicalEvaluationTab } from "./components/tabs/AnatomicalEvaluationTab";
 import { AddObservationDialog } from "./components/AddObservationsDialog";
 import { AddAnatomicalIssueDialog } from "./components/AddAnatomicalIssueDialog";
-import { ReportPreview } from "./components/ReportPreview";
+import { OwnerReportPreview, ReportPreview } from "./components/ReportPreview";
 import { ExitConfirmationDialog } from "./components/ExitConfirmationDialog";
 import { ReportSidebarNavigation } from "./components/ReportSidebarNavigation";
 import { PatientCard } from "./components/PatientCard";
@@ -46,6 +46,8 @@ import {
   PlusIcon,
   KeyboardIcon,
   AlertTriangle,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
 } from "lucide-react";
 import { cn } from "@/lib/style";
 import { toast } from "sonner";
@@ -193,6 +195,7 @@ export function AdvancedReportEditor({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isLivePreviewOpen, setIsLivePreviewOpen] = useState(true);
 
   // État initial sauvegardé pour la détection des changements
   const [lastSavedState, setLastSavedState] = useState({
@@ -749,10 +752,27 @@ export function AdvancedReportEditor({
                   <Button
                     variant="outline"
                     onClick={() => setShowPreview(true)}
-                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
+                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98] xl:hidden"
                   >
                     <EyeIcon className="size-4" />
                     Aperçu
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsLivePreviewOpen((isOpen) => !isOpen)}
+                    className={cn(
+                      "hidden h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98] xl:inline-flex",
+                      isLivePreviewOpen &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100",
+                    )}
+                    aria-pressed={isLivePreviewOpen}
+                  >
+                    {isLivePreviewOpen ? (
+                      <PanelRightCloseIcon className="size-4" />
+                    ) : (
+                      <PanelRightOpenIcon className="size-4" />
+                    )}
+                    {isLivePreviewOpen ? "Masquer l’aperçu" : "Aperçu"}
                   </Button>
                   <Button
                     variant="outline"
@@ -798,8 +818,13 @@ export function AdvancedReportEditor({
                   </Card>
                 </div>
               ) : (
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="min-h-0 flex-1 overflow-hidden">
+                <div
+                  className={cn(
+                    "grid h-full min-h-0 grid-cols-1",
+                    isLivePreviewOpen && "xl:grid-cols-[minmax(0,1fr)_21.5rem]",
+                  )}
+                >
+                  <div className="min-h-0 overflow-hidden">
                     {activeTab === "clinical" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
                         <ObservationsTab
@@ -862,6 +887,25 @@ export function AdvancedReportEditor({
                       </div>
                     )}
                   </div>
+
+                  {isLivePreviewOpen ? (
+                    <aside
+                      aria-label="Aperçu propriétaire en direct"
+                      className="hidden min-h-0 overflow-y-auto border-l border-slate-200 bg-slate-100/70 p-4 xl:block"
+                    >
+                      <OwnerReportPreview
+                        title={title}
+                        consultationReason={consultationReason}
+                        patientName={selectedPet?.name}
+                        observations={observations}
+                        notes={notes}
+                        recommendations={recommendations}
+                        anatomicalIssues={anatomicalIssues}
+                        activeSection={activeTab}
+                        className="rounded-[1.5rem]"
+                      />
+                    </aside>
+                  ) : null}
                 </div>
               )}
             </section>
@@ -1181,10 +1225,13 @@ export function AdvancedReportEditor({
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
         title={title}
+        consultationReason={consultationReason}
+        patientName={selectedPet?.name}
         observations={observations}
         notes={notes}
         recommendations={recommendations}
         anatomicalIssues={anatomicalIssues}
+        activeSection={activeTab}
         images={[]}
       />
 
