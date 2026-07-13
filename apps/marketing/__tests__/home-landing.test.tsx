@@ -98,11 +98,15 @@ describe("Biume Carnet vivant homepage", () => {
   test("keeps homepage ids unique and every navigation anchor live", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!);
+    const navigationTargets = [
+      ...html.matchAll(/\shref="#([^"]+)"/g),
+    ].map((match) => match[1]!);
 
     expect(new Set(ids).size).toBe(ids.length);
-    for (const target of ["produit", "comment-ca-marche"]) {
+    expect(navigationTargets).toContain("produit");
+    expect(navigationTargets).toContain("comment-ca-marche");
+    for (const target of new Set(navigationTargets)) {
       expect(ids.filter((id) => id === target)).toHaveLength(1);
-      expect(html).toContain(`href="#${target}"`);
     }
   });
 
