@@ -257,6 +257,12 @@ describe("report transformation story", () => {
     expect(css).toContain('[data-report-motion="ready"]');
     expect(css).toContain('[data-report-enhanced="true"]');
     expect(css).toMatch(
+      /\.report-bridge-line\s*{[^}]*linear-gradient\(\s*to bottom,\s*var\(--carnet-logo-violet\),\s*var\(--carnet-logo-blue\),\s*var\(--carnet-logo-green\)/s,
+    );
+    expect(css).toMatch(
+      /@media\s*\(min-width:\s*768px\)[\s\S]*?\.report-bridge-line\s*{[^}]*linear-gradient\(\s*to right,\s*var\(--carnet-logo-violet\),\s*var\(--carnet-logo-blue\),\s*var\(--carnet-logo-green\)/s,
+    );
+    expect(css).toMatch(
       /\[data-report-motion="ready"\][^{]*\.report-bridge-line\s*{[^}]*transform:\s*scaleX\(0\)/s,
     );
     expect(css).toMatch(

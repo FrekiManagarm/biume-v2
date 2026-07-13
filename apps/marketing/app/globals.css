@@ -339,9 +339,9 @@ details[open] [data-faq-indicator] {
 .report-bridge-line {
   background-image: linear-gradient(
     to bottom,
-    var(--carnet-violet),
-    var(--carnet-blue),
-    var(--carnet-green)
+    var(--carnet-logo-violet),
+    var(--carnet-logo-blue),
+    var(--carnet-logo-green)
   );
   transform-origin: center top;
 }
@@ -350,9 +350,9 @@ details[open] [data-faq-indicator] {
   .report-bridge-line {
     background-image: linear-gradient(
       to right,
-      var(--carnet-violet),
-      var(--carnet-blue),
-      var(--carnet-green)
+      var(--carnet-logo-violet),
+      var(--carnet-logo-blue),
+      var(--carnet-logo-green)
     );
     transform-origin: left center;
   }
