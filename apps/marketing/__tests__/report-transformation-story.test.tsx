@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
-import { ReportTransformationStory } from "../components/landing/report-transformation-story";
+import {
+  ReportTransformationStory,
+  shouldEnhanceReport,
+} from "../components/landing/report-transformation-story";
 import {
   REPORT_NOTE_SUMMARY,
   REPORT_TRANSFORMATION_DEMO,
@@ -9,6 +12,19 @@ import {
 import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
 describe("report transformation story", () => {
+  test("reveals only at the configured intersection ratio", () => {
+    expect(shouldEnhanceReport(undefined)).toBe(false);
+    expect(
+      shouldEnhanceReport({ isIntersecting: false, intersectionRatio: 1 }),
+    ).toBe(false);
+    expect(
+      shouldEnhanceReport({ isIntersecting: true, intersectionRatio: 0.23 }),
+    ).toBe(false);
+    expect(
+      shouldEnhanceReport({ isIntersecting: true, intersectionRatio: 0.24 }),
+    ).toBe(true);
+  });
+
   test("renders the compact note-to-owner transformation before hydration", () => {
     const demo = REPORT_TRANSFORMATION_DEMO;
     const html = renderToStaticMarkup(
@@ -38,12 +54,40 @@ describe("report transformation story", () => {
     expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-token(?:=|\s|>)/g)).toHaveLength(3);
+    expect(html).toContain('id="produit"');
     expect(html).toContain('id="comment-ca-marche"');
+    expect(html).toContain("md:grid-cols-[0.78fr_0.46fr_1.18fr]");
+    expect(html).toContain(
+      "report-bridge-line absolute inset-y-4 left-1/2 w-px md:inset-x-0 md:top-1/2 md:h-px md:w-auto",
+    );
+    expect(html).toContain("var(--carnet-violet)");
+    expect(html).toContain("var(--carnet-logo-violet)");
+    expect(html).toContain("var(--carnet-logo-blue)");
+    expect(html).toContain("var(--carnet-logo-green)");
+    expect(html).toContain("var(--carnet-green)");
     expect(html).not.toContain("data-report-state");
     expect(html).not.toContain("data-report-layer");
     expect(html).not.toContain("md:min-h-[160svh]");
     expect(html).not.toMatch(exactZeroOpacity);
     expect(html).not.toContain("visibility:hidden");
+  });
+
+  test("keeps the bottom sequence to its three labels", () => {
+    const html = renderToStaticMarkup(
+      <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />,
+    );
+    const sequence = html.match(
+      /<ol[^>]*data-report-sequence[^>]*>([\s\S]*?)<\/ol>/,
+    )?.[1];
+
+    expect(sequence).toBeDefined();
+    expect(sequence?.match(/data-report-sequence-item(?:=|\s|>)/g)).toHaveLength(
+      3,
+    );
+    expect(textOnly(sequence ?? "")).toBe(
+      "Vous notez Biume organise Vous décidez",
+    );
+    expect(sequence).not.toMatch(/>0[123]</);
   });
 
   test("adds one-shot progressive enhancement without hiding SSR content", async () => {
@@ -62,6 +106,8 @@ describe("report transformation story", () => {
     expect(source).toContain('section.dataset.reportMotion = "ready"');
     expect(source).toContain('section.dataset.reportEnhanced = "true"');
     expect(source).toContain("observer.disconnect()");
+    expect(source).toContain("entry.intersectionRatio >= reportRevealThreshold");
+    expect(source).toContain("{ threshold: reportRevealThreshold }");
     expect(source).toContain("matchMedia");
     expect(source).not.toContain("new Map<");
     expect(source).not.toContain("intersectionRatios");
@@ -83,6 +129,18 @@ describe("report transformation story", () => {
     );
     expect(css).toMatch(
       /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.report-bridge-line[^{]*{[^}]*transition:\s*none/s,
+    );
+    expect(css).toMatch(
+      /\[data-report-enhanced="true"\]\s+\.report-owner-document\s*{[^}]*transition-delay:\s*300ms/s,
+    );
+    expect(css).toMatch(
+      /\[data-report-enhanced="true"\]\s+\.report-bridge-line\s*{[^}]*720ms[^}]*140ms/s,
+    );
+    expect(css).toContain(
+      "calc(220ms + var(--token-index) * 80ms)",
+    );
+    expect(css).not.toMatch(
+      /\[data-report-(?:motion|enhanced)=[\s\S]*transition[^;]*(?:top|left|width|height)/,
     );
     expect(css).not.toContain(".report-document-layer");
     expect(css).not.toContain("[data-report-active=");

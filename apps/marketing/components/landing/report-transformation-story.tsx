@@ -13,7 +13,22 @@ import {
 } from "./report-transformation-demo";
 
 const reducedMotionMediaQuery = "(prefers-reduced-motion: reduce)";
+const reportRevealThreshold = 0.24;
 const reportTokens = ["Thorax", "Gauche", "Évolution"] as const;
+
+export function shouldEnhanceReport(
+  entry:
+    | Pick<
+        IntersectionObserverEntry,
+        "isIntersecting" | "intersectionRatio"
+      >
+    | undefined,
+) {
+  return Boolean(
+    entry?.isIntersecting &&
+      entry.intersectionRatio >= reportRevealThreshold,
+  );
+}
 
 function useReportEnhancement(sectionRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -28,12 +43,16 @@ function useReportEnhancement(sectionRef: RefObject<HTMLElement | null>) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          section.dataset.reportEnhanced = "true";
-          observer.disconnect();
+        const entry = entries[0];
+
+        if (!shouldEnhanceReport(entry)) {
+          return;
         }
+
+        section.dataset.reportEnhanced = "true";
+        observer.disconnect();
       },
-      { threshold: 0.24 },
+      { threshold: reportRevealThreshold },
     );
 
     observer.observe(section);
@@ -85,9 +104,9 @@ function TransformationBridge() {
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="flex flex-col items-center gap-2 rounded-xl bg-[color:var(--carnet-anthracite)] px-4 py-3">
           <span aria-hidden="true" className="flex items-center gap-1">
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-violet)]" />
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-blue)]" />
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-green)]" />
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-violet)]" />
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-blue)]" />
+            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-green)]" />
           </span>
           <span className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/78">
             Biume organise
@@ -186,18 +205,19 @@ export function ReportTransformationStory({
           <OwnerDocument demo={demo} />
         </div>
 
-        <ol className="mt-8 grid grid-cols-3 border-t border-white/12 pt-4 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-white/52 md:mt-10 md:text-xs">
-          {["Vous notez", "Biume organise", "Vous décidez"].map(
-            (label, index) => (
-              <li
-                key={label}
-                className="flex items-center gap-2 border-r border-white/10 px-2 first:pl-0 last:border-r-0 last:pr-0 md:px-4"
-              >
-                <span className="text-white/28">0{index + 1}</span>
-                {label}
-              </li>
-            ),
-          )}
+        <ol
+          data-report-sequence
+          className="mt-8 grid grid-cols-3 border-t border-white/12 pt-4 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-white/52 md:mt-10 md:text-xs"
+        >
+          {["Vous notez", "Biume organise", "Vous décidez"].map((label) => (
+            <li
+              key={label}
+              data-report-sequence-item
+              className="border-r border-white/10 px-2 first:pl-0 last:border-r-0 last:pr-0 md:px-4"
+            >
+              {label}
+            </li>
+          ))}
         </ol>
       </div>
     </section>
