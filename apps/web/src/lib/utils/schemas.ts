@@ -10,7 +10,7 @@ export const createReportSchema = z.object({
   status: z.enum(["draft", "finalized", "sent"]).optional().default("draft"),
 });
 
-export const reportSchema = z.object({
+const reportSchemaBase = z.object({
   title: z.string().min(1, "Le titre est requis"),
   petId: z.string().optional(),
   appointmentId: z.string().optional(),
@@ -71,6 +71,29 @@ export const reportSchema = z.object({
     )
     .optional()
     .default([]),
+});
+
+export const reportSchema = reportSchemaBase.superRefine((report, context) => {
+  const anatomicalIds = [
+    ...report.observations.map((item) => item.id),
+    ...report.anatomicalIssues.map((item) => item.id),
+  ];
+  if (new Set(anatomicalIds).size !== anatomicalIds.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Les identifiants anatomiques doivent être uniques",
+      path: ["anatomicalIssues"],
+    });
+  }
+
+  const recommendationIds = report.recommendations.map((item) => item.id);
+  if (new Set(recommendationIds).size !== recommendationIds.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Les identifiants de recommandation doivent être uniques",
+      path: ["recommendations"],
+    });
+  }
 });
 
 export const anatomicalIssueSchema = z.object({

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   buildReportChildRows,
+  executeAtomicReportMutations,
   getRemovedOwnerSources,
 } from "./reports.persistence";
 
@@ -44,6 +45,11 @@ describe("report child persistence", () => {
           { sourceKind: "observation", sourceId: "obs_keep" },
           { sourceKind: "observation", sourceId: "obs_delete" },
           { sourceKind: "recommendation", sourceId: "rec_delete" },
+          {
+            sourceKind: "consultationReason",
+            sourceId: "consultationReason",
+          },
+          { sourceKind: "notes", sourceId: "notes" },
         ],
         {
           observation: ["obs_keep"],
@@ -55,5 +61,23 @@ describe("report child persistence", () => {
       { sourceKind: "observation", sourceId: "obs_delete" },
       { sourceKind: "recommendation", sourceId: "rec_delete" },
     ]);
+  });
+
+  test("submits all report mutations to one atomic batch and propagates failure", async () => {
+    const mutations = [
+      { name: "update-report" },
+      { name: "delete-owner-source" },
+      { name: "replace-children" },
+    ] as const;
+    const receivedBatches: Array<typeof mutations> = [];
+
+    await expect(
+      executeAtomicReportMutations(mutations, async (received) => {
+        receivedBatches.push(received);
+        throw new Error("duplicate child id");
+      }),
+    ).rejects.toThrow("duplicate child id");
+
+    expect(receivedBatches).toEqual([mutations]);
   });
 });

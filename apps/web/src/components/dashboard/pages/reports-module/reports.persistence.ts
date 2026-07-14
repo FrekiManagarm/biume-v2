@@ -77,3 +77,13 @@ export function getRemovedOwnerSources(
     return false;
   });
 }
+
+export function executeAtomicReportMutations<
+  const Mutations extends readonly [unknown, ...unknown[]],
+  Result,
+>(
+  mutations: Mutations,
+  executeBatch: (mutations: Mutations) => Promise<Result>,
+) {
+  return executeBatch(mutations);
+}
