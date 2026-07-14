@@ -25,7 +25,7 @@
         "check-types": "turbo check-types",
         "dev:app": "turbo -F web dev",
         "dev:marketing": "turbo -F marketing dev",
-        "dev:web": "turbo -F web dev",
+        "dev:web": "turbo -F @biume/web dev",
         "db:push": "turbo -F @biume/db db:push",
         "db:studio": "turbo -F @biume/db db:studio",
         "db:generate": "turbo -F @biume/db db:generate",
