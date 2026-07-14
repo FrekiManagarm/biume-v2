@@ -13,6 +13,18 @@ type ReportRecommendationDraft = {
 export type ReportUpdateStatus = "draft" | "finalized";
 export type ProfessionalSectionStatus = "empty" | "in-progress" | "complete";
 
+export function getAnatomicalProfessionalItemText(issue: {
+  notes?: string | null;
+  region: string;
+  anatomicalPart?: { name?: string | null } | null;
+}) {
+  return (
+    issue.notes?.trim() ||
+    issue.anatomicalPart?.name?.trim() ||
+    issue.region.trim()
+  );
+}
+
 export function deriveProfessionalSectionStatus(
   section: ReportSectionId,
   content: { consultationReason: string; itemTexts: readonly string[] },

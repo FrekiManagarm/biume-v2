@@ -150,4 +150,53 @@ describe("compareBaselineSchema", () => {
       true,
     );
   });
+
+  test("accepts a table with no expected and no actual primary key", () => {
+    const withoutPrimaryKey = {
+      ...snapshot,
+      tables: {
+        "public.child": {
+          ...snapshot.tables["public.child"],
+          columns: {
+            ...snapshot.tables["public.child"].columns,
+            id: {
+              ...snapshot.tables["public.child"].columns.id,
+              primaryKey: false,
+            },
+          },
+        },
+      },
+    };
+
+    expect(
+      compareBaselineSchema(withoutPrimaryKey, {
+        ...actual,
+        primaryKeys: [],
+      }),
+    ).toEqual([]);
+  });
+
+  test("rejects an unexpected primary key when the baseline expects none", () => {
+    const withoutPrimaryKey = {
+      ...snapshot,
+      tables: {
+        "public.child": {
+          ...snapshot.tables["public.child"],
+          columns: {
+            ...snapshot.tables["public.child"].columns,
+            id: {
+              ...snapshot.tables["public.child"].columns.id,
+              primaryKey: false,
+            },
+          },
+        },
+      },
+    };
+
+    expect(
+      compareBaselineSchema(withoutPrimaryKey, actual).some((mismatch) =>
+        mismatch.includes("primary key"),
+      ),
+    ).toBe(true);
+  });
 });

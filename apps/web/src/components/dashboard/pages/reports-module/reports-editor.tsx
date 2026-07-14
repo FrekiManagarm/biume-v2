@@ -27,6 +27,7 @@ import {
   buildReportUpdatePayload,
   ensureSuccessfulReportUpdate,
   deriveProfessionalSectionStatus,
+  getAnatomicalProfessionalItemText,
   getReportDraftRevision,
   getReportDesktopGridClassName,
   invalidateReportDetailQuery,
@@ -738,7 +739,7 @@ export function AdvancedReportEditor({
       count: anatomicalIssues.length,
       professionalStatus: deriveProfessionalSectionStatus("anatomical", {
         consultationReason: "",
-        itemTexts: anatomicalIssues.map((item) => item.notes),
+        itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
       }),
     },
     {

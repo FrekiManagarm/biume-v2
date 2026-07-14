@@ -35,6 +35,14 @@ geometry, path, transform, view box, ratio, or laterality data was changed.
    constraints, declared indexes, columns, and enums before a baseline history
    row can be written. Fixture tests cover each mismatch category. The Neon
    branch-first procedure is documented; production was not accessed.
+   Tables whose snapshot intentionally has no primary key are accepted only
+   when the live table also has none; an unexpected live primary key remains a
+   mismatch. This covers the existing `client_note` baseline shape.
+
+The anatomical professional completion rule also treats a structured displayed
+region as meaningful content when optional notes are empty. It resolves notes,
+then `anatomicalPart.name`, then the stored region identifier; owner content and
+anatomical rendering remain unchanged.
 
 Small review recommendations were also included: all report child IDs now use
 `z.string().min(1)`, and owner Sheets explicitly disable transitions under
@@ -42,8 +50,8 @@ reduced motion.
 
 ## Verification
 
-- `bun --filter @biume/web test` — 24 files, 130 tests passed.
-- `bun --filter @biume/db test` — 3 files, 12 tests passed.
+- `bun --filter @biume/web test` — 24 files, 131 tests passed.
+- `bun --filter @biume/db test` — 3 files, 14 tests passed.
 - `bun x tsc --noEmit -p packages/db/tsconfig.json` — passed.
 - `bun run check-types` — passed for every workspace package exposing the
   script (UI and emails; Turbo reports the other packages without a script).

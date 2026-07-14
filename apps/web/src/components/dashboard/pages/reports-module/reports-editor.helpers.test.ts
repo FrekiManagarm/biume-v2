@@ -11,6 +11,7 @@ import {
   replaceOwnerContentRecord,
   runExclusiveReportSave,
   deriveProfessionalSectionStatus,
+  getAnatomicalProfessionalItemText,
 } from "./reports-editor.helpers";
 
 describe("deriveProfessionalSectionStatus", () => {
@@ -36,6 +37,20 @@ describe("deriveProfessionalSectionStatus", () => {
     ],
   ] as const)("derives %s as %s", (section, content, expected) => {
     expect(deriveProfessionalSectionStatus(section, content)).toBe(expected);
+  });
+
+  test("considers an anatomical item complete when its structured region replaces optional notes", () => {
+    const itemText = getAnatomicalProfessionalItemText({
+      notes: "",
+      region: "database_part_id",
+      anatomicalPart: { name: "Cervicales" },
+    });
+    expect(
+      deriveProfessionalSectionStatus("anatomical", {
+        consultationReason: "",
+        itemTexts: [itemText],
+      }),
+    ).toBe("complete");
   });
 });
 

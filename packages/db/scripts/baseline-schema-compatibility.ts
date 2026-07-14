@@ -178,10 +178,12 @@ export function compareBaselineSchema(
     const primaryKey = actual.primaryKeys.find(
       (key) => key.tableName === tableName,
     );
-    if (
-      !primaryKey ||
-      !sameColumns(primaryKey.columns, expectedPrimaryColumns)
-    ) {
+    const primaryKeyMatches =
+      expectedPrimaryColumns.length === 0
+        ? primaryKey === undefined
+        : primaryKey !== undefined &&
+          sameColumns(primaryKey.columns, expectedPrimaryColumns);
+    if (!primaryKeyMatches) {
       mismatches.push(`${tableName} primary key does not match the baseline`);
     }
 
