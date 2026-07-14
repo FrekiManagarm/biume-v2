@@ -10,7 +10,34 @@ import {
   openOwnerPreparation,
   replaceOwnerContentRecord,
   runExclusiveReportSave,
+  deriveProfessionalSectionStatus,
 } from "./reports-editor.helpers";
+
+describe("deriveProfessionalSectionStatus", () => {
+  test.each([
+    ["clinical", { consultationReason: "", itemTexts: [] }, "empty"],
+    ["clinical", { consultationReason: "Suivi", itemTexts: [] }, "in-progress"],
+    [
+      "clinical",
+      { consultationReason: "Suivi", itemTexts: ["Observation"] },
+      "complete",
+    ],
+    ["anatomical", { consultationReason: "", itemTexts: [""] }, "in-progress"],
+    [
+      "anatomical",
+      { consultationReason: "", itemTexts: ["Tension"] },
+      "complete",
+    ],
+    ["recommendations", { consultationReason: "", itemTexts: [] }, "empty"],
+    [
+      "notes",
+      { consultationReason: "", itemTexts: ["Surveiller"] },
+      "complete",
+    ],
+  ] as const)("derives %s as %s", (section, content, expected) => {
+    expect(deriveProfessionalSectionStatus(section, content)).toBe(expected);
+  });
+});
 
 describe("buildReportUpdatePayload", () => {
   test("preserves empty draft text fields so saved reports can clear existing values", () => {

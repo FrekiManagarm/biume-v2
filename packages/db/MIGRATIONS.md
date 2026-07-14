@@ -33,10 +33,14 @@ Run the read-only preflight:
 bun --filter @biume/db db:baseline-existing --check
 ```
 
-The preflight verifies all 22 tables, their exact column names, PostgreSQL
-types and nullability, and the ordered values of all 11 enums represented by
-the generated `0000_snapshot.json`. It also checks that owner-content objects
-are absent and refuses unknown or hash-mismatched Drizzle history.
+The preflight verifies all 22 tables against the generated
+`0000_snapshot.json`: exact column names, PostgreSQL types, nullability,
+pertinent defaults, primary keys, foreign keys (including update/delete
+actions), unique constraints, declared indexes, and the ordered values of all
+11 enums. The two documented legacy timestamp defaults are reported and are
+the only allowed preflight exception; `--apply` normalizes them before writing
+the baseline history row. The script also checks that owner-content objects are
+absent and refuses unknown or hash-mismatched Drizzle history.
 
 After reviewing the target and preflight output, apply the baseline and feature
 migration during the maintenance window:
@@ -44,6 +48,11 @@ migration during the maintenance window:
 ```sh
 bun --filter @biume/db db:baseline-existing --apply --confirm-existing-schema
 ```
+
+Never run `--apply` first against production. Execute both `--check` and
+`--apply` on a fresh Neon branch cloned from the target, inspect the resulting
+constraints and application behavior, then repeat the same guarded operation
+during the production maintenance window.
 
 The operation:
 

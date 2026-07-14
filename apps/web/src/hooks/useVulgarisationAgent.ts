@@ -3,14 +3,14 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 
 type VulgarisationRequestOptions = {
-  reportId?: string;
-  sourceKind?:
+  reportId: string;
+  sourceKind:
     | "consultationReason"
     | "observation"
     | "anatomicalIssue"
     | "recommendation"
     | "notes";
-  sourceContext?: string;
+  sourceId: string;
 };
 
 export function useVulgarisationAgent() {
@@ -29,7 +29,7 @@ export function useVulgarisationAgent() {
   const isLoading = status === "submitted" || status === "streaming";
 
   const sendMessage = useCallback(
-    async (text: string, options: VulgarisationRequestOptions = {}) => {
+    async (text: string, options: VulgarisationRequestOptions) => {
       await send(
         {
           text,

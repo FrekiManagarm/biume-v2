@@ -3,6 +3,10 @@ import {
   buildPersistedOwnerSources,
   prepareOwnerContentUpsert,
 } from "./owner-content.persistence";
+import {
+  buildOwnerSourceItems,
+  deriveOwnerContentStatus,
+} from "./owner-content";
 
 const source = {
   key: "observation:obs_01",
@@ -100,5 +104,58 @@ describe("buildPersistedOwnerSources", () => {
       professionalText: "Tension C1-C2",
       context: expect.stringContaining("Zone non précisée"),
     });
+  });
+
+  test("keeps a newly saved anatomical owner version ready after persistence", () => {
+    const report = {
+      id: "report_01",
+      consultationReason: "",
+      notes: "",
+      anatomicalIssues: [
+        {
+          id: "issue_01",
+          type: "dysfunction" as const,
+          observationType: null,
+          notes: "Tension C1-C2",
+          laterality: "bilateral" as const,
+          severity: 3,
+          anatomicalPart: { name: "Cervicales" },
+        },
+      ],
+      recommendations: [],
+    };
+    const persistedSource = buildPersistedOwnerSources(report)[0]!;
+    const saved = prepareOwnerContentUpsert({
+      reportId: report.id,
+      sourceKind: persistedSource.sourceKind,
+      sourceId: persistedSource.sourceId,
+      ownerText: "La zone du cou présente une tension.",
+      sources: [persistedSource],
+    });
+    const clientSource = buildOwnerSourceItems({
+      reportId: report.id,
+      consultationReason: "",
+      observations: [],
+      anatomicalIssues: [
+        {
+          id: "issue_01",
+          type: "dysfunction",
+          region: "database_part_id",
+          notes: "Tension C1-C2",
+          laterality: "bilateral",
+          severity: 3,
+          anatomicalPart: { name: "Cervicales" } as never,
+        },
+      ],
+      recommendations: [],
+      notes: "",
+    })[0]!;
+
+    expect(
+      deriveOwnerContentStatus(clientSource, {
+        id: "owner_01",
+        ...saved,
+      }),
+    ).toBe("ready");
   });
 });

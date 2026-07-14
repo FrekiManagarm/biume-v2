@@ -411,7 +411,7 @@ export function OwnerReportPreviewSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-screen max-w-none overflow-y-auto p-0 sm:w-[32rem] sm:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:sm:w-[32rem] data-[side=right]:sm:max-w-[32rem]"
+        className="w-screen max-w-none overflow-y-auto p-0 motion-reduce:transition-none lg:w-[32rem] lg:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:lg:w-[32rem] data-[side=right]:lg:max-w-[32rem]"
       >
         <SheetHeader className="border-b border-border px-5 py-4 text-left">
           <SheetTitle>Aperçu propriétaire</SheetTitle>
@@ -460,7 +460,7 @@ export function ReportPreview({
     >
       <SheetContent
         side="right"
-        className="w-screen max-w-none overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl sm:w-[32rem] sm:max-w-[32rem] sm:p-5 data-[side=right]:w-screen data-[side=right]:sm:w-[32rem] data-[side=right]:sm:max-w-[32rem]"
+        className="w-screen max-w-none overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl motion-reduce:transition-none lg:w-[32rem] lg:max-w-[32rem] lg:p-5 data-[side=right]:w-screen data-[side=right]:lg:w-[32rem] data-[side=right]:lg:max-w-[32rem]"
       >
         <SheetHeader className="px-1 pb-1 text-left">
           <SheetTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-950">

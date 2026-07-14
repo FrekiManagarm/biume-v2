@@ -42,8 +42,8 @@ describe("OwnerReportPreviewSheet", () => {
     expect(screen.getByRole("dialog").className.split(" ")).toEqual(
       expect.arrayContaining([
         "data-[side=right]:w-screen",
-        "data-[side=right]:sm:w-[32rem]",
-        "data-[side=right]:sm:max-w-[32rem]",
+        "data-[side=right]:lg:w-[32rem]",
+        "data-[side=right]:lg:max-w-[32rem]",
       ]),
     );
     expect(screen.getByText("Compte rendu de suivi · Nox")).not.toBeNull();
@@ -87,6 +87,29 @@ describe("OwnerReportPreviewSheet", () => {
     expect(onStartPreparation).toHaveBeenCalledOnce();
     expect(onJumpToSection).toHaveBeenCalledWith("recommendations");
   });
+
+  test.each([
+    [390, "w-screen"],
+    [768, "w-screen"],
+    [1024, "lg:w-[32rem]"],
+  ] as const)(
+    "keeps the preview width contract at %ipx",
+    (width, expectedClass) => {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: width,
+      });
+      render(
+        <OwnerReportPreviewSheet
+          open
+          onOpenChange={vi.fn()}
+          title="Compte rendu"
+          entries={[]}
+        />,
+      );
+      expect(screen.getByRole("dialog").className).toContain(expectedClass);
+    },
+  );
 
   test("disables preparation while the professional report is saving", () => {
     render(

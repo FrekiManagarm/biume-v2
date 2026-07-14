@@ -16,14 +16,30 @@ afterEach(cleanup);
 describe("ReportSidebarNavigation", () => {
   const defaultProps = {
     tabs: [
-      { id: "clinical" as const, label: "Observations", count: 2 },
-      { id: "anatomical" as const, label: "Anatomie", count: 1 },
+      {
+        id: "clinical" as const,
+        label: "Observations",
+        count: 2,
+        professionalStatus: "complete" as const,
+      },
+      {
+        id: "anatomical" as const,
+        label: "Anatomie",
+        count: 1,
+        professionalStatus: "in-progress" as const,
+      },
       {
         id: "recommendations" as const,
         label: "Recommandations",
         count: 1,
+        professionalStatus: "complete" as const,
       },
-      { id: "notes" as const, label: "Notes additionnelles", count: 1 },
+      {
+        id: "notes" as const,
+        label: "Notes additionnelles",
+        count: 0,
+        professionalStatus: "empty" as const,
+      },
     ],
     activeTab: "clinical" as const,
     onChangeTab: vi.fn(),
@@ -50,6 +66,28 @@ describe("ReportSidebarNavigation", () => {
     expect(screen.getAllByText("Prêt")).toHaveLength(2);
     expect(screen.getByText("À actualiser")).not.toBeNull();
     expect(screen.getByText("À préparer")).not.toBeNull();
+    expect(screen.getByLabelText("Observations : 2 éléments")).not.toBeNull();
+    expect(screen.getByText("En cours")).not.toBeNull();
+    expect(screen.getByText("Vide")).not.toBeNull();
+    expect(screen.getAllByText("Complet")[0]?.className).toContain("emerald");
+  });
+
+  test("does not claim owner readiness when a section has no applicable source", () => {
+    render(
+      <ReportSidebarNavigation
+        {...defaultProps}
+        ownerStatuses={{
+          ...defaultProps.ownerStatuses,
+          notes: "not-applicable",
+        }}
+      />,
+    );
+
+    expect(
+      within(
+        screen.getByRole("button", { name: /Notes additionnelles/ }),
+      ).queryByText("Prêt"),
+    ).toBeNull();
   });
 
   test("keeps direct navigation and the owner preparation action", () => {

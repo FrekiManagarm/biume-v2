@@ -3,6 +3,11 @@ import { config as loadEnv } from "dotenv";
 import { drizzle } from "drizzle-orm/neon-http";
 import { migrate } from "drizzle-orm/neon-http/migrator";
 import { fileURLToPath } from "node:url";
+import {
+  compareBaselineSchema,
+  type ActualBaselineSchema,
+  type BaselineSnapshot,
+} from "./baseline-schema-compatibility";
 
 type JournalEntry = {
   idx: number;
@@ -12,25 +17,6 @@ type JournalEntry = {
 
 type Journal = {
   entries: JournalEntry[];
-};
-
-type SnapshotColumn = {
-  name: string;
-  type: string;
-  notNull: boolean;
-};
-
-type SnapshotTable = {
-  columns: Record<string, SnapshotColumn>;
-};
-
-type SnapshotEnum = {
-  values: string[];
-};
-
-type Snapshot = {
-  tables: Record<string, SnapshotTable>;
-  enums: Record<string, SnapshotEnum>;
 };
 
 type MigrationRow = {
@@ -75,19 +61,6 @@ function migrationHash(sql: string) {
   return new Bun.CryptoHasher("sha256").update(sql).digest("hex");
 }
 
-function postgresTypeName(type: string) {
-  if (type.endsWith("[]")) {
-    return `_${type.slice(0, -2)}`;
-  }
-
-  return (
-    {
-      boolean: "bool",
-      integer: "int4",
-    }[type] ?? type
-  );
-}
-
 function validateJournal(journal: Journal) {
   const tags = journal.entries.map((entry) => entry.tag);
 
@@ -103,7 +76,9 @@ function validateJournal(journal: Journal) {
 
   const [baseline, feature] = journal.entries;
   if (!baseline || !feature || baseline.when >= feature.when) {
-    throw new Error("Migration journal timestamps are missing or out of order.");
+    throw new Error(
+      "Migration journal timestamps are missing or out of order.",
+    );
   }
 
   return { baseline, feature };
@@ -166,7 +141,7 @@ async function main() {
   const [journal, baselineSnapshot, baselineSql, featureSql] =
     await Promise.all([
       Bun.file(journalPath).json() as Promise<Journal>,
-      Bun.file(baselineSnapshotPath).json() as Promise<Snapshot>,
+      Bun.file(baselineSnapshotPath).json() as Promise<BaselineSnapshot>,
       Bun.file(`${migrationsFolder}/0000_baseline.sql`).text(),
       Bun.file(`${migrationsFolder}/0001_report_owner_content.sql`).text(),
     ]);
@@ -214,82 +189,110 @@ async function main() {
     where namespace.nspname = 'public'
     order by value.enumsortorder
   `) as EnumValueRow[];
+  const primaryKeyRows = (await sql`
+    select
+      namespace.nspname || '.' || table_class.relname as "tableName",
+      constraint_row.conname as name,
+      array_agg(attribute.attname order by key_column.ordinality) as columns
+    from pg_catalog.pg_constraint as constraint_row
+    inner join pg_catalog.pg_class as table_class on table_class.oid = constraint_row.conrelid
+    inner join pg_catalog.pg_namespace as namespace on namespace.oid = table_class.relnamespace
+    cross join lateral unnest(constraint_row.conkey) with ordinality as key_column(attnum, ordinality)
+    inner join pg_catalog.pg_attribute as attribute
+      on attribute.attrelid = constraint_row.conrelid and attribute.attnum = key_column.attnum
+    where namespace.nspname = 'public' and constraint_row.contype = 'p'
+    group by namespace.nspname, table_class.relname, constraint_row.conname
+  `) as ActualBaselineSchema["primaryKeys"];
+  const foreignKeyRows = (await sql`
+    select
+      source_namespace.nspname || '.' || source_table.relname as "tableName",
+      constraint_row.conname as name,
+      array_agg(source_attribute.attname order by source_key.ordinality) as columns,
+      target_namespace.nspname || '.' || target_table.relname as "referencedTable",
+      array_agg(target_attribute.attname order by source_key.ordinality) as "referencedColumns",
+      case constraint_row.confdeltype when 'c' then 'cascade' when 'r' then 'restrict' when 'n' then 'set null' when 'd' then 'set default' else 'no action' end as "onDelete",
+      case constraint_row.confupdtype when 'c' then 'cascade' when 'r' then 'restrict' when 'n' then 'set null' when 'd' then 'set default' else 'no action' end as "onUpdate"
+    from pg_catalog.pg_constraint as constraint_row
+    inner join pg_catalog.pg_class as source_table on source_table.oid = constraint_row.conrelid
+    inner join pg_catalog.pg_namespace as source_namespace on source_namespace.oid = source_table.relnamespace
+    inner join pg_catalog.pg_class as target_table on target_table.oid = constraint_row.confrelid
+    inner join pg_catalog.pg_namespace as target_namespace on target_namespace.oid = target_table.relnamespace
+    cross join lateral unnest(constraint_row.conkey) with ordinality as source_key(attnum, ordinality)
+    inner join lateral unnest(constraint_row.confkey) with ordinality as target_key(attnum, ordinality)
+      on target_key.ordinality = source_key.ordinality
+    inner join pg_catalog.pg_attribute as source_attribute
+      on source_attribute.attrelid = constraint_row.conrelid and source_attribute.attnum = source_key.attnum
+    inner join pg_catalog.pg_attribute as target_attribute
+      on target_attribute.attrelid = constraint_row.confrelid and target_attribute.attnum = target_key.attnum
+    where source_namespace.nspname = 'public' and constraint_row.contype = 'f'
+    group by source_namespace.nspname, source_table.relname, target_namespace.nspname, target_table.relname,
+      constraint_row.conname, constraint_row.confdeltype, constraint_row.confupdtype
+  `) as ActualBaselineSchema["foreignKeys"];
+  const uniqueConstraintRows = (await sql`
+    select
+      namespace.nspname || '.' || table_class.relname as "tableName",
+      constraint_row.conname as name,
+      array_agg(attribute.attname order by key_column.ordinality) as columns,
+      index_row.indnullsnotdistinct as "nullsNotDistinct"
+    from pg_catalog.pg_constraint as constraint_row
+    inner join pg_catalog.pg_class as table_class on table_class.oid = constraint_row.conrelid
+    inner join pg_catalog.pg_namespace as namespace on namespace.oid = table_class.relnamespace
+    inner join pg_catalog.pg_index as index_row on index_row.indexrelid = constraint_row.conindid
+    cross join lateral unnest(constraint_row.conkey) with ordinality as key_column(attnum, ordinality)
+    inner join pg_catalog.pg_attribute as attribute
+      on attribute.attrelid = constraint_row.conrelid and attribute.attnum = key_column.attnum
+    where namespace.nspname = 'public' and constraint_row.contype = 'u'
+    group by namespace.nspname, table_class.relname, constraint_row.conname, index_row.indnullsnotdistinct
+  `) as ActualBaselineSchema["uniqueConstraints"];
+  const indexRows = (await sql`
+    select
+      namespace.nspname || '.' || table_class.relname as "tableName",
+      index_class.relname as name,
+      array_agg(pg_get_indexdef(index_row.indexrelid, key_position.ordinality::integer, true) order by key_position.ordinality) as columns,
+      index_row.indisunique as unique
+    from pg_catalog.pg_index as index_row
+    inner join pg_catalog.pg_class as table_class on table_class.oid = index_row.indrelid
+    inner join pg_catalog.pg_namespace as namespace on namespace.oid = table_class.relnamespace
+    inner join pg_catalog.pg_class as index_class on index_class.oid = index_row.indexrelid
+    cross join lateral generate_series(1, index_row.indnkeyatts) with ordinality as key_position(position, ordinality)
+    where namespace.nspname = 'public'
+    group by namespace.nspname, table_class.relname, index_class.relname, index_row.indisunique
+  `) as ActualBaselineSchema["indexes"];
   const [migrationTable] = (await sql`
     select to_regclass('drizzle.__drizzle_migrations')::text as name
   `) as Array<{ name: string | null }>;
 
+  const columnsByTable = Map.groupBy(columnRows, (column) => column.table_name);
   const actualTables = new Set(tableRows.map((row) => row.name));
   const actualEnums = new Set(enumRows.map((row) => row.name));
-  const missingTables = Object.keys(baselineSnapshot.tables).filter(
-    (table) => !actualTables.has(table),
+  const schemaMismatches = compareBaselineSchema(
+    baselineSnapshot,
+    {
+      tables: [...actualTables],
+      columns: columnRows.map((column) => ({
+        tableName: column.table_name,
+        name: column.column_name,
+        type: column.udt_name,
+        notNull: column.is_nullable === "NO",
+        defaultValue: column.column_default,
+      })),
+      enums: [...actualEnums],
+      enumValues: enumValueRows.map((row) => ({
+        enumName: row.enum_name,
+        value: row.enum_value,
+      })),
+      primaryKeys: primaryKeyRows,
+      foreignKeys: foreignKeyRows,
+      uniqueConstraints: uniqueConstraintRows,
+      indexes: indexRows,
+    },
+    {
+      allowedDefaultMismatches: new Set([
+        "public.reminder.createdAt",
+        "public.signatures.createdAt",
+      ]),
+    },
   );
-  const missingEnums = Object.keys(baselineSnapshot.enums).filter(
-    (enumName) => !actualEnums.has(enumName),
-  );
-
-  if (missingTables.length > 0 || missingEnums.length > 0) {
-    throw new Error(
-      `Existing schema does not match the baseline. Missing tables: ${missingTables.join(", ") || "none"}. Missing enums: ${missingEnums.join(", ") || "none"}.`,
-    );
-  }
-
-  const columnsByTable = Map.groupBy(
-    columnRows,
-    (column) => column.table_name,
-  );
-  const schemaMismatches: string[] = [];
-
-  for (const [tableName, table] of Object.entries(baselineSnapshot.tables)) {
-    const actualColumns = columnsByTable.get(tableName) ?? [];
-    const actualByName = new Map(
-      actualColumns.map((column) => [column.column_name, column]),
-    );
-    const expectedNames = new Set(Object.keys(table.columns));
-
-    for (const column of Object.values(table.columns)) {
-      const actual = actualByName.get(column.name);
-      if (!actual) {
-        schemaMismatches.push(`${tableName}.${column.name} is missing`);
-        continue;
-      }
-
-      const expectedType = postgresTypeName(column.type);
-      if (actual.udt_name !== expectedType) {
-        schemaMismatches.push(
-          `${tableName}.${column.name} has type ${actual.udt_name}, expected ${expectedType}`,
-        );
-      }
-
-      if ((actual.is_nullable === "NO") !== column.notNull) {
-        schemaMismatches.push(
-          `${tableName}.${column.name} nullability does not match the baseline`,
-        );
-      }
-    }
-
-    for (const actual of actualColumns) {
-      if (!expectedNames.has(actual.column_name)) {
-        schemaMismatches.push(
-          `${tableName}.${actual.column_name} is not present in the baseline`,
-        );
-      }
-    }
-  }
-
-  const enumValuesByName = Map.groupBy(
-    enumValueRows,
-    (row) => row.enum_name,
-  );
-  for (const [enumName, expected] of Object.entries(
-    baselineSnapshot.enums,
-  )) {
-    const actual = (enumValuesByName.get(enumName) ?? []).map(
-      (row) => row.enum_value,
-    );
-    if (actual.join("\u0000") !== expected.values.join("\u0000")) {
-      schemaMismatches.push(`${enumName} values do not match the baseline`);
-    }
-  }
 
   if (schemaMismatches.length > 0) {
     throw new Error(
@@ -304,7 +307,9 @@ async function main() {
     const column = (columnsByTable.get(tableName ?? "") ?? []).find(
       (candidate) => candidate.column_name === columnName,
     );
-    return column?.column_default?.replaceAll(" ", "").toLowerCase() !== "now()";
+    return (
+      column?.column_default?.replaceAll(" ", "").toLowerCase() !== "now()"
+    );
   });
 
   const featureTableExists = actualTables.has("public.report_owner_content");
@@ -358,7 +363,9 @@ async function main() {
   }
 
   if (featureRecorded) {
-    console.log("0000 and 0001 are already recorded and present; no action needed.");
+    console.log(
+      "0000 and 0001 are already recorded and present; no action needed.",
+    );
     return;
   }
 

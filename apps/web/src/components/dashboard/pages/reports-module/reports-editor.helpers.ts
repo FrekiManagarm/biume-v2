@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { cn } from "@/lib/style";
 import type { OwnerContentRecord } from "./owner-content";
+import type { ReportSectionId } from "./owner-content";
 import type { AnatomicalIssue, Observation } from "./types";
 
 type ReportRecommendationDraft = {
@@ -10,6 +11,27 @@ type ReportRecommendationDraft = {
 };
 
 export type ReportUpdateStatus = "draft" | "finalized";
+export type ProfessionalSectionStatus = "empty" | "in-progress" | "complete";
+
+export function deriveProfessionalSectionStatus(
+  section: ReportSectionId,
+  content: { consultationReason: string; itemTexts: readonly string[] },
+): ProfessionalSectionStatus {
+  const meaningfulItems = content.itemTexts.filter((text) => text.trim());
+  if (section === "clinical") {
+    const hasReason = Boolean(content.consultationReason.trim());
+    if (!hasReason && meaningfulItems.length === 0) return "empty";
+    return hasReason &&
+      meaningfulItems.length === content.itemTexts.length &&
+      meaningfulItems.length > 0
+      ? "complete"
+      : "in-progress";
+  }
+  if (content.itemTexts.length === 0) return "empty";
+  return meaningfulItems.length === content.itemTexts.length
+    ? "complete"
+    : "in-progress";
+}
 
 type BuildReportUpdatePayloadInput = {
   reportId: string;

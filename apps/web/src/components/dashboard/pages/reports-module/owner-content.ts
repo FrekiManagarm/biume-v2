@@ -90,14 +90,16 @@ export function buildOwnerSourceItems(
     ),
   );
   for (const observation of input.observations) {
+    const displayedRegion =
+      observation.anatomicalPart?.name ?? observation.region;
     sources.push(
       createSource(
         "observation",
         observation.id,
         "clinical",
-        observation.notes || observation.region,
+        observation.notes || displayedRegion,
         JSON.stringify({
-          region: observation.region,
+          region: displayedRegion,
           laterality: observation.laterality,
           severity: observation.severity,
           type: observation.type,
@@ -107,14 +109,15 @@ export function buildOwnerSourceItems(
     );
   }
   for (const issue of input.anatomicalIssues) {
+    const displayedRegion = issue.anatomicalPart?.name ?? issue.region;
     sources.push(
       createSource(
         "anatomicalIssue",
         issue.id,
         "anatomical",
-        issue.notes || issue.region,
+        issue.notes || displayedRegion,
         JSON.stringify({
-          region: issue.region,
+          region: displayedRegion,
           laterality: issue.laterality,
           severity: issue.severity,
           type: issue.type,

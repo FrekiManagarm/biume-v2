@@ -65,4 +65,13 @@ describe("reportSchema item ids", () => {
       ]),
     );
   });
+
+  test("rejects an empty recommendation id", () => {
+    const result = reportSchema.safeParse({
+      ...validReport,
+      recommendations: [{ id: "", content: "Repos" }],
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

@@ -19,11 +19,22 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/style";
 import type { OwnerContentStatus, ReportSectionId } from "../owner-content";
+import type { ProfessionalSectionStatus } from "../reports-editor.helpers";
 
 type ReportTab = {
   id: ReportSectionId;
   label: string;
   count: number;
+  professionalStatus: ProfessionalSectionStatus;
+};
+
+const professionalStatusPresentation: Record<
+  ProfessionalSectionStatus,
+  { label: string; className: string }
+> = {
+  empty: { label: "Vide", className: "text-primary-foreground/60" },
+  "in-progress": { label: "En cours", className: "text-primary-foreground/85" },
+  complete: { label: "Complet", className: "text-emerald-200" },
 };
 
 const tabIcons = {
@@ -69,14 +80,16 @@ export function ReportSidebarNavigation({
   onChangeTab: (tab: ReportSectionId) => void;
   onGoBack: () => void;
   onShortcuts: () => void;
-  ownerStatuses: Record<ReportSectionId, OwnerContentStatus>;
+  ownerStatuses: Record<ReportSectionId, OwnerContentStatus | "not-applicable">;
   pendingOwnerCount: number;
   onPrepareOwnerContent: () => void;
   isPreparationDisabled?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }) {
-  const completedCount = tabs.filter((tab) => tab.count > 0).length;
+  const completedCount = tabs.filter(
+    (tab) => tab.professionalStatus === "complete",
+  ).length;
   const progressPercent = Math.round((completedCount / tabs.length) * 100);
   const controlClassName =
     "h-11 w-11 shrink-0 rounded-xl text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground";
@@ -161,7 +174,13 @@ export function ReportSidebarNavigation({
           {tabs.map((tab) => {
             const Icon = tabIcons[tab.id];
             const isActive = activeTab === tab.id;
-            const status = ownerStatusPresentation[ownerStatuses[tab.id]];
+            const ownerStatus = ownerStatuses[tab.id];
+            const status =
+              ownerStatus === "not-applicable"
+                ? null
+                : ownerStatusPresentation[ownerStatus];
+            const professionalStatus =
+              professionalStatusPresentation[tab.professionalStatus];
             const button = (
               <button
                 key={tab.id}
@@ -184,15 +203,35 @@ export function ReportSidebarNavigation({
                   <>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {tab.label}
+                      <span
+                        className="ml-2 text-xs font-normal opacity-75"
+                        aria-label={`${tab.label} : ${tab.count} éléments`}
+                      >
+                        {tab.count}
+                      </span>
+                      <span
+                        className={cn(
+                          "mt-0.5 block text-[10px] font-medium",
+                          isActive && tab.professionalStatus === "complete"
+                            ? "text-emerald-700"
+                            : isActive
+                              ? "text-primary/75"
+                              : professionalStatus.className,
+                        )}
+                      >
+                        {professionalStatus.label}
+                      </span>
                     </span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-inset",
-                        status.className,
-                      )}
-                    >
-                      {status.label}
-                    </span>
+                    {status ? (
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-inset",
+                          status.className,
+                        )}
+                      >
+                        {status.label}
+                      </span>
+                    ) : null}
                   </>
                 ) : null}
               </button>

@@ -65,6 +65,42 @@ describe("owner content", () => {
     expect(deriveOwnerContentStatus(source, undefined)).toBe("missing");
   });
 
+  test("uses the displayed anatomical-part name in the canonical fingerprint", () => {
+    const [source] = buildOwnerSourceItems({
+      ...input,
+      consultationReason: "",
+      observations: [],
+      recommendations: [],
+      notes: "",
+      anatomicalIssues: [
+        {
+          ...input.anatomicalIssues[0]!,
+          region: "database_part_id",
+          notes: "",
+          anatomicalPart: { name: "Cervicales" } as never,
+        },
+      ],
+    });
+    const [persistedEquivalent] = buildOwnerSourceItems({
+      ...input,
+      consultationReason: "",
+      observations: [],
+      recommendations: [],
+      notes: "",
+      anatomicalIssues: [
+        {
+          ...input.anatomicalIssues[0]!,
+          region: "Cervicales",
+          notes: "",
+        },
+      ],
+    });
+
+    expect(source?.context).toContain('"region":"Cervicales"');
+    expect(source?.professionalText).toBe("Cervicales");
+    expect(source?.fingerprint).toBe(persistedEquivalent?.fingerprint);
+  });
+
   test("queues stale before missing and excludes ready sources", () => {
     const sources = buildOwnerSourceItems(input);
     const records = [

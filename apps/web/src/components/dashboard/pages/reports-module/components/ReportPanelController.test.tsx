@@ -57,8 +57,8 @@ describe("ReportPanelController", () => {
     expect(dialog?.className.split(" ")).toEqual(
       expect.arrayContaining([
         "data-[side=right]:w-screen",
-        "data-[side=right]:sm:w-[32rem]",
-        "data-[side=right]:sm:max-w-[32rem]",
+        "data-[side=right]:lg:w-[32rem]",
+        "data-[side=right]:lg:max-w-[32rem]",
         "motion-reduce:transition-none",
       ]),
     );
@@ -67,6 +67,27 @@ describe("ReportPanelController", () => {
     ).not.toBeNull();
     expect(screen.queryByText("Aperçu propriétaire")).toBeNull();
   });
+
+  test.each([
+    [390, "w-screen"],
+    [768, "w-screen"],
+    [1024, "lg:w-[32rem]"],
+  ] as const)(
+    "keeps the preparation width contract at %ipx",
+    (width, expectedClass) => {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: width,
+      });
+      render(
+        <ReportPanelController
+          {...commonProps}
+          state={{ type: "owner-preparation" }}
+        />,
+      );
+      expect(screen.getByRole("dialog").className).toContain(expectedClass);
+    },
+  );
 
   test("renders no dialog when the panel is closed", () => {
     render(

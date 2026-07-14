@@ -90,6 +90,7 @@ export function OwnerPreparationSheet({
   const manualEditRevision = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmSkip, setConfirmSkip] = useState(false);
 
   useEffect(() => {
     setDraft(existing?.ownerText ?? "");
@@ -154,7 +155,7 @@ export function OwnerPreparationSheet({
       await sendMessage(active.professionalText, {
         reportId,
         sourceKind: active.sourceKind,
-        sourceContext: active.context,
+        sourceId: active.sourceId,
       });
     } catch {
       setGenerationError("Génération impossible");
@@ -182,6 +183,15 @@ export function OwnerPreparationSheet({
 
   function skip() {
     if (!active) return;
+    if (hasUnsavedOwnerDraft) {
+      setConfirmSkip(true);
+      return;
+    }
+    completeSkip();
+  }
+
+  function completeSkip() {
+    if (!active) return;
     setHandledSourceKeys((current) => new Set(current).add(active.key));
   }
 
@@ -192,7 +202,7 @@ export function OwnerPreparationSheet({
     <Sheet open={open} onOpenChange={requestOpenChange}>
       <SheetContent
         side="right"
-        className="w-screen max-w-none gap-0 p-0 motion-reduce:transition-none sm:w-[32rem] sm:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:sm:w-[32rem] data-[side=right]:sm:max-w-[32rem]"
+        className="w-screen max-w-none gap-0 p-0 motion-reduce:transition-none lg:w-[32rem] lg:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:lg:w-[32rem] data-[side=right]:lg:max-w-[32rem]"
       >
         <SheetHeader className="border-b border-border px-5 py-4 text-left">
           <SheetTitle>Préparation guidée</SheetTitle>
@@ -334,6 +344,29 @@ export function OwnerPreparationSheet({
               }}
             >
               Fermer sans enregistrer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmSkip} onOpenChange={setConfirmSkip}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Passer sans enregistrer ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le brouillon de cette version propriétaire ne sera pas conservé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuer la préparation</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                setConfirmSkip(false);
+                completeSkip();
+              }}
+            >
+              Passer sans enregistrer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

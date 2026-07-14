@@ -170,7 +170,7 @@ describe("OwnerPreparationSheet", () => {
     expect(sendMessage).toHaveBeenCalledWith("Restriction gléno-humérale", {
       reportId: "report_01",
       sourceKind: "observation",
-      sourceContext: "Épaule gauche",
+      sourceId: "obs_01",
     });
   });
 
@@ -361,7 +361,7 @@ describe("OwnerPreparationSheet", () => {
     ).toBe(false);
   });
 
-  test("skips without saving and confirms before closing an edited draft", () => {
+  test("asks before skipping an edited draft so it is never silently lost", () => {
     const onSave = vi.fn();
     const onOpenChange = vi.fn();
     render(
@@ -374,9 +374,40 @@ describe("OwnerPreparationSheet", () => {
         onSave={onSave}
       />,
     );
+    fireEvent.change(screen.getByLabelText("Version propriétaire"), {
+      target: { value: "Brouillon non enregistré" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Passer" }));
+
+    expect(screen.getByText("1 sur 2")).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Passer sans enregistrer" }),
+    ).not.toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continuer la préparation" }),
+    );
+    expect(screen.getByDisplayValue("Brouillon non enregistré")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Passer" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Passer sans enregistrer" }),
+    );
     expect(screen.getByText("2 sur 2")).not.toBeNull();
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  test("confirms before closing an edited draft", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <OwnerPreparationSheet
+        open
+        onOpenChange={onOpenChange}
+        reportId="report_01"
+        queue={[first]}
+        records={[]}
+        onSave={vi.fn()}
+      />,
+    );
     fireEvent.change(screen.getByLabelText("Version propriétaire"), {
       target: { value: "Brouillon non enregistré" },
     });

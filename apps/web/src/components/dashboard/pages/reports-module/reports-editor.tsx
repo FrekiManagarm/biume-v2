@@ -26,6 +26,7 @@ import {
 import {
   buildReportUpdatePayload,
   ensureSuccessfulReportUpdate,
+  deriveProfessionalSectionStatus,
   getReportDraftRevision,
   getReportDesktopGridClassName,
   invalidateReportDetailQuery,
@@ -170,9 +171,7 @@ export function AdvancedReportEditor({
     : undefined;
 
   // Initialisation directe des états avec les données
-  const [selectedPetId] = useState<string>(
-    initialData.patientId || "",
-  );
+  const [selectedPetId] = useState<string>(initialData.patientId || "");
   const [title, setTitle] = useState(
     initialData.title ||
       "Compte rendu détaillé du " + new Date().toLocaleDateString(),
@@ -728,21 +727,37 @@ export function AdvancedReportEditor({
       id: "clinical" as const,
       label: "Observations",
       count: observations.length,
+      professionalStatus: deriveProfessionalSectionStatus("clinical", {
+        consultationReason,
+        itemTexts: observations.map((item) => item.notes || item.region),
+      }),
     },
     {
       id: "anatomical" as const,
       label: "Anatomie",
       count: anatomicalIssues.length,
+      professionalStatus: deriveProfessionalSectionStatus("anatomical", {
+        consultationReason: "",
+        itemTexts: anatomicalIssues.map((item) => item.notes),
+      }),
     },
     {
       id: "recommendations" as const,
       label: "Recommandations",
       count: recommendations.length,
+      professionalStatus: deriveProfessionalSectionStatus("recommendations", {
+        consultationReason: "",
+        itemTexts: recommendations.map((item) => item.content),
+      }),
     },
     {
       id: "notes" as const,
       label: "Notes additionnelles",
       count: notes.trim() ? 1 : 0,
+      professionalStatus: deriveProfessionalSectionStatus("notes", {
+        consultationReason: "",
+        itemTexts: notes.trim() ? [notes] : [],
+      }),
     },
   ];
   const ownerStatuses = Object.fromEntries(
@@ -750,14 +765,17 @@ export function AdvancedReportEditor({
       const sectionStatuses = ownerSources
         .filter((source) => source.section === tab.id)
         .map((source) => ownerDocument.byKey[source.key]!.status);
-      const status: OwnerContentStatus = sectionStatuses.includes("stale")
-        ? "stale"
-        : sectionStatuses.includes("missing")
-          ? "missing"
-          : "ready";
+      const status: OwnerContentStatus | "not-applicable" =
+        sectionStatuses.length === 0
+          ? "not-applicable"
+          : sectionStatuses.includes("stale")
+            ? "stale"
+            : sectionStatuses.includes("missing")
+              ? "missing"
+              : "ready";
       return [tab.id, status];
     }),
-  ) as Record<ReportSectionId, OwnerContentStatus>;
+  ) as Record<ReportSectionId, OwnerContentStatus | "not-applicable">;
   const selectedPetSummary = selectedPet
     ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
     : "Aucun patient sélectionné";

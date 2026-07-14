@@ -20,7 +20,7 @@ const reportSchemaBase = z.object({
   observations: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         region: z.string(),
         severity: z.number().min(1).max(5),
         notes: z.string(),
@@ -43,7 +43,7 @@ const reportSchemaBase = z.object({
   anatomicalIssues: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         type: z.enum(["dysfunction", "anatomicalSuspicion"]),
         region: z.string(),
         severity: z.number().min(1).max(5),
@@ -65,7 +65,7 @@ const reportSchemaBase = z.object({
   recommendations: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         content: z.string(),
       }),
     )
