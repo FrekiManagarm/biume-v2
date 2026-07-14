@@ -1,7 +1,9 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
-import { anatomicalPart, AnatomicalPart } from "./anatomicalPart"
+import { anatomicalPart } from "./anatomicalPart"
+import type { AnatomicalPart } from "./anatomicalPart"
 
 export const anatomicalPartType = pgTable("anatomical_part_type", {
   id: text("id")

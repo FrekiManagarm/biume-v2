@@ -1,8 +1,10 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { boolean, pgEnum, pgTable, text } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 
-import { User, user } from "./user"
+import { user } from "./user"
+import type { User } from "./user"
 
 export const notificationType = pgEnum("notificationType", ["rate", "newClient", "newReport", "newAskReservation"])
 

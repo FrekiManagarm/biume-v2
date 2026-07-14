@@ -1,18 +1,19 @@
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { Animal, animals } from "./animals";
-import {
-  AdvancedReport,
-  advancedReport,
-} from "./advancedReport/advancedReport";
-import { Organization, organization } from "./organization";
-import { Client, clients } from "./clients";
-import { Appointment, appointments } from "./appointments";
-import {
-  MedicalDocument,
-  medicalDocuments,
-} from "./medicalDocuments";
+import { animals } from "./animals";
+import type { Animal } from "./animals";
+import { advancedReport } from "./advancedReport/advancedReport";
+import type { AdvancedReport } from "./advancedReport/advancedReport";
+import { organization } from "./organization";
+import type { Organization } from "./organization";
+import { clients } from "./clients";
+import type { Client } from "./clients";
+import { appointments } from "./appointments";
+import type { Appointment } from "./appointments";
+import { medicalDocuments } from "./medicalDocuments";
+import type { MedicalDocument } from "./medicalDocuments";
 
 export const petGender = pgEnum("petGender", ["Male", "Female"]);
 

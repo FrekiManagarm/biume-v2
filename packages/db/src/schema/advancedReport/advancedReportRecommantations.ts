@@ -1,6 +1,8 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { advancedReport, AdvancedReport } from "./advancedReport"
-import { InferSelectModel, relations } from "drizzle-orm"
+import { advancedReport } from "./advancedReport"
+import type { AdvancedReport } from "./advancedReport"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 
 export const advancedReportRecommendations = pgTable("advanced_report_recommendations", {
   id: text("id").primaryKey(),

@@ -1,8 +1,12 @@
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { ClientNote, clientNote } from "./clientNote";
-import { Organization, organization } from "./organization";
-import { Pet, pets } from "./pets";
+import { clientNote } from "./clientNote";
+import type { ClientNote } from "./clientNote";
+import { organization } from "./organization";
+import type { Organization } from "./organization";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
 
 export const clients = pgTable("clients", {
   id: text("id")

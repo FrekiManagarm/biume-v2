@@ -1,17 +1,22 @@
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { ClientNote, clientNote } from "./clientNote";
+import { clientNote } from "./clientNote";
+import type { ClientNote } from "./clientNote";
 import { invitation } from "./invitation";
-import { Member, member } from "./member";
-import {
-  AdvancedReport,
-  advancedReport,
-} from "./advancedReport/advancedReport";
-import { Signature, signatures } from "./signatures";
-import { Client, clients } from "./clients";
-import { Pet, pets } from "./pets";
-import { Appointment, appointments } from "./appointments";
+import { member } from "./member";
+import type { Member } from "./member";
+import { advancedReport } from "./advancedReport/advancedReport";
+import type { AdvancedReport } from "./advancedReport/advancedReport";
+import { signatures } from "./signatures";
+import type { Signature } from "./signatures";
+import { clients } from "./clients";
+import type { Client } from "./clients";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
+import { appointments } from "./appointments";
+import type { Appointment } from "./appointments";
 
 export const organization = pgTable("organizations", {
   id: text("id")

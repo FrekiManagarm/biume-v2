@@ -1,7 +1,10 @@
 import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { Pet, pets } from "./pets";
-import { Organization, organization } from "./organization";
-import { InferSelectModel, relations } from "drizzle-orm";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
+import { organization } from "./organization";
+import type { Organization } from "./organization";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { advancedReport } from "./advancedReport/advancedReport";
 

@@ -1,10 +1,13 @@
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { createSelectSchema } from "drizzle-zod";
 
-import { Organization, organization } from "./organization";
-import { User, user } from "./user";
+import { organization } from "./organization";
+import type { Organization } from "./organization";
+import { user } from "./user";
+import type { User } from "./user";
 
 export const member = pgTable("members", {
   id: text("id").primaryKey(),

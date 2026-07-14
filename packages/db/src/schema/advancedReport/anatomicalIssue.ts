@@ -1,9 +1,12 @@
 import { pgEnum, pgTable, text, integer, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
-import { InferSelectModel, relations } from "drizzle-orm"
-import { AnatomicalPart, anatomicalPart } from "../anatomicalPart"
-import { AnatomicalPartType } from "../anatomicalPartType"
-import { AdvancedReport, advancedReport } from "./advancedReport"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
+import { anatomicalPart } from "../anatomicalPart"
+import type { AnatomicalPart } from "../anatomicalPart"
+import type { AnatomicalPartType } from "../anatomicalPartType"
+import { advancedReport } from "./advancedReport"
+import type { AdvancedReport } from "./advancedReport"
 
 // Définition des enums pour les types
 export const anatomicalIssueType = pgEnum("anatomical_issue_type", [
