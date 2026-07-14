@@ -103,48 +103,6 @@ export function ReportReminderDialog({
     }
   };
 
-  const handleFinalizeWithReminder = async () => {
-    if (!reminderDate) {
-      toast.error("Veuillez sélectionner une date pour le rappel");
-      return;
-    }
-
-    // Combiner date et heure
-    const [hours, minutes] = reminderTime.split(":").map(Number);
-    const reminderDateTime = new Date(reminderDate);
-    reminderDateTime.setHours(hours || 9, minutes || 0, 0, 0);
-
-    // Vérifier que la date est dans le futur
-    if (reminderDateTime <= new Date()) {
-      toast.error("La date du rappel doit être dans le futur");
-      return;
-    }
-
-    try {
-      // Finaliser le rapport
-      await onFinalize();
-
-      // Programmer le rappel
-      const reminderResult = await scheduleReportReminder({
-        reportId,
-        reminderDate: reminderDateTime.toISOString(),
-        reminderMessage: reminderMessage.trim() || undefined,
-      });
-
-      if (reminderResult.success) {
-        toast.success("Rapport finalisé et rappel programmé avec succès");
-        handleClose();
-      } else {
-        toast.error(
-          reminderResult.error || "Erreur lors de la programmation du rappel",
-        );
-      }
-    } catch (error) {
-      console.error("Erreur lors de la finalisation:", error);
-      toast.error("Erreur lors de la finalisation du rapport");
-    }
-  };
-
   return (
     <Credenza open={isOpen} onOpenChange={onOpenChange}>
       <CredenzaContent className="sm:max-w-125">
