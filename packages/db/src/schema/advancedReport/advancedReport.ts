@@ -7,6 +7,8 @@ import {
   AdvancedReportRecommendations,
   advancedReportRecommendations,
 } from "./advancedReportRecommantations";
+import { reportOwnerContent } from "./reportOwnerContent";
+import type { ReportOwnerContent } from "./reportOwnerContent";
 import { pets, Pet } from "../pets";
 import { appointments, Appointment } from "../appointments";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -47,6 +49,7 @@ export const advancedReportRelations = relations(
     }),
     anatomicalIssues: many(anatomicalIssue),
     recommendations: many(advancedReportRecommendations),
+    ownerContents: many(reportOwnerContent),
     patient: one(pets, {
       fields: [advancedReport.patientId],
       references: [pets.id],
@@ -65,6 +68,7 @@ export type AdvancedReport = InferSelectModel<typeof advancedReport> & {
   organization: Organization;
   anatomicalIssues: AnatomicalIssue[];
   recommendations: AdvancedReportRecommendations[];
+  ownerContents: ReportOwnerContent[];
   patient: Pet;
   appointment?: Appointment | null;
 };
