@@ -16,9 +16,14 @@ import {
   anatomicalIssue,
   type AdvancedReport,
   advancedReport,
+  reportOwnerContent,
 } from "@biume/db/schema/index";
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
+import {
+  buildReportChildRows,
+  getRemovedOwnerSources,
+} from "#/components/dashboard/pages/reports-module/reports.persistence";
 // import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
@@ -322,6 +327,41 @@ export const updateReport = createServerFn({ method: "POST" })
         return fallbackPart.id;
       };
 
+      const childRows = buildReportChildRows({
+        reportId: updatedReport.id,
+        observations,
+        anatomicalIssues,
+        recommendations,
+        resolveAnatomicalPartId,
+      });
+
+      const existingOwnerSources = await db
+        .select({
+          sourceKind: reportOwnerContent.sourceKind,
+          sourceId: reportOwnerContent.sourceId,
+        })
+        .from(reportOwnerContent)
+        .where(eq(reportOwnerContent.reportId, updatedReport.id))
+        .execute();
+
+      const removedSources = getRemovedOwnerSources(existingOwnerSources, {
+        observation: observations.map((item) => item.id),
+        anatomicalIssue: anatomicalIssues.map((item) => item.id),
+        recommendation: recommendations.map((item) => item.id),
+      });
+
+      for (const source of removedSources) {
+        await db
+          .delete(reportOwnerContent)
+          .where(
+            and(
+              eq(reportOwnerContent.reportId, updatedReport.id),
+              eq(reportOwnerContent.sourceKind, source.sourceKind),
+              eq(reportOwnerContent.sourceId, source.sourceId),
+            ),
+          );
+      }
+
       // Supprimer les anciennes données
       await db
         .delete(anatomicalIssue)
@@ -334,49 +374,26 @@ export const updateReport = createServerFn({ method: "POST" })
         .execute();
 
       // Insérer les nouveaux problèmes anatomiques
-      if (anatomicalIssues.length > 0) {
-        const issuesData = anatomicalIssues.map((issue) => ({
-          id: crypto.randomUUID(),
-          type: issue.type as "dysfunction" | "anatomicalSuspicion",
-          anatomicalPartId: resolveAnatomicalPartId(issue),
-          severity: issue.severity,
-          advancedReportId: updatedReport.id,
-          notes: issue.notes,
-          laterality: issue.laterality as "left" | "right" | "bilateral",
-          observationType: "none" as const,
-        }));
-
-        await db.insert(anatomicalIssue).values(issuesData).execute();
+      if (childRows.anatomicalIssues.length > 0) {
+        await db
+          .insert(anatomicalIssue)
+          .values(childRows.anatomicalIssues)
+          .execute();
       }
 
       // Insérer les nouvelles observations
-      if (observations.length > 0) {
-        const observationsData = observations.map((observation) => ({
-          id: crypto.randomUUID(),
-          type: "observation" as const,
-          advancedReportId: updatedReport.id,
-          notes: observation.notes,
-          anatomicalPartId: resolveAnatomicalPartId(observation),
-          laterality: observation.laterality as "left" | "right" | "bilateral",
-          severity: observation.severity,
-          observationType: observation.type as
-            "dynamic" | "static" | "diagnosticExclusion" | "none",
-        }));
-
-        await db.insert(anatomicalIssue).values(observationsData).execute();
+      if (childRows.observations.length > 0) {
+        await db
+          .insert(anatomicalIssue)
+          .values(childRows.observations)
+          .execute();
       }
 
       // Insérer les nouvelles recommandations
-      if (recommendations.length > 0) {
-        const recommendationsData = recommendations.map((recommendation) => ({
-          id: crypto.randomUUID(),
-          advancedReportId: updatedReport.id,
-          recommendation: recommendation.content,
-        }));
-
+      if (childRows.recommendations.length > 0) {
         await db
           .insert(advancedReportRecommendations)
-          .values(recommendationsData)
+          .values(childRows.recommendations)
           .execute();
       }
 
