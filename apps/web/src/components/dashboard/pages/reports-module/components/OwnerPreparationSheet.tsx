@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { CheckCircle2, LoaderCircle, Sparkles } from "lucide-react";
 import {
@@ -32,10 +32,16 @@ export type OwnerPreparationSaveInput = {
 };
 
 const sectionLabels: Record<OwnerSourceItem["section"], string> = {
-  clinical: "Clinique",
+  clinical: "Observations",
   anatomical: "Anatomie",
   recommendations: "Recommandations",
-  notes: "Notes",
+  notes: "Notes additionnelles",
+};
+
+type GenerationAttempt = {
+  sourceKey: string;
+  manualEditRevision: number;
+  previousAssistantMessageId: string | null;
 };
 
 export function OwnerPreparationSheet({
@@ -79,21 +85,24 @@ export function OwnerPreparationSheet({
   const [draft, setDraft] = useState(existing?.ownerText ?? "");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [generationSourceKey, setGenerationSourceKey] = useState<string | null>(
-    null,
-  );
+  const [generationAttempt, setGenerationAttempt] =
+    useState<GenerationAttempt | null>(null);
+  const manualEditRevision = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
 
   useEffect(() => {
     setDraft(existing?.ownerText ?? "");
+    manualEditRevision.current = 0;
     setSaveError(null);
     setGenerationError(null);
-    setGenerationSourceKey(null);
+    setGenerationAttempt(null);
     reset();
   }, [active?.key, existing?.ownerText, reset]);
 
-  const latestAssistantText = getLatestAssistantText(messages);
+  const latestAssistantMessage = getLatestAssistantMessage(messages);
+  const latestAssistantMessageId = latestAssistantMessage?.id ?? null;
+  const latestAssistantText = latestAssistantMessage?.text ?? "";
   const activeKey = active?.key;
 
   useEffect(() => {
@@ -102,17 +111,23 @@ export function OwnerPreparationSheet({
       !error &&
       !generationError &&
       activeKey &&
-      generationSourceKey === activeKey &&
+      generationAttempt?.sourceKey === activeKey &&
+      latestAssistantMessageId !==
+        generationAttempt.previousAssistantMessageId &&
       latestAssistantText
     ) {
-      setDraft(latestAssistantText);
+      if (manualEditRevision.current === generationAttempt.manualEditRevision) {
+        setDraft(latestAssistantText);
+      }
+      setGenerationAttempt(null);
     }
   }, [
     activeKey,
     error,
+    generationAttempt,
     generationError,
-    generationSourceKey,
     isLoading,
+    latestAssistantMessageId,
     latestAssistantText,
   ]);
 
@@ -129,8 +144,12 @@ export function OwnerPreparationSheet({
   async function generateProposal() {
     if (!active || isLoading) return;
     setGenerationError(null);
+    setGenerationAttempt({
+      sourceKey: active.key,
+      manualEditRevision: manualEditRevision.current,
+      previousAssistantMessageId: latestAssistantMessageId,
+    });
     reset();
-    setGenerationSourceKey(active.key);
     try {
       await sendMessage(active.professionalText, {
         reportId,
@@ -260,6 +279,7 @@ export function OwnerPreparationSheet({
                   id="owner-version"
                   value={draft}
                   onChange={(event) => {
+                    manualEditRevision.current += 1;
                     setDraft(event.target.value);
                     setSaveError(null);
                   }}
@@ -322,15 +342,16 @@ export function OwnerPreparationSheet({
   );
 }
 
-function getLatestAssistantText(messages: UIMessage[]) {
+function getLatestAssistantMessage(messages: UIMessage[]) {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
     if (message?.role !== "assistant") continue;
-    return message.parts
+    const text = message.parts
       .filter((part) => part.type === "text")
       .map((part) => part.text)
       .join("")
       .trim();
+    return { id: message.id, text };
   }
-  return "";
+  return null;
 }

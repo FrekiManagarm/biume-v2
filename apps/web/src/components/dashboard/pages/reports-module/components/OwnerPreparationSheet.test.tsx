@@ -234,19 +234,75 @@ describe("OwnerPreparationSheet", () => {
     ).toBeNull();
   });
 
-  test("shows the focused content section in the queue header", () => {
-    render(
-      <OwnerPreparationSheet
-        open
-        onOpenChange={vi.fn()}
-        reportId="report_01"
-        queue={[first]}
-        records={[]}
-        onSave={vi.fn()}
-      />,
+  test.each([
+    ["clinical", "Observations"],
+    ["anatomical", "Anatomie"],
+    ["recommendations", "Recommandations"],
+    ["notes", "Notes additionnelles"],
+  ] as const)(
+    "shows the %s content section as %s in the queue header",
+    (section, label) => {
+      render(
+        <OwnerPreparationSheet
+          open
+          onOpenChange={vi.fn()}
+          reportId="report_01"
+          queue={[{ ...first, key: `${section}:source`, section }]}
+          records={[]}
+          onSave={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText(label)).not.toBeNull();
+    },
+  );
+
+  test("preserves edits made while the latest of successive generations is streaming", () => {
+    const props = {
+      open: true,
+      onOpenChange: vi.fn(),
+      reportId: "report_01",
+      records: [],
+      onSave: vi.fn(),
+    };
+    const { rerender } = render(
+      <OwnerPreparationSheet {...props} queue={[first]} />,
     );
 
-    expect(screen.getByText("Clinique")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Générer" }));
+    agentState.messages = [
+      {
+        id: "assistant_01",
+        role: "assistant",
+        parts: [{ type: "text", text: "Première proposition" }],
+      },
+    ];
+    rerender(<OwnerPreparationSheet {...props} queue={[first]} />);
+    expect(screen.getByDisplayValue("Première proposition")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Régénérer" }));
+    agentState.isLoading = true;
+    rerender(<OwnerPreparationSheet {...props} queue={[{ ...first }]} />);
+    fireEvent.change(screen.getByLabelText("Version propriétaire"), {
+      target: { value: "Correction saisie pendant la génération" },
+    });
+    rerender(<OwnerPreparationSheet {...props} queue={[{ ...first }]} />);
+
+    agentState.messages = [
+      {
+        id: "assistant_02",
+        role: "assistant",
+        parts: [{ type: "text", text: "Seconde proposition" }],
+      },
+    ];
+    agentState.isLoading = false;
+    rerender(<OwnerPreparationSheet {...props} queue={[{ ...first }]} />);
+
+    expect(
+      screen.getByDisplayValue("Correction saisie pendant la génération"),
+    ).not.toBeNull();
+    expect(screen.queryByDisplayValue("Seconde proposition")).toBeNull();
+    expect(sendMessage).toHaveBeenCalledTimes(2);
   });
 
   test("preserves a manual correction after a generated proposal", () => {
