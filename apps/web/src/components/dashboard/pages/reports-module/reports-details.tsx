@@ -318,6 +318,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
                     organization: report.organization,
                     anatomicalIssues: report.anatomicalIssues,
                     recommendations: report.recommendations,
+                    ownerContents: report.ownerContents,
                   }}
                   type="advanced_report"
                 />
