@@ -11,13 +11,14 @@ function readComponentSource(fileName: string) {
 
 describe("region dropdown layering", () => {
   test.each(["AddAnatomicalIssueDialog.tsx", "AddObservationsDialog.tsx"])(
-    "%s uses a non-modal region dropdown inside the parent modal",
+    "%s uses an input-compatible non-modal popover inside the parent modal",
     (fileName) => {
       const source = readComponentSource(fileName);
 
       expect(source).toMatch(
-        /<DropdownMenu\s+modal=\{false\}\s+open=\{openRegionPopover\}\s+onOpenChange=\{setOpenRegionPopover\}/,
+        /<Popover\s+modal=\{false\}\s+open=\{openRegionPopover\}\s+onOpenChange=\{setOpenRegionPopover\}/,
       );
+      expect(source).not.toContain("<DropdownMenu");
     },
   );
 

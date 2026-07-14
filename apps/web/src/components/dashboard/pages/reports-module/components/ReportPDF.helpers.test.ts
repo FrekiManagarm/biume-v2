@@ -261,6 +261,35 @@ describe("reportPalette", () => {
 });
 
 describe("ReportPDF", () => {
+  test("restores Buffer before browser PDF image resolution", async () => {
+    const originalBuffer = globalThis.Buffer;
+
+    Reflect.deleteProperty(globalThis, "Buffer");
+
+    try {
+      const document = ReportPDF({
+        report: {
+          id: "report_browser_01",
+          title: "Bilan navigateur",
+          createdAt: new Date("2026-07-14T09:30:00.000Z"),
+          patient: {
+            name: "Mistral",
+            animal: { code: "dog", name: "Chien" },
+          },
+        },
+        type: "advanced_report",
+      });
+
+      expect(globalThis.Buffer).toBeDefined();
+
+      const buffer = await renderToBuffer(document);
+
+      expect(buffer.byteLength).toBeGreaterThan(1_000);
+    } finally {
+      globalThis.Buffer = originalBuffer;
+    }
+  });
+
   test("renders anatomical paths when a region has no SVG transform", async () => {
     const buffer = await renderToBuffer(
       ReportPDF({

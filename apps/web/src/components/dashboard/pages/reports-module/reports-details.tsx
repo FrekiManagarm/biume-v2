@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { ClientOnly, Link, useNavigate } from "@tanstack/react-router";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -248,7 +248,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
 
   return (
     <>
-      <div className="mx-auto grid w-full max-w-350 gap-5 pb-8 text-slate-950">
+      <div className="grid w-full gap-5 pb-8 text-slate-950">
         <header className="grid gap-4 border-b border-slate-200 pb-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
           <div className="min-w-0">
             <Button
@@ -305,37 +305,50 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               <Printer className="size-4" />
               Imprimer
             </Button>
-            <PDFDownloadLink
-              document={
-                <ReportPDF
-                  report={{
-                    id: report.id,
-                    title: report.title,
-                    createdAt: report.createdAt || new Date(),
-                    consultationReason: report.consultationReason,
-                    notes: report.notes,
-                    patient: report.patient,
-                    organization: report.organization,
-                    anatomicalIssues: report.anatomicalIssues,
-                    recommendations: report.recommendations,
-                    ownerContents: report.ownerContents,
-                  }}
-                  type="advanced_report"
-                />
-              }
-              fileName={`rapport-${report.id}.pdf`}
-            >
-              {({ loading }) => (
+            <ClientOnly
+              fallback={
                 <Button
                   variant="outline"
-                  disabled={loading}
-                  className="h-10 w-full rounded-lg border-slate-200 bg-white active:scale-[0.98]"
+                  disabled
+                  className="h-10 w-full rounded-lg border-slate-200 bg-white"
                 >
                   <Download className="size-4" />
-                  {loading ? "Préparation" : "PDF"}
+                  Préparation
                 </Button>
-              )}
-            </PDFDownloadLink>
+              }
+            >
+              <PDFDownloadLink
+                document={
+                  <ReportPDF
+                    report={{
+                      id: report.id,
+                      title: report.title,
+                      createdAt: report.createdAt || new Date(),
+                      consultationReason: report.consultationReason,
+                      notes: report.notes,
+                      patient: report.patient,
+                      organization: report.organization,
+                      anatomicalIssues: report.anatomicalIssues,
+                      recommendations: report.recommendations,
+                      ownerContents: report.ownerContents,
+                    }}
+                    type="advanced_report"
+                  />
+                }
+                fileName={`rapport-${report.id}.pdf`}
+              >
+                {({ loading }) => (
+                  <Button
+                    variant="outline"
+                    disabled={loading}
+                    className="h-10 w-full rounded-lg border-slate-200 bg-white active:scale-[0.98]"
+                  >
+                    <Download className="size-4" />
+                    {loading ? "Préparation" : "PDF"}
+                  </Button>
+                )}
+              </PDFDownloadLink>
+            </ClientOnly>
           </div>
         </header>
 

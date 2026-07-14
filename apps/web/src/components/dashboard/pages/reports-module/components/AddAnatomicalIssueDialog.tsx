@@ -17,10 +17,10 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   ActivityLogIcon,
   ArrowLeftIcon,
@@ -622,12 +622,12 @@ export function AddAnatomicalIssueDialog({
                   Région anatomique <span className="text-destructive">*</span>
                 </Label>
                 <div className="flex items-center gap-2">
-                  <DropdownMenu
+                  <Popover
                     modal={false}
                     open={openRegionPopover}
                     onOpenChange={setOpenRegionPopover}
                   >
-                    <DropdownMenuTrigger
+                    <PopoverTrigger
                       render={
                         <Button
                           variant="outline"
@@ -650,8 +650,8 @@ export function AddAnatomicalIssueDialog({
                         </Button>
                       }
                     />
-                    <DropdownMenuContent
-                      className="w-(--radix-dropdown-menu-trigger-width) overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.75)]"
+                    <PopoverContent
+                      className="w-(--anchor-width) gap-0 overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.75)]"
                       align="start"
                     >
                       <div className="flex flex-col">
@@ -776,8 +776,8 @@ export function AddAnatomicalIssueDialog({
                           </div>
                         </ScrollArea>
                       </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </PopoverContent>
+                  </Popover>
                   {newIssue.region &&
                     petId &&
                     !isTestMode &&

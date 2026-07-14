@@ -324,7 +324,7 @@ export function AnatomicalEvaluationTab({
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="bg-background rounded-2xl border shadow-sm relative isolate flex-1 min-h-0 overflow-hidden">
+      <div className="relative isolate flex-1 min-h-0 overflow-hidden">
         {/* Image anatomique avec overlay - zone fixe sans scroll */}
         <div className="pointer-events-none absolute inset-0 z-0">
           <div className="flex h-full w-full items-center justify-center">

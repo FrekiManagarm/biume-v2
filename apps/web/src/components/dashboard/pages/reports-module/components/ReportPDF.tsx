@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
+import { Buffer as BrowserBuffer } from "buffer";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -31,6 +32,10 @@ const metricToneStyles: Record<ReportMetricTone, { color: string; soft: string }
   ink: { color: reportPalette.ink, soft: reportPalette.faint },
   sand: { color: reportPalette.sand, soft: reportPalette.sandSoft },
 };
+
+function ensurePdfBufferRuntime() {
+  globalThis.Buffer ??= BrowserBuffer;
+}
 
 const styles = StyleSheet.create({
   page: {
@@ -645,6 +650,8 @@ function RecommendationRow({
 }
 
 export function ReportPDF(props: ReportPDFProps) {
+  ensurePdfBufferRuntime();
+
   const model = buildReportPdfViewModel(props.report);
   const issues = model.issues;
   const recommendations = model.recommendations;

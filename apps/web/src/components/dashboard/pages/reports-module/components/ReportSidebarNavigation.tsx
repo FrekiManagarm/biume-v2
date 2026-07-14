@@ -170,7 +170,12 @@ export function ReportSidebarNavigation({
           </div>
         </div>
 
-        <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto py-4">
+        <nav
+          className={cn(
+            "min-h-0 flex-1 space-y-2 overflow-y-auto py-4",
+            isCollapsed && "flex w-full flex-col items-center",
+          )}
+        >
           {tabs.map((tab) => {
             const Icon = tabIcons[tab.id];
             const isActive = activeTab === tab.id;
@@ -257,7 +262,7 @@ export function ReportSidebarNavigation({
             disabled={isPreparationDisabled}
             className={cn(
               "border border-primary-foreground/20 bg-primary-foreground text-primary hover:bg-primary-foreground/90 focus-visible:ring-primary",
-              isCollapsed ? "h-11 w-11 px-0" : "h-auto w-full py-3",
+              isCollapsed ? "h-11 w-11 self-center px-0" : "h-auto w-full py-3",
             )}
             aria-label={
               isCollapsed

@@ -162,5 +162,9 @@ describe("ReportSidebarNavigation", () => {
     expect(rail.getByLabelText("Raccourcis clavier").className).toContain(
       "h-11 w-11",
     );
+    expect(rail.getByRole("navigation").className).toContain("items-center");
+    expect(rail.getByLabelText("2 contenus à préparer").className).toContain(
+      "self-center",
+    );
   });
 });

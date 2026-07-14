@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
-import { useNavigate } from "@tanstack/react-router";
+import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { deleteReport } from "@/lib/api/actions/reports.action";
 import { toast } from "sonner";
 import { sendNewReportClientEmailWithPDF } from "@/lib/api/actions/email.action";
@@ -334,35 +334,44 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         render={
-                          <PDFDownloadLink
-                            document={
-                              <ReportPDF
-                                report={{
-                                  id: report.id,
-                                  title: report.title,
-                                  createdAt: report.createdAt || new Date(),
-                                  patient: report.patient,
-                                  organization: report.organization,
-                                  anatomicalIssues: report.anatomicalIssues,
-                                  recommendations: report.recommendations,
-                                }}
-                                type="advanced_report"
-                              />
-                            }
-                            fileName={`rapport-${report.id}.pdf`}
-                          >
-                            {({ loading }) => (
-                              <div
-                                className="flex items-center gap-2"
-                                onClick={(e) => e.stopPropagation()}
-                              >
+                          <ClientOnly
+                            fallback={
+                              <div className="flex items-center gap-2">
                                 <Download className="size-4" />
-                                {loading
-                                  ? "Génération..."
-                                  : "Télécharger le PDF"}
+                                Génération...
                               </div>
-                            )}
-                          </PDFDownloadLink>
+                            }
+                          >
+                            <PDFDownloadLink
+                              document={
+                                <ReportPDF
+                                  report={{
+                                    id: report.id,
+                                    title: report.title,
+                                    createdAt: report.createdAt || new Date(),
+                                    patient: report.patient,
+                                    organization: report.organization,
+                                    anatomicalIssues: report.anatomicalIssues,
+                                    recommendations: report.recommendations,
+                                  }}
+                                  type="advanced_report"
+                                />
+                              }
+                              fileName={`rapport-${report.id}.pdf`}
+                            >
+                              {({ loading }) => (
+                                <div
+                                  className="flex items-center gap-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Download className="size-4" />
+                                  {loading
+                                    ? "Génération..."
+                                    : "Télécharger le PDF"}
+                                </div>
+                              )}
+                            </PDFDownloadLink>
+                          </ClientOnly>
                         }
                       />
                       <DropdownMenuItem
