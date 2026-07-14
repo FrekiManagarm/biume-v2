@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -50,6 +51,14 @@ const second = {
   order: 1,
   status: "missing" as const,
 };
+const existingFirst = {
+  id: "owner_01",
+  reportId: "report_01",
+  sourceKind: "observation" as const,
+  sourceId: "obs_01",
+  ownerText: "Version déjà relue.",
+  sourceFingerprint: "outdated",
+};
 
 describe("OwnerPreparationSheet", () => {
   beforeEach(() => {
@@ -80,6 +89,49 @@ describe("OwnerPreparationSheet", () => {
     );
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(screen.getByText("2 sur 2")).not.toBeNull();
+  });
+
+  test("keeps the next item focused when the saved item leaves the queue", async () => {
+    let resolveSave!: () => void;
+    let rerender!: ReturnType<typeof render>["rerender"];
+    const savePromise = new Promise<void>((resolve) => {
+      resolveSave = resolve;
+    });
+    const onSave = vi.fn(() => {
+      rerender(
+        <OwnerPreparationSheet
+          open
+          onOpenChange={vi.fn()}
+          reportId="report_01"
+          queue={[second]}
+          records={[existingFirst]}
+          onSave={onSave}
+        />,
+      );
+      return savePromise;
+    });
+    ({ rerender } = render(
+      <OwnerPreparationSheet
+        open
+        onOpenChange={vi.fn()}
+        reportId="report_01"
+        queue={[first, second]}
+        records={[]}
+        onSave={onSave}
+      />,
+    ));
+    fireEvent.change(screen.getByLabelText("Version propriétaire"), {
+      target: { value: "Version enregistrée" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Valider et continuer" }),
+    );
+
+    expect(screen.getByDisplayValue("Surveillance")).not.toBeNull();
+    await act(async () => resolveSave());
+
+    expect(screen.queryByText("Préparation terminée")).toBeNull();
+    expect(screen.getByDisplayValue("Surveillance")).not.toBeNull();
   });
 
   test("keeps the proposal visible when saving fails", async () => {
@@ -152,6 +204,49 @@ describe("OwnerPreparationSheet", () => {
       screen.getByDisplayValue("L’épaule gauche manque de mobilité."),
     ).not.toBeNull();
     expect(props.onSave).not.toHaveBeenCalled();
+  });
+
+  test("ignores a partial assistant message when generation fails", () => {
+    const props = {
+      open: true,
+      onOpenChange: vi.fn(),
+      reportId: "report_01",
+      queue: [first],
+      records: [existingFirst],
+      onSave: vi.fn(),
+    };
+    const { rerender } = render(<OwnerPreparationSheet {...props} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Régénérer" }));
+    agentState.messages = [
+      {
+        id: "assistant_partial",
+        role: "assistant",
+        parts: [{ type: "text", text: "Réponse partielle à ignorer" }],
+      },
+    ];
+    agentState.error = new Error("stream failed");
+    rerender(<OwnerPreparationSheet {...props} />);
+
+    expect(screen.getByDisplayValue("Version déjà relue.")).not.toBeNull();
+    expect(
+      screen.queryByDisplayValue("Réponse partielle à ignorer"),
+    ).toBeNull();
+  });
+
+  test("shows the focused content section in the queue header", () => {
+    render(
+      <OwnerPreparationSheet
+        open
+        onOpenChange={vi.fn()}
+        reportId="report_01"
+        queue={[first]}
+        records={[]}
+        onSave={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Clinique")).not.toBeNull();
   });
 
   test("preserves a manual correction after a generated proposal", () => {

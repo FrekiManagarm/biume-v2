@@ -31,6 +31,13 @@ export type OwnerPreparationSaveInput = {
   ownerText: string;
 };
 
+const sectionLabels: Record<OwnerSourceItem["section"], string> = {
+  clinical: "Clinique",
+  anatomical: "Anatomie",
+  recommendations: "Recommandations",
+  notes: "Notes",
+};
+
 export function OwnerPreparationSheet({
   open,
   onOpenChange,
@@ -52,12 +59,16 @@ export function OwnerPreparationSheet({
 }) {
   const { messages, isLoading, error, sendMessage, reset } =
     useVulgarisationAgent();
-  const [index, setIndex] = useState(() => {
-    if (!initialSourceKey) return 0;
+  const [handledSourceKeys, setHandledSourceKeys] = useState(() => {
+    if (!initialSourceKey) return new Set<string>();
     const requested = queue.findIndex((item) => item.key === initialSourceKey);
-    return requested >= 0 ? requested : 0;
+    if (requested < 1) return new Set<string>();
+    return new Set(queue.slice(0, requested).map((item) => item.key));
   });
-  const active = queue[index];
+  const active = queue.find((item) => !handledSourceKeys.has(item.key));
+  const activeIndex = active
+    ? queue.findIndex((item) => item.key === active.key)
+    : -1;
   const existing = active
     ? records.find(
         (record) =>
@@ -88,13 +99,22 @@ export function OwnerPreparationSheet({
   useEffect(() => {
     if (
       !isLoading &&
+      !error &&
+      !generationError &&
       activeKey &&
       generationSourceKey === activeKey &&
       latestAssistantText
     ) {
       setDraft(latestAssistantText);
     }
-  }, [activeKey, generationSourceKey, isLoading, latestAssistantText]);
+  }, [
+    activeKey,
+    error,
+    generationError,
+    generationSourceKey,
+    isLoading,
+    latestAssistantText,
+  ]);
 
   const hasUnsavedOwnerDraft = draft !== (existing?.ownerText ?? "");
 
@@ -133,8 +153,7 @@ export function OwnerPreparationSheet({
         sourceId: active.sourceId,
         ownerText: draft,
       });
-      if (index < queue.length - 1) setIndex(index + 1);
-      else setIndex(queue.length);
+      setHandledSourceKeys((current) => new Set(current).add(active.key));
     } catch {
       setSaveError("Enregistrement impossible");
     } finally {
@@ -143,11 +162,11 @@ export function OwnerPreparationSheet({
   }
 
   function skip() {
-    if (index < queue.length - 1) setIndex(index + 1);
-    else setIndex(queue.length);
+    if (!active) return;
+    setHandledSourceKeys((current) => new Set(current).add(active.key));
   }
 
-  const isComplete = index >= queue.length;
+  const isComplete = !active;
   const generationFailed = Boolean(error || generationError);
 
   return (
@@ -183,9 +202,14 @@ export function OwnerPreparationSheet({
         ) : active ? (
           <>
             <div className="flex items-center justify-between border-b border-border bg-muted/30 px-5 py-3 text-xs">
-              <span className="font-medium text-foreground">
-                {index + 1} sur {queue.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">
+                  {activeIndex + 1} sur {queue.length}
+                </span>
+                <span className="text-muted-foreground" aria-label="Section">
+                  {sectionLabels[active.section]}
+                </span>
+              </div>
               <span className="text-muted-foreground">
                 {active.status === "stale" ? "À mettre à jour" : "À préparer"}
               </span>
