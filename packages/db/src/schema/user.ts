@@ -31,7 +31,7 @@ export const user = pgTable("users", {
   smsNotifications: boolean("sms_notifications").notNull().default(false),
 });
 
-export const userRelations = relations(user, ({ one, many }) => ({
+export const userRelations = relations(user, ({ many }) => ({
   pets: many(pets),
   sessions: many(session),
   accounts: many(account),

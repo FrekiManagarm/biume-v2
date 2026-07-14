@@ -391,6 +391,31 @@ describe("OwnerPreparationSheet", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  test("keeps initial focus inside the sheet and closes a clean draft with Escape", async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <OwnerPreparationSheet
+        open
+        onOpenChange={onOpenChange}
+        reportId="report_01"
+        queue={[first]}
+        records={[]}
+        onSave={vi.fn()}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() =>
+      expect(dialog.contains(document.activeElement)).toBe(true),
+    );
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(
+      screen.queryByRole("button", { name: "Fermer sans enregistrer" }),
+    ).toBeNull();
+  });
+
   test("shows the owner preview action after the last saved item", async () => {
     const onViewPreview = vi.fn();
     render(

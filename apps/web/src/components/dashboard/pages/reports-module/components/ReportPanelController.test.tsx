@@ -47,8 +47,13 @@ describe("ReportPanelController", () => {
     );
 
     const [dialog] = screen.getAllByRole("dialog");
-    expect(dialog?.className.split(" ")).toContain(
-      "data-[side=right]:sm:max-w-[32rem]",
+    expect(dialog?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "data-[side=right]:w-screen",
+        "data-[side=right]:sm:w-[32rem]",
+        "data-[side=right]:sm:max-w-[32rem]",
+        "motion-reduce:transition-none",
+      ]),
     );
     expect(
       screen.getByRole("heading", { name: "Préparation guidée" }),

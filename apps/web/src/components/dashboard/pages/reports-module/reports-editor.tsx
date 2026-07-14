@@ -101,7 +101,6 @@ interface AdvancedReportEditorProps {
 
 export function AdvancedReportEditor({
   reportId,
-  orgId,
   initialData,
 }: AdvancedReportEditorProps) {
   const navigate = useNavigate();
@@ -171,7 +170,7 @@ export function AdvancedReportEditor({
     : undefined;
 
   // Initialisation directe des états avec les données
-  const [selectedPetId, setSelectedPetId] = useState<string>(
+  const [selectedPetId] = useState<string>(
     initialData.patientId || "",
   );
   const [title, setTitle] = useState(
@@ -194,7 +193,7 @@ export function AdvancedReportEditor({
   const [editingObservationId, setEditingObservationId] = useState<
     string | null
   >(null);
-  const [consultationReason, setConsultationReason] = useState<string>(
+  const [consultationReason] = useState<string>(
     initialData.consultationReason || "",
   );
   const [recommendations, setRecommendations] = useState<

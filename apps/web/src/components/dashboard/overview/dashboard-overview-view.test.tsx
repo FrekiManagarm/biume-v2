@@ -90,7 +90,9 @@ describe("DashboardOverviewView", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Vue d'ensemble" }),
+      screen.getByRole("region", {
+        name: "Indicateurs du tableau de bord",
+      }),
     ).toBeTruthy();
     expect(screen.getByText("Agenda du jour")).toBeTruthy();
     expect(screen.getAllByText("Naska").length).toBeGreaterThan(0);
