@@ -8,13 +8,16 @@ import {
 } from "lucide-react";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/style";
 import type { Observation } from "../data/dog/typesDog";
+import type { ReportSectionId } from "../owner-content";
 import type { AnatomicalIssue } from "../types";
 
 type OwnerPreviewSection =
@@ -37,6 +40,24 @@ interface ReportPreviewProps extends OwnerReportPreviewProps {
   onClose: () => void;
   images: string[];
 }
+
+export type OwnerPreviewEntry = {
+  key: string;
+  label: string;
+  text: string;
+  status: "missing" | "stale" | "ready";
+  usedFallback: boolean;
+};
+
+export type OwnerReportPreviewSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  patientName?: string;
+  entries: OwnerPreviewEntry[];
+  onStartPreparation?: () => void;
+  onJumpToSection?: (section: ReportSectionId) => void;
+};
 
 const severityLabels = [
   "Non renseignée",
@@ -322,6 +343,69 @@ export function OwnerReportPreview({
   );
 }
 
+function OwnerReportPreviewDocument({
+  entries,
+}: {
+  entries: OwnerPreviewEntry[];
+}) {
+  return (
+    <div className="space-y-5 px-5 py-6">
+      {entries.map((entry) => (
+        <section key={entry.key} className="border-t border-border pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">
+              {entry.label}
+            </h3>
+            {entry.status === "stale" ? (
+              <Badge
+                variant="outline"
+                className="border-amber-200 text-amber-800"
+              >
+                À actualiser
+              </Badge>
+            ) : entry.usedFallback ? (
+              <Badge
+                variant="outline"
+                className="border-amber-200 text-amber-800"
+              >
+                Texte professionnel utilisé
+              </Badge>
+            ) : null}
+          </div>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {entry.text}
+          </p>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function OwnerReportPreviewSheet({
+  open,
+  onOpenChange,
+  title,
+  patientName,
+  entries,
+}: OwnerReportPreviewSheetProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-screen max-w-none overflow-y-auto p-0 sm:w-[32rem] sm:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:sm:w-[32rem] data-[side=right]:sm:max-w-[32rem]"
+      >
+        <SheetHeader className="border-b border-border px-5 py-4 text-left">
+          <SheetTitle>Aperçu propriétaire</SheetTitle>
+          <SheetDescription>
+            {patientName ? `${title} · ${patientName}` : title}
+          </SheetDescription>
+        </SheetHeader>
+        <OwnerReportPreviewDocument entries={entries} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function ReportPreview({
   isOpen,
   onClose,
@@ -335,14 +419,25 @@ export function ReportPreview({
   activeSection,
 }: ReportPreviewProps) {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl sm:max-w-2xl sm:p-5">
-        <DialogHeader className="px-1 pb-1 text-left">
-          <DialogTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-950">
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent
+        side="right"
+        className="w-screen max-w-none overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl sm:w-[32rem] sm:max-w-[32rem] sm:p-5 data-[side=right]:w-screen data-[side=right]:sm:w-[32rem] data-[side=right]:sm:max-w-[32rem]"
+      >
+        <SheetHeader className="px-1 pb-1 text-left">
+          <SheetTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-950">
             <FileText className="size-4 text-emerald-800" />
             Aperçu propriétaire
-          </DialogTitle>
-        </DialogHeader>
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            {patientName ? `${title} · ${patientName}` : title}
+          </SheetDescription>
+        </SheetHeader>
 
         <OwnerReportPreview
           title={title}
@@ -355,7 +450,7 @@ export function ReportPreview({
           activeSection={activeSection}
           className="rounded-[1.5rem] shadow-none"
         />
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
