@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { ReportPanelController } from "./ReportPanelController";
@@ -67,5 +74,40 @@ describe("ReportPanelController", () => {
     );
 
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  test("returns focus to the invoking control after Escape closes the preview", async () => {
+    function Harness() {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Ouvrir l’aperçu propriétaire
+          </button>
+          <ReportPanelController
+            {...commonProps}
+            state={isOpen ? { type: "owner-preview" } : { type: "closed" }}
+            onClose={() => setIsOpen(false)}
+          />
+        </>
+      );
+    }
+
+    render(<Harness />);
+    const trigger = screen.getByRole("button", {
+      name: "Ouvrir l’aperçu propriétaire",
+    });
+
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
+    fireEvent.click(trigger);
+    expect(screen.getByRole("dialog")).not.toBeNull();
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
   });
 });
