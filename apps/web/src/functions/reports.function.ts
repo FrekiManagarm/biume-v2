@@ -232,6 +232,7 @@ export const getReportById = createServerFn({ method: "GET" })
             },
           },
           recommendations: true,
+          ownerContents: true,
         },
       });
 
