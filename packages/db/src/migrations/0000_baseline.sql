@@ -1,6 +1,3 @@
-CREATE TYPE "public"."animal_type" AS ENUM('DOG', 'CAT', 'HORSE');--> statement-breakpoint
-CREATE TYPE "public"."dysfunction_zone" AS ENUM('articulation', 'fascias', 'organes', 'muscles', 'other');--> statement-breakpoint
-CREATE TYPE "public"."appointmentStatus" AS ENUM('CREATED', 'CONFIRMED', 'CANCELLED', 'COMPLETED');--> statement-breakpoint
 CREATE TYPE "public"."notificationType" AS ENUM('rate', 'newClient', 'newReport', 'newAskReservation');--> statement-breakpoint
 CREATE TYPE "public"."petGender" AS ENUM('Male', 'Female');--> statement-breakpoint
 CREATE TYPE "public"."reminderStatus" AS ENUM('pending', 'completed', 'cancelled');--> statement-breakpoint
@@ -9,7 +6,9 @@ CREATE TYPE "public"."anatomical_issue_observation_type" AS ENUM('dynamic', 'sta
 CREATE TYPE "public"."anatomical_issue_type" AS ENUM('dysfunction', 'anatomicalSuspicion', 'observation');--> statement-breakpoint
 CREATE TYPE "public"."laterality_type" AS ENUM('left', 'right', 'bilateral');--> statement-breakpoint
 CREATE TYPE "public"."reportStatus" AS ENUM('draft', 'finalized', 'sent');--> statement-breakpoint
-CREATE TYPE "public"."report_owner_content_source_kind" AS ENUM('consultationReason', 'observation', 'anatomicalIssue', 'recommendation', 'notes');--> statement-breakpoint
+CREATE TYPE "public"."animal_type" AS ENUM('DOG', 'CAT', 'HORSE');--> statement-breakpoint
+CREATE TYPE "public"."dysfunction_zone" AS ENUM('articulation', 'fascias', 'organes', 'muscles', 'other');--> statement-breakpoint
+CREATE TYPE "public"."appointmentStatus" AS ENUM('CREATED', 'CONFIRMED', 'CANCELLED', 'COMPLETED');--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -24,76 +23,6 @@ CREATE TABLE "accounts" (
 	"password" text,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "anatomical_part" (
-	"id" text PRIMARY KEY NOT NULL,
-	"zone" "dysfunction_zone" NOT NULL,
-	"name" text DEFAULT '' NOT NULL,
-	"viewboxLeft" text DEFAULT '' NOT NULL,
-	"pathLeft" text DEFAULT '' NOT NULL,
-	"transformLeft" text DEFAULT '' NOT NULL,
-	"viewboxRight" text DEFAULT '' NOT NULL,
-	"pathRight" text DEFAULT '' NOT NULL,
-	"transformRight" text DEFAULT '' NOT NULL,
-	"animal_type" "animal_type" DEFAULT 'DOG' NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "anatomical_part_type" (
-	"id" text PRIMARY KEY NOT NULL,
-	"name" text DEFAULT '' NOT NULL,
-	"precision" boolean DEFAULT false NOT NULL,
-	"anatomical_part_id" text NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "animals" (
-	"id" text PRIMARY KEY NOT NULL,
-	"name" text,
-	"code" text,
-	"createdAt" timestamp DEFAULT now(),
-	"updatedAt" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "appointments" (
-	"id" text PRIMARY KEY NOT NULL,
-	"patientId" text,
-	"beginAt" timestamp NOT NULL,
-	"endAt" timestamp NOT NULL,
-	"organizationId" text,
-	"atHome" boolean DEFAULT false NOT NULL,
-	"status" "appointmentStatus" DEFAULT 'CREATED' NOT NULL,
-	"note" text,
-	"createdAt" timestamp DEFAULT now(),
-	"updatedAt" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "client_note" (
-	"id" text,
-	"organization_id" text,
-	"client_id" text,
-	"note" text,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now()
-);
---> statement-breakpoint
-CREATE TABLE "clients" (
-	"id" text PRIMARY KEY NOT NULL,
-	"image" text,
-	"name" text,
-	"email" text,
-	"phone" text,
-	"address" text,
-	"city" text,
-	"state" text,
-	"zip" text,
-	"country" text,
-	"organizationId" text,
-	"createdAt" timestamp DEFAULT now(),
-	"updatedAt" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "invitations" (
@@ -178,7 +107,7 @@ CREATE TABLE "reminder" (
 	"dueDate" timestamp NOT NULL,
 	"organizationId" text,
 	"userId" text,
-	"createdAt" timestamp DEFAULT '2026-07-14 06:50:57.507',
+	"createdAt" timestamp DEFAULT now(),
 	"updatedAt" timestamp
 );
 --> statement-breakpoint
@@ -200,7 +129,7 @@ CREATE TABLE "signatures" (
 	"name" text NOT NULL,
 	"signature" text NOT NULL,
 	"organizationId" text,
-	"createdAt" timestamp DEFAULT '2026-07-14 06:50:57.491' NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp
 );
 --> statement-breakpoint
@@ -270,15 +199,74 @@ CREATE TABLE "advanced_report_recommendations" (
 	"updated_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "report_owner_content" (
+CREATE TABLE "anatomical_part" (
 	"id" text PRIMARY KEY NOT NULL,
-	"report_id" text NOT NULL,
-	"source_kind" "report_owner_content_source_kind" NOT NULL,
-	"source_id" text NOT NULL,
-	"owner_text" text NOT NULL,
-	"source_fingerprint" text NOT NULL,
+	"zone" "dysfunction_zone" NOT NULL,
+	"name" text DEFAULT '' NOT NULL,
+	"viewboxLeft" text DEFAULT '' NOT NULL,
+	"pathLeft" text DEFAULT '' NOT NULL,
+	"transformLeft" text DEFAULT '' NOT NULL,
+	"viewboxRight" text DEFAULT '' NOT NULL,
+	"pathRight" text DEFAULT '' NOT NULL,
+	"transformRight" text DEFAULT '' NOT NULL,
+	"animal_type" "animal_type" DEFAULT 'DOG' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE "anatomical_part_type" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text DEFAULT '' NOT NULL,
+	"precision" boolean DEFAULT false NOT NULL,
+	"anatomical_part_id" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE "animals" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text,
+	"code" text,
+	"createdAt" timestamp DEFAULT now(),
+	"updatedAt" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE "clients" (
+	"id" text PRIMARY KEY NOT NULL,
+	"image" text,
+	"name" text,
+	"email" text,
+	"phone" text,
+	"address" text,
+	"city" text,
+	"state" text,
+	"zip" text,
+	"country" text,
+	"organizationId" text,
+	"createdAt" timestamp DEFAULT now(),
+	"updatedAt" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE "client_note" (
+	"id" text,
+	"organization_id" text,
+	"client_id" text,
+	"note" text,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "appointments" (
+	"id" text PRIMARY KEY NOT NULL,
+	"patientId" text,
+	"beginAt" timestamp NOT NULL,
+	"endAt" timestamp NOT NULL,
+	"organizationId" text,
+	"atHome" boolean DEFAULT false NOT NULL,
+	"status" "appointmentStatus" DEFAULT 'CREATED' NOT NULL,
+	"note" text,
+	"createdAt" timestamp DEFAULT now(),
+	"updatedAt" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "medical_documents" (
@@ -296,12 +284,6 @@ CREATE TABLE "medical_documents" (
 );
 --> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "anatomical_part_type" ADD CONSTRAINT "anatomical_part_type_anatomical_part_id_anatomical_part_id_fk" FOREIGN KEY ("anatomical_part_id") REFERENCES "public"."anatomical_part"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "appointments" ADD CONSTRAINT "appointments_patientId_pets_id_fk" FOREIGN KEY ("patientId") REFERENCES "public"."pets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "appointments" ADD CONSTRAINT "appointments_organizationId_organizations_id_fk" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "client_note" ADD CONSTRAINT "client_note_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "client_note" ADD CONSTRAINT "client_note_client_id_users_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "clients" ADD CONSTRAINT "clients_organizationId_organizations_id_fk" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_inviter_id_users_id_fk" FOREIGN KEY ("inviter_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "members" ADD CONSTRAINT "members_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -321,7 +303,11 @@ ALTER TABLE "advancedReport" ADD CONSTRAINT "advancedReport_createdBy_organizati
 ALTER TABLE "advancedReport" ADD CONSTRAINT "advancedReport_patientId_pets_id_fk" FOREIGN KEY ("patientId") REFERENCES "public"."pets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "advancedReport" ADD CONSTRAINT "advancedReport_appointmentId_appointments_id_fk" FOREIGN KEY ("appointmentId") REFERENCES "public"."appointments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "advanced_report_recommendations" ADD CONSTRAINT "advanced_report_recommendations_advanced_report_id_advancedReport_id_fk" FOREIGN KEY ("advanced_report_id") REFERENCES "public"."advancedReport"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "report_owner_content" ADD CONSTRAINT "report_owner_content_report_id_advancedReport_id_fk" FOREIGN KEY ("report_id") REFERENCES "public"."advancedReport"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "anatomical_part_type" ADD CONSTRAINT "anatomical_part_type_anatomical_part_id_anatomical_part_id_fk" FOREIGN KEY ("anatomical_part_id") REFERENCES "public"."anatomical_part"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "clients" ADD CONSTRAINT "clients_organizationId_organizations_id_fk" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "client_note" ADD CONSTRAINT "client_note_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "client_note" ADD CONSTRAINT "client_note_client_id_users_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_patientId_pets_id_fk" FOREIGN KEY ("patientId") REFERENCES "public"."pets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_organizationId_organizations_id_fk" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "medical_documents" ADD CONSTRAINT "medical_documents_petId_pets_id_fk" FOREIGN KEY ("petId") REFERENCES "public"."pets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "medical_documents" ADD CONSTRAINT "medical_documents_uploadedBy_organizations_id_fk" FOREIGN KEY ("uploadedBy") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "report_owner_content_source_unique" ON "report_owner_content" USING btree ("report_id","source_kind","source_id");
+ALTER TABLE "medical_documents" ADD CONSTRAINT "medical_documents_uploadedBy_organizations_id_fk" FOREIGN KEY ("uploadedBy") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;

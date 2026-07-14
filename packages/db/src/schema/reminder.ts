@@ -24,7 +24,7 @@ export const reminder = pgTable("reminder", {
   userId: text("userId").references(() => user.id, {
     onDelete: "cascade",
   }),
-  createdAt: timestamp("createdAt", { mode: "date" }).default(new Date()),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }),
 })
 

@@ -9,7 +9,7 @@ export const signatures = pgTable("signatures", {
   organizationId: text("organizationId").references(() => organization.id, {
     onDelete: "cascade",
   }),
-  createdAt: timestamp("createdAt", { mode: "date" }).default(new Date()).notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }),
 })
 
