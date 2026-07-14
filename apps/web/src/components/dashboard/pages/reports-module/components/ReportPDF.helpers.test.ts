@@ -147,6 +147,93 @@ describe("buildReportPdfViewModel", () => {
     );
     expect(model.recommendations[0]?.recommendation).toBe("Repos 48 h");
   });
+
+  test("preserves stale owner text in the PDF view model", () => {
+    const model = buildReportPdfViewModel({
+      id: "report_stale_pdf",
+      title: "Compte rendu",
+      createdAt: new Date("2026-07-14T09:00:00Z"),
+      anatomicalIssues: [
+        {
+          id: "observation_stale",
+          type: "observation",
+          observationType: "dynamic",
+          laterality: "right",
+          severity: 3,
+          notes: "Restriction professionnelle actualisée",
+          anatomicalPart: { name: "Hanche" },
+        },
+      ],
+      recommendations: [],
+      ownerContents: [
+        {
+          id: "owner_stale",
+          reportId: "report_stale_pdf",
+          sourceKind: "observation",
+          sourceId: "observation_stale",
+          ownerText: "La hanche droite reste moins mobile.",
+          sourceFingerprint: "ancienne-empreinte",
+        },
+      ],
+    });
+
+    expect(model.issues[0]?.notes).toBe(
+      "La hanche droite reste moins mobile.",
+    );
+  });
+
+  test("uses owner text for an anatomical issue in the PDF view model", () => {
+    const ownerSources = buildOwnerSourceItems({
+      reportId: "report_anatomical_pdf",
+      consultationReason: "",
+      observations: [],
+      anatomicalIssues: [
+        {
+          id: "issue_anatomical",
+          type: "dysfunction",
+          region: "Bassin",
+          severity: 2,
+          notes: "Dysfonction ilio-sacrée",
+          laterality: "left",
+        },
+      ],
+      recommendations: [],
+      notes: "",
+    });
+    const anatomicalSource = ownerSources.find(
+      (source) => source.sourceKind === "anatomicalIssue",
+    );
+    const model = buildReportPdfViewModel({
+      id: "report_anatomical_pdf",
+      title: "Compte rendu",
+      createdAt: new Date("2026-07-14T09:00:00Z"),
+      anatomicalIssues: [
+        {
+          id: "issue_anatomical",
+          type: "dysfunction",
+          laterality: "left",
+          severity: 2,
+          notes: "Dysfonction ilio-sacrée",
+          anatomicalPart: { name: "Bassin" },
+        },
+      ],
+      recommendations: [],
+      ownerContents: [
+        {
+          id: "owner_anatomical",
+          reportId: "report_anatomical_pdf",
+          sourceKind: "anatomicalIssue",
+          sourceId: "issue_anatomical",
+          ownerText: "Le bassin gauche manque légèrement de mobilité.",
+          sourceFingerprint: anatomicalSource!.fingerprint,
+        },
+      ],
+    });
+
+    expect(model.issues[0]?.notes).toBe(
+      "Le bassin gauche manque légèrement de mobilité.",
+    );
+  });
 });
 
 describe("getSeverityTone", () => {
