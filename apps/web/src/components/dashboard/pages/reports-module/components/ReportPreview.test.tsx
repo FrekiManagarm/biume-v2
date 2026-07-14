@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { OwnerReportPreviewSheet, ReportPreview } from "./ReportPreview";
@@ -22,6 +22,7 @@ describe("OwnerReportPreviewSheet", () => {
             text: "Mobilité améliorée pendant la séance.",
             status: "stale",
             usedFallback: false,
+            section: "clinical",
           },
           {
             key: "notes:notes",
@@ -29,6 +30,7 @@ describe("OwnerReportPreviewSheet", () => {
             text: "Surveiller le confort dans les prochains jours.",
             status: "missing",
             usedFallback: true,
+            section: "notes",
           },
         ]}
       />,
@@ -50,6 +52,59 @@ describe("OwnerReportPreviewSheet", () => {
     ).not.toBeNull();
     expect(screen.getByText("À actualiser")).not.toBeNull();
     expect(screen.getByText("Texte professionnel utilisé")).not.toBeNull();
+  });
+
+  test("starts preparation and jumps to the selected professional section", () => {
+    const onStartPreparation = vi.fn();
+    const onJumpToSection = vi.fn();
+    render(
+      <OwnerReportPreviewSheet
+        open
+        onOpenChange={vi.fn()}
+        title="Compte rendu de suivi"
+        entries={[
+          {
+            key: "recommendation:recommendation-1",
+            label: "Recommandation",
+            text: "Privilégier les sorties courtes.",
+            status: "missing",
+            usedFallback: true,
+            section: "recommendations",
+          },
+        ]}
+        onStartPreparation={onStartPreparation}
+        onJumpToSection={onJumpToSection}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Préparer les contenus" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ouvrir Recommandation" }),
+    );
+
+    expect(onStartPreparation).toHaveBeenCalledOnce();
+    expect(onJumpToSection).toHaveBeenCalledWith("recommendations");
+  });
+
+  test("disables preparation while the professional report is saving", () => {
+    render(
+      <OwnerReportPreviewSheet
+        open
+        onOpenChange={vi.fn()}
+        title="Compte rendu de suivi"
+        entries={[]}
+        onStartPreparation={vi.fn()}
+        isPreparationDisabled
+      />,
+    );
+
+    expect(
+      screen
+        .getByRole("button", { name: "Préparer les contenus" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
   });
 
   test("preserves the existing owner document body in the legacy preview", () => {

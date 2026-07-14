@@ -70,6 +70,35 @@ describe("ReportSidebarNavigation", () => {
     expect(onPrepareOwnerContent).toHaveBeenCalledOnce();
   });
 
+  test("marks the active section and preserves its semantic owner color", () => {
+    const { rerender } = render(<ReportSidebarNavigation {...defaultProps} />);
+
+    const activeTab = screen.getByRole("button", { name: /Observations/ });
+    const staleBadge = screen.getByText("À actualiser");
+
+    expect(activeTab.getAttribute("aria-current")).toBe("page");
+    expect(staleBadge.className).toContain("bg-amber-100");
+    expect(staleBadge.className).not.toContain("bg-primary/10");
+
+    rerender(
+      <ReportSidebarNavigation {...defaultProps} activeTab="anatomical" />,
+    );
+    const readyBadge = within(
+      screen.getByRole("button", { name: /Anatomie/ }),
+    ).getByText("Prêt");
+    expect(readyBadge.className).toContain("bg-emerald-100");
+  });
+
+  test("disables preparation while the professional draft is saving", () => {
+    render(<ReportSidebarNavigation {...defaultProps} isPreparationDisabled />);
+
+    expect(
+      screen
+        .getByRole("button", { name: "2 contenus à préparer" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+  });
+
   test("uses the primary application tokens", () => {
     const { container } = render(<ReportSidebarNavigation {...defaultProps} />);
     const shellClassName = container.firstElementChild?.className ?? "";

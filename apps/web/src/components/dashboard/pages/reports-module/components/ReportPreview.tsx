@@ -15,6 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/style";
 import type { Observation } from "../data/dog/typesDog";
 import type { ReportSectionId } from "../owner-content";
@@ -47,6 +48,7 @@ export type OwnerPreviewEntry = {
   text: string;
   status: "missing" | "stale" | "ready";
   usedFallback: boolean;
+  section: ReportSectionId;
 };
 
 export type OwnerReportPreviewSheetProps = {
@@ -56,6 +58,7 @@ export type OwnerReportPreviewSheetProps = {
   patientName?: string;
   entries: OwnerPreviewEntry[];
   onStartPreparation?: () => void;
+  isPreparationDisabled?: boolean;
   onJumpToSection?: (section: ReportSectionId) => void;
 };
 
@@ -345,8 +348,10 @@ export function OwnerReportPreview({
 
 function OwnerReportPreviewDocument({
   entries,
+  onJumpToSection,
 }: {
   entries: OwnerPreviewEntry[];
+  onJumpToSection?: (section: ReportSectionId) => void;
 }) {
   return (
     <div className="space-y-5 px-5 py-6">
@@ -375,6 +380,17 @@ function OwnerReportPreviewDocument({
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {entry.text}
           </p>
+          {onJumpToSection ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 px-0"
+              aria-label={`Ouvrir ${entry.label}`}
+              onClick={() => onJumpToSection(entry.section)}
+            >
+              Ouvrir la section
+            </Button>
+          ) : null}
         </section>
       ))}
     </div>
@@ -387,6 +403,9 @@ export function OwnerReportPreviewSheet({
   title,
   patientName,
   entries,
+  onStartPreparation,
+  isPreparationDisabled = false,
+  onJumpToSection,
 }: OwnerReportPreviewSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -400,7 +419,21 @@ export function OwnerReportPreviewSheet({
             {patientName ? `${title} · ${patientName}` : title}
           </SheetDescription>
         </SheetHeader>
-        <OwnerReportPreviewDocument entries={entries} />
+        <OwnerReportPreviewDocument
+          entries={entries}
+          onJumpToSection={onJumpToSection}
+        />
+        {onStartPreparation ? (
+          <div className="sticky bottom-0 border-t border-border bg-background p-4">
+            <Button
+              className="w-full"
+              onClick={onStartPreparation}
+              disabled={isPreparationDisabled}
+            >
+              Préparer les contenus
+            </Button>
+          </div>
+        ) : null}
       </SheetContent>
     </Sheet>
   );

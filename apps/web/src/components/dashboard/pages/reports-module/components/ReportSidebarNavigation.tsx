@@ -39,15 +39,15 @@ const ownerStatusPresentation: Record<
 > = {
   ready: {
     label: "Prêt",
-    className: "bg-emerald-500/20 text-emerald-50 ring-emerald-300/30",
+    className: "bg-emerald-100 text-emerald-900 ring-emerald-300/60",
   },
   missing: {
     label: "À préparer",
-    className: "bg-amber-400/20 text-amber-50 ring-amber-200/30",
+    className: "bg-amber-100 text-amber-900 ring-amber-300/60",
   },
   stale: {
     label: "À actualiser",
-    className: "bg-amber-400/20 text-amber-50 ring-amber-200/30",
+    className: "bg-amber-100 text-amber-900 ring-amber-300/60",
   },
 };
 
@@ -60,6 +60,7 @@ export function ReportSidebarNavigation({
   ownerStatuses,
   pendingOwnerCount,
   onPrepareOwnerContent,
+  isPreparationDisabled = false,
   isCollapsed = false,
   onToggleCollapse,
 }: {
@@ -71,6 +72,7 @@ export function ReportSidebarNavigation({
   ownerStatuses: Record<ReportSectionId, OwnerContentStatus>;
   pendingOwnerCount: number;
   onPrepareOwnerContent: () => void;
+  isPreparationDisabled?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }) {
@@ -165,6 +167,7 @@ export function ReportSidebarNavigation({
                 key={tab.id}
                 type="button"
                 aria-label={isCollapsed ? tab.label : undefined}
+                aria-current={isActive ? "page" : undefined}
                 onClick={() => onChangeTab(tab.id)}
                 className={cn(
                   "flex items-center rounded-xl text-left transition-colors",
@@ -185,9 +188,7 @@ export function ReportSidebarNavigation({
                     <span
                       className={cn(
                         "rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-inset",
-                        isActive
-                          ? "bg-primary/10 text-primary ring-primary/20"
-                          : status.className,
+                        status.className,
                       )}
                     >
                       {status.label}
@@ -214,6 +215,7 @@ export function ReportSidebarNavigation({
           <Button
             type="button"
             onClick={onPrepareOwnerContent}
+            disabled={isPreparationDisabled}
             className={cn(
               "border border-primary-foreground/20 bg-primary-foreground text-primary hover:bg-primary-foreground/90 focus-visible:ring-primary",
               isCollapsed ? "h-11 w-11 px-0" : "h-auto w-full py-3",

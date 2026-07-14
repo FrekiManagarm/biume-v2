@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
@@ -25,11 +25,14 @@ import {
 } from "./components/ReportPanelController";
 import {
   buildReportUpdatePayload,
+  ensureSuccessfulReportUpdate,
+  getReportDraftRevision,
   getReportDesktopGridClassName,
   invalidateReportDetailQuery,
   invalidateReportUpdateQueries,
   openOwnerPreparation,
   replaceOwnerContentRecord,
+  runExclusiveReportSave,
   type ReportUpdateStatus,
 } from "./reports-editor.helpers";
 import {
@@ -52,10 +55,7 @@ import type {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  CheckIcon,
   ChevronLeftIcon,
-  EyeIcon,
-  SaveIcon,
   PlusIcon,
   KeyboardIcon,
   AlertTriangle,
@@ -267,6 +267,7 @@ export function AdvancedReportEditor({
         text: resolved.text,
         status: resolved.status,
         usedFallback: resolved.usedFallback,
+        section: source.section,
       };
     });
   }, [ownerDocument, ownerSources]);
@@ -282,6 +283,18 @@ export function AdvancedReportEditor({
     recommendations: initialRecommendations,
     anatomicalIssues: initialAnatomicalIssues,
   });
+  const currentDraftState = {
+    title,
+    observations,
+    notes,
+    consultationReason,
+    recommendations,
+    anatomicalIssues,
+  };
+  const currentDraftRevision = getReportDraftRevision(currentDraftState);
+  const currentDraftRevisionRef = useRef(currentDraftRevision);
+  currentDraftRevisionRef.current = currentDraftRevision;
+  const reportSaveGuard = useRef<Promise<boolean> | null>(null);
 
   // État temporaire pour le nouveau problème anatomique
   const [newAnatomicalIssue, setNewAnatomicalIssue] = useState<
@@ -543,30 +556,6 @@ export function AdvancedReportEditor({
   // Mutation pour mettre à jour le rapport
   const updateReportMutation = useMutation({
     mutationFn: updateReport,
-    onSuccess: async (data) => {
-      if (data?.success) {
-        toast.success("Rapport mis à jour avec succès");
-        await invalidateReportUpdateQueries(queryClient, reportId);
-        // Mettre à jour l'état de sauvegarde après succès
-        setLastSavedState({
-          title,
-          observations,
-          notes,
-          consultationReason,
-          recommendations,
-          anatomicalIssues,
-        });
-        setHasUnsavedChanges(false);
-        if (data.status === "finalized") {
-          navigate({
-            to: "/dashboard/reports/$id",
-            params: { id: reportId },
-          });
-        }
-      } else {
-        toast.error(data?.error || "Erreur lors de la mise à jour du rapport");
-      }
-    },
     onError: (error) => {
       toast.error(
         error instanceof Error
@@ -590,6 +579,15 @@ export function AdvancedReportEditor({
   const handleUpdateReport = async (
     status: ReportUpdateStatus = "draft",
   ): Promise<boolean> => {
+    const submittedState = {
+      title,
+      observations,
+      notes,
+      consultationReason,
+      recommendations,
+      anatomicalIssues,
+    };
+    const submittedRevision = getReportDraftRevision(submittedState);
     const reportDataToSend = buildReportUpdatePayload({
       reportId,
       title,
@@ -602,21 +600,45 @@ export function AdvancedReportEditor({
       status,
     });
 
-    try {
-      const result = await updateReportMutation.mutateAsync(reportDataToSend);
-      return Boolean(result?.success);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
-      return false;
-    }
+    return runExclusiveReportSave(reportSaveGuard, async () => {
+      try {
+        const result = await updateReportMutation.mutateAsync(reportDataToSend);
+        if (!result?.success) {
+          toast.error(
+            result?.error || "Erreur lors de la mise à jour du rapport",
+          );
+          return false;
+        }
+
+        toast.success("Rapport mis à jour avec succès");
+        await invalidateReportUpdateQueries(queryClient, reportId);
+        setLastSavedState(submittedState);
+        setHasUnsavedChanges(
+          currentDraftRevisionRef.current !== submittedRevision,
+        );
+        if (result.status === "finalized") {
+          navigate({
+            to: "/dashboard/reports/$id",
+            params: { id: reportId },
+          });
+        }
+        return true;
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour:", error);
+        return false;
+      }
+    });
   };
 
-  const handleOpenOwnerPreparation = async (sourceKey?: string) =>
-    openOwnerPreparation({
+  const handleOpenOwnerPreparation = async (sourceKey?: string) => {
+    if (reportSaveGuard.current) return false;
+    return openOwnerPreparation({
       hasUnsavedChanges,
       saveDraft: () => handleUpdateReport("draft"),
       openPanel: () => setPanelState({ type: "owner-preparation", sourceKey }),
+      getRevision: () => currentDraftRevisionRef.current,
     });
+  };
 
   // Fonction pour ouvrir le dialog de rappel
   const handleOpenReminderDialog = () => {
@@ -724,7 +746,6 @@ export function AdvancedReportEditor({
       count: notes.trim() ? 1 : 0,
     },
   ];
-  const activeTabMeta = tabs.find((tab) => tab.id === activeTab);
   const ownerStatuses = Object.fromEntries(
     tabs.map((tab) => {
       const sectionStatuses = ownerSources
@@ -760,6 +781,7 @@ export function AdvancedReportEditor({
               onPrepareOwnerContent={() => {
                 void handleOpenOwnerPreparation();
               }}
+              isPreparationDisabled={updateReportMutation.isPending}
               isCollapsed={isSidebarCollapsed}
               onToggleCollapse={() =>
                 setIsSidebarCollapsed(!isSidebarCollapsed)
@@ -813,7 +835,7 @@ export function AdvancedReportEditor({
                 </div>
               ) : (
                 <div className="h-full min-h-0">
-                  <div className="min-h-0 overflow-hidden">
+                  <div className="h-full min-h-0 overflow-hidden">
                     {activeTab === "clinical" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
                         <ObservationsTab
@@ -886,39 +908,19 @@ export function AdvancedReportEditor({
       {/* Mobile/Tablet Layout */}
       <div className="min-h-dvh bg-slate-50 lg:hidden">
         <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <div className="grid gap-4 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleGoBack}
-                  className="mt-0.5 shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
-                >
-                  <ChevronLeftIcon className="h-5 w-5" />
-                </Button>
-                <div className="min-w-0">
-                  <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
-                    {activeTabMeta?.label || "Modifier le rapport"}
-                  </h1>
-                  <p className="mt-1 truncate text-xs font-medium text-slate-500">
-                    {selectedPetSummary}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="default"
-                size="icon"
-                onClick={handleFinalizeRequest}
-                disabled={updateReportMutation.isPending}
-                className="shrink-0 rounded-xl bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
-                aria-label="Finaliser le rapport"
-              >
-                <CheckIcon className="h-4 w-4" />
-              </Button>
-            </div>
-
+          <ReportWorkspaceHeader
+            title={title}
+            onTitleChange={setTitle}
+            patientSummary={selectedPetSummary}
+            appointment={appointmentDetails}
+            onPreview={() => setPanelState({ type: "owner-preview" })}
+            onSave={() => {
+              void handleUpdateReport("draft");
+            }}
+            onFinalize={handleFinalizeRequest}
+            isSaving={updateReportMutation.isPending}
+          />
+          <div className="grid gap-3 p-4 pt-3">
             <Select
               value={activeTab}
               onValueChange={(value) =>
@@ -940,12 +942,15 @@ export function AdvancedReportEditor({
               </SelectContent>
             </Select>
 
-            <div
-              className={cn(
-                "grid gap-2",
-                activeTab === "clinical" ? "grid-cols-4" : "grid-cols-3",
-              )}
-            >
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGoBack}
+                aria-label="Retour"
+              >
+                <ChevronLeftIcon className="size-4" />
+              </Button>
               {activeTab === "clinical" && (
                 <Button
                   size="sm"
@@ -954,17 +959,9 @@ export function AdvancedReportEditor({
                   aria-label="Nouvelle observation"
                 >
                   <PlusIcon className="h-4 w-4" />
+                  Nouvelle observation
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPanelState({ type: "owner-preview" })}
-                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
-                aria-label="Aperçu"
-              >
-                <EyeIcon className="h-4 w-4" />
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -973,16 +970,7 @@ export function AdvancedReportEditor({
                 aria-label="Raccourcis"
               >
                 <KeyboardIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpdateReport("draft")}
-                disabled={updateReportMutation.isPending}
-                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
-                aria-label="Sauvegarder"
-              >
-                <SaveIcon className="h-4 w-4" />
+                Raccourcis
               </Button>
             </div>
           </div>
@@ -1096,7 +1084,11 @@ export function AdvancedReportEditor({
           onStartPreparation: () => {
             void handleOpenOwnerPreparation();
           },
-          onJumpToSection: (section) => setActiveTab(section),
+          isPreparationDisabled: updateReportMutation.isPending,
+          onJumpToSection: (section) => {
+            setActiveTab(section);
+            setPanelState({ type: "closed" });
+          },
         }}
         preparation={{
           reportId,
@@ -1317,7 +1309,9 @@ export function AdvancedReportEditor({
         onOpenChange={setIsReminderDialogOpen}
         reportId={reportId}
         onFinalize={async () => {
-          await handleUpdateReport("finalized");
+          await ensureSuccessfulReportUpdate(() =>
+            handleUpdateReport("finalized"),
+          );
         }}
         isFinalizing={updateReportMutation.isPending}
       />

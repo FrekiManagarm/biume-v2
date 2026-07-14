@@ -23,6 +23,16 @@ type BuildReportUpdatePayloadInput = {
   status: ReportUpdateStatus;
 };
 
+export type ReportDraftState = Pick<
+  BuildReportUpdatePayloadInput,
+  | "title"
+  | "consultationReason"
+  | "notes"
+  | "observations"
+  | "anatomicalIssues"
+  | "recommendations"
+>;
+
 export function buildReportUpdatePayload({
   reportId,
   title,
@@ -58,16 +68,46 @@ export function getReportDesktopGridClassName(isSidebarCollapsed: boolean) {
   );
 }
 
+export function getReportDraftRevision(draft: ReportDraftState) {
+  return JSON.stringify(draft);
+}
+
+export async function ensureSuccessfulReportUpdate(
+  update: () => Promise<boolean>,
+) {
+  if (!(await update())) {
+    throw new Error("Échec de la mise à jour du rapport");
+  }
+}
+
+export function runExclusiveReportSave(
+  guard: { current: Promise<boolean> | null },
+  save: () => Promise<boolean>,
+) {
+  if (guard.current) return Promise.resolve(false);
+  const pending = save().finally(() => {
+    if (guard.current === pending) guard.current = null;
+  });
+  guard.current = pending;
+  return pending;
+}
+
 export async function openOwnerPreparation({
   hasUnsavedChanges,
   saveDraft,
   openPanel,
+  getRevision,
 }: {
   hasUnsavedChanges: boolean;
   saveDraft: () => Promise<boolean>;
   openPanel: () => void;
+  getRevision?: () => string;
 }) {
-  if (hasUnsavedChanges && !(await saveDraft())) return false;
+  const revisionBeforeSave = getRevision?.();
+  if (hasUnsavedChanges) {
+    if (!(await saveDraft())) return false;
+    if (revisionBeforeSave !== getRevision?.()) return false;
+  }
   openPanel();
   return true;
 }

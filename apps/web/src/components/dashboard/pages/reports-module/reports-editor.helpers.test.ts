@@ -2,11 +2,14 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   buildReportUpdatePayload,
+  ensureSuccessfulReportUpdate,
+  getReportDraftRevision,
   getReportDesktopGridClassName,
   invalidateReportDetailQuery,
   invalidateReportUpdateQueries,
   openOwnerPreparation,
   replaceOwnerContentRecord,
+  runExclusiveReportSave,
 } from "./reports-editor.helpers";
 
 describe("buildReportUpdatePayload", () => {
@@ -85,6 +88,83 @@ describe("openOwnerPreparation", () => {
 
     expect(saveDraft).not.toHaveBeenCalled();
     expect(openPanel).toHaveBeenCalledOnce();
+  });
+
+  test("does not open when the draft changes while its save is pending", async () => {
+    let resolveSave: ((saved: boolean) => void) | undefined;
+    let revision = "revision-1";
+    const saveDraft = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
+    const openPanel = vi.fn();
+
+    const opening = openOwnerPreparation({
+      hasUnsavedChanges: true,
+      saveDraft,
+      openPanel,
+      getRevision: () => revision,
+    });
+    revision = "revision-2";
+    resolveSave?.(true);
+
+    await expect(opening).resolves.toBe(false);
+    expect(openPanel).not.toHaveBeenCalled();
+  });
+});
+
+describe("ensureSuccessfulReportUpdate", () => {
+  test("rejects a false update result so finalization cannot continue", async () => {
+    await expect(
+      ensureSuccessfulReportUpdate(() => Promise.resolve(false)),
+    ).rejects.toThrow("Échec de la mise à jour du rapport");
+  });
+
+  test("resolves after a successful update", async () => {
+    await expect(
+      ensureSuccessfulReportUpdate(() => Promise.resolve(true)),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe("runExclusiveReportSave", () => {
+  test("rejects a concurrent caller while keeping one save in flight", async () => {
+    let resolveSave: ((saved: boolean) => void) | undefined;
+    const save = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
+    const guard = { current: null as Promise<boolean> | null };
+
+    const first = runExclusiveReportSave(guard, save);
+    const second = runExclusiveReportSave(guard, save);
+    resolveSave?.(true);
+
+    await expect(first).resolves.toBe(true);
+    await expect(second).resolves.toBe(false);
+    expect(save).toHaveBeenCalledOnce();
+    expect(guard.current).toBeNull();
+  });
+});
+
+describe("getReportDraftRevision", () => {
+  test("changes when professional content changes", () => {
+    const draft = {
+      title: "Compte rendu",
+      observations: [],
+      notes: "Note initiale",
+      consultationReason: "Suivi",
+      recommendations: [],
+      anatomicalIssues: [],
+    };
+
+    expect(getReportDraftRevision(draft)).not.toBe(
+      getReportDraftRevision({ ...draft, notes: "Note modifiée" }),
+    );
   });
 });
 
