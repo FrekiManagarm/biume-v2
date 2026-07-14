@@ -582,8 +582,8 @@ function OrganizationTab({
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Activez la vulgarisation automatique des rapports lorsque votre
-                plan le permet.
+                Activez la préparation à la demande des versions destinées aux
+                propriétaires lorsque votre plan le permet.
               </p>
             </div>
           </div>

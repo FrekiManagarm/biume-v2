@@ -1,6 +1,13 @@
+import {
+  buildOwnerSourceItems,
+  type OwnerContentRecord,
+} from "../owner-content";
+import { buildOwnerReportViewModel } from "../owner-report-view-model";
+
 export type ReportPdfIssue = {
   id?: string | null;
   type?: string | null;
+  observationType?: string | null;
   notes?: string | null;
   laterality?: string | null;
   severity?: number | null;
@@ -56,6 +63,7 @@ export type ReportPdfReport = {
   } | null;
   anatomicalIssues?: ReportPdfIssue[] | null;
   recommendations?: ReportPdfRecommendation[] | null;
+  ownerContents?: OwnerContentRecord[] | null;
 };
 
 export type ReportMetricTone = "accent" | "forest" | "ink" | "sand";
@@ -166,6 +174,73 @@ export function buildReportPdfViewModel(report: ReportPdfReport) {
   const breed = patient?.breed || patient?.nacType;
   const owner = patient?.owner;
   const ownerContact = owner?.phone || owner?.email;
+  const ownerSources = buildOwnerSourceItems({
+    reportId: report.id,
+    consultationReason: report.consultationReason ?? "",
+    observations: observations.map((item) => ({
+      id: item.id ?? "",
+      region: item.anatomicalPart?.name ?? "Zone non précisée",
+      severity: item.severity ?? 2,
+      notes: item.notes ?? "",
+      type:
+        item.observationType === "static" ||
+        item.observationType === "dynamic" ||
+        item.observationType === "diagnosticExclusion"
+          ? item.observationType
+          : "none",
+      laterality:
+        item.laterality === "left" ||
+        item.laterality === "right" ||
+        item.laterality === "bilateral"
+          ? item.laterality
+          : "bilateral",
+    })),
+    anatomicalIssues: [...dysfunctions, ...suspicions].map((item) => ({
+      id: item.id ?? "",
+      type:
+        item.type === "anatomicalSuspicion"
+          ? "anatomicalSuspicion"
+          : "dysfunction",
+      region: item.anatomicalPart?.name ?? "Zone non précisée",
+      severity: item.severity ?? 2,
+      notes: item.notes ?? "",
+      laterality:
+        item.laterality === "left" ||
+        item.laterality === "right" ||
+        item.laterality === "bilateral"
+          ? item.laterality
+          : "bilateral",
+    })),
+    recommendations: recommendations.map((item) => ({
+      id: item.id ?? "",
+      content: item.recommendation ?? item.description ?? "",
+    })),
+    notes: report.notes ?? "",
+  });
+  const ownerView = buildOwnerReportViewModel(
+    ownerSources,
+    report.ownerContents ?? [],
+  );
+  const ownerText = (key: string, professionalText: string) =>
+    ownerView.byKey[key]?.text ?? professionalText;
+  const resolvedIssues = issues.map((issue) => ({
+    ...issue,
+    notes: ownerText(
+      `${issue.type === "observation" ? "observation" : "anatomicalIssue"}:${issue.id ?? ""}`,
+      issue.notes?.trim() ||
+        issue.anatomicalPart?.name ||
+        "Aucune note clinique precisee pour ce point.",
+    ),
+  }));
+  const resolvedRecommendations = recommendations.map((recommendation) => ({
+    ...recommendation,
+    recommendation: ownerText(
+      `recommendation:${recommendation.id ?? ""}`,
+      recommendation.recommendation?.trim() ||
+        recommendation.description?.trim() ||
+        "Recommandation a completer.",
+    ),
+  }));
 
   const patientFacts = [
     patient?.gender,
@@ -183,8 +258,13 @@ export function buildReportPdfViewModel(report: ReportPdfReport) {
       .join(" - "),
     organizationName: report.organization?.name || "Biume",
     consultationReason:
-      report.consultationReason?.trim() || "Motif de consultation non renseigne",
-    practitionerNotes: report.notes?.trim() || "",
+      ownerText(
+        "consultationReason:consultationReason",
+        report.consultationReason?.trim() || "",
+      ) || "Motif de consultation non renseigne",
+    practitionerNotes: ownerText("notes:notes", report.notes?.trim() || ""),
+    issues: resolvedIssues,
+    recommendations: resolvedRecommendations,
     animalKind: getAnimalKind(report),
     hasClinicalContent: issues.length > 0 || recommendations.length > 0,
     metrics: [

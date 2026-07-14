@@ -1,8 +1,11 @@
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { Pet, pets } from "./pets";
-import { Organization, organization } from "./organization";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
+import { organization } from "./organization";
+import type { Organization } from "./organization";
 
 export const medicalDocuments = pgTable("medical_documents", {
   id: text("id")
@@ -47,4 +50,3 @@ export type CreateMedicalDocument = typeof medicalDocuments.$inferInsert;
 
 export const CreateMedicalDocumentSchema = createInsertSchema(medicalDocuments);
 export const MedicalDocumentSchema = createSelectSchema(medicalDocuments);
-

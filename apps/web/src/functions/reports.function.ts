@@ -16,9 +16,15 @@ import {
   anatomicalIssue,
   type AdvancedReport,
   advancedReport,
+  reportOwnerContent,
 } from "@biume/db/schema/index";
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
+import {
+  buildReportChildRows,
+  executeAtomicReportMutations,
+  getRemovedOwnerSources,
+} from "#/components/dashboard/pages/reports-module/reports.persistence";
 // import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
@@ -226,6 +232,7 @@ export const getReportById = createServerFn({ method: "GET" })
             },
           },
           recommendations: true,
+          ownerContents: true,
         },
       });
 
@@ -239,7 +246,7 @@ export const getReportById = createServerFn({ method: "GET" })
   });
 
 export const updateReport = createServerFn({ method: "POST" })
-  .validator(reportSchema.extend({ reportId: z.string() }))
+  .validator(reportSchema.safeExtend({ reportId: z.string() }))
   .handler(async ({ data }) => {
     const {
       reportId,
@@ -257,27 +264,19 @@ export const updateReport = createServerFn({ method: "POST" })
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
-      // Mettre à jour le rapport principal
-      const [updatedReport] = await db
-        .update(advancedReport)
-        .set({
-          title,
-          consultationReason,
-          patientId: petId || "",
-          notes,
-          updatedAt: new Date(),
-          status: status || "draft",
-        })
+      const [ownedReport] = await db
+        .select({ id: advancedReport.id })
+        .from(advancedReport)
         .where(
           and(
             eq(advancedReport.id, reportId),
             eq(advancedReport.createdBy, organization.id),
           ),
         )
-        .returning()
+        .limit(1)
         .execute();
 
-      if (!updatedReport) throw new Error("Report not found or unauthorized");
+      if (!ownedReport) throw new Error("Report not found or unauthorized");
 
       const regionCandidates = [
         ...anatomicalIssues.map((issue) => issue.region),
@@ -322,63 +321,83 @@ export const updateReport = createServerFn({ method: "POST" })
         return fallbackPart.id;
       };
 
-      // Supprimer les anciennes données
-      await db
-        .delete(anatomicalIssue)
-        .where(eq(anatomicalIssue.advancedReportId, reportId))
+      const childRows = buildReportChildRows({
+        reportId: ownedReport.id,
+        observations,
+        anatomicalIssues,
+        recommendations,
+        resolveAnatomicalPartId,
+      });
+
+      const existingOwnerSources = await db
+        .select({
+          sourceKind: reportOwnerContent.sourceKind,
+          sourceId: reportOwnerContent.sourceId,
+        })
+        .from(reportOwnerContent)
+        .where(eq(reportOwnerContent.reportId, ownedReport.id))
         .execute();
 
-      await db
-        .delete(advancedReportRecommendations)
-        .where(eq(advancedReportRecommendations.advancedReportId, reportId))
-        .execute();
+      const removedSources = getRemovedOwnerSources(existingOwnerSources, {
+        observation: observations.map((item) => item.id),
+        anatomicalIssue: anatomicalIssues.map((item) => item.id),
+        recommendation: recommendations.map((item) => item.id),
+      });
 
-      // Insérer les nouveaux problèmes anatomiques
-      if (anatomicalIssues.length > 0) {
-        const issuesData = anatomicalIssues.map((issue) => ({
-          id: crypto.randomUUID(),
-          type: issue.type as "dysfunction" | "anatomicalSuspicion",
-          anatomicalPartId: resolveAnatomicalPartId(issue),
-          severity: issue.severity,
-          advancedReportId: updatedReport.id,
-          notes: issue.notes,
-          laterality: issue.laterality as "left" | "right" | "bilateral",
-          observationType: "none" as const,
-        }));
+      const mutationQueries = [
+        db
+          .update(advancedReport)
+          .set({
+            title,
+            consultationReason,
+            patientId: petId || "",
+            notes,
+            updatedAt: new Date(),
+            status: status || "draft",
+          })
+          .where(
+            and(
+              eq(advancedReport.id, ownedReport.id),
+              eq(advancedReport.createdBy, organization.id),
+            ),
+          ),
+        ...removedSources.map((source) =>
+          db
+            .delete(reportOwnerContent)
+            .where(
+              and(
+                eq(reportOwnerContent.reportId, ownedReport.id),
+                eq(reportOwnerContent.sourceKind, source.sourceKind),
+                eq(reportOwnerContent.sourceId, source.sourceId),
+              ),
+            ),
+        ),
+        db
+          .delete(anatomicalIssue)
+          .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
+        db
+          .delete(advancedReportRecommendations)
+          .where(
+            eq(advancedReportRecommendations.advancedReportId, ownedReport.id),
+          ),
+        ...(childRows.anatomicalIssues.length > 0
+          ? [db.insert(anatomicalIssue).values(childRows.anatomicalIssues)]
+          : []),
+        ...(childRows.observations.length > 0
+          ? [db.insert(anatomicalIssue).values(childRows.observations)]
+          : []),
+        ...(childRows.recommendations.length > 0
+          ? [
+              db
+                .insert(advancedReportRecommendations)
+                .values(childRows.recommendations),
+            ]
+          : []),
+      ] as const;
 
-        await db.insert(anatomicalIssue).values(issuesData).execute();
-      }
-
-      // Insérer les nouvelles observations
-      if (observations.length > 0) {
-        const observationsData = observations.map((observation) => ({
-          id: crypto.randomUUID(),
-          type: "observation" as const,
-          advancedReportId: updatedReport.id,
-          notes: observation.notes,
-          anatomicalPartId: resolveAnatomicalPartId(observation),
-          laterality: observation.laterality as "left" | "right" | "bilateral",
-          severity: observation.severity,
-          observationType: observation.type as
-            "dynamic" | "static" | "diagnosticExclusion" | "none",
-        }));
-
-        await db.insert(anatomicalIssue).values(observationsData).execute();
-      }
-
-      // Insérer les nouvelles recommandations
-      if (recommendations.length > 0) {
-        const recommendationsData = recommendations.map((recommendation) => ({
-          id: crypto.randomUUID(),
-          advancedReportId: updatedReport.id,
-          recommendation: recommendation.content,
-        }));
-
-        await db
-          .insert(advancedReportRecommendations)
-          .values(recommendationsData)
-          .execute();
-      }
+      await executeAtomicReportMutations(mutationQueries, (queries) =>
+        db.batch(queries),
+      );
 
       return { success: true, status: status };
     } catch (error) {

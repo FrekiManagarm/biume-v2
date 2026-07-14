@@ -10,7 +10,7 @@ export const createReportSchema = z.object({
   status: z.enum(["draft", "finalized", "sent"]).optional().default("draft"),
 });
 
-export const reportSchema = z.object({
+const reportSchemaBase = z.object({
   title: z.string().min(1, "Le titre est requis"),
   petId: z.string().optional(),
   appointmentId: z.string().optional(),
@@ -20,7 +20,7 @@ export const reportSchema = z.object({
   observations: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         region: z.string(),
         severity: z.number().min(1).max(5),
         notes: z.string(),
@@ -43,7 +43,7 @@ export const reportSchema = z.object({
   anatomicalIssues: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         type: z.enum(["dysfunction", "anatomicalSuspicion"]),
         region: z.string(),
         severity: z.number().min(1).max(5),
@@ -65,12 +65,35 @@ export const reportSchema = z.object({
   recommendations: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         content: z.string(),
       }),
     )
     .optional()
     .default([]),
+});
+
+export const reportSchema = reportSchemaBase.superRefine((report, context) => {
+  const anatomicalIds = [
+    ...report.observations.map((item) => item.id),
+    ...report.anatomicalIssues.map((item) => item.id),
+  ];
+  if (new Set(anatomicalIds).size !== anatomicalIds.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Les identifiants anatomiques doivent être uniques",
+      path: ["anatomicalIssues"],
+    });
+  }
+
+  const recommendationIds = report.recommendations.map((item) => item.id);
+  if (new Set(recommendationIds).size !== recommendationIds.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Les identifiants de recommandation doivent être uniques",
+      path: ["recommendations"],
+    });
+  }
 });
 
 export const anatomicalIssueSchema = z.object({

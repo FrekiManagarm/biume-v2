@@ -1,8 +1,11 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
-import { Organization, organization } from "./organization"
-import { User, user } from "./user"
+import { organization } from "./organization"
+import type { Organization } from "./organization"
+import { user } from "./user"
+import type { User } from "./user"
 
 export const invitation = pgTable("invitations", {
   id: text("id").primaryKey(),

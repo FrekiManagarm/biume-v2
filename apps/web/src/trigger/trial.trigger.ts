@@ -5,7 +5,7 @@ import { resend } from "@/lib/utils/resend";
 import { render } from "@react-email/components";
 import { TrialStartEmail } from "@biume/emails/TrialStartEmail";
 import { TrialFollowUpEmail } from "@biume/emails/TrialFollowUpEmail";
-import { TrialEndingReminderEmail } from "@biume/emails/TrialEndingReminderEmail";
+import TrialEndingReminderEmail from "@biume/emails/TrialEndingReminderEmail";
 import { db } from "@/lib/utils/db";
 import { organization as organizationSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";

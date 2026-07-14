@@ -1,5 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 
+import { cn } from "@/lib/style";
+import type { OwnerContentRecord } from "./owner-content";
+import type { ReportSectionId } from "./owner-content";
 import type { AnatomicalIssue, Observation } from "./types";
 
 type ReportRecommendationDraft = {
@@ -8,6 +11,39 @@ type ReportRecommendationDraft = {
 };
 
 export type ReportUpdateStatus = "draft" | "finalized";
+export type ProfessionalSectionStatus = "empty" | "in-progress" | "complete";
+
+export function getAnatomicalProfessionalItemText(issue: {
+  notes?: string | null;
+  region: string;
+  anatomicalPart?: { name?: string | null } | null;
+}) {
+  return (
+    issue.notes?.trim() ||
+    issue.anatomicalPart?.name?.trim() ||
+    issue.region.trim()
+  );
+}
+
+export function deriveProfessionalSectionStatus(
+  section: ReportSectionId,
+  content: { consultationReason: string; itemTexts: readonly string[] },
+): ProfessionalSectionStatus {
+  const meaningfulItems = content.itemTexts.filter((text) => text.trim());
+  if (section === "clinical") {
+    const hasReason = Boolean(content.consultationReason.trim());
+    if (!hasReason && meaningfulItems.length === 0) return "empty";
+    return hasReason &&
+      meaningfulItems.length === content.itemTexts.length &&
+      meaningfulItems.length > 0
+      ? "complete"
+      : "in-progress";
+  }
+  if (content.itemTexts.length === 0) return "empty";
+  return meaningfulItems.length === content.itemTexts.length
+    ? "complete"
+    : "in-progress";
+}
 
 type BuildReportUpdatePayloadInput = {
   reportId: string;
@@ -20,6 +56,16 @@ type BuildReportUpdatePayloadInput = {
   recommendations: ReportRecommendationDraft[];
   status: ReportUpdateStatus;
 };
+
+export type ReportDraftState = Pick<
+  BuildReportUpdatePayloadInput,
+  | "title"
+  | "consultationReason"
+  | "notes"
+  | "observations"
+  | "anatomicalIssues"
+  | "recommendations"
+>;
 
 export function buildReportUpdatePayload({
   reportId,
@@ -46,6 +92,83 @@ export function buildReportUpdatePayload({
 }
 
 type ReportQueryClient = Pick<QueryClient, "invalidateQueries">;
+
+export function getReportDesktopGridClassName(isSidebarCollapsed: boolean) {
+  return cn(
+    "grid h-full w-full gap-5 p-4 transition-[grid-template-columns] duration-200",
+    isSidebarCollapsed
+      ? "grid-cols-[72px_minmax(0,1fr)]"
+      : "grid-cols-[18rem_minmax(0,1fr)]",
+  );
+}
+
+export function getReportDraftRevision(draft: ReportDraftState) {
+  return JSON.stringify(draft);
+}
+
+export async function ensureSuccessfulReportUpdate(
+  update: () => Promise<boolean>,
+) {
+  if (!(await update())) {
+    throw new Error("Échec de la mise à jour du rapport");
+  }
+}
+
+export function runExclusiveReportSave(
+  guard: { current: Promise<boolean> | null },
+  save: () => Promise<boolean>,
+) {
+  if (guard.current) return Promise.resolve(false);
+  const pending = save().finally(() => {
+    if (guard.current === pending) guard.current = null;
+  });
+  guard.current = pending;
+  return pending;
+}
+
+export async function openOwnerPreparation({
+  hasUnsavedChanges,
+  saveDraft,
+  openPanel,
+  getRevision,
+}: {
+  hasUnsavedChanges: boolean;
+  saveDraft: () => Promise<boolean>;
+  openPanel: () => void;
+  getRevision?: () => string;
+}) {
+  const revisionBeforeSave = getRevision?.();
+  if (hasUnsavedChanges) {
+    if (!(await saveDraft())) return false;
+    if (revisionBeforeSave !== getRevision?.()) return false;
+  }
+  openPanel();
+  return true;
+}
+
+export function replaceOwnerContentRecord(
+  records: OwnerContentRecord[],
+  replacement: OwnerContentRecord,
+) {
+  const matchingIndex = records.findIndex(
+    (record) =>
+      record.sourceKind === replacement.sourceKind &&
+      record.sourceId === replacement.sourceId,
+  );
+  if (matchingIndex === -1) return [...records, replacement];
+  return records.map((record, index) =>
+    index === matchingIndex ? replacement : record,
+  );
+}
+
+export async function invalidateReportDetailQuery(
+  queryClient: ReportQueryClient,
+  reportId: string,
+) {
+  await queryClient.invalidateQueries({
+    queryKey: ["reports", "detail", reportId],
+  });
+}
 
 export async function invalidateReportUpdateQueries(
   queryClient: ReportQueryClient,

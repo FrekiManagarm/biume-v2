@@ -30,7 +30,6 @@ import {
   Cross2Icon,
   ExclamationTriangleIcon,
   ListBulletIcon,
-  MagicWandIcon,
   MagnifyingGlassIcon,
   MixerHorizontalIcon,
 } from "@radix-ui/react-icons";
@@ -48,7 +47,6 @@ import {
 import { anatomicalRegionsByCategoryCat } from "../data/cat/typesCat";
 import { anatomicalRegionsByCategoryHorse } from "../data/horse/typesHorse";
 import type { AnatomicalPart } from "@/lib/schemas/anatomicalPart";
-import { VulgarisationPanel } from "@/components/ai/VulgarisationPanel";
 
 type AnatomicalZone = "articulation" | "fascias" | "organes" | "muscles";
 
@@ -150,7 +148,6 @@ export function AddAnatomicalIssueDialog({
   const [currentStep, setCurrentStep] = useState(1);
   const [hoveredSeverity, setHoveredSeverity] = useState<number | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
-  const [isVulgarisationOpen, setIsVulgarisationOpen] = useState(false);
 
   const getAnimalType = () => {
     const animalName = animalData?.name?.toLowerCase() || "";
@@ -910,21 +907,9 @@ export function AddAnatomicalIssueDialog({
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.45)]">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold text-slate-800">
-                    Notes
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsVulgarisationOpen(true)}
-                    className="h-8 gap-1.5 rounded-xl border-slate-200 bg-white text-xs text-slate-700 shadow-none transition-all hover:bg-slate-950 hover:text-white active:scale-[0.98]"
-                  >
-                    <MagicWandIcon className="h-3.5 w-3.5" />
-                    Vulgariser
-                  </Button>
-                </div>
+                <Label className="text-sm font-semibold text-slate-800">
+                  Notes
+                </Label>
                 <Textarea
                   value={newIssue.notes}
                   onChange={(e) =>
@@ -933,12 +918,6 @@ export function AddAnatomicalIssueDialog({
                   placeholder={`Détails sur ${newIssue.type === "dysfunction" ? "la dysfonction" : "la suspicion d'atteinte"}...`}
                   className="min-h-32 resize-none rounded-2xl border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-relaxed text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-slate-950/10"
                 />
-                {newIssue.notes && (
-                  <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                    Utilisez le bouton "Vulgariser" pour transformer le texte
-                    technique en langage clair pour vos clients.
-                  </p>
-                )}
               </div>
             </div>
           )}
@@ -1011,15 +990,6 @@ export function AddAnatomicalIssueDialog({
             onOpenChange={setIsHistoryPanelOpen}
           />
         )}
-
-      <VulgarisationPanel
-        isOpen={isVulgarisationOpen}
-        onOpenChange={setIsVulgarisationOpen}
-        initialText={newIssue.notes || ""}
-        onTextInsert={(text) => {
-          setNewIssue({ ...newIssue, notes: text });
-        }}
-      />
     </Credenza>
   );
 }

@@ -646,8 +646,8 @@ function RecommendationRow({
 
 export function ReportPDF(props: ReportPDFProps) {
   const model = buildReportPdfViewModel(props.report);
-  const issues = props.report.anatomicalIssues ?? [];
-  const recommendations = props.report.recommendations ?? [];
+  const issues = model.issues;
+  const recommendations = model.recommendations;
   const leftImage = getAnimalImage(model.animalKind, "left");
   const rightImage = getAnimalImage(model.animalKind, "right");
   const generatedAt = formatGeneratedAt(new Date());

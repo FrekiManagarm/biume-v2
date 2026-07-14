@@ -1,7 +1,9 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { Pet, pets } from "./pets";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
 
 export const animals = pgTable("animals", {
   id: text("id")

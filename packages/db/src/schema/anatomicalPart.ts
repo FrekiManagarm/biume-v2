@@ -1,8 +1,11 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
-import { AnatomicalIssue, anatomicalIssue } from "./advancedReport/anatomicalIssue"
-import { AnatomicalPartType, anatomicalPartType } from "./anatomicalPartType"
+import { anatomicalIssue } from "./advancedReport/anatomicalIssue"
+import type { AnatomicalIssue } from "./advancedReport/anatomicalIssue"
+import { anatomicalPartType } from "./anatomicalPartType"
+import type { AnatomicalPartType } from "./anatomicalPartType"
 
 export const dysfunctionZone = pgEnum("dysfunction_zone", ["articulation", "fascias", "organes", "muscles", "other"])
 export const animalType = pgEnum("animal_type", ["DOG", "CAT", "HORSE"])

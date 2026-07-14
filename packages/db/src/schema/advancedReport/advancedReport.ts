@@ -1,14 +1,20 @@
 import { relations } from "drizzle-orm";
-import { InferSelectModel } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { Organization, organization } from "../organization";
-import { AnatomicalIssue, anatomicalIssue } from "./anatomicalIssue";
-import {
+import { organization } from "../organization";
+import type { Organization } from "../organization";
+import { anatomicalIssue } from "./anatomicalIssue";
+import type { AnatomicalIssue } from "./anatomicalIssue";
+import { advancedReportRecommendations } from "./advancedReportRecommantations";
+import type {
   AdvancedReportRecommendations,
-  advancedReportRecommendations,
 } from "./advancedReportRecommantations";
-import { pets, Pet } from "../pets";
-import { appointments, Appointment } from "../appointments";
+import { reportOwnerContent } from "./reportOwnerContent";
+import type { ReportOwnerContent } from "./reportOwnerContent";
+import { pets } from "../pets";
+import type { Pet } from "../pets";
+import { appointments } from "../appointments";
+import type { Appointment } from "../appointments";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const reportStatus = pgEnum("reportStatus", [
@@ -47,6 +53,7 @@ export const advancedReportRelations = relations(
     }),
     anatomicalIssues: many(anatomicalIssue),
     recommendations: many(advancedReportRecommendations),
+    ownerContents: many(reportOwnerContent),
     patient: one(pets, {
       fields: [advancedReport.patientId],
       references: [pets.id],
@@ -65,6 +72,7 @@ export type AdvancedReport = InferSelectModel<typeof advancedReport> & {
   organization: Organization;
   anatomicalIssues: AnatomicalIssue[];
   recommendations: AdvancedReportRecommendations[];
+  ownerContents: ReportOwnerContent[];
   patient: Pet;
   appointment?: Appointment | null;
 };

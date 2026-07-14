@@ -8,13 +8,17 @@ import {
 } from "lucide-react";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/style";
 import type { Observation } from "../data/dog/typesDog";
+import type { ReportSectionId } from "../owner-content";
 import type { AnatomicalIssue } from "../types";
 
 type OwnerPreviewSection =
@@ -37,6 +41,26 @@ interface ReportPreviewProps extends OwnerReportPreviewProps {
   onClose: () => void;
   images: string[];
 }
+
+export type OwnerPreviewEntry = {
+  key: string;
+  label: string;
+  text: string;
+  status: "missing" | "stale" | "ready";
+  usedFallback: boolean;
+  section: ReportSectionId;
+};
+
+export type OwnerReportPreviewSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  patientName?: string;
+  entries: OwnerPreviewEntry[];
+  onStartPreparation?: () => void;
+  isPreparationDisabled?: boolean;
+  onJumpToSection?: (section: ReportSectionId) => void;
+};
 
 const severityLabels = [
   "Non renseignée",
@@ -322,6 +346,99 @@ export function OwnerReportPreview({
   );
 }
 
+function OwnerReportPreviewDocument({
+  entries,
+  onJumpToSection,
+}: {
+  entries: OwnerPreviewEntry[];
+  onJumpToSection?: (section: ReportSectionId) => void;
+}) {
+  return (
+    <div className="space-y-5 px-5 py-6">
+      {entries.map((entry) => (
+        <section key={entry.key} className="border-t border-border pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">
+              {entry.label}
+            </h3>
+            {entry.status === "stale" ? (
+              <Badge
+                variant="outline"
+                className="border-amber-200 text-amber-800"
+              >
+                À actualiser
+              </Badge>
+            ) : entry.usedFallback ? (
+              <Badge
+                variant="outline"
+                className="border-amber-200 text-amber-800"
+              >
+                Texte professionnel utilisé
+              </Badge>
+            ) : null}
+          </div>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {entry.text}
+          </p>
+          {onJumpToSection ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 px-0"
+              aria-label={`Ouvrir ${entry.label}`}
+              onClick={() => onJumpToSection(entry.section)}
+            >
+              Ouvrir la section
+            </Button>
+          ) : null}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function OwnerReportPreviewSheet({
+  open,
+  onOpenChange,
+  title,
+  patientName,
+  entries,
+  onStartPreparation,
+  isPreparationDisabled = false,
+  onJumpToSection,
+}: OwnerReportPreviewSheetProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-screen max-w-none overflow-y-auto p-0 motion-reduce:transition-none lg:w-[32rem] lg:max-w-[32rem] data-[side=right]:w-screen data-[side=right]:lg:w-[32rem] data-[side=right]:lg:max-w-[32rem]"
+      >
+        <SheetHeader className="border-b border-border px-5 py-4 text-left">
+          <SheetTitle>Aperçu propriétaire</SheetTitle>
+          <SheetDescription>
+            {patientName ? `${title} · ${patientName}` : title}
+          </SheetDescription>
+        </SheetHeader>
+        <OwnerReportPreviewDocument
+          entries={entries}
+          onJumpToSection={onJumpToSection}
+        />
+        {onStartPreparation ? (
+          <div className="sticky bottom-0 border-t border-border bg-background p-4">
+            <Button
+              className="w-full"
+              onClick={onStartPreparation}
+              disabled={isPreparationDisabled}
+            >
+              Préparer les contenus
+            </Button>
+          </div>
+        ) : null}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function ReportPreview({
   isOpen,
   onClose,
@@ -335,14 +452,25 @@ export function ReportPreview({
   activeSection,
 }: ReportPreviewProps) {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl sm:max-w-2xl sm:p-5">
-        <DialogHeader className="px-1 pb-1 text-left">
-          <DialogTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-950">
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent
+        side="right"
+        className="w-screen max-w-none overflow-y-auto border-0 bg-slate-100 p-3 shadow-2xl motion-reduce:transition-none lg:w-[32rem] lg:max-w-[32rem] lg:p-5 data-[side=right]:w-screen data-[side=right]:lg:w-[32rem] data-[side=right]:lg:max-w-[32rem]"
+      >
+        <SheetHeader className="px-1 pb-1 text-left">
+          <SheetTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-950">
             <FileText className="size-4 text-emerald-800" />
             Aperçu propriétaire
-          </DialogTitle>
-        </DialogHeader>
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            {patientName ? `${title} · ${patientName}` : title}
+          </SheetDescription>
+        </SheetHeader>
 
         <OwnerReportPreview
           title={title}
@@ -355,7 +483,7 @@ export function ReportPreview({
           activeSection={activeSection}
           className="rounded-[1.5rem] shadow-none"
         />
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

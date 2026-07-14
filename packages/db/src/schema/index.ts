@@ -13,6 +13,7 @@ export * from "./verification";
 export * from "./advancedReport/anatomicalIssue";
 export * from "./advancedReport/advancedReport";
 export * from "./advancedReport/advancedReportRecommantations";
+export * from "./advancedReport/reportOwnerContent";
 export * from "./anatomicalPart";
 export * from "./anatomicalPartType";
 export * from "./animals";

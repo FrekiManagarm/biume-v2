@@ -12,6 +12,7 @@
   "scripts": {
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
+    "db:baseline-existing": "bun scripts/baseline-existing.ts",
     "dev": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
     "test": "vitest run",

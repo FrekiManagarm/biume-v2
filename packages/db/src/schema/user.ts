@@ -1,13 +1,17 @@
-import { Account } from "better-auth";
-import { InferSelectModel, relations } from "drizzle-orm";
+import type { Account } from "better-auth";
+import { relations } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { account } from "./account";
-import { ClientNote, clientNote } from "./clientNote";
+import { clientNote } from "./clientNote";
+import type { ClientNote } from "./clientNote";
 import { invitation } from "./invitation";
-import { Member, member } from "./member";
+import { member } from "./member";
+import type { Member } from "./member";
 import { notification } from "./notifications";
-import { Pet, pets } from "./pets";
+import { pets } from "./pets";
+import type { Pet } from "./pets";
 import { session } from "./session";
 
 export const user = pgTable("users", {
@@ -27,7 +31,7 @@ export const user = pgTable("users", {
   smsNotifications: boolean("sms_notifications").notNull().default(false),
 });
 
-export const userRelations = relations(user, ({ one, many }) => ({
+export const userRelations = relations(user, ({ many }) => ({
   pets: many(pets),
   sessions: many(session),
   accounts: many(account),

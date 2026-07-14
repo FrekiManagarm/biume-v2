@@ -1,5 +1,17 @@
+import { useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+
+type VulgarisationRequestOptions = {
+  reportId: string;
+  sourceKind:
+    | "consultationReason"
+    | "observation"
+    | "anatomicalIssue"
+    | "recommendation"
+    | "notes";
+  sourceId: string;
+};
 
 export function useVulgarisationAgent() {
   const {
@@ -16,20 +28,21 @@ export function useVulgarisationAgent() {
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  const sendMessage = async (text: string, reportId?: string) => {
-    await send(
-      {
-        text,
-      },
-      {
-        body: {
-          reportId,
+  const sendMessage = useCallback(
+    async (text: string, options: VulgarisationRequestOptions) => {
+      await send(
+        {
+          text,
         },
-      },
-    );
-  };
+        {
+          body: options,
+        },
+      );
+    },
+    [send],
+  );
 
-  const reset = () => setMessages([]);
+  const reset = useCallback(() => setMessages([]), [setMessages]);
 
   return {
     messages,

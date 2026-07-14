@@ -1,9 +1,12 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 
-import { Organization, organization } from "./organization"
-import { User, user } from "./user"
+import { organization } from "./organization"
+import type { Organization } from "./organization"
+import { user } from "./user"
+import type { User } from "./user"
 
 export const reminderStatus = pgEnum("reminderStatus", ["pending", "completed", "cancelled"])
 
@@ -24,7 +27,7 @@ export const reminder = pgTable("reminder", {
   userId: text("userId").references(() => user.id, {
     onDelete: "cascade",
   }),
-  createdAt: timestamp("createdAt", { mode: "date" }).default(new Date()),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }),
 })
 

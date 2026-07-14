@@ -1,4 +1,5 @@
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { organization } from "./organization"
 
@@ -9,7 +10,7 @@ export const signatures = pgTable("signatures", {
   organizationId: text("organizationId").references(() => organization.id, {
     onDelete: "cascade",
   }),
-  createdAt: timestamp("createdAt", { mode: "date" }).default(new Date()).notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }),
 })
 

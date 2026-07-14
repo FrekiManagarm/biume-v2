@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { updateReport } from "@/lib/api/actions/reports.action";
+import { upsertReportOwnerContent } from "@/lib/api/actions/report-owner-content.action";
 import type { InferSelectModel } from "drizzle-orm";
 import type { advancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import { AnimalCredenza } from "@/components/animal-folder";
@@ -12,17 +13,40 @@ import { RecommendationsTab } from "./components/tabs/RecommendationsTab";
 import { AnatomicalEvaluationTab } from "./components/tabs/AnatomicalEvaluationTab";
 import { AddObservationDialog } from "./components/AddObservationsDialog";
 import { AddAnatomicalIssueDialog } from "./components/AddAnatomicalIssueDialog";
-import { OwnerReportPreview, ReportPreview } from "./components/ReportPreview";
 import { ExitConfirmationDialog } from "./components/ExitConfirmationDialog";
 import { ReportSidebarNavigation } from "./components/ReportSidebarNavigation";
-import { PatientCard } from "./components/PatientCard";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
+import { ReportWorkspaceHeader } from "./components/ReportWorkspaceHeader";
+import { OwnerPreparationWarningDialog } from "./components/OwnerPreparationWarningDialog";
+import {
+  ReportPanelController,
+  type ReportPanelState,
+} from "./components/ReportPanelController";
 import {
   buildReportUpdatePayload,
+  ensureSuccessfulReportUpdate,
+  deriveProfessionalSectionStatus,
+  getAnatomicalProfessionalItemText,
+  getReportDraftRevision,
+  getReportDesktopGridClassName,
+  invalidateReportDetailQuery,
   invalidateReportUpdateQueries,
+  openOwnerPreparation,
+  replaceOwnerContentRecord,
+  runExclusiveReportSave,
   type ReportUpdateStatus,
 } from "./reports-editor.helpers";
+import {
+  buildOwnerPreparationQueue,
+  buildOwnerSourceItems,
+  type OwnerContentRecord,
+  type OwnerContentStatus,
+  type OwnerSourceItem,
+  type OwnerSourceKind,
+  type ReportSectionId,
+} from "./owner-content";
+import { buildOwnerReportViewModel } from "./owner-report-view-model";
 
 import type {
   Observation,
@@ -31,23 +55,12 @@ import type {
   InterventionZone,
 } from "./types";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ListTodoIcon,
-  ActivityIcon,
-  CheckIcon,
-  FileTextIcon,
-  ClipboardListIcon,
-  HeartHandshakeIcon,
   ChevronLeftIcon,
-  EyeIcon,
-  SaveIcon,
   PlusIcon,
   KeyboardIcon,
   AlertTriangle,
-  PanelRightCloseIcon,
-  PanelRightOpenIcon,
 } from "lucide-react";
 import { cn } from "@/lib/style";
 import { toast } from "sonner";
@@ -66,11 +79,19 @@ import type {
   AnatomicalIssue as AnatomicalIssueSchema,
   Appointment,
 } from "@/lib/schemas";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ReportData = InferSelectModel<typeof advancedReport> & {
   patient?: Pet;
   anatomicalIssues?: AnatomicalIssueSchema[];
   recommendations?: AdvancedReportRecommendations[];
+  ownerContents?: OwnerContentRecord[];
   appointment?: Appointment | null;
 };
 
@@ -82,7 +103,6 @@ interface AdvancedReportEditorProps {
 
 export function AdvancedReportEditor({
   reportId,
-  orgId,
   initialData,
 }: AdvancedReportEditorProps) {
   const navigate = useNavigate();
@@ -152,9 +172,7 @@ export function AdvancedReportEditor({
     : undefined;
 
   // Initialisation directe des états avec les données
-  const [selectedPetId, setSelectedPetId] = useState<string>(
-    initialData.patientId || "",
-  );
+  const [selectedPetId] = useState<string>(initialData.patientId || "");
   const [title, setTitle] = useState(
     initialData.title ||
       "Compte rendu détaillé du " + new Date().toLocaleDateString(),
@@ -162,7 +180,12 @@ export function AdvancedReportEditor({
   const [observations, setObservations] =
     useState<Observation[]>(initialObservations);
   const [notes, setNotes] = useState(initialData.notes || "");
-  const [showPreview, setShowPreview] = useState(false);
+  const [panelState, setPanelState] = useState<ReportPanelState>({
+    type: "closed",
+  });
+  const [ownerContents, setOwnerContents] = useState<OwnerContentRecord[]>(
+    initialData.ownerContents ?? [],
+  );
   const [activeTab, setActiveTab] = useState<
     "clinical" | "notes" | "recommendations" | "anatomical"
   >("clinical");
@@ -170,7 +193,7 @@ export function AdvancedReportEditor({
   const [editingObservationId, setEditingObservationId] = useState<
     string | null
   >(null);
-  const [consultationReason, setConsultationReason] = useState<string>(
+  const [consultationReason] = useState<string>(
     initialData.consultationReason || "",
   );
   const [recommendations, setRecommendations] = useState<
@@ -195,7 +218,58 @@ export function AdvancedReportEditor({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isLivePreviewOpen, setIsLivePreviewOpen] = useState(true);
+  const [isOwnerWarningOpen, setIsOwnerWarningOpen] = useState(false);
+
+  const ownerSources = useMemo(
+    () =>
+      buildOwnerSourceItems({
+        reportId,
+        consultationReason,
+        observations,
+        anatomicalIssues,
+        recommendations,
+        notes,
+      }),
+    [
+      reportId,
+      consultationReason,
+      observations,
+      anatomicalIssues,
+      recommendations,
+      notes,
+    ],
+  );
+  const ownerQueue = useMemo(
+    () =>
+      buildOwnerPreparationQueue(ownerSources, ownerContents) as Array<
+        OwnerSourceItem & { status: "missing" | "stale" }
+      >,
+    [ownerSources, ownerContents],
+  );
+  const ownerDocument = useMemo(
+    () => buildOwnerReportViewModel(ownerSources, ownerContents),
+    [ownerSources, ownerContents],
+  );
+  const ownerPreviewEntries = useMemo(() => {
+    const labels: Record<OwnerSourceKind, string> = {
+      consultationReason: "Motif de consultation",
+      observation: "Observation",
+      anatomicalIssue: "Point anatomique",
+      recommendation: "Recommandation",
+      notes: "Note additionnelle",
+    };
+    return ownerSources.map((source) => {
+      const resolved = ownerDocument.byKey[source.key]!;
+      return {
+        key: source.key,
+        label: labels[source.sourceKind],
+        text: resolved.text,
+        status: resolved.status,
+        usedFallback: resolved.usedFallback,
+        section: source.section,
+      };
+    });
+  }, [ownerDocument, ownerSources]);
 
   // État initial sauvegardé pour la détection des changements
   const [lastSavedState, setLastSavedState] = useState({
@@ -208,6 +282,18 @@ export function AdvancedReportEditor({
     recommendations: initialRecommendations,
     anatomicalIssues: initialAnatomicalIssues,
   });
+  const currentDraftState = {
+    title,
+    observations,
+    notes,
+    consultationReason,
+    recommendations,
+    anatomicalIssues,
+  };
+  const currentDraftRevision = getReportDraftRevision(currentDraftState);
+  const currentDraftRevisionRef = useRef(currentDraftRevision);
+  currentDraftRevisionRef.current = currentDraftRevision;
+  const reportSaveGuard = useRef<Promise<boolean> | null>(null);
 
   // État temporaire pour le nouveau problème anatomique
   const [newAnatomicalIssue, setNewAnatomicalIssue] = useState<
@@ -469,30 +555,6 @@ export function AdvancedReportEditor({
   // Mutation pour mettre à jour le rapport
   const updateReportMutation = useMutation({
     mutationFn: updateReport,
-    onSuccess: async (data) => {
-      if (data?.success) {
-        toast.success("Rapport mis à jour avec succès");
-        await invalidateReportUpdateQueries(queryClient, reportId);
-        // Mettre à jour l'état de sauvegarde après succès
-        setLastSavedState({
-          title,
-          observations,
-          notes,
-          consultationReason,
-          recommendations,
-          anatomicalIssues,
-        });
-        setHasUnsavedChanges(false);
-        if (data.status === "finalized") {
-          navigate({
-            to: "/dashboard/reports/$id",
-            params: { id: reportId },
-          });
-        }
-      } else {
-        toast.error(data?.error || "Erreur lors de la mise à jour du rapport");
-      }
-    },
     onError: (error) => {
       toast.error(
         error instanceof Error
@@ -502,7 +564,29 @@ export function AdvancedReportEditor({
     },
   });
 
-  const handleUpdateReport = async (status: ReportUpdateStatus = "draft") => {
+  const ownerContentMutation = useMutation({
+    mutationFn: upsertReportOwnerContent,
+    onSuccess: async (result) => {
+      if (!result.success || !result.data) return;
+      setOwnerContents((current) =>
+        replaceOwnerContentRecord(current, result.data),
+      );
+      await invalidateReportDetailQuery(queryClient, reportId);
+    },
+  });
+
+  const handleUpdateReport = async (
+    status: ReportUpdateStatus = "draft",
+  ): Promise<boolean> => {
+    const submittedState = {
+      title,
+      observations,
+      notes,
+      consultationReason,
+      recommendations,
+      anatomicalIssues,
+    };
+    const submittedRevision = getReportDraftRevision(submittedState);
     const reportDataToSend = buildReportUpdatePayload({
       reportId,
       title,
@@ -515,17 +599,65 @@ export function AdvancedReportEditor({
       status,
     });
 
-    try {
-      await updateReportMutation.mutateAsync(reportDataToSend);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
-    }
+    return runExclusiveReportSave(reportSaveGuard, async () => {
+      try {
+        const result = await updateReportMutation.mutateAsync(reportDataToSend);
+        if (!result?.success) {
+          toast.error(
+            result?.error || "Erreur lors de la mise à jour du rapport",
+          );
+          return false;
+        }
+
+        toast.success("Rapport mis à jour avec succès");
+        await invalidateReportUpdateQueries(queryClient, reportId);
+        setLastSavedState(submittedState);
+        setHasUnsavedChanges(
+          currentDraftRevisionRef.current !== submittedRevision,
+        );
+        if (result.status === "finalized") {
+          navigate({
+            to: "/dashboard/reports/$id",
+            params: { id: reportId },
+          });
+        }
+        return true;
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour:", error);
+        return false;
+      }
+    });
+  };
+
+  const handleOpenOwnerPreparation = async (sourceKey?: string) => {
+    if (reportSaveGuard.current) return false;
+    return openOwnerPreparation({
+      hasUnsavedChanges,
+      saveDraft: () => handleUpdateReport("draft"),
+      openPanel: () => setPanelState({ type: "owner-preparation", sourceKey }),
+      getRevision: () => currentDraftRevisionRef.current,
+    });
   };
 
   // Fonction pour ouvrir le dialog de rappel
   const handleOpenReminderDialog = () => {
     setIsReminderDialogOpen(true);
   };
+
+  const missingOwnerCount = ownerQueue.filter(
+    (item) => item.status === "missing",
+  ).length;
+  const staleOwnerCount = ownerQueue.filter(
+    (item) => item.status === "stale",
+  ).length;
+
+  function handleFinalizeRequest() {
+    if (missingOwnerCount === 0 && staleOwnerCount === 0) {
+      handleOpenReminderDialog();
+      return;
+    }
+    setIsOwnerWarningOpen(true);
+  }
 
   const handleTabChange = (
     tab: "clinical" | "notes" | "recommendations" | "anatomical",
@@ -591,81 +723,60 @@ export function AdvancedReportEditor({
     history.back();
   };
 
-  const getTabProgress = (tab: string) => {
-    switch (tab) {
-      case "clinical":
-        return observations.length > 0;
-      case "anatomical":
-        return anatomicalIssues.length > 0;
-      case "recommendations":
-        return recommendations.length > 0;
-      case "notes":
-        return notes.trim().length > 0;
-      default:
-        return false;
-    }
-  };
-
-  const getTabCount = (tab: string) => {
-    switch (tab) {
-      case "clinical":
-        return observations.length;
-      case "anatomical":
-        return anatomicalIssues.length;
-      case "recommendations":
-        return recommendations.length;
-      case "notes":
-        return notes.trim().length > 0 ? 1 : 0;
-      default:
-        return 0;
-    }
-  };
-
-  // Configuration des catégories et de leurs onglets
-  const categories = [
+  const tabs = [
     {
-      id: "evaluation",
-      name: "Évaluation clinique",
-      icon: <ClipboardListIcon className="h-5 w-5" />,
-      tabs: [
-        {
-          id: "clinical",
-          label: "Observations",
-          icon: <ListTodoIcon className="h-4 w-4" />,
-        },
-        {
-          id: "anatomical",
-          label: "Anatomie",
-          icon: <ActivityIcon className="h-4 w-4" />,
-        },
-      ],
+      id: "clinical" as const,
+      label: "Observations",
+      count: observations.length,
+      professionalStatus: deriveProfessionalSectionStatus("clinical", {
+        consultationReason,
+        itemTexts: observations.map((item) => item.notes || item.region),
+      }),
     },
     {
-      id: "recommendations",
-      name: "Recommandations & Notes",
-      icon: <HeartHandshakeIcon className="h-5 w-5" />,
-      tabs: [
-        {
-          id: "recommendations",
-          label: "Recommandations",
-          icon: <CheckIcon className="h-4 w-4" />,
-        },
-        {
-          id: "notes",
-          label: "Notes additionnelles",
-          icon: <FileTextIcon className="h-4 w-4" />,
-        },
-      ],
+      id: "anatomical" as const,
+      label: "Anatomie",
+      count: anatomicalIssues.length,
+      professionalStatus: deriveProfessionalSectionStatus("anatomical", {
+        consultationReason: "",
+        itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
+      }),
+    },
+    {
+      id: "recommendations" as const,
+      label: "Recommandations",
+      count: recommendations.length,
+      professionalStatus: deriveProfessionalSectionStatus("recommendations", {
+        consultationReason: "",
+        itemTexts: recommendations.map((item) => item.content),
+      }),
+    },
+    {
+      id: "notes" as const,
+      label: "Notes additionnelles",
+      count: notes.trim() ? 1 : 0,
+      professionalStatus: deriveProfessionalSectionStatus("notes", {
+        consultationReason: "",
+        itemTexts: notes.trim() ? [notes] : [],
+      }),
     },
   ];
-
-  const flatTabs = categories.flatMap((category) =>
-    category.tabs.map((tab) => ({
-      ...tab,
-      categoryName: category.name,
-    })),
-  );
-  const activeTabMeta = flatTabs.find((tab) => tab.id === activeTab);
+  const ownerStatuses = Object.fromEntries(
+    tabs.map((tab) => {
+      const sectionStatuses = ownerSources
+        .filter((source) => source.section === tab.id)
+        .map((source) => ownerDocument.byKey[source.key]!.status);
+      const status: OwnerContentStatus | "not-applicable" =
+        sectionStatuses.length === 0
+          ? "not-applicable"
+          : sectionStatuses.includes("stale")
+            ? "stale"
+            : sectionStatuses.includes("missing")
+              ? "missing"
+              : "ready";
+      return [tab.id, status];
+    }),
+  ) as Record<ReportSectionId, OwnerContentStatus | "not-applicable">;
   const selectedPetSummary = selectedPet
     ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
     : "Aucun patient sélectionné";
@@ -674,42 +785,26 @@ export function AdvancedReportEditor({
     <div className="min-h-dvh w-full bg-slate-50 text-slate-950">
       {/* Desktop Layout */}
       <div className="hidden h-dvh lg:block">
-        <div
-          className={cn(
-            "grid h-full w-full gap-5 p-4 transition-all duration-200 ease-out",
-            isSidebarCollapsed
-              ? "grid-cols-[72px_minmax(0,1fr)]"
-              : "grid-cols-[20rem_minmax(0,1fr)]",
-          )}
-        >
+        <div className={getReportDesktopGridClassName(isSidebarCollapsed)}>
           {/* Navigation latérale */}
           <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden">
             <ReportSidebarNavigation
-              title={title}
-              onTitleChange={setTitle}
-              appointment={appointmentDetails}
-              categories={categories}
+              tabs={tabs}
               activeTab={activeTab}
               onChangeTab={(tab) => setActiveTab(tab)}
               onGoBack={handleGoBack}
               onShortcuts={() => setIsShortcutsModalOpen(true)}
-              getTabProgress={getTabProgress}
-              getTabCount={getTabCount}
-              hasUnsavedChanges={hasUnsavedChanges}
+              ownerStatuses={ownerStatuses}
+              pendingOwnerCount={ownerQueue.length}
+              onPrepareOwnerContent={() => {
+                void handleOpenOwnerPreparation();
+              }}
+              isPreparationDisabled={updateReportMutation.isPending}
               isCollapsed={isSidebarCollapsed}
               onToggleCollapse={() =>
                 setIsSidebarCollapsed(!isSidebarCollapsed)
               }
             />
-
-            {/* Patient sélectionné - design épuré */}
-            {selectedPet && (
-              <PatientCard
-                patient={selectedPet}
-                onPatientClick={() => setIsAnimalCredenzaOpen(true)}
-                isCollapsed={isSidebarCollapsed}
-              />
-            )}
             <TestModeSection
               isTestMode={isTestMode}
               onTestModeChange={setIsTestMode}
@@ -720,80 +815,19 @@ export function AdvancedReportEditor({
           </div>
 
           {/* Contenu principal */}
-          <main className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
-            <header className="border-b border-slate-200 bg-white px-5 py-4">
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-                <div className="min-w-0">
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 [&_svg]:size-5">
-                      {activeTabMeta?.icon || <FileTextIcon />}
-                    </div>
-                    <div className="min-w-0">
-                      <h1 className="truncate text-2xl font-semibold leading-none tracking-tight text-slate-950">
-                        {activeTabMeta?.label || "Édition"}
-                      </h1>
-                      <p className="mt-2 truncate text-sm font-medium text-slate-500">
-                        {selectedPetSummary}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
-                  {activeTab === "clinical" && (
-                    <Button
-                      onClick={handleOpenAddObservation}
-                      className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]"
-                    >
-                      <PlusIcon className="size-4" />
-                      Nouvelle observation
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowPreview(true)}
-                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98] xl:hidden"
-                  >
-                    <EyeIcon className="size-4" />
-                    Aperçu
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsLivePreviewOpen((isOpen) => !isOpen)}
-                    className={cn(
-                      "hidden h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98] xl:inline-flex",
-                      isLivePreviewOpen &&
-                        "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100",
-                    )}
-                    aria-pressed={isLivePreviewOpen}
-                  >
-                    {isLivePreviewOpen ? (
-                      <PanelRightCloseIcon className="size-4" />
-                    ) : (
-                      <PanelRightOpenIcon className="size-4" />
-                    )}
-                    {isLivePreviewOpen ? "Masquer l’aperçu" : "Aperçu"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleUpdateReport("draft")}
-                    disabled={updateReportMutation.isPending}
-                    className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
-                  >
-                    <SaveIcon className="size-4" />
-                    Sauvegarder
-                  </Button>
-                  <Button
-                    onClick={handleOpenReminderDialog}
-                    disabled={updateReportMutation.isPending}
-                    className="h-10 rounded-xl bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
-                  >
-                    <CheckIcon className="size-4" />
-                    Finaliser
-                  </Button>
-                </div>
-              </div>
-            </header>
+          <main className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
+            <ReportWorkspaceHeader
+              title={title}
+              onTitleChange={setTitle}
+              patientSummary={selectedPetSummary}
+              appointment={appointmentDetails}
+              onPreview={() => setPanelState({ type: "owner-preview" })}
+              onSave={() => {
+                void handleUpdateReport("draft");
+              }}
+              onFinalize={handleFinalizeRequest}
+              isSaving={updateReportMutation.isPending}
+            />
 
             <section className="min-h-0 overflow-hidden bg-slate-50/60">
               {isCat ? (
@@ -818,13 +852,8 @@ export function AdvancedReportEditor({
                   </Card>
                 </div>
               ) : (
-                <div
-                  className={cn(
-                    "grid h-full min-h-0 grid-cols-1",
-                    isLivePreviewOpen && "xl:grid-cols-[minmax(0,1fr)_21.5rem]",
-                  )}
-                >
-                  <div className="min-h-0 overflow-hidden">
+                <div className="h-full min-h-0">
+                  <div className="h-full min-h-0 overflow-hidden">
                     {activeTab === "clinical" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
                         <ObservationsTab
@@ -887,25 +916,6 @@ export function AdvancedReportEditor({
                       </div>
                     )}
                   </div>
-
-                  {isLivePreviewOpen ? (
-                    <aside
-                      aria-label="Aperçu propriétaire en direct"
-                      className="hidden min-h-0 overflow-y-auto border-l border-slate-200 bg-slate-100/70 p-4 xl:block"
-                    >
-                      <OwnerReportPreview
-                        title={title}
-                        consultationReason={consultationReason}
-                        patientName={selectedPet?.name}
-                        observations={observations}
-                        notes={notes}
-                        recommendations={recommendations}
-                        anatomicalIssues={anatomicalIssues}
-                        activeSection={activeTab}
-                        className="rounded-[1.5rem]"
-                      />
-                    </aside>
-                  ) : null}
                 </div>
               )}
             </section>
@@ -916,45 +926,49 @@ export function AdvancedReportEditor({
       {/* Mobile/Tablet Layout */}
       <div className="min-h-dvh bg-slate-50 lg:hidden">
         <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <div className="grid gap-4 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleGoBack}
-                  className="mt-0.5 shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
-                >
-                  <ChevronLeftIcon className="h-5 w-5" />
-                </Button>
-                <div className="min-w-0">
-                  <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
-                    {activeTabMeta?.label || "Modifier le rapport"}
-                  </h1>
-                  <p className="mt-1 truncate text-xs font-medium text-slate-500">
-                    {selectedPetSummary}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="default"
-                size="icon"
-                onClick={handleOpenReminderDialog}
-                disabled={updateReportMutation.isPending}
-                className="shrink-0 rounded-xl bg-slate-950 text-white hover:bg-slate-800 active:scale-[0.98]"
-                aria-label="Finaliser le rapport"
-              >
-                <CheckIcon className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div
-              className={cn(
-                "grid gap-2",
-                activeTab === "clinical" ? "grid-cols-4" : "grid-cols-3",
-              )}
+          <ReportWorkspaceHeader
+            title={title}
+            onTitleChange={setTitle}
+            patientSummary={selectedPetSummary}
+            appointment={appointmentDetails}
+            onPreview={() => setPanelState({ type: "owner-preview" })}
+            onSave={() => {
+              void handleUpdateReport("draft");
+            }}
+            onFinalize={handleFinalizeRequest}
+            isSaving={updateReportMutation.isPending}
+          />
+          <div className="grid gap-3 p-4 pt-3">
+            <Select
+              value={activeTab}
+              onValueChange={(value) =>
+                handleTabChange(value as ReportSectionId)
+              }
             >
+              <SelectTrigger
+                className="h-10 w-full"
+                aria-label="Section du rapport"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {tabs.map((tab) => (
+                  <SelectItem key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGoBack}
+                aria-label="Retour"
+              >
+                <ChevronLeftIcon className="size-4" />
+              </Button>
               {activeTab === "clinical" && (
                 <Button
                   size="sm"
@@ -963,17 +977,9 @@ export function AdvancedReportEditor({
                   aria-label="Nouvelle observation"
                 >
                   <PlusIcon className="h-4 w-4" />
+                  Nouvelle observation
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(true)}
-                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
-                aria-label="Aperçu"
-              >
-                <EyeIcon className="h-4 w-4" />
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -982,23 +988,13 @@ export function AdvancedReportEditor({
                 aria-label="Raccourcis"
               >
                 <KeyboardIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpdateReport("draft")}
-                disabled={updateReportMutation.isPending}
-                className="h-9 rounded-xl border-slate-200 bg-white text-slate-700 active:scale-[0.98]"
-                aria-label="Sauvegarder"
-              >
-                <SaveIcon className="h-4 w-4" />
+                Raccourcis
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Content mobile avec padding bottom pour navigation */}
-        <div className="pb-20">
+        <div>
           <div
             className={cn(
               "px-4 py-6",
@@ -1063,131 +1059,6 @@ export function AdvancedReportEditor({
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white lg:hidden">
-        <div className="grid h-16 grid-cols-4">
-          <button
-            onClick={() => handleTabChange("clinical")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
-              activeTab === "clinical"
-                ? "bg-slate-950 text-white"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
-            )}
-          >
-            <div className="relative">
-              <ListTodoIcon
-                className={cn(
-                  "h-5 w-5 transition-colors duration-200",
-                  getTabProgress("clinical") &&
-                    activeTab !== "clinical" &&
-                    "text-emerald-700",
-                )}
-              />
-              {getTabCount("clinical") > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none"
-                >
-                  {getTabCount("clinical")}
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">Obs.</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange("anatomical")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
-              activeTab === "anatomical"
-                ? "bg-slate-950 text-white"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
-            )}
-          >
-            <div className="relative">
-              <ActivityIcon
-                className={cn(
-                  "h-5 w-5 transition-colors duration-200",
-                  getTabProgress("anatomical") &&
-                    activeTab !== "anatomical" &&
-                    "text-emerald-700",
-                )}
-              />
-              {getTabCount("anatomical") > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none"
-                >
-                  {getTabCount("anatomical")}
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">Anat.</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange("recommendations")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
-              activeTab === "recommendations"
-                ? "bg-slate-950 text-white"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
-            )}
-          >
-            <div className="relative">
-              <CheckIcon
-                className={cn(
-                  "h-5 w-5 transition-colors duration-200",
-                  getTabProgress("recommendations") &&
-                    activeTab !== "recommendations" &&
-                    "text-emerald-700",
-                )}
-              />
-              {getTabCount("recommendations") > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none"
-                >
-                  {getTabCount("recommendations")}
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">Conseils</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange("notes")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200 active:scale-[0.98]",
-              activeTab === "notes"
-                ? "bg-slate-950 text-white"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-950",
-            )}
-          >
-            <div className="relative">
-              <FileTextIcon
-                className={cn(
-                  "h-5 w-5 transition-colors duration-200",
-                  getTabProgress("notes") &&
-                    activeTab !== "notes" &&
-                    "text-emerald-700",
-                )}
-              />
-              {getTabProgress("notes") && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none"
-                >
-                  <CheckIcon className="h-3 w-3" />
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">Notes</span>
-          </button>
-        </div>
-      </div>
-
       <ExitConfirmationDialog
         showExitConfirmDialog={showExitConfirmDialog}
         setShowExitConfirmDialog={setShowExitConfirmDialog}
@@ -1221,18 +1092,50 @@ export function AdvancedReportEditor({
         petId={selectedPetId}
       />
 
-      <ReportPreview
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        title={title}
-        consultationReason={consultationReason}
-        patientName={selectedPet?.name}
-        observations={observations}
-        notes={notes}
-        recommendations={recommendations}
-        anatomicalIssues={anatomicalIssues}
-        activeSection={activeTab}
-        images={[]}
+      <ReportPanelController
+        state={panelState}
+        onClose={() => setPanelState({ type: "closed" })}
+        preview={{
+          title,
+          patientName: selectedPet?.name,
+          entries: ownerPreviewEntries,
+          onStartPreparation: () => {
+            void handleOpenOwnerPreparation();
+          },
+          isPreparationDisabled: updateReportMutation.isPending,
+          onJumpToSection: (section) => {
+            setActiveTab(section);
+            setPanelState({ type: "closed" });
+          },
+        }}
+        preparation={{
+          reportId,
+          queue: ownerQueue,
+          records: ownerContents,
+          onSave: async (input) => {
+            const result = await ownerContentMutation.mutateAsync(input);
+            if (!result.success) {
+              throw new Error("Enregistrement impossible");
+            }
+            return result;
+          },
+          onViewPreview: () => setPanelState({ type: "owner-preview" }),
+        }}
+      />
+
+      <OwnerPreparationWarningDialog
+        open={isOwnerWarningOpen}
+        missingCount={missingOwnerCount}
+        staleCount={staleOwnerCount}
+        onOpenChange={setIsOwnerWarningOpen}
+        onPrepare={() => {
+          setIsOwnerWarningOpen(false);
+          void handleOpenOwnerPreparation();
+        }}
+        onFinalize={() => {
+          setIsOwnerWarningOpen(false);
+          handleOpenReminderDialog();
+        }}
       />
 
       <AnimalCredenza
@@ -1423,7 +1326,11 @@ export function AdvancedReportEditor({
         isOpen={isReminderDialogOpen}
         onOpenChange={setIsReminderDialogOpen}
         reportId={reportId}
-        onFinalize={() => handleUpdateReport("finalized")}
+        onFinalize={async () => {
+          await ensureSuccessfulReportUpdate(() =>
+            handleUpdateReport("finalized"),
+          );
+        }}
         isFinalizing={updateReportMutation.isPending}
       />
     </div>
