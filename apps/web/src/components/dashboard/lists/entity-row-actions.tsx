@@ -56,7 +56,7 @@ export function EntityRowActions({
           Modifier
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+        <DropdownMenuItem variant="destructive" onClick={onDelete}>
           <Trash2 />
           Supprimer
         </DropdownMenuItem>

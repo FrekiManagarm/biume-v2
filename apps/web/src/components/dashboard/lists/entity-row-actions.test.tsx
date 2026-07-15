@@ -58,11 +58,18 @@ vi.mock("#/components/ui/dropdown-menu", () => {
     DropdownMenuItem: ({
       children,
       onClick,
+      variant,
     }: {
       children: ReactNode;
       onClick?: () => void;
+      variant?: "default" | "destructive";
     }) => (
-      <button type="button" role="menuitem" onClick={onClick}>
+      <button
+        type="button"
+        role="menuitem"
+        data-variant={variant}
+        onClick={onClick}
+      >
         {children}
       </button>
     ),
@@ -155,6 +162,10 @@ describe("EntityRowActions", () => {
         .getAllByRole("menuitem")
         .map((item) => item.textContent),
     ).toEqual(["Consulter", "Modifier", "Supprimer"]);
+
+    expect(
+      within(menu).getByRole("menuitem", { name: "Supprimer" }).dataset.variant,
+    ).toBe("destructive");
 
     fireEvent.click(within(menu).getByRole("menuitem", { name: "Modifier" }));
     expect(onEdit).toHaveBeenCalledOnce();

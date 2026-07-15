@@ -30,7 +30,7 @@ export const emptyClientFormValues = {
   country: "France",
 };
 
-export function getClientFormValues(client?: ClientFormSource) {
+export function getClientFormValues(client?: ClientFormSource | null) {
   if (!client) return { ...emptyClientFormValues };
 
   return {

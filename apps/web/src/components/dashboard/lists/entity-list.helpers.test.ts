@@ -37,6 +37,13 @@ describe("getClientFormValues", () => {
     expect(values).toEqual(emptyClientFormValues);
     expect(values).not.toBe(emptyClientFormValues);
   });
+
+  test("returns a fresh copy of the empty values for a null client", () => {
+    const values = getClientFormValues(null);
+
+    expect(values).toEqual(emptyClientFormValues);
+    expect(values).not.toBe(emptyClientFormValues);
+  });
 });
 
 describe("getPatientFormValues", () => {
