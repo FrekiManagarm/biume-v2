@@ -6,7 +6,10 @@ import {
   getClientFormValues,
   getPageAfterDeletion,
   getPageAfterEntityRemoval,
+  getPatientDeletionDescription,
+  getPatientDisplayName,
   getPatientFormValues,
+  getPatientMutationValues,
   isStaleEntityError,
 } from "./entity-list.helpers";
 
@@ -91,6 +94,81 @@ describe("getPatientFormValues", () => {
       weight: 4,
       height: 25,
       description: "",
+    });
+  });
+
+  test("uses the current first client and animal for a new patient", () => {
+    expect(
+      getPatientFormValues(null, {
+        ownerId: "client-1",
+        type: "animal-1",
+      }),
+    ).toEqual({
+      name: "",
+      ownerId: "client-1",
+      type: "animal-1",
+      breed: "",
+      gender: "Male",
+      birthDate: "",
+      weight: 0,
+      height: 0,
+      description: "",
+    });
+  });
+});
+
+describe("patient action helpers", () => {
+  test("warns explicitly that deleting a patient is permanent", () => {
+    const description = getPatientDeletionDescription();
+
+    expect(description).toContain("action est irréversible");
+    expect(description).toContain("dossier patient");
+    expect(description).toContain("données");
+    expect(description).toContain("définitivement");
+  });
+
+  test("normalizes blank patient names for labels", () => {
+    expect(getPatientDisplayName("   ")).toBe("Patient sans nom");
+    expect(getPatientDisplayName("  Nala  ")).toBe("Nala");
+  });
+
+  test("serializes the birth date at local noon and omits blank notes", () => {
+    const values = getPatientMutationValues({
+      name: "Nala",
+      ownerId: "client-1",
+      type: "animal-1",
+      breed: "Européen",
+      gender: "Female",
+      birthDate: "2024-06-09",
+      weight: 4,
+      height: 25,
+      description: "   ",
+    });
+
+    expect(values.birthDate).toEqual(new Date(2024, 5, 9, 12));
+    expect(values.description).toBeUndefined();
+  });
+
+  test("builds an edit payload with the matching patient id", () => {
+    const values = getPatientMutationValues(
+      {
+        name: "Nala",
+        ownerId: "client-1",
+        type: "animal-1",
+        breed: "Européen",
+        gender: "Female",
+        birthDate: "2024-06-09",
+        weight: 4,
+        height: 25,
+        description: "À surveiller",
+      },
+      "patient-1",
+    );
+
+    expect(values).toMatchObject({
+      id: "patient-1",
+      name: "Nala",
+      description: "À surveiller",
     });
   });
 });

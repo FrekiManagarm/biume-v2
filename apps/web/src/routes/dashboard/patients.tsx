@@ -1,11 +1,14 @@
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { Client, Pet } from "@biume/db/schema/index";
+import type { Client } from "@biume/db/schema/index";
 import {
   Activity,
   CalendarClock,
-  Eye,
   PawPrint,
   Plus,
   Search,
@@ -18,6 +21,24 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { AnimalCredenza } from "#/components/animal-folder";
+import {
+  DeleteEntityDialog,
+  EntityRowActions,
+} from "#/components/dashboard/lists/entity-row-actions";
+import {
+  canChangeEntityFormOpenState,
+  completeEntityDeletion,
+  getPatientDeletionDescription,
+  getPatientDisplayName,
+  getPatientFormValues,
+  getPatientMutationValues,
+  handleEntityDeletionError,
+  handleEntityEditError,
+  invalidateEntityLists,
+  type PatientFormSource,
+  reconcileEditedEntity,
+  refreshEntityListsAfterRemoval,
+} from "#/components/dashboard/lists/entity-list.helpers";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -48,7 +69,9 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import {
   createPatient,
+  deletePatient,
   type AnimalOption,
+  updatePatient,
 } from "#/lib/api/actions/patients.action";
 import { clientsQueryOptions } from "#/lib/api/queries/clients.query";
 import {
@@ -61,6 +84,15 @@ type PatientsSearch = {
   search?: string;
   type?: string;
   page?: number;
+};
+
+type PatientListItem = PatientFormSource & {
+  id: string;
+  image: string | null;
+  createdAt: Date | null;
+  animal?: { name: string | null } | null;
+  owner?: { name: string | null } | null;
+  advancedReport?: Array<{ createdAt: Date | null }> | null;
 };
 
 export const Route = createFileRoute("/dashboard/patients")({
@@ -100,8 +132,9 @@ export const Route = createFileRoute("/dashboard/patients")({
   component: PatientsPage,
 });
 
-function PatientsPage() {
+export function PatientsPage() {
   const search = Route.useSearch();
+  const queryClient = useQueryClient();
   const { data: patients } = useSuspenseQuery(
     patientsQueryOptions({
       search: search.search ?? "",
@@ -118,6 +151,11 @@ function PatientsPage() {
     null,
   );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState<PatientListItem | null>(
+    null,
+  );
+  const [patientToDelete, setPatientToDelete] =
+    useState<PatientListItem | null>(null);
 
   useEffect(() => {
     if (selectedPatientId) {
@@ -168,6 +206,7 @@ function PatientsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+  const currentPatientIds = currentPatients.map((patient) => patient.id);
   const reportsCount = patients.reduce(
     (sum, patient) => sum + (patient.advancedReport?.length ?? 0),
     0,
@@ -175,6 +214,52 @@ function PatientsPage() {
   const recentPatients = patients.filter((patient) =>
     isDateInLastDays(patient.createdAt, 30),
   ).length;
+  const invalidateQuery = (queryKey: readonly string[]) =>
+    queryClient.invalidateQueries({ queryKey });
+  const navigateToPage = (page: number) =>
+    navigate({
+      search: (previous) => ({ ...previous, page }),
+    });
+  const deleteMutation = useMutation({
+    mutationFn: deletePatient,
+    onSuccess: async (_deletedPatient, input) => {
+      await completeEntityDeletion({
+        currentPage,
+        close: (deletedId) =>
+          setPatientToDelete((current) =>
+            reconcileEditedEntity(current, deletedId),
+          ),
+        invalidateQuery,
+        navigateToPage,
+        removedId: input.id,
+        visibleIds: currentPatientIds,
+      });
+      toast.success("Patient supprimé.");
+    },
+    onError: async (error, input) => {
+      const wasHandled = await handleEntityDeletionError({
+        error,
+        currentPage,
+        close: (deletedId) =>
+          setPatientToDelete((current) =>
+            reconcileEditedEntity(current, deletedId),
+          ),
+        invalidateQuery,
+        navigateToPage,
+        removedId: input.id,
+        visibleIds: currentPatientIds,
+      });
+
+      if (wasHandled) {
+        toast.error(
+          "Ce patient n’existe plus. Les listes ont été actualisées.",
+        );
+        return;
+      }
+
+      toast.error("Impossible de supprimer ce patient. Réessayez.");
+    },
+  });
 
   function updateSearch(next: Partial<PatientsSearch>) {
     navigate({
@@ -257,8 +342,8 @@ function PatientsPage() {
 
           {currentPatients.length > 0 ? (
             <>
-              <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white">
-                <Table>
+              <div className="overflow-x-auto rounded-[1.25rem] border border-slate-200 bg-white">
+                <Table className="min-w-[860px]">
                   <TableHeader className="bg-slate-50">
                     <TableRow className="hover:bg-slate-50">
                       <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
@@ -292,7 +377,7 @@ function PatientsPage() {
                             <PatientAvatar patient={patient} />
                             <div className="min-w-0">
                               <p className="truncate font-semibold text-slate-950">
-                                {patient.name}
+                                {getPatientDisplayName(patient.name)}
                               </p>
                               <p className="mt-1 truncate text-sm text-slate-500">
                                 {patient.breed || "Race non renseignée"}
@@ -323,21 +408,19 @@ function PatientsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="py-4 text-sm text-slate-600">
-                          {patient.owner?.name ?? "Propriétaire inconnu"}
+                          {patient.owner?.name?.trim() ||
+                            "Propriétaire inconnu"}
                         </TableCell>
                         <TableCell className="py-4 text-sm text-slate-600">
                           {formatDate(getLatestReportDate(patient))}
                         </TableCell>
                         <TableCell className="py-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-9"
-                            onClick={() => setSelectedPatientId(patient.id)}
-                          >
-                            <Eye className="size-4" />
-                            <span className="sr-only">Voir le dossier</span>
-                          </Button>
+                          <EntityRowActions
+                            entityName={getPatientDisplayName(patient.name)}
+                            onView={() => setSelectedPatientId(patient.id)}
+                            onEdit={() => setPatientToEdit(patient)}
+                            onDelete={() => setPatientToDelete(patient)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -382,11 +465,58 @@ function PatientsPage() {
         />
       ) : null}
 
-      <CreatePatientDialog
-        animals={animals}
-        clients={clients}
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+      {isCreateOpen ? (
+        <PatientFormDialog
+          key="create-patient"
+          animals={animals}
+          clients={clients}
+          open
+          onOpenChange={setIsCreateOpen}
+        />
+      ) : null}
+      {patientToEdit ? (
+        <PatientFormDialog
+          key={patientToEdit.id}
+          animals={animals}
+          clients={clients}
+          patient={patientToEdit}
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              const editedId = patientToEdit.id;
+              setPatientToEdit((current) =>
+                reconcileEditedEntity(current, editedId),
+              );
+            }
+          }}
+          onStale={async (editedId) => {
+            setPatientToEdit((current) =>
+              reconcileEditedEntity(current, editedId),
+            );
+            await refreshEntityListsAfterRemoval({
+              currentPage,
+              invalidateQuery,
+              navigateToPage,
+              removedId: editedId,
+              visibleIds: currentPatientIds,
+            });
+          }}
+        />
+      ) : null}
+      <DeleteEntityDialog
+        open={patientToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setPatientToDelete(null);
+        }}
+        title={`Supprimer ${getPatientDisplayName(patientToDelete?.name)} ?`}
+        description={getPatientDeletionDescription()}
+        confirmLabel="Supprimer le patient"
+        isPending={deleteMutation.isPending}
+        onConfirm={() => {
+          if (patientToDelete) {
+            deleteMutation.mutate({ id: patientToDelete.id });
+          }
+        }}
       />
     </div>
   );
@@ -399,36 +529,34 @@ const patientFormSchema = z.object({
   breed: z.string().trim().min(1, "La race est requise."),
   gender: z.enum(["Male", "Female"]),
   birthDate: z.string().trim().min(1, "La date de naissance est requise."),
-  weight: z.coerce.number().int().min(0, "Le poids doit être positif."),
-  height: z.coerce.number().int().min(0, "La taille doit être positive."),
-  description: z.string().trim().optional(),
+  weight: z.number().int().min(0, "Le poids doit être positif."),
+  height: z.number().int().min(0, "La taille doit être positive."),
+  description: z.string().trim(),
 });
 
 type PatientFormValues = z.infer<typeof patientFormSchema>;
 
-function CreatePatientDialog({
+function PatientFormDialog({
   animals,
   clients,
   onOpenChange,
+  onStale,
   open,
+  patient,
 }: {
   animals: AnimalOption[];
   clients: Client[];
   onOpenChange: (open: boolean) => void;
+  onStale?: (patientId: string) => Promise<void>;
   open: boolean;
+  patient?: PatientListItem | null;
 }) {
   const queryClient = useQueryClient();
-  const defaultValues = {
-    name: "",
+  const isEditing = Boolean(patient);
+  const defaultValues = getPatientFormValues(patient, {
     ownerId: clients[0]?.id ?? "",
     type: animals[0]?.id ?? "",
-    breed: "",
-    gender: "Male",
-    birthDate: "",
-    weight: 0,
-    height: 0,
-    description: "",
-  } satisfies PatientFormValues;
+  }) satisfies PatientFormValues;
 
   const form = useForm({
     defaultValues,
@@ -438,29 +566,57 @@ function CreatePatientDialog({
     onSubmit: async ({ value }) => {
       try {
         const parsed = patientFormSchema.parse(value);
-        await createPatient({
-          ...parsed,
-          birthDate: new Date(parsed.birthDate),
-          description: parsed.description || undefined,
-        });
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["patients"] }),
-          queryClient.invalidateQueries({ queryKey: ["clients"] }),
-        ]);
-        toast.success("Patient créé.");
+        if (patient) {
+          await updatePatient(getPatientMutationValues(parsed, patient.id));
+        } else {
+          await createPatient(getPatientMutationValues(parsed));
+        }
+        await invalidateEntityLists((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        );
+        toast.success(patient ? "Patient modifié." : "Patient créé.");
         form.reset();
         onOpenChange(false);
       } catch (error) {
+        const wasStale = patient
+          ? await handleEntityEditError({
+              entityId: patient.id,
+              error,
+              onStale: async (patientId) => {
+                if (onStale) {
+                  await onStale(patientId);
+                  return;
+                }
+
+                await invalidateEntityLists((queryKey) =>
+                  queryClient.invalidateQueries({ queryKey }),
+                );
+                onOpenChange(false);
+              },
+            })
+          : false;
+
+        if (wasStale) {
+          toast.error(
+            "Ce patient n’existe plus. Les listes ont été actualisées.",
+          );
+          return;
+        }
+
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Impossible de créer ce patient.",
+          isEditing
+            ? "Impossible de modifier ce patient. Réessayez."
+            : "Impossible de créer ce patient. Réessayez.",
         );
       }
     },
   });
 
   function handleOpenChange(nextOpen: boolean) {
+    if (!canChangeEntityFormOpenState(nextOpen, form.state.isSubmitting)) {
+      return;
+    }
+
     if (!nextOpen) {
       form.reset();
     }
@@ -487,10 +643,12 @@ function CreatePatientDialog({
               </div>
               <CredenzaHeader className="min-w-0 flex-1 gap-1 text-left">
                 <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
-                  Nouveau patient
+                  {isEditing ? "Modifier le patient" : "Nouveau patient"}
                 </CredenzaTitle>
                 <CredenzaDescription className="text-sm leading-relaxed text-slate-600">
-                  Ajoutez un animal et rattachez-le à un propriétaire existant.
+                  {isEditing
+                    ? "Actualisez les informations utiles au suivi de ce patient."
+                    : "Ajoutez un animal et rattachez-le à un propriétaire existant."}
                 </CredenzaDescription>
               </CredenzaHeader>
             </div>
@@ -651,7 +809,9 @@ function CreatePatientDialog({
                   >
                     <Select
                       value={field.state.value}
-                      onValueChange={field.handleChange}
+                      onValueChange={(value) =>
+                        field.handleChange(value as PatientFormValues["gender"])
+                      }
                     >
                       <SelectTrigger
                         id={field.name}
@@ -805,7 +965,13 @@ function CreatePatientDialog({
                   disabled={!hasRequiredRelations || !canSubmit || isSubmitting}
                   className="gap-2 bg-slate-950 text-white hover:bg-slate-800"
                 >
-                  {isSubmitting ? "Création..." : "Créer le patient"}
+                  {isSubmitting
+                    ? isEditing
+                      ? "Modification..."
+                      : "Création..."
+                    : isEditing
+                      ? "Enregistrer"
+                      : "Créer le patient"}
                 </Button>
               )}
             />
@@ -927,7 +1093,7 @@ function MetricCard({
   );
 }
 
-function PatientAvatar({ patient }: { patient: Pet }) {
+function PatientAvatar({ patient }: { patient: PatientListItem }) {
   return (
     <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-900">
       {patient.image ? (
@@ -1017,7 +1183,7 @@ function EmptyState({
   );
 }
 
-function getLatestReportDate(patient: Pet) {
+function getLatestReportDate(patient: PatientListItem) {
   return patient.advancedReport
     ?.map((report) => report.createdAt)
     .filter(Boolean)
