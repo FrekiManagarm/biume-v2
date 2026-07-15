@@ -25,10 +25,16 @@ import {
   EntityRowActions,
 } from "#/components/dashboard/lists/entity-row-actions";
 import {
+  canChangeClientFormOpenState,
+  completeClientDeletion,
   getClientDeletionDescription,
+  getClientDisplayName,
   getClientFormValues,
-  getPageAfterDeletion,
-  isStaleEntityError,
+  handleClientDeletionError,
+  handleClientEditError,
+  invalidateClientLists,
+  reconcileEditedClient,
+  refreshClientListsAfterRemoval,
 } from "#/components/dashboard/lists/entity-list.helpers";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -157,30 +163,35 @@ function ClientsPage() {
     (sum, client) => sum + (client.pets?.length ?? 0),
     0,
   );
+  const invalidateQuery = (queryKey: readonly string[]) =>
+    queryClient.invalidateQueries({ queryKey });
+  const navigateToPage = (page: number) =>
+    navigate({
+      search: (previous) => ({ ...previous, page }),
+    });
   const deleteMutation = useMutation({
     mutationFn: deleteClient,
     onSuccess: async () => {
-      const nextPage = getPageAfterDeletion(currentPage, currentClients.length);
-
-      setClientToDelete(null);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["clients"] }),
-        queryClient.invalidateQueries({ queryKey: ["patients"] }),
-      ]);
-      if (nextPage !== currentPage) {
-        await navigate({
-          search: (previous) => ({ ...previous, page: nextPage }),
-        });
-      }
+      await completeClientDeletion({
+        currentPage,
+        itemCountOnPage: currentClients.length,
+        close: () => setClientToDelete(null),
+        invalidateQuery,
+        navigateToPage,
+      });
       toast.success("Client supprimé.");
     },
     onError: async (error) => {
-      if (isStaleEntityError(error)) {
-        setClientToDelete(null);
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["clients"] }),
-          queryClient.invalidateQueries({ queryKey: ["patients"] }),
-        ]);
+      const wasHandled = await handleClientDeletionError({
+        error,
+        currentPage,
+        itemCountOnPage: currentClients.length,
+        close: () => setClientToDelete(null),
+        invalidateQuery,
+        navigateToPage,
+      });
+
+      if (wasHandled) {
         toast.error("Ce client n’existe plus. Les listes ont été actualisées.");
         return;
       }
@@ -337,7 +348,7 @@ function ClientsPage() {
                         </TableCell>
                         <TableCell className="py-4 text-right">
                           <EntityRowActions
-                            entityName={client.name ?? "client sans nom"}
+                            entityName={getClientDisplayName(client.name)}
                             onView={() => setClientToView(client)}
                             onEdit={() => setClientToEdit(client)}
                             onDelete={() => setClientToDelete(client)}
@@ -387,7 +398,23 @@ function ClientsPage() {
           client={clientToEdit}
           open
           onOpenChange={(open) => {
-            if (!open) setClientToEdit(null);
+            if (!open) {
+              const editedId = clientToEdit.id;
+              setClientToEdit((current) =>
+                reconcileEditedClient(current, editedId),
+              );
+            }
+          }}
+          onStale={async (editedId) => {
+            setClientToEdit((current) =>
+              reconcileEditedClient(current, editedId),
+            );
+            await refreshClientListsAfterRemoval({
+              currentPage,
+              itemCountOnPage: currentClients.length,
+              invalidateQuery,
+              navigateToPage,
+            });
           }}
         />
       ) : null}
@@ -405,7 +432,7 @@ function ClientsPage() {
         onOpenChange={(open) => {
           if (!open && !deleteMutation.isPending) setClientToDelete(null);
         }}
-        title={`Supprimer ${clientToDelete?.name ?? "ce client"} ?`}
+        title={`Supprimer ${getClientDisplayName(clientToDelete?.name)} ?`}
         description={getClientDeletionDescription(
           clientToDelete?.pets?.length ?? 0,
         )}
@@ -442,10 +469,12 @@ type ClientFormValues = z.infer<typeof clientFormSchema>;
 function ClientFormDialog({
   client,
   onOpenChange,
+  onStale,
   open,
 }: {
   client?: Client | null;
   onOpenChange: (open: boolean) => void;
+  onStale?: (clientId: string) => Promise<void>;
   open: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -467,16 +496,34 @@ function ClientFormDialog({
         } else {
           await createClient(parsed);
         }
-        await queryClient.invalidateQueries({ queryKey: ["clients"] });
+        await invalidateClientLists((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        );
         toast.success(client ? "Client modifié." : "Client créé.");
         form.reset();
         onOpenChange(false);
       } catch (error) {
-        if (client && isStaleEntityError(error)) {
-          await queryClient.invalidateQueries({ queryKey: ["clients"] });
-          onOpenChange(false);
+        const wasStale = client
+          ? await handleClientEditError({
+              clientId: client.id,
+              error,
+              onStale: async (clientId) => {
+                if (onStale) {
+                  await onStale(clientId);
+                  return;
+                }
+
+                await invalidateClientLists((queryKey) =>
+                  queryClient.invalidateQueries({ queryKey }),
+                );
+                onOpenChange(false);
+              },
+            })
+          : false;
+
+        if (wasStale) {
           toast.error(
-            "Ce client n’existe plus. La liste des clients a été actualisée.",
+            "Ce client n’existe plus. Les listes ont été actualisées.",
           );
           return;
         }
@@ -491,6 +538,10 @@ function ClientFormDialog({
   });
 
   function handleOpenChange(nextOpen: boolean) {
+    if (!canChangeClientFormOpenState(nextOpen, form.state.isSubmitting)) {
+      return;
+    }
+
     if (!nextOpen) {
       form.reset();
     }
@@ -729,32 +780,35 @@ function ClientFormDialog({
           </div>
 
           <CredenzaFooter className="mb-0 border-t border-slate-200 bg-white px-6 pb-6 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-            >
-              Annuler
-            </Button>
             <form.Subscribe
               selector={(state) => ({
                 canSubmit: state.canSubmit,
                 isSubmitting: state.isSubmitting,
               })}
               children={({ canSubmit, isSubmitting }) => (
-                <Button
-                  type="submit"
-                  disabled={!canSubmit || isSubmitting}
-                  className="gap-2 bg-slate-950 text-white hover:bg-slate-800"
-                >
-                  {isSubmitting
-                    ? isEditing
-                      ? "Modification..."
-                      : "Création..."
-                    : isEditing
-                      ? "Enregistrer les modifications"
-                      : "Créer le client"}
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                    onClick={() => handleOpenChange(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={!canSubmit || isSubmitting}
+                    className="gap-2 bg-slate-950 text-white hover:bg-slate-800"
+                  >
+                    {isSubmitting
+                      ? isEditing
+                        ? "Modification..."
+                        : "Création..."
+                      : isEditing
+                        ? "Enregistrer les modifications"
+                        : "Créer le client"}
+                  </Button>
+                </>
               )}
             />
           </CredenzaFooter>
@@ -782,11 +836,11 @@ function ClientDetailsDialog({
       <CredenzaContent className="overflow-hidden p-0 sm:max-w-xl">
         <div className="flex max-h-[calc(100dvh-3rem)] flex-col">
           <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-5">
-            <div className="flex items-start gap-4 pr-8">
-              <InitialsBadge name={client.name ?? "Client"} />
+            <div className="flex min-w-0 items-start gap-4 pr-8">
+              <InitialsBadge name={getClientDisplayName(client.name)} />
               <CredenzaHeader className="min-w-0 flex-1 gap-1 text-left">
-                <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
-                  {client.name || "Client sans nom"}
+                <CredenzaTitle className="min-w-0 break-words text-xl font-semibold tracking-tight text-slate-950">
+                  {getClientDisplayName(client.name)}
                 </CredenzaTitle>
                 <CredenzaDescription className="text-sm leading-relaxed text-slate-600">
                   Coordonnées du propriétaire et patients rattachés à cette
@@ -798,27 +852,27 @@ function ClientDetailsDialog({
 
           <div className="grid gap-6 overflow-y-auto px-6 py-5">
             <dl className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-1">
+              <div className="min-w-0 grid gap-1">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Email
                 </dt>
-                <dd className="break-words text-sm text-slate-800">
+                <dd className="min-w-0 break-words text-sm text-slate-800">
                   {client.email || "Email non renseigné"}
                 </dd>
               </div>
-              <div className="grid gap-1">
+              <div className="min-w-0 grid gap-1">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Téléphone
                 </dt>
-                <dd className="text-sm text-slate-800">
+                <dd className="min-w-0 break-words text-sm text-slate-800">
                   {client.phone || "Téléphone non renseigné"}
                 </dd>
               </div>
-              <div className="grid gap-1 sm:col-span-2">
+              <div className="min-w-0 grid gap-1 sm:col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Adresse
                 </dt>
-                <dd className="text-sm leading-6 text-slate-800">
+                <dd className="min-w-0 break-words text-sm leading-6 text-slate-800">
                   {address || "Adresse non renseignée"}
                 </dd>
               </div>
@@ -836,10 +890,10 @@ function ClientDetailsDialog({
                   {client.pets.map((pet) => (
                     <li
                       key={pet.id}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800"
+                      className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800"
                     >
                       <PawPrint className="size-4 shrink-0 text-emerald-700" />
-                      {pet.name}
+                      <span className="min-w-0 break-words">{pet.name}</span>
                     </li>
                   ))}
                 </ul>

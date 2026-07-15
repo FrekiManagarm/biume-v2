@@ -81,6 +81,97 @@ export function getPageAfterDeletion(
   return itemCountOnPage === 1 ? Math.max(1, currentPage - 1) : currentPage;
 }
 
+type ClientListRefreshOptions = {
+  currentPage: number;
+  itemCountOnPage: number;
+  invalidateQuery: (queryKey: readonly string[]) => Promise<unknown>;
+  navigateToPage: (page: number) => Promise<unknown>;
+};
+
+type ClientDeletionOptions = ClientListRefreshOptions & {
+  close: () => void;
+};
+
+export function getClientDisplayName(name?: string | null) {
+  return name?.trim() || "Client sans nom";
+}
+
+export function canChangeClientFormOpenState(
+  nextOpen: boolean,
+  isSubmitting: boolean,
+) {
+  return nextOpen || !isSubmitting;
+}
+
+export function reconcileEditedClient<T extends { id: string }>(
+  currentClient: T | null,
+  editedClientId: string,
+) {
+  return currentClient?.id === editedClientId ? null : currentClient;
+}
+
+export async function invalidateClientLists(
+  invalidateQuery: (queryKey: readonly string[]) => Promise<unknown>,
+) {
+  await Promise.all([
+    invalidateQuery(["clients"]),
+    invalidateQuery(["patients"]),
+  ]);
+}
+
+export async function refreshClientListsAfterRemoval({
+  currentPage,
+  itemCountOnPage,
+  invalidateQuery,
+  navigateToPage,
+}: ClientListRefreshOptions) {
+  const nextPage = getPageAfterDeletion(currentPage, itemCountOnPage);
+
+  await invalidateClientLists(invalidateQuery);
+  if (nextPage !== currentPage) {
+    await navigateToPage(nextPage);
+  }
+
+  return nextPage;
+}
+
+export async function completeClientDeletion({
+  close,
+  ...refreshOptions
+}: ClientDeletionOptions) {
+  close();
+  return refreshClientListsAfterRemoval(refreshOptions);
+}
+
+export async function handleClientDeletionError({
+  error,
+  ...deletionOptions
+}: ClientDeletionOptions & { error: unknown }) {
+  if (!isStaleEntityError(error)) {
+    return false;
+  }
+
+  await completeClientDeletion(deletionOptions);
+  return true;
+}
+
+export async function handleClientEditError({
+  clientId,
+  error,
+  onStale,
+}: {
+  clientId: string;
+  error: unknown;
+  onStale: (clientId: string) => Promise<void>;
+}) {
+  if (!isStaleEntityError(error)) {
+    return false;
+  }
+
+  await onStale(clientId);
+  return true;
+}
+
 export function isStaleEntityError(error: unknown) {
   return (
     error instanceof Error &&
