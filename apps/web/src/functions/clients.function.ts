@@ -1,16 +1,16 @@
 import { db } from "@biume/db";
-import { clients, type Client } from "@biume/db/schema/index";
+import { clients, pets, type Client } from "@biume/db/schema/index";
 import { createServerFn } from "@tanstack/react-start";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { deleteRecordWithUploadThingFiles } from "#/server/uploadthing-files";
 import {
   createClientSchema,
   deleteClientSchema,
   updateClientSchema,
 } from "#/functions/clients.schema";
+import { deleteClientWithPatientIsolation } from "#/functions/tenant-mutation-isolation";
 
 export {
   createClientSchema,
@@ -143,33 +143,27 @@ export const deleteClient = createServerFn({ method: "POST" })
       throw new Error("Organization not found");
     }
 
-    const client = await db.query.clients.findFirst({
-      where: and(
-        eq(clients.id, data.id),
-        eq(clients.organizationId, organization.id),
-      ),
-      columns: { id: true },
-      with: {
-        pets: {
+    return deleteClientWithPatientIsolation({
+      findClient: () =>
+        db.query.clients.findFirst({
+          where: and(
+            eq(clients.id, data.id),
+            eq(clients.organizationId, organization.id),
+          ),
           columns: { id: true },
-          with: {
-            medicalDocuments: {
-              columns: { fileUrl: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (!client) {
-      throw new Error("Client introuvable ou inaccessible.");
-    }
-
-    return deleteRecordWithUploadThingFiles({
-      fileUrls: client.pets.flatMap((patient) =>
-        patient.medicalDocuments.map((document) => document.fileUrl),
-      ),
-      deleteRecord: async () => {
+        }),
+      findForeignPatient: () =>
+        db.query.pets.findFirst({
+          where: and(
+            eq(pets.ownerId, data.id),
+            or(
+              isNull(pets.organizationId),
+              ne(pets.organizationId, organization.id),
+            ),
+          ),
+          columns: { id: true },
+        }),
+      deleteClient: async () => {
         const [deletedClient] = await db
           .delete(clients)
           .where(

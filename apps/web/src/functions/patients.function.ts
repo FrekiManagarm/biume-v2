@@ -5,12 +5,12 @@ import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { deleteRecordWithUploadThingFiles } from "#/server/uploadthing-files";
 import {
   createPatientSchema,
   deletePatientSchema,
   updatePatientSchema,
 } from "#/functions/patients.schema";
+import { createPatientWithOwnerIsolation } from "#/functions/tenant-mutation-isolation";
 
 export {
   createPatientSchema,
@@ -97,26 +97,38 @@ export const createPatient = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const [createdPatient] = await db
-      .insert(pets)
-      .values({
-        name: data.name,
-        ownerId: data.ownerId,
-        type: data.type,
-        breed: data.breed,
-        gender: data.gender,
-        birthDate: data.birthDate,
-        weight: data.weight,
-        height: data.height,
-        description: data.description || null,
-        chippedNumber: data.chippedNumber,
-        organizationId: organization.id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
+    return createPatientWithOwnerIsolation({
+      findOwner: () =>
+        db.query.clients.findFirst({
+          where: and(
+            eq(clients.id, data.ownerId),
+            eq(clients.organizationId, organization.id),
+          ),
+          columns: { id: true },
+        }),
+      insertPatient: async () => {
+        const [createdPatient] = await db
+          .insert(pets)
+          .values({
+            name: data.name,
+            ownerId: data.ownerId,
+            type: data.type,
+            breed: data.breed,
+            gender: data.gender,
+            birthDate: data.birthDate,
+            weight: data.weight,
+            height: data.height,
+            description: data.description || null,
+            chippedNumber: data.chippedNumber,
+            organizationId: organization.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
 
-    return createdPatient;
+        return createdPatient;
+      },
+    });
   });
 
 export const updatePatient = createServerFn({ method: "POST" })
@@ -173,40 +185,18 @@ export const deletePatient = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const patient = await db.query.pets.findFirst({
-      where: and(
-        eq(pets.id, data.id),
-        eq(pets.organizationId, organization.id),
-      ),
-      columns: { id: true },
-      with: {
-        medicalDocuments: {
-          columns: { fileUrl: true },
-        },
-      },
-    });
+    const [deletedPatient] = await db
+      .delete(pets)
+      .where(
+        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+      )
+      .returning({ id: pets.id });
 
-    if (!patient) {
+    if (!deletedPatient) {
       throw new Error("Patient introuvable ou inaccessible.");
     }
 
-    return deleteRecordWithUploadThingFiles({
-      fileUrls: patient.medicalDocuments.map((document) => document.fileUrl),
-      deleteRecord: async () => {
-        const [deletedPatient] = await db
-          .delete(pets)
-          .where(
-            and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
-          )
-          .returning({ id: pets.id });
-
-        if (!deletedPatient) {
-          throw new Error("Patient introuvable ou inaccessible.");
-        }
-
-        return deletedPatient;
-      },
-    });
+    return deletedPatient;
   });
 
 export const getPatientById = createServerFn({ method: "GET" })

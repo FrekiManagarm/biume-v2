@@ -17,19 +17,21 @@ import {
 
 describe("getClientDeletionDescription", () => {
   test.each([
-    [0, ["aucun patient"]],
-    [1, ["1 patient"]],
-    [3, ["3 patients", "données associées"]],
-  ])(
-    "describes the irreversible cascade for %i attached patients",
-    (patientCount, expectedFragments) => {
-      const description = getClientDeletionDescription(patientCount);
-
-      for (const fragment of expectedFragments) {
-        expect(description).toContain(fragment);
-      }
-    },
-  );
+    [
+      0,
+      "Cette action est irréversible. La fiche client, ses données enregistrées dans Biume et les éventuelles références à des documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+    ],
+    [
+      1,
+      "Cette action est irréversible. La fiche client, la fiche de son patient, leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+    ],
+    [
+      3,
+      "Cette action est irréversible. La fiche client, les fiches de ses 3 patients, leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+    ],
+  ])("describes exactly what is deleted for %i patients", (count, expected) => {
+    expect(getClientDeletionDescription(count)).toBe(expected);
+  });
 });
 
 describe("getClientFormValues", () => {
@@ -121,12 +123,9 @@ describe("getPatientFormValues", () => {
 
 describe("patient action helpers", () => {
   test("warns explicitly that deleting a patient is permanent", () => {
-    const description = getPatientDeletionDescription();
-
-    expect(description).toContain("action est irréversible");
-    expect(description).toContain("dossier patient");
-    expect(description).toContain("données");
-    expect(description).toContain("définitivement");
+    expect(getPatientDeletionDescription()).toBe(
+      "Cette action est irréversible. La fiche patient, ses données enregistrées dans Biume et les références à ses documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+    );
   });
 
   test("normalizes blank patient names for labels", () => {

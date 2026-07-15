@@ -54,14 +54,14 @@ export const emptyClientFormValues = {
 
 export function getClientDeletionDescription(patientCount: number) {
   if (patientCount === 0) {
-    return "Cette action est irréversible. Ce client n’a aucun patient rattaché ; aucune fiche patient ne sera supprimée.";
+    return "Cette action est irréversible. La fiche client, ses données enregistrées dans Biume et les éventuelles références à des documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.";
   }
 
   if (patientCount === 1) {
-    return "Cette action est irréversible. La suppression entraînera également celle de 1 patient, de son dossier et de ses données associées.";
+    return "Cette action est irréversible. La fiche client, la fiche de son patient, leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.";
   }
 
-  return `Cette action est irréversible. La suppression entraînera également celle de ${patientCount} patients, de leurs dossiers et de leurs données associées.`;
+  return `Cette action est irréversible. La fiche client, les fiches de ses ${patientCount} patients, leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.`;
 }
 
 export function getClientFormValues(client?: ClientFormSource | null) {
@@ -114,7 +114,7 @@ export function getPatientFormValues(
 }
 
 export function getPatientDeletionDescription() {
-  return "Cette action est irréversible : le dossier patient et toutes ses données seront supprimés définitivement.";
+  return "Cette action est irréversible. La fiche patient, ses données enregistrées dans Biume et les références à ses documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.";
 }
 
 export function getPatientDisplayName(name?: string | null) {

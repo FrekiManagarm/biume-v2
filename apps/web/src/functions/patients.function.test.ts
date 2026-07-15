@@ -116,6 +116,10 @@ describe("patient mutation authorization", () => {
       source.indexOf("export const updatePatient"),
       source.indexOf("export const deletePatient"),
     );
+    const createSource = source.slice(
+      source.indexOf("export const createPatient"),
+      source.indexOf("export const updatePatient"),
+    );
     const deleteSource = source.slice(
       source.indexOf("export const deletePatient"),
       source.indexOf("export const getPatientById"),
@@ -125,10 +129,11 @@ describe("patient mutation authorization", () => {
     expect(source).toContain("eq(clients.organizationId, organization.id)");
     expect(source).toContain("Propriétaire introuvable ou inaccessible.");
     expect(source).toContain("Patient introuvable ou inaccessible.");
+    expect(createSource).toContain(
+      "eq(clients.organizationId, organization.id)",
+    );
+    expect(createSource).toContain("createPatientWithOwnerIsolation");
     expect(deleteSource).toContain("eq(pets.organizationId, organization.id)");
-    expect(deleteSource).toContain("medicalDocuments");
-    expect(deleteSource).toContain("fileUrl: true");
-    expect(deleteSource).toContain("deleteRecordWithUploadThingFiles");
     expect(updateSource).toMatch(
       /chippedNumber:\s*data\.chippedNumber === undefined\s*\?\s*undefined\s*:\s*data\.chippedNumber/,
     );

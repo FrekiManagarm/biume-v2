@@ -46,8 +46,8 @@ describe("client mutation authorization", () => {
     expect(deleteSource).toContain(
       "eq(clients.organizationId, organization.id)",
     );
-    expect(deleteSource).toContain("medicalDocuments");
-    expect(deleteSource).toContain("fileUrl: true");
-    expect(deleteSource).toContain("deleteRecordWithUploadThingFiles");
+    expect(deleteSource).toContain("deleteClientWithPatientIsolation");
+    expect(deleteSource).toContain("ne(pets.organizationId, organization.id)");
+    expect(deleteSource).toContain("isNull(pets.organizationId)");
   });
 });
