@@ -1,10 +1,26 @@
 import { db } from "@biume/db";
-import { animals, type Pet, pets } from "@biume/db/schema/index";
+import { animals, clients, type Pet, pets } from "@biume/db/schema/index";
 import { createServerFn } from "@tanstack/react-start";
 import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
+import {
+  createPatientSchema,
+  deletePatientSchema,
+  updatePatientSchema,
+} from "#/functions/patients.schema";
+
+export {
+  createPatientSchema,
+  deletePatientSchema,
+  updatePatientSchema,
+} from "#/functions/patients.schema";
+export type {
+  CreatePatientInput,
+  DeletePatientInput,
+  UpdatePatientInput,
+} from "#/functions/patients.schema";
 
 const getAllPatientsParams = z
   .object({
@@ -20,21 +36,7 @@ const patientIdSchema = z.object({
   id: z.string(),
 });
 
-export const createPatientSchema = z.object({
-  name: z.string().trim().min(1),
-  ownerId: z.string().trim().min(1),
-  type: z.string().trim().min(1),
-  breed: z.string().trim().min(1),
-  gender: z.enum(["Male", "Female"]).default("Male"),
-  birthDate: z.coerce.date(),
-  weight: z.coerce.number().int().min(0),
-  height: z.coerce.number().int().min(0),
-  description: z.string().trim().optional(),
-  chippedNumber: z.coerce.number().int().positive().optional(),
-});
-
 export type GetAllPatientsParams = z.infer<typeof getAllPatientsParams>;
-export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 export type AnimalOption = {
   code: string | null;
   id: string;
@@ -114,6 +116,73 @@ export const createPatient = createServerFn({ method: "POST" })
       .returning();
 
     return createdPatient;
+  });
+
+export const updatePatient = createServerFn({ method: "POST" })
+  .validator(updatePatientSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const owner = await db.query.clients.findFirst({
+      where: and(
+        eq(clients.id, data.ownerId),
+        eq(clients.organizationId, organization.id),
+      ),
+      columns: {
+        id: true,
+      },
+    });
+
+    if (!owner) {
+      throw new Error("Propriétaire introuvable ou inaccessible.");
+    }
+
+    const [updatedPatient] = await db
+      .update(pets)
+      .set({
+        name: data.name,
+        ownerId: data.ownerId,
+        type: data.type,
+        breed: data.breed,
+        gender: data.gender,
+        birthDate: data.birthDate,
+        weight: data.weight,
+        height: data.height,
+        description: data.description || null,
+        chippedNumber: data.chippedNumber,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+      )
+      .returning();
+
+    if (!updatedPatient) {
+      throw new Error("Patient introuvable ou inaccessible.");
+    }
+
+    return updatedPatient;
+  });
+
+export const deletePatient = createServerFn({ method: "POST" })
+  .validator(deletePatientSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const [deletedPatient] = await db
+      .delete(pets)
+      .where(
+        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+      )
+      .returning({ id: pets.id });
+
+    if (!deletedPatient) {
+      throw new Error("Patient introuvable ou inaccessible.");
+    }
+
+    return deletedPatient;
   });
 
 export const getPatientById = createServerFn({ method: "GET" })
