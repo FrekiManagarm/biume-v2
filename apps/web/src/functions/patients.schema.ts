@@ -13,8 +13,26 @@ export const createPatientSchema = z.object({
   chippedNumber: z.coerce.number().int().positive().optional(),
 });
 
+const updateDateSchema = z
+  .union([z.date(), z.string().trim().min(1)])
+  .pipe(z.coerce.date());
+
+const updateNonNegativeIntegerSchema = z
+  .union([z.number(), z.string().trim().min(1)])
+  .pipe(z.coerce.number<string | number>().int().min(0));
+
+const updateChippedNumberSchema = z
+  .union([z.number(), z.string().trim().min(1)])
+  .pipe(z.coerce.number<string | number>().int().positive())
+  .nullable()
+  .optional();
+
 export const updatePatientSchema = createPatientSchema.extend({
   id: z.string().trim().min(1),
+  birthDate: updateDateSchema,
+  weight: updateNonNegativeIntegerSchema,
+  height: updateNonNegativeIntegerSchema,
+  chippedNumber: updateChippedNumberSchema,
 });
 
 export const deletePatientSchema = z.object({

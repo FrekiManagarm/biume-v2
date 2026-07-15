@@ -23,6 +23,71 @@ describe("patient mutation schemas", () => {
     );
   });
 
+  test("accepts Date and number values used by the patient UI", () => {
+    expect(
+      updatePatientSchema.safeParse({
+        ...validPatientUpdate,
+        birthDate: new Date("2022-04-15"),
+        weight: 4,
+        height: 25,
+      }).success,
+    ).toBe(true);
+  });
+
+  test.each([
+    ["birthDate", null],
+    ["birthDate", true],
+    ["birthDate", " "],
+    ["weight", null],
+    ["weight", true],
+    ["weight", " "],
+    ["height", null],
+    ["height", false],
+    ["height", " "],
+  ])("rejects an invalid %s update value: %o", (field, value) => {
+    expect(
+      updatePatientSchema.safeParse({
+        ...validPatientUpdate,
+        [field]: value,
+      }).success,
+    ).toBe(false);
+  });
+
+  test("distinguishes an absent chip number from an explicit null", () => {
+    const absentChip = updatePatientSchema.parse(validPatientUpdate);
+    const clearedChip = updatePatientSchema.parse({
+      ...validPatientUpdate,
+      chippedNumber: null,
+    });
+
+    expect(absentChip).not.toHaveProperty("chippedNumber");
+    expect(clearedChip.chippedNumber).toBeNull();
+  });
+
+  test.each([123456, "123456"])(
+    "accepts a positive chip number: %o",
+    (chippedNumber) => {
+      expect(
+        updatePatientSchema.safeParse({
+          ...validPatientUpdate,
+          chippedNumber,
+        }).success,
+      ).toBe(true);
+    },
+  );
+
+  test.each([true, " ", 0, -1, "0"])(
+    "rejects an invalid chip number: %o",
+    (chippedNumber) => {
+      expect(
+        updatePatientSchema.safeParse({
+          ...validPatientUpdate,
+          chippedNumber,
+        }).success,
+      ).toBe(false);
+    },
+  );
+
   test.each([
     { ...validPatientUpdate, id: "" },
     { ...validPatientUpdate, ownerId: "" },
@@ -47,10 +112,17 @@ describe("patient mutation authorization", () => {
     const organizationScopeCount = (
       source.match(/eq\(pets\.organizationId, organization\.id\)/g) ?? []
     ).length;
+    const updateSource = source.slice(
+      source.indexOf("export const updatePatient"),
+      source.indexOf("export const deletePatient"),
+    );
 
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);
     expect(source).toContain("eq(clients.organizationId, organization.id)");
     expect(source).toContain("Propriétaire introuvable ou inaccessible.");
     expect(source).toContain("Patient introuvable ou inaccessible.");
+    expect(updateSource).toMatch(
+      /chippedNumber:\s*data\.chippedNumber === undefined\s*\?\s*undefined\s*:\s*data\.chippedNumber/,
+    );
   });
 });

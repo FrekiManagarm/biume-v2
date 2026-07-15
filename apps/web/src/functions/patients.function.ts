@@ -150,7 +150,8 @@ export const updatePatient = createServerFn({ method: "POST" })
         weight: data.weight,
         height: data.height,
         description: data.description || null,
-        chippedNumber: data.chippedNumber,
+        chippedNumber:
+          data.chippedNumber === undefined ? undefined : data.chippedNumber,
         updatedAt: new Date(),
       })
       .where(
