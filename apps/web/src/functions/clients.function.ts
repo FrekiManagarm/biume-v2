@@ -5,8 +5,22 @@ import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
+import {
+  createClientSchema,
+  deleteClientSchema,
+  updateClientSchema,
+} from "#/functions/clients.schema";
 
-const optionalText = z.string().trim().optional();
+export {
+  createClientSchema,
+  deleteClientSchema,
+  updateClientSchema,
+} from "#/functions/clients.schema";
+export type {
+  CreateClientInput,
+  DeleteClientInput,
+  UpdateClientInput,
+} from "#/functions/clients.schema";
 
 const getAllClientsParams = z
   .object({
@@ -17,18 +31,7 @@ const getAllClientsParams = z
   .optional()
   .default({});
 
-export const createClientSchema = z.object({
-  name: z.string().trim().min(1),
-  email: optionalText,
-  phone: optionalText,
-  address: optionalText,
-  city: optionalText,
-  zip: optionalText,
-  country: optionalText,
-});
-
 export type GetAllClientsParams = z.infer<typeof getAllClientsParams>;
-export type CreateClientInput = z.infer<typeof createClientSchema>;
 
 export const getAllClients = createServerFn({ method: "GET" })
   .validator(getAllClientsParams)
@@ -94,4 +97,64 @@ export const createClient = createServerFn({ method: "POST" })
       .returning();
 
     return createdClient;
+  });
+
+export const updateClient = createServerFn({ method: "POST" })
+  .validator(updateClientSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      throw new Error("Organization not found");
+    }
+
+    const [updatedClient] = await db
+      .update(clients)
+      .set({
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address || null,
+        city: data.city || null,
+        zip: data.zip || null,
+        country: data.country || null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(clients.id, data.id),
+          eq(clients.organizationId, organization.id),
+        ),
+      )
+      .returning();
+
+    if (!updatedClient) {
+      throw new Error("Client introuvable ou inaccessible.");
+    }
+
+    return updatedClient;
+  });
+
+export const deleteClient = createServerFn({ method: "POST" })
+  .validator(deleteClientSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      throw new Error("Organization not found");
+    }
+
+    const [deletedClient] = await db
+      .delete(clients)
+      .where(
+        and(
+          eq(clients.id, data.id),
+          eq(clients.organizationId, organization.id),
+        ),
+      )
+      .returning({ id: clients.id });
+
+    if (!deletedClient) {
+      throw new Error("Client introuvable ou inaccessible.");
+    }
+
+    return deletedClient;
   });
