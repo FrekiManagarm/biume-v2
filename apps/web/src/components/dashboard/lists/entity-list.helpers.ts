@@ -242,9 +242,13 @@ export async function completeEntityDeletion({
 
 export async function handleEntityDeletionError({
   error,
+  isStaleError = isStaleEntityError,
   ...deletionOptions
-}: EntityDeletionOptions & { error: unknown }) {
-  if (!isStaleEntityError(error)) {
+}: EntityDeletionOptions & {
+  error: unknown;
+  isStaleError?: (error: unknown) => boolean;
+}) {
+  if (!isStaleError(error)) {
     return false;
   }
 
@@ -255,13 +259,15 @@ export async function handleEntityDeletionError({
 export async function handleEntityEditError({
   entityId,
   error,
+  isStaleError = isStaleEntityError,
   onStale,
 }: {
   entityId: string;
   error: unknown;
+  isStaleError?: (error: unknown) => boolean;
   onStale: (entityId: string) => Promise<void>;
 }) {
-  if (!isStaleEntityError(error)) {
+  if (!isStaleError(error)) {
     return false;
   }
 
@@ -311,7 +317,7 @@ export async function handleClientDeletionError({
   error,
   ...deletionOptions
 }: ClientDeletionOptions & { error: unknown }) {
-  if (!isStaleEntityError(error)) {
+  if (!isStaleClientError(error)) {
     return false;
   }
 
@@ -328,7 +334,7 @@ export async function handleClientEditError({
   error: unknown;
   onStale: (clientId: string) => Promise<void>;
 }) {
-  if (!isStaleEntityError(error)) {
+  if (!isStaleClientError(error)) {
     return false;
   }
 
@@ -337,8 +343,23 @@ export async function handleClientEditError({
 }
 
 export function isStaleEntityError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.includes("introuvable ou inaccessible")
-  );
+  return isStalePatientError(error) || isStaleClientError(error);
+}
+
+export function isStalePatientError(error: unknown) {
+  return matchesStaleEntityError(error, "patient");
+}
+
+export function isStaleClientError(error: unknown) {
+  return matchesStaleEntityError(error, "client");
+}
+
+function matchesStaleEntityError(error: unknown, entityName: string) {
+  if (!(error instanceof Error)) return false;
+
+  const escapedName = entityName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `\\b${escapedName}(?: est)? introuvable ou inaccessible\\b`,
+    "i",
+  ).test(error.message);
 }

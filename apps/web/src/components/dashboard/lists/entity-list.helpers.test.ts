@@ -10,7 +10,9 @@ import {
   getPatientDisplayName,
   getPatientFormValues,
   getPatientMutationValues,
+  isStaleClientError,
   isStaleEntityError,
+  isStalePatientError,
 } from "./entity-list.helpers";
 
 describe("getClientDeletionDescription", () => {
@@ -211,6 +213,31 @@ describe("isStaleEntityError", () => {
       ),
     ).toBe(true);
     expect(isStaleEntityError(new Error("Une autre erreur"))).toBe(false);
+    expect(
+      isStaleEntityError(
+        new Error("Propriétaire introuvable ou inaccessible."),
+      ),
+    ).toBe(false);
     expect(isStaleEntityError("introuvable ou inaccessible")).toBe(false);
+  });
+
+  test("distinguishes the missing patient from a missing owner", () => {
+    expect(
+      isStalePatientError(new Error("Patient introuvable ou inaccessible.")),
+    ).toBe(true);
+    expect(
+      isStalePatientError(
+        new Error("Propriétaire introuvable ou inaccessible."),
+      ),
+    ).toBe(false);
+  });
+
+  test("recognizes only a missing client in client flows", () => {
+    expect(
+      isStaleClientError(new Error("Client introuvable ou inaccessible.")),
+    ).toBe(true);
+    expect(
+      isStaleClientError(new Error("Patient introuvable ou inaccessible.")),
+    ).toBe(false);
   });
 });

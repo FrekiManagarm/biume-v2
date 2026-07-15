@@ -100,7 +100,7 @@ vi.mock("sonner", () => ({
 }));
 
 vi.mock("#/components/dashboard/lists/entity-row-actions", async () => {
-  const { createElement } = await import("react");
+  const { createElement, useState } = await import("react");
 
   return {
     EntityRowActions: ({
@@ -109,12 +109,43 @@ vi.mock("#/components/dashboard/lists/entity-row-actions", async () => {
     }: {
       entityName: string;
       onDelete: () => void;
-    }) =>
-      createElement(
-        "button",
-        { type: "button", onClick: onDelete },
-        `Delete ${entityName}`,
-      ),
+    }) => {
+      const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+      return createElement(
+        "div",
+        null,
+        createElement(
+          "button",
+          {
+            "aria-expanded": isMenuOpen,
+            "aria-haspopup": "menu",
+            "aria-label": `Actions pour ${entityName}`,
+            onClick: () => setIsMenuOpen((open) => !open),
+            type: "button",
+          },
+          "Actions",
+        ),
+        isMenuOpen
+          ? createElement(
+              "div",
+              { role: "menu" },
+              createElement(
+                "button",
+                {
+                  onClick: () => {
+                    setIsMenuOpen(false);
+                    onDelete();
+                  },
+                  role: "menuitem",
+                  type: "button",
+                },
+                "Supprimer",
+              ),
+            )
+          : null,
+      );
+    },
     DeleteEntityDialog: ({
       description,
       onConfirm,
@@ -220,6 +251,7 @@ import {
   handleEntityDeletionError,
   handleEntityEditError,
   invalidateEntityLists,
+  isStalePatientError,
   reconcileEditedEntity,
   refreshEntityListsAfterRemoval,
 } from "#/components/dashboard/lists/entity-list.helpers";
@@ -269,7 +301,10 @@ describe("patient list actions", () => {
 
     render(createElement(routeModule.PatientsPage));
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete Patient 11" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Actions pour Patient 11" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Supprimer" }));
     expect(screen.getByTestId("delete-dialog")).toBeTruthy();
     expect(screen.getByText(getPatientDeletionDescription())).toBeTruthy();
 
@@ -310,6 +345,7 @@ describe("patient list actions", () => {
     expect(source).toContain("completeEntityDeletion");
     expect(source).toContain("handleEntityDeletionError");
     expect(source).toContain("handleEntityEditError");
+    expect(source).toContain("isStaleError: isStalePatientError");
     expect(source).toContain("refreshEntityListsAfterRemoval");
     expect(source).toContain("reconcileEditedEntity");
     expect(source).toContain("form.state.isSubmitting");
@@ -337,6 +373,7 @@ describe("patient list actions", () => {
     const wasHandled = await handleEntityEditError({
       error: new Error("Patient introuvable ou inaccessible."),
       entityId: "patient-a",
+      isStaleError: isStalePatientError,
       onStale: async (editedId) => {
         editedPatient = reconcileEditedEntity(editedPatient, editedId);
         await refreshEntityListsAfterRemoval({
@@ -353,6 +390,20 @@ describe("patient list actions", () => {
     expect(editedPatient).toEqual({ id: "patient-b" });
     expect(invalidateQuery).toHaveBeenCalledTimes(2);
     expect(navigateToPage).toHaveBeenCalledWith(2);
+  });
+
+  test("a missing owner keeps the patient edit open without refreshing pagination", async () => {
+    const onStale = vi.fn(async () => undefined);
+
+    const wasHandled = await handleEntityEditError({
+      error: new Error("Propriétaire introuvable ou inaccessible."),
+      entityId: "patient-a",
+      isStaleError: isStalePatientError,
+      onStale,
+    });
+
+    expect(wasHandled).toBe(false);
+    expect(onStale).not.toHaveBeenCalled();
   });
 
   test("successful deletion closes, refreshes both lists, and corrects pagination", async () => {
@@ -386,6 +437,7 @@ describe("patient list actions", () => {
         patientToDelete = reconcileEditedEntity(patientToDelete, removedId);
       },
       invalidateQuery,
+      isStaleError: isStalePatientError,
       navigateToPage,
       removedId: "patient-a",
       visibleIds: ["patient-a"],

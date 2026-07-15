@@ -35,6 +35,7 @@ import {
   handleEntityDeletionError,
   handleEntityEditError,
   invalidateEntityLists,
+  isStalePatientError,
   type PatientFormSource,
   reconcileEditedEntity,
   refreshEntityListsAfterRemoval,
@@ -245,6 +246,7 @@ export function PatientsPage() {
             reconcileEditedEntity(current, deletedId),
           ),
         invalidateQuery,
+        isStaleError: isStalePatientError,
         navigateToPage,
         removedId: input.id,
         visibleIds: currentPatientIds,
@@ -582,6 +584,7 @@ function PatientFormDialog({
           ? await handleEntityEditError({
               entityId: patient.id,
               error,
+              isStaleError: isStalePatientError,
               onStale: async (patientId) => {
                 if (onStale) {
                   await onStale(patientId);
