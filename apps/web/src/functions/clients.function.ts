@@ -11,6 +11,7 @@ import {
   updateClientSchema,
 } from "#/functions/clients.schema";
 import { deleteClientWithPatientIsolation } from "#/functions/tenant-mutation-isolation";
+import { getClientRelationsForOrganization } from "#/functions/tenant-query-isolation";
 
 export {
   createClientSchema,
@@ -60,17 +61,10 @@ export const getAllClients = createServerFn({ method: "GET" })
     return db.query.clients.findMany({
       where,
       orderBy: [desc(clients.createdAt)],
-      with: {
-        pets: {
-          with: {
-            animal: true,
-            advancedReport: true,
-          },
-        },
-      },
+      with: getClientRelationsForOrganization(organization.id),
       limit,
       offset: Math.max(0, (page - 1) * limit),
-    }) as Promise<Client[]>;
+    }) as unknown as Promise<Client[]>;
   });
 
 export const createClient = createServerFn({ method: "POST" })
@@ -163,6 +157,41 @@ export const deleteClient = createServerFn({ method: "POST" })
           ),
           columns: { id: true },
         }),
+      findScopedPatients: () =>
+        db.query.pets.findMany({
+          where: and(
+            eq(pets.ownerId, data.id),
+            eq(pets.organizationId, organization.id),
+          ),
+          columns: { id: true, organizationId: true },
+          with: {
+            appointments: {
+              columns: { id: true, organizationId: true },
+              with: {
+                reports: {
+                  columns: {
+                    id: true,
+                    createdBy: true,
+                    appointmentId: true,
+                    patientId: true,
+                  },
+                },
+              },
+            },
+            advancedReport: {
+              columns: {
+                id: true,
+                createdBy: true,
+                appointmentId: true,
+                patientId: true,
+              },
+            },
+            medicalDocuments: {
+              columns: { id: true, uploadedBy: true },
+            },
+          },
+        }),
+      organizationId: organization.id,
       deleteClient: async () => {
         const [deletedClient] = await db
           .delete(clients)

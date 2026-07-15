@@ -49,5 +49,12 @@ describe("client mutation authorization", () => {
     expect(deleteSource).toContain("deleteClientWithPatientIsolation");
     expect(deleteSource).toContain("ne(pets.organizationId, organization.id)");
     expect(deleteSource).toContain("isNull(pets.organizationId)");
+    expect(source).toContain("getClientRelationsForOrganization");
+    expect(deleteSource).toContain("findScopedPatients");
+    expect(deleteSource).toContain("appointments");
+    expect(deleteSource).toContain("reports");
+    expect(deleteSource).toContain("medicalDocuments");
+    expect(deleteSource).toContain("appointmentId: true");
+    expect(deleteSource).toContain("patientId: true");
   });
 });

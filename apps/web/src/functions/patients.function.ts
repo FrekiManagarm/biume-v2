@@ -10,7 +10,10 @@ import {
   deletePatientSchema,
   updatePatientSchema,
 } from "#/functions/patients.schema";
-import { createPatientWithOwnerIsolation } from "#/functions/tenant-mutation-isolation";
+import {
+  createPatientWithOwnerIsolation,
+  deletePatientWithDependencyIsolation,
+} from "#/functions/tenant-mutation-isolation";
 
 export {
   createPatientSchema,
@@ -185,18 +188,57 @@ export const deletePatient = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const [deletedPatient] = await db
-      .delete(pets)
-      .where(
-        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
-      )
-      .returning({ id: pets.id });
+    return deletePatientWithDependencyIsolation({
+      findPatient: () =>
+        db.query.pets.findFirst({
+          where: and(
+            eq(pets.id, data.id),
+            eq(pets.organizationId, organization.id),
+          ),
+          columns: { id: true, organizationId: true },
+          with: {
+            appointments: {
+              columns: { id: true, organizationId: true },
+              with: {
+                reports: {
+                  columns: {
+                    id: true,
+                    createdBy: true,
+                    appointmentId: true,
+                    patientId: true,
+                  },
+                },
+              },
+            },
+            advancedReport: {
+              columns: {
+                id: true,
+                createdBy: true,
+                appointmentId: true,
+                patientId: true,
+              },
+            },
+            medicalDocuments: {
+              columns: { id: true, uploadedBy: true },
+            },
+          },
+        }),
+      organizationId: organization.id,
+      deletePatient: async () => {
+        const [deletedPatient] = await db
+          .delete(pets)
+          .where(
+            and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+          )
+          .returning({ id: pets.id });
 
-    if (!deletedPatient) {
-      throw new Error("Patient introuvable ou inaccessible.");
-    }
+        if (!deletedPatient) {
+          throw new Error("Patient introuvable ou inaccessible.");
+        }
 
-    return deletedPatient;
+        return deletedPatient;
+      },
+    });
   });
 
 export const getPatientById = createServerFn({ method: "GET" })

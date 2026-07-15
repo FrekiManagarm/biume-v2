@@ -134,6 +134,12 @@ describe("patient mutation authorization", () => {
     );
     expect(createSource).toContain("createPatientWithOwnerIsolation");
     expect(deleteSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(deleteSource).toContain("deletePatientWithDependencyIsolation");
+    expect(deleteSource).toContain("appointments");
+    expect(deleteSource).toContain("reports");
+    expect(deleteSource).toContain("medicalDocuments");
+    expect(deleteSource).toContain("appointmentId: true");
+    expect(deleteSource).toContain("patientId: true");
     expect(updateSource).toMatch(
       /chippedNumber:\s*data\.chippedNumber === undefined\s*\?\s*undefined\s*:\s*data\.chippedNumber/,
     );

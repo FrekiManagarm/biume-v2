@@ -1,6 +1,7 @@
 import { db } from "@biume/db";
 import { and, eq, or, lte, gte, ne } from "drizzle-orm";
 import { getCurrentOrganization } from "#/functions/auth.function";
+import { createAppointmentWithPatientIsolation } from "#/functions/tenant-mutation-isolation";
 import { type Appointment, appointments, pets } from "@biume/db/schema/index";
 import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
@@ -137,33 +138,33 @@ export const createAppointment = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    // Récupérer les informations du patient avec le propriétaire
-    const patient = await db.query.pets.findFirst({
-      where: eq(pets.id, data.patientId),
-      with: {
-        owner: true,
+    return createAppointmentWithPatientIsolation({
+      findPatient: () =>
+        db.query.pets.findFirst({
+          where: and(
+            eq(pets.id, data.patientId),
+            eq(pets.organizationId, organization.id),
+          ),
+          columns: { id: true },
+        }),
+      insertAppointment: async () => {
+        const [newAppointment] = await db
+          .insert(appointments)
+          .values({
+            patientId: data.patientId,
+            beginAt: data.beginAt,
+            endAt: data.endAt,
+            organizationId: organization.id,
+            atHome: data.atHome || false,
+            note: data.note,
+            status: "CREATED",
+            createdAt: new Date(),
+          })
+          .returning();
+
+        return newAppointment;
       },
     });
-
-    if (!patient) {
-      throw new Error("Patient non trouvé");
-    }
-
-    const [newAppointment] = await db
-      .insert(appointments)
-      .values({
-        patientId: data.patientId,
-        beginAt: data.beginAt,
-        endAt: data.endAt,
-        organizationId: organization.id,
-        atHome: data.atHome || false,
-        note: data.note,
-        status: "CREATED",
-        createdAt: new Date(),
-      })
-      .returning();
-
-    return newAppointment;
   });
 
 /**

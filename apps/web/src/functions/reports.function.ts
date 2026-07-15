@@ -16,8 +16,11 @@ import {
   anatomicalIssue,
   type AdvancedReport,
   advancedReport,
+  appointments,
+  pets,
   reportOwnerContent,
 } from "@biume/db/schema/index";
+import { createReportWithTenantIsolation } from "#/functions/tenant-mutation-isolation";
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
 import {
@@ -167,27 +170,51 @@ export const createReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { title, petId, appointmentId, consultationReason, notes, status } =
       data;
+    const patientId = petId ?? "";
 
     try {
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
-      const [newReport] = await db
-        .insert(advancedReport)
-        .values({
-          title: title || "Nouveau rapport",
-          consultationReason,
-          patientId: petId || "",
-          appointmentId: appointmentId || null,
-          notes,
-          status: status || "draft",
-          createdBy: organization.id,
-          createdAt: new Date(),
-        })
-        .returning({ id: advancedReport.id })
-        .execute();
+      return createReportWithTenantIsolation({
+        findPatient: () =>
+          db.query.pets.findFirst({
+            where: and(
+              eq(pets.id, patientId),
+              eq(pets.organizationId, organization.id),
+            ),
+            columns: { id: true },
+          }),
+        findAppointment: appointmentId
+          ? () =>
+              db.query.appointments.findFirst({
+                where: and(
+                  eq(appointments.id, appointmentId),
+                  eq(appointments.organizationId, organization.id),
+                  eq(appointments.patientId, patientId),
+                ),
+                columns: { id: true },
+              })
+          : undefined,
+        insertReport: async () => {
+          const [newReport] = await db
+            .insert(advancedReport)
+            .values({
+              title: title || "Nouveau rapport",
+              consultationReason,
+              patientId,
+              appointmentId: appointmentId || null,
+              notes,
+              status: status || "draft",
+              createdBy: organization.id,
+              createdAt: new Date(),
+            })
+            .returning({ id: advancedReport.id })
+            .execute();
 
-      return { success: true, status: status, reportId: newReport.id };
+          return { success: true, status: status, reportId: newReport.id };
+        },
+      });
     } catch (error) {
       console.error("Error creating report", error);
       throw new Error("Error creating report");

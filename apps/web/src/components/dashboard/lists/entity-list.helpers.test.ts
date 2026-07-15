@@ -19,11 +19,11 @@ describe("getClientDeletionDescription", () => {
   test.each([
     [
       0,
-      "Cette action est irréversible. La fiche client, ses données enregistrées dans Biume et les éventuelles références à des documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+      "Cette action est irréversible. La fiche client et ses données enregistrées dans Biume seront supprimées définitivement. 0 patient : aucune fiche patient ne sera supprimée. Les éventuelles références à des documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
     ],
     [
       1,
-      "Cette action est irréversible. La fiche client, la fiche de son patient, leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
+      "Cette action est irréversible. La fiche client, la fiche de son unique patient (1 patient), leurs données enregistrées dans Biume et les références à leurs documents seront supprimées définitivement. Les fichiers hébergés par le service de stockage ne seront pas supprimés.",
     ],
     [
       3,
