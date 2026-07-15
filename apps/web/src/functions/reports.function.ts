@@ -20,7 +20,10 @@ import {
   pets,
   reportOwnerContent,
 } from "@biume/db/schema/index";
-import { createReportWithTenantIsolation } from "#/functions/tenant-mutation-isolation";
+import {
+  createReportWithTenantIsolation,
+  updateReportWithTenantIsolation,
+} from "#/functions/tenant-mutation-isolation";
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
 import {
@@ -279,6 +282,7 @@ export const updateReport = createServerFn({ method: "POST" })
       reportId,
       title,
       petId,
+      appointmentId,
       consultationReason,
       notes,
       status,
@@ -286,147 +290,187 @@ export const updateReport = createServerFn({ method: "POST" })
       anatomicalIssues = [],
       recommendations = [],
     } = data;
+    const patientId = petId ?? "";
 
     try {
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
-      const [ownedReport] = await db
-        .select({ id: advancedReport.id })
-        .from(advancedReport)
-        .where(
-          and(
-            eq(advancedReport.id, reportId),
-            eq(advancedReport.createdBy, organization.id),
-          ),
-        )
-        .limit(1)
-        .execute();
-
-      if (!ownedReport) throw new Error("Report not found or unauthorized");
-
-      const regionCandidates = [
-        ...anatomicalIssues.map((issue) => issue.region),
-        ...observations.map((observation) => observation.region),
-      ].filter((region): region is string => Boolean(region));
-
-      const fallbackAnatomicalParts =
-        regionCandidates.length > 0
-          ? await db
-              .select({
-                id: anatomicalPart.id,
-                name: anatomicalPart.name,
-              })
-              .from(anatomicalPart)
-              .where(
-                or(
-                  inArray(anatomicalPart.id, regionCandidates),
-                  inArray(anatomicalPart.name, regionCandidates),
-                ),
-              )
-              .execute()
-          : [];
-
-      const resolveAnatomicalPartId = (issue: {
-        anatomicalPart?: { id: string };
-        region: string;
-      }) => {
-        if (issue.anatomicalPart?.id) {
-          return issue.anatomicalPart.id;
-        }
-
-        const fallbackPart = fallbackAnatomicalParts.find(
-          (part) => part.id === issue.region || part.name === issue.region,
-        );
-
-        if (!fallbackPart) {
-          throw new Error(
-            `Région anatomique introuvable pour "${issue.region}"`,
-          );
-        }
-
-        return fallbackPart.id;
-      };
-
-      const childRows = buildReportChildRows({
-        reportId: ownedReport.id,
-        observations,
-        anatomicalIssues,
-        recommendations,
-        resolveAnatomicalPartId,
-      });
-
-      const existingOwnerSources = await db
-        .select({
-          sourceKind: reportOwnerContent.sourceKind,
-          sourceId: reportOwnerContent.sourceId,
-        })
-        .from(reportOwnerContent)
-        .where(eq(reportOwnerContent.reportId, ownedReport.id))
-        .execute();
-
-      const removedSources = getRemovedOwnerSources(existingOwnerSources, {
-        observation: observations.map((item) => item.id),
-        anatomicalIssue: anatomicalIssues.map((item) => item.id),
-        recommendation: recommendations.map((item) => item.id),
-      });
-
-      const mutationQueries = [
-        db
-          .update(advancedReport)
-          .set({
-            title,
-            consultationReason,
-            patientId: petId || "",
-            notes,
-            updatedAt: new Date(),
-            status: status || "draft",
-          })
-          .where(
-            and(
-              eq(advancedReport.id, ownedReport.id),
-              eq(advancedReport.createdBy, organization.id),
-            ),
-          ),
-        ...removedSources.map((source) =>
-          db
-            .delete(reportOwnerContent)
+      return updateReportWithTenantIsolation({
+        findReport: async () => {
+          const [ownedReport] = await db
+            .select({
+              id: advancedReport.id,
+              appointmentId: advancedReport.appointmentId,
+            })
+            .from(advancedReport)
             .where(
               and(
-                eq(reportOwnerContent.reportId, ownedReport.id),
-                eq(reportOwnerContent.sourceKind, source.sourceKind),
-                eq(reportOwnerContent.sourceId, source.sourceId),
+                eq(advancedReport.id, reportId),
+                eq(advancedReport.createdBy, organization.id),
               ),
+            )
+            .limit(1)
+            .execute();
+
+          return ownedReport;
+        },
+        findPatient: () =>
+          db.query.pets.findFirst({
+            where: and(
+              eq(pets.id, patientId),
+              eq(pets.organizationId, organization.id),
             ),
-        ),
-        db
-          .delete(anatomicalIssue)
-          .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
-        db
-          .delete(advancedReportRecommendations)
-          .where(
-            eq(advancedReportRecommendations.advancedReportId, ownedReport.id),
-          ),
-        ...(childRows.anatomicalIssues.length > 0
-          ? [db.insert(anatomicalIssue).values(childRows.anatomicalIssues)]
-          : []),
-        ...(childRows.observations.length > 0
-          ? [db.insert(anatomicalIssue).values(childRows.observations)]
-          : []),
-        ...(childRows.recommendations.length > 0
-          ? [
+            columns: { id: true },
+          }),
+        validateAppointment: async (ownedReport) => {
+          const resolvedAppointmentId =
+            appointmentId ?? ownedReport.appointmentId;
+          if (!resolvedAppointmentId) return true;
+
+          const appointment = await db.query.appointments.findFirst({
+            where: and(
+              eq(appointments.id, resolvedAppointmentId),
+              eq(appointments.organizationId, organization.id),
+              eq(appointments.patientId, patientId),
+            ),
+            columns: { id: true },
+          });
+
+          return Boolean(appointment);
+        },
+        updateReport: async (ownedReport) => {
+          const resolvedAppointmentId =
+            appointmentId ?? ownedReport.appointmentId ?? null;
+
+          const regionCandidates = [
+            ...anatomicalIssues.map((issue) => issue.region),
+            ...observations.map((observation) => observation.region),
+          ].filter((region): region is string => Boolean(region));
+
+          const fallbackAnatomicalParts =
+            regionCandidates.length > 0
+              ? await db
+                  .select({
+                    id: anatomicalPart.id,
+                    name: anatomicalPart.name,
+                  })
+                  .from(anatomicalPart)
+                  .where(
+                    or(
+                      inArray(anatomicalPart.id, regionCandidates),
+                      inArray(anatomicalPart.name, regionCandidates),
+                    ),
+                  )
+                  .execute()
+              : [];
+
+          const resolveAnatomicalPartId = (issue: {
+            anatomicalPart?: { id: string };
+            region: string;
+          }) => {
+            if (issue.anatomicalPart?.id) {
+              return issue.anatomicalPart.id;
+            }
+
+            const fallbackPart = fallbackAnatomicalParts.find(
+              (part) => part.id === issue.region || part.name === issue.region,
+            );
+
+            if (!fallbackPart) {
+              throw new Error(
+                `Région anatomique introuvable pour "${issue.region}"`,
+              );
+            }
+
+            return fallbackPart.id;
+          };
+
+          const childRows = buildReportChildRows({
+            reportId: ownedReport.id,
+            observations,
+            anatomicalIssues,
+            recommendations,
+            resolveAnatomicalPartId,
+          });
+
+          const existingOwnerSources = await db
+            .select({
+              sourceKind: reportOwnerContent.sourceKind,
+              sourceId: reportOwnerContent.sourceId,
+            })
+            .from(reportOwnerContent)
+            .where(eq(reportOwnerContent.reportId, ownedReport.id))
+            .execute();
+
+          const removedSources = getRemovedOwnerSources(existingOwnerSources, {
+            observation: observations.map((item) => item.id),
+            anatomicalIssue: anatomicalIssues.map((item) => item.id),
+            recommendation: recommendations.map((item) => item.id),
+          });
+
+          const mutationQueries = [
+            db
+              .update(advancedReport)
+              .set({
+                title,
+                consultationReason,
+                patientId,
+                appointmentId: resolvedAppointmentId,
+                notes,
+                updatedAt: new Date(),
+                status: status || "draft",
+              })
+              .where(
+                and(
+                  eq(advancedReport.id, ownedReport.id),
+                  eq(advancedReport.createdBy, organization.id),
+                ),
+              ),
+            ...removedSources.map((source) =>
               db
-                .insert(advancedReportRecommendations)
-                .values(childRows.recommendations),
-            ]
-          : []),
-      ] as const;
+                .delete(reportOwnerContent)
+                .where(
+                  and(
+                    eq(reportOwnerContent.reportId, ownedReport.id),
+                    eq(reportOwnerContent.sourceKind, source.sourceKind),
+                    eq(reportOwnerContent.sourceId, source.sourceId),
+                  ),
+                ),
+            ),
+            db
+              .delete(anatomicalIssue)
+              .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
+            db
+              .delete(advancedReportRecommendations)
+              .where(
+                eq(
+                  advancedReportRecommendations.advancedReportId,
+                  ownedReport.id,
+                ),
+              ),
+            ...(childRows.anatomicalIssues.length > 0
+              ? [db.insert(anatomicalIssue).values(childRows.anatomicalIssues)]
+              : []),
+            ...(childRows.observations.length > 0
+              ? [db.insert(anatomicalIssue).values(childRows.observations)]
+              : []),
+            ...(childRows.recommendations.length > 0
+              ? [
+                  db
+                    .insert(advancedReportRecommendations)
+                    .values(childRows.recommendations),
+                ]
+              : []),
+          ] as const;
 
-      await executeAtomicReportMutations(mutationQueries, (queries) =>
-        db.batch(queries),
-      );
+          await executeAtomicReportMutations(mutationQueries, (queries) =>
+            db.batch(queries),
+          );
 
-      return { success: true, status: status };
+          return { success: true as const, status: status };
+        },
+      });
     } catch (error) {
       console.error("Error updating report", error);
       return {

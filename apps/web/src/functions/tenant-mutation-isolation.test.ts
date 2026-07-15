@@ -6,6 +6,8 @@ import {
   createReportWithTenantIsolation,
   deleteClientWithPatientIsolation,
   deletePatientWithDependencyIsolation,
+  updateAppointmentWithTenantIsolation,
+  updateReportWithTenantIsolation,
 } from "./tenant-mutation-isolation";
 
 const scopedPatientDependencies = {
@@ -246,5 +248,114 @@ describe("tenant-isolated creation", () => {
     ).resolves.toEqual({ id: "report-1" });
 
     expect(insertReport).toHaveBeenCalledOnce();
+  });
+});
+
+describe("tenant-isolated updates", () => {
+  test("updateAppointment never updates an absent or foreign appointment", async () => {
+    const updateAppointment = vi.fn(async () => ({ id: "appointment-1" }));
+
+    await expect(
+      updateAppointmentWithTenantIsolation({
+        findAppointment: async () => null,
+        updateAppointment,
+      }),
+    ).rejects.toThrow("Rendez-vous non trouvé");
+
+    expect(updateAppointment).not.toHaveBeenCalled();
+  });
+
+  test("updateAppointment never updates with an absent or foreign patient", async () => {
+    const updateAppointment = vi.fn(async () => ({ id: "appointment-1" }));
+
+    await expect(
+      updateAppointmentWithTenantIsolation({
+        findAppointment: async () => ({ id: "appointment-1" }),
+        findPatient: async () => null,
+        updateAppointment,
+      }),
+    ).rejects.toThrow("Patient non trouvé");
+
+    expect(updateAppointment).not.toHaveBeenCalled();
+  });
+
+  test("updateAppointment updates after its appointment and changed patient are scoped", async () => {
+    const updateAppointment = vi.fn(async () => ({ id: "appointment-1" }));
+
+    await expect(
+      updateAppointmentWithTenantIsolation({
+        findAppointment: async () => ({ id: "appointment-1" }),
+        findPatient: async () => ({ id: "patient-1" }),
+        updateAppointment,
+      }),
+    ).resolves.toEqual({ id: "appointment-1" });
+
+    expect(updateAppointment).toHaveBeenCalledOnce();
+  });
+
+  test("updateReport never updates an absent or foreign report", async () => {
+    const updateReport = vi.fn(async () => ({ success: true }));
+
+    await expect(
+      updateReportWithTenantIsolation({
+        findReport: async () => null,
+        findPatient: async () => ({ id: "patient-1" }),
+        validateAppointment: async () => true,
+        updateReport,
+      }),
+    ).rejects.toThrow("Report not found");
+
+    expect(updateReport).not.toHaveBeenCalled();
+  });
+
+  test("updateReport never updates with an absent or foreign patient", async () => {
+    const updateReport = vi.fn(async () => ({ success: true }));
+
+    await expect(
+      updateReportWithTenantIsolation({
+        findReport: async () => ({ id: "report-1", appointmentId: null }),
+        findPatient: async () => null,
+        validateAppointment: async () => true,
+        updateReport,
+      }),
+    ).rejects.toThrow("Patient non trouvé");
+
+    expect(updateReport).not.toHaveBeenCalled();
+  });
+
+  test("updateReport never updates with an absent, foreign, or patient-incoherent appointment", async () => {
+    const updateReport = vi.fn(async () => ({ success: true }));
+
+    await expect(
+      updateReportWithTenantIsolation({
+        findReport: async () => ({
+          id: "report-1",
+          appointmentId: "appointment-1",
+        }),
+        findPatient: async () => ({ id: "patient-1" }),
+        validateAppointment: async () => false,
+        updateReport,
+      }),
+    ).rejects.toThrow("Rendez-vous non trouvé");
+
+    expect(updateReport).not.toHaveBeenCalled();
+  });
+
+  test("updateReport updates after report, patient, and appointment are scoped and coherent", async () => {
+    const updateReport = vi.fn(async (report) => ({ id: report.id }));
+
+    await expect(
+      updateReportWithTenantIsolation({
+        findReport: async () => ({
+          id: "report-1",
+          appointmentId: "appointment-1",
+        }),
+        findPatient: async () => ({ id: "patient-1" }),
+        validateAppointment: async () => true,
+        updateReport,
+      }),
+    ).resolves.toEqual({ id: "report-1" });
+
+    expect(updateReport).toHaveBeenCalledOnce();
   });
 });

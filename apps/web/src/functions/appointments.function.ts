@@ -1,7 +1,10 @@
 import { db } from "@biume/db";
 import { and, eq, or, lte, gte, ne } from "drizzle-orm";
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { createAppointmentWithPatientIsolation } from "#/functions/tenant-mutation-isolation";
+import {
+  createAppointmentWithPatientIsolation,
+  updateAppointmentWithTenantIsolation,
+} from "#/functions/tenant-mutation-isolation";
 import { type Appointment, appointments, pets } from "@biume/db/schema/index";
 import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
@@ -174,28 +177,52 @@ export const updateAppointment = createServerFn({ method: "POST" })
   .validator(updateAppointmentSchema)
   .handler(async ({ data }) => {
     const { appointmentId, ...values } = data;
+    const patientId = values.patientId;
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const [updatedAppointment] = await db
-      .update(appointments)
-      .set({
-        ...values,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(appointments.id, appointmentId),
-          eq(appointments.organizationId, organization.id),
-        ),
-      )
-      .returning();
+    return updateAppointmentWithTenantIsolation({
+      findAppointment: () =>
+        db.query.appointments.findFirst({
+          where: and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.organizationId, organization.id),
+          ),
+          columns: { id: true },
+        }),
+      findPatient:
+        patientId !== undefined
+          ? () =>
+              db.query.pets.findFirst({
+                where: and(
+                  eq(pets.id, patientId),
+                  eq(pets.organizationId, organization.id),
+                ),
+                columns: { id: true },
+              })
+          : undefined,
+      updateAppointment: async () => {
+        const [updatedAppointment] = await db
+          .update(appointments)
+          .set({
+            ...values,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(appointments.id, appointmentId),
+              eq(appointments.organizationId, organization.id),
+            ),
+          )
+          .returning();
 
-    if (!updatedAppointment) {
-      throw new Error("Rendez-vous non trouvé ou non autorisé");
-    }
+        if (!updatedAppointment) {
+          throw new Error("Rendez-vous non trouvé ou non autorisé");
+        }
 
-    return updatedAppointment;
+        return updatedAppointment;
+      },
+    });
   });
 
 export const deleteAppointment = createServerFn({ method: "POST" })

@@ -38,3 +38,50 @@ describe("tenant-isolated creation wiring", () => {
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
   });
 });
+
+describe("tenant-isolated update wiring", () => {
+  test("updateAppointment scopes the appointment and changed patient before update", () => {
+    const source = readFileSync(
+      new URL("./appointments.function.ts", import.meta.url),
+      "utf8",
+    );
+    const updateSource = source.slice(
+      source.indexOf("export const updateAppointment"),
+      source.indexOf("export const deleteAppointment"),
+    );
+
+    expect(updateSource).toContain("updateAppointmentWithTenantIsolation");
+    expect(updateSource).toContain("patientId !== undefined");
+    expect(updateSource).toContain("eq(appointments.id, appointmentId)");
+    expect(updateSource).toContain(
+      "eq(appointments.organizationId, organization.id)",
+    );
+    expect(updateSource).toContain("eq(pets.id, patientId)");
+    expect(updateSource).toContain("eq(pets.organizationId, organization.id)");
+  });
+
+  test("updateReport scopes report, patient, and coherent current or requested appointment", () => {
+    const source = readFileSync(
+      new URL("./reports.function.ts", import.meta.url),
+      "utf8",
+    );
+    const updateSource = source.slice(
+      source.indexOf("export const updateReport"),
+      source.indexOf("export const getAnatomicalParts"),
+    );
+
+    expect(updateSource).toContain("updateReportWithTenantIsolation");
+    expect(updateSource).toContain(
+      "eq(advancedReport.createdBy, organization.id)",
+    );
+    expect(updateSource).toContain("eq(pets.id, patientId)");
+    expect(updateSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(updateSource).toContain(
+      "eq(appointments.id, resolvedAppointmentId)",
+    );
+    expect(updateSource).toContain(
+      "eq(appointments.organizationId, organization.id)",
+    );
+    expect(updateSource).toContain("eq(appointments.patientId, patientId)");
+  });
+});

@@ -1,4 +1,5 @@
 type EntityReference = { id: string };
+type ReportReference = EntityReference & { appointmentId?: string | null };
 
 type TenantReference = string | null | undefined;
 
@@ -78,6 +79,51 @@ export async function createReportWithTenantIsolation<T>({
   }
 
   return insertReport();
+}
+
+export async function updateAppointmentWithTenantIsolation<T>({
+  findAppointment,
+  findPatient,
+  updateAppointment,
+}: {
+  findAppointment: () => Promise<EntityReference | null | undefined>;
+  findPatient?: () => Promise<EntityReference | null | undefined>;
+  updateAppointment: () => Promise<T>;
+}) {
+  if (!(await findAppointment())) {
+    throw new Error("Rendez-vous non trouvé ou non autorisé");
+  }
+
+  if (findPatient && !(await findPatient())) {
+    throw new Error("Patient non trouvé ou inaccessible");
+  }
+
+  return updateAppointment();
+}
+
+export async function updateReportWithTenantIsolation<T>({
+  findReport,
+  findPatient,
+  validateAppointment,
+  updateReport,
+}: {
+  findReport: () => Promise<ReportReference | null | undefined>;
+  findPatient: () => Promise<EntityReference | null | undefined>;
+  validateAppointment: (report: ReportReference) => Promise<boolean>;
+  updateReport: (report: ReportReference) => Promise<T>;
+}) {
+  const report = await findReport();
+  if (!report) throw new Error("Report not found or unauthorized");
+
+  if (!(await findPatient())) {
+    throw new Error("Patient non trouvé ou inaccessible");
+  }
+
+  if (!(await validateAppointment(report))) {
+    throw new Error("Rendez-vous non trouvé ou incompatible");
+  }
+
+  return updateReport(report);
 }
 
 export async function createPatientWithOwnerIsolation<T>({
