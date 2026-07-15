@@ -28,6 +28,7 @@ const patientPageMocks = vi.hoisted(() => ({
   patients: [] as Array<Record<string, unknown>>,
   search: { page: 2, search: "", type: "tous" },
   toastSuccess: vi.fn((_message: string) => undefined),
+  updateAction: vi.fn(async (input: Record<string, unknown>) => input),
 }));
 
 vi.mock("react", async () => {
@@ -80,7 +81,7 @@ vi.mock("#/components/animal-folder", () => ({
 vi.mock("#/lib/api/actions/patients.action", () => ({
   createPatient: vi.fn(),
   deletePatient: patientPageMocks.deleteAction,
-  updatePatient: vi.fn(),
+  updatePatient: patientPageMocks.updateAction,
 }));
 
 vi.mock("#/lib/api/queries/clients.query", () => ({
@@ -106,9 +107,13 @@ vi.mock("#/components/dashboard/lists/entity-row-actions", async () => {
     EntityRowActions: ({
       entityName,
       onDelete,
+      onEdit,
+      onView,
     }: {
       entityName: string;
       onDelete: () => void;
+      onEdit: () => void;
+      onView: () => void;
     }) => {
       const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -130,6 +135,30 @@ vi.mock("#/components/dashboard/lists/entity-row-actions", async () => {
           ? createElement(
               "div",
               { role: "menu" },
+              createElement(
+                "button",
+                {
+                  onClick: () => {
+                    setIsMenuOpen(false);
+                    onView();
+                  },
+                  role: "menuitem",
+                  type: "button",
+                },
+                "Voir",
+              ),
+              createElement(
+                "button",
+                {
+                  onClick: () => {
+                    setIsMenuOpen(false);
+                    onEdit();
+                  },
+                  role: "menuitem",
+                  type: "button",
+                },
+                "Modifier",
+              ),
               createElement(
                 "button",
                 {
@@ -167,6 +196,24 @@ vi.mock("#/components/dashboard/lists/entity-row-actions", async () => {
             ),
           )
         : null,
+  };
+});
+
+vi.mock("#/components/ui/credenza", async () => {
+  const { createElement } = await import("react");
+  const Container = ({ children }: { children?: ReactNode }) =>
+    createElement("div", null, children);
+
+  return {
+    Credenza: ({ children, open }: { children?: ReactNode; open: boolean }) =>
+      open ? createElement("div", { role: "dialog" }, children) : null,
+    CredenzaContent: Container,
+    CredenzaDescription: ({ children }: { children?: ReactNode }) =>
+      createElement("p", null, children),
+    CredenzaFooter: Container,
+    CredenzaHeader: Container,
+    CredenzaTitle: ({ children }: { children?: ReactNode }) =>
+      createElement("h2", null, children),
   };
 });
 
@@ -293,6 +340,66 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("patient list actions", () => {
+  test("edits a patient through the composed menu and prefilled form flow", async () => {
+    const routeModule =
+      (await import("./patients")) as typeof import("./patients") & {
+        PatientsPage: ComponentType;
+      };
+
+    render(createElement(routeModule.PatientsPage));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Actions pour Patient 11" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Modifier" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Modifier le patient" }),
+    ).toBeTruthy();
+    expect(
+      (screen.getByLabelText("Nom du patient") as HTMLInputElement).value,
+    ).toBe("Patient 11");
+    expect((screen.getByLabelText("Race") as HTMLInputElement).value).toBe(
+      "Européen",
+    );
+    expect((screen.getByLabelText("Naissance") as HTMLInputElement).value).toBe(
+      "2024-01-11",
+    );
+
+    fireEvent.change(screen.getByLabelText("Nom du patient"), {
+      target: { value: "Nala suivie" },
+    });
+    fireEvent.change(screen.getByLabelText("Notes"), {
+      target: { value: "Contrôle annuel" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(patientPageMocks.updateAction).toHaveBeenCalledWith({
+        id: "patient-11",
+        name: "Nala suivie",
+        ownerId: "client-1",
+        type: "animal-1",
+        breed: "Européen",
+        gender: "Female",
+        birthDate: new Date(2024, 0, 11, 12),
+        weight: 4,
+        height: 25,
+        description: "Contrôle annuel",
+      });
+      expect(patientPageMocks.invalidateQueries.mock.calls).toEqual([
+        [{ queryKey: ["patients"] }],
+        [{ queryKey: ["clients"] }],
+      ]);
+      expect(
+        screen.queryByRole("heading", { name: "Modifier le patient" }),
+      ).toBeNull();
+    });
+    expect(patientPageMocks.toastSuccess).toHaveBeenCalledWith(
+      "Patient modifié.",
+    );
+  });
+
   test("deletes the only patient on page two through the composed page flow", async () => {
     const routeModule =
       (await import("./patients")) as typeof import("./patients") & {
@@ -349,6 +456,7 @@ describe("patient list actions", () => {
     expect(source).toContain("refreshEntityListsAfterRemoval");
     expect(source).toContain("reconcileEditedEntity");
     expect(source).toContain("form.state.isSubmitting");
+    expect(source).toContain("getClientDisplayName(client.name)");
   });
 
   test("blocks only user close requests while the form is submitting", () => {

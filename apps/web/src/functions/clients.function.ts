@@ -5,6 +5,7 @@ import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
+import { deleteRecordWithUploadThingFiles } from "#/server/uploadthing-files";
 import {
   createClientSchema,
   deleteClientSchema,
@@ -142,19 +143,48 @@ export const deleteClient = createServerFn({ method: "POST" })
       throw new Error("Organization not found");
     }
 
-    const [deletedClient] = await db
-      .delete(clients)
-      .where(
-        and(
-          eq(clients.id, data.id),
-          eq(clients.organizationId, organization.id),
-        ),
-      )
-      .returning({ id: clients.id });
+    const client = await db.query.clients.findFirst({
+      where: and(
+        eq(clients.id, data.id),
+        eq(clients.organizationId, organization.id),
+      ),
+      columns: { id: true },
+      with: {
+        pets: {
+          columns: { id: true },
+          with: {
+            medicalDocuments: {
+              columns: { fileUrl: true },
+            },
+          },
+        },
+      },
+    });
 
-    if (!deletedClient) {
+    if (!client) {
       throw new Error("Client introuvable ou inaccessible.");
     }
 
-    return deletedClient;
+    return deleteRecordWithUploadThingFiles({
+      fileUrls: client.pets.flatMap((patient) =>
+        patient.medicalDocuments.map((document) => document.fileUrl),
+      ),
+      deleteRecord: async () => {
+        const [deletedClient] = await db
+          .delete(clients)
+          .where(
+            and(
+              eq(clients.id, data.id),
+              eq(clients.organizationId, organization.id),
+            ),
+          )
+          .returning({ id: clients.id });
+
+        if (!deletedClient) {
+          throw new Error("Client introuvable ou inaccessible.");
+        }
+
+        return deletedClient;
+      },
+    });
   });

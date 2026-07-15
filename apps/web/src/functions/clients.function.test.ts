@@ -37,8 +37,17 @@ describe("client mutation authorization", () => {
     const organizationScopeCount = (
       source.match(/eq\(clients\.organizationId, organization\.id\)/g) ?? []
     ).length;
+    const deleteSource = source.slice(
+      source.indexOf("export const deleteClient"),
+    );
 
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);
     expect(source).toContain("Client introuvable ou inaccessible.");
+    expect(deleteSource).toContain(
+      "eq(clients.organizationId, organization.id)",
+    );
+    expect(deleteSource).toContain("medicalDocuments");
+    expect(deleteSource).toContain("fileUrl: true");
+    expect(deleteSource).toContain("deleteRecordWithUploadThingFiles");
   });
 });

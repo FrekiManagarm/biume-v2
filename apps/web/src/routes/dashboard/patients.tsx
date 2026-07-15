@@ -28,6 +28,7 @@ import {
 import {
   canChangeEntityFormOpenState,
   completeEntityDeletion,
+  getClientDisplayName,
   getPatientDeletionDescription,
   getPatientDisplayName,
   getPatientFormValues,
@@ -754,7 +755,7 @@ function PatientFormDialog({
                       <SelectContent>
                         {clients.map((client) => (
                           <SelectItem key={client.id} value={client.id}>
-                            {client.name ?? "Client sans nom"}
+                            {getClientDisplayName(client.name)}
                           </SelectItem>
                         ))}
                       </SelectContent>

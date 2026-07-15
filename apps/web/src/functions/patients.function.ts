@@ -5,6 +5,7 @@ import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getCurrentOrganization } from "#/functions/auth.function";
+import { deleteRecordWithUploadThingFiles } from "#/server/uploadthing-files";
 import {
   createPatientSchema,
   deletePatientSchema,
@@ -172,18 +173,40 @@ export const deletePatient = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const [deletedPatient] = await db
-      .delete(pets)
-      .where(
-        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
-      )
-      .returning({ id: pets.id });
+    const patient = await db.query.pets.findFirst({
+      where: and(
+        eq(pets.id, data.id),
+        eq(pets.organizationId, organization.id),
+      ),
+      columns: { id: true },
+      with: {
+        medicalDocuments: {
+          columns: { fileUrl: true },
+        },
+      },
+    });
 
-    if (!deletedPatient) {
+    if (!patient) {
       throw new Error("Patient introuvable ou inaccessible.");
     }
 
-    return deletedPatient;
+    return deleteRecordWithUploadThingFiles({
+      fileUrls: patient.medicalDocuments.map((document) => document.fileUrl),
+      deleteRecord: async () => {
+        const [deletedPatient] = await db
+          .delete(pets)
+          .where(
+            and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+          )
+          .returning({ id: pets.id });
+
+        if (!deletedPatient) {
+          throw new Error("Patient introuvable ou inaccessible.");
+        }
+
+        return deletedPatient;
+      },
+    });
   });
 
 export const getPatientById = createServerFn({ method: "GET" })
