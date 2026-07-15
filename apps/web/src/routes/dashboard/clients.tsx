@@ -106,7 +106,7 @@ export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
 });
 
-function ClientsPage() {
+export function ClientsPage() {
   const search = Route.useSearch();
   const queryClient = useQueryClient();
   const { data: clients } = useSuspenseQuery(
@@ -156,6 +156,7 @@ function ClientsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+  const currentClientIds = currentClients.map((client) => client.id);
   const activeClients = clients.filter((client) =>
     getLastActivityDate(client),
   ).length;
@@ -171,24 +172,26 @@ function ClientsPage() {
     });
   const deleteMutation = useMutation({
     mutationFn: deleteClient,
-    onSuccess: async () => {
+    onSuccess: async (_deletedClient, input) => {
       await completeClientDeletion({
         currentPage,
-        itemCountOnPage: currentClients.length,
         close: () => setClientToDelete(null),
         invalidateQuery,
         navigateToPage,
+        removedId: input.id,
+        visibleIds: currentClientIds,
       });
       toast.success("Client supprimé.");
     },
-    onError: async (error) => {
+    onError: async (error, input) => {
       const wasHandled = await handleClientDeletionError({
         error,
         currentPage,
-        itemCountOnPage: currentClients.length,
         close: () => setClientToDelete(null),
         invalidateQuery,
         navigateToPage,
+        removedId: input.id,
+        visibleIds: currentClientIds,
       });
 
       if (wasHandled) {
@@ -411,9 +414,10 @@ function ClientsPage() {
             );
             await refreshClientListsAfterRemoval({
               currentPage,
-              itemCountOnPage: currentClients.length,
               invalidateQuery,
               navigateToPage,
+              removedId: editedId,
+              visibleIds: currentClientIds,
             });
           }}
         />

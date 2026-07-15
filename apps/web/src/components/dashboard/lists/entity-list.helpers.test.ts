@@ -5,6 +5,7 @@ import {
   getClientDeletionDescription,
   getClientFormValues,
   getPageAfterDeletion,
+  getPageAfterEntityRemoval,
   getPatientFormValues,
   isStaleEntityError,
 } from "./entity-list.helpers";
@@ -103,6 +104,23 @@ describe("getPageAfterDeletion", () => {
     "returns page %i after deleting one of %i items from page %i",
     (currentPage, itemCount, expectedPage) => {
       expect(getPageAfterDeletion(currentPage, itemCount)).toBe(expectedPage);
+    },
+  );
+});
+
+describe("getPageAfterEntityRemoval", () => {
+  test.each([
+    [3, ["A"], "A", 2],
+    [3, [], "A", 2],
+    [3, ["B"], "A", 3],
+    [3, ["A", "B"], "A", 3],
+    [1, [], "A", 1],
+  ])(
+    "resolves page %i with visible ids %j after removing %s",
+    (currentPage, visibleIds, removedId, expectedPage) => {
+      expect(
+        getPageAfterEntityRemoval(currentPage, visibleIds, removedId),
+      ).toBe(expectedPage);
     },
   );
 });

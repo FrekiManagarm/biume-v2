@@ -81,9 +81,22 @@ export function getPageAfterDeletion(
   return itemCountOnPage === 1 ? Math.max(1, currentPage - 1) : currentPage;
 }
 
+export function getPageAfterEntityRemoval(
+  currentPage: number,
+  visibleIds: readonly string[],
+  removedId: string,
+) {
+  const remainingVisibleIds = visibleIds.filter((id) => id !== removedId);
+
+  return currentPage > 1 && remainingVisibleIds.length === 0
+    ? currentPage - 1
+    : currentPage;
+}
+
 type ClientListRefreshOptions = {
   currentPage: number;
-  itemCountOnPage: number;
+  visibleIds: readonly string[];
+  removedId: string;
   invalidateQuery: (queryKey: readonly string[]) => Promise<unknown>;
   navigateToPage: (page: number) => Promise<unknown>;
 };
@@ -121,11 +134,16 @@ export async function invalidateClientLists(
 
 export async function refreshClientListsAfterRemoval({
   currentPage,
-  itemCountOnPage,
   invalidateQuery,
   navigateToPage,
+  removedId,
+  visibleIds,
 }: ClientListRefreshOptions) {
-  const nextPage = getPageAfterDeletion(currentPage, itemCountOnPage);
+  const nextPage = getPageAfterEntityRemoval(
+    currentPage,
+    visibleIds,
+    removedId,
+  );
 
   await invalidateClientLists(invalidateQuery);
   if (nextPage !== currentPage) {
