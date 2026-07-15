@@ -2,11 +2,29 @@ import { describe, expect, test } from "vitest";
 
 import {
   emptyClientFormValues,
+  getClientDeletionDescription,
   getClientFormValues,
   getPageAfterDeletion,
   getPatientFormValues,
   isStaleEntityError,
 } from "./entity-list.helpers";
+
+describe("getClientDeletionDescription", () => {
+  test.each([
+    [0, ["aucun patient"]],
+    [1, ["1 patient"]],
+    [3, ["3 patients", "données associées"]],
+  ])(
+    "describes the irreversible cascade for %i attached patients",
+    (patientCount, expectedFragments) => {
+      const description = getClientDeletionDescription(patientCount);
+
+      for (const fragment of expectedFragments) {
+        expect(description).toContain(fragment);
+      }
+    },
+  );
+});
 
 describe("getClientFormValues", () => {
   test("normalizes nullable client fields to empty strings", () => {

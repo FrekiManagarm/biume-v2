@@ -1,11 +1,14 @@
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Client } from "@biume/db/schema/index";
 import {
   CalendarClock,
   Contact2,
-  Eye,
   Mail,
   PawPrint,
   Phone,
@@ -17,6 +20,16 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import {
+  DeleteEntityDialog,
+  EntityRowActions,
+} from "#/components/dashboard/lists/entity-row-actions";
+import {
+  getClientDeletionDescription,
+  getClientFormValues,
+  getPageAfterDeletion,
+  isStaleEntityError,
+} from "#/components/dashboard/lists/entity-list.helpers";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -45,7 +58,11 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
-import { createClient } from "#/lib/api/actions/clients.action";
+import {
+  createClient,
+  deleteClient,
+  updateClient,
+} from "#/lib/api/actions/clients.action";
 import { clientsQueryOptions } from "#/lib/api/queries/clients.query";
 import { cn } from "#/lib/utils";
 
@@ -85,11 +102,15 @@ export const Route = createFileRoute("/dashboard/clients")({
 
 function ClientsPage() {
   const search = Route.useSearch();
+  const queryClient = useQueryClient();
   const { data: clients } = useSuspenseQuery(
     clientsQueryOptions({ search: search.search ?? "", limit: 250 }),
   );
   const navigate = useNavigate({ from: "/dashboard/clients" });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [clientToView, setClientToView] = useState<Client | null>(null);
+  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const searchQuery = search.search ?? "";
   const statusFilter = search.status ?? "tous";
   const currentPage = Math.max(1, search.page ?? 1);
@@ -136,6 +157,37 @@ function ClientsPage() {
     (sum, client) => sum + (client.pets?.length ?? 0),
     0,
   );
+  const deleteMutation = useMutation({
+    mutationFn: deleteClient,
+    onSuccess: async () => {
+      const nextPage = getPageAfterDeletion(currentPage, currentClients.length);
+
+      setClientToDelete(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["patients"] }),
+      ]);
+      if (nextPage !== currentPage) {
+        await navigate({
+          search: (previous) => ({ ...previous, page: nextPage }),
+        });
+      }
+      toast.success("Client supprimé.");
+    },
+    onError: async (error) => {
+      if (isStaleEntityError(error)) {
+        setClientToDelete(null);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["clients"] }),
+          queryClient.invalidateQueries({ queryKey: ["patients"] }),
+        ]);
+        toast.error("Ce client n’existe plus. Les listes ont été actualisées.");
+        return;
+      }
+
+      toast.error("Impossible de supprimer ce client. Réessayez.");
+    },
+  });
 
   function updateSearch(next: Partial<ClientsSearch>) {
     navigate({
@@ -284,14 +336,12 @@ function ClientsPage() {
                           {formatDate(getLastActivityDate(client))}
                         </TableCell>
                         <TableCell className="py-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-9"
-                          >
-                            <Eye className="size-4" />
-                            <span className="sr-only">Voir le client</span>
-                          </Button>
+                          <EntityRowActions
+                            entityName={client.name ?? "client sans nom"}
+                            onView={() => setClientToView(client)}
+                            onEdit={() => setClientToEdit(client)}
+                            onDelete={() => setClientToDelete(client)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -324,7 +374,49 @@ function ClientsPage() {
         </div>
       </Panel>
 
-      <CreateClientDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      {isCreateOpen ? (
+        <ClientFormDialog
+          key="create-client"
+          open
+          onOpenChange={setIsCreateOpen}
+        />
+      ) : null}
+      {clientToEdit ? (
+        <ClientFormDialog
+          key={clientToEdit.id}
+          client={clientToEdit}
+          open
+          onOpenChange={(open) => {
+            if (!open) setClientToEdit(null);
+          }}
+        />
+      ) : null}
+      {clientToView ? (
+        <ClientDetailsDialog
+          client={clientToView}
+          open
+          onOpenChange={(open) => {
+            if (!open) setClientToView(null);
+          }}
+        />
+      ) : null}
+      <DeleteEntityDialog
+        open={clientToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setClientToDelete(null);
+        }}
+        title={`Supprimer ${clientToDelete?.name ?? "ce client"} ?`}
+        description={getClientDeletionDescription(
+          clientToDelete?.pets?.length ?? 0,
+        )}
+        confirmLabel="Supprimer le client"
+        isPending={deleteMutation.isPending}
+        onConfirm={() => {
+          if (clientToDelete) {
+            deleteMutation.mutate({ id: clientToDelete.id });
+          }
+        }}
+      />
     </div>
   );
 }
@@ -338,50 +430,61 @@ const clientFormSchema = z.object({
       (value) => value.length === 0 || z.email().safeParse(value).success,
       "L'email doit être valide.",
     ),
-  phone: z.string().trim().optional(),
-  address: z.string().trim().optional(),
-  city: z.string().trim().optional(),
-  zip: z.string().trim().optional(),
-  country: z.string().trim().optional(),
+  phone: z.string().trim(),
+  address: z.string().trim(),
+  city: z.string().trim(),
+  zip: z.string().trim(),
+  country: z.string().trim(),
 });
 
 type ClientFormValues = z.infer<typeof clientFormSchema>;
 
-const clientDefaultValues = {
-  name: "",
-  email: "",
-  phone: "",
-  address: "",
-  city: "",
-  zip: "",
-  country: "France",
-} satisfies ClientFormValues;
-
-function CreateClientDialog({
+function ClientFormDialog({
+  client,
   onOpenChange,
   open,
 }: {
+  client?: Client | null;
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }) {
   const queryClient = useQueryClient();
+  const isEditing = Boolean(client);
   const form = useForm({
-    defaultValues: clientDefaultValues,
+    defaultValues: getClientFormValues(client) satisfies ClientFormValues,
     validators: {
       onSubmit: clientFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
-        await createClient(clientFormSchema.parse(value));
+        const parsed = clientFormSchema.parse(value);
+
+        if (client) {
+          await updateClient({
+            id: client.id,
+            ...parsed,
+          });
+        } else {
+          await createClient(parsed);
+        }
         await queryClient.invalidateQueries({ queryKey: ["clients"] });
-        toast.success("Client créé.");
+        toast.success(client ? "Client modifié." : "Client créé.");
         form.reset();
         onOpenChange(false);
       } catch (error) {
+        if (client && isStaleEntityError(error)) {
+          await queryClient.invalidateQueries({ queryKey: ["clients"] });
+          onOpenChange(false);
+          toast.error(
+            "Ce client n’existe plus. La liste des clients a été actualisée.",
+          );
+          return;
+        }
+
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Impossible de créer ce client.",
+          isEditing
+            ? "Impossible de modifier ce client. Réessayez."
+            : "Impossible de créer ce client. Réessayez.",
         );
       }
     },
@@ -412,11 +515,12 @@ function CreateClientDialog({
               </div>
               <CredenzaHeader className="min-w-0 flex-1 gap-1 text-left">
                 <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
-                  Nouveau client
+                  {isEditing ? "Modifier le client" : "Nouveau client"}
                 </CredenzaTitle>
                 <CredenzaDescription className="text-sm leading-relaxed text-slate-600">
-                  Créez une fiche propriétaire avec les coordonnées utiles au
-                  suivi.
+                  {isEditing
+                    ? "Actualisez les coordonnées utiles au suivi de ce propriétaire."
+                    : "Créez une fiche propriétaire avec les coordonnées utiles au suivi."}
                 </CredenzaDescription>
               </CredenzaHeader>
             </div>
@@ -643,12 +747,116 @@ function CreateClientDialog({
                   disabled={!canSubmit || isSubmitting}
                   className="gap-2 bg-slate-950 text-white hover:bg-slate-800"
                 >
-                  {isSubmitting ? "Création..." : "Créer le client"}
+                  {isSubmitting
+                    ? isEditing
+                      ? "Modification..."
+                      : "Création..."
+                    : isEditing
+                      ? "Enregistrer les modifications"
+                      : "Créer le client"}
                 </Button>
               )}
             />
           </CredenzaFooter>
         </form>
+      </CredenzaContent>
+    </Credenza>
+  );
+}
+
+function ClientDetailsDialog({
+  client,
+  onOpenChange,
+  open,
+}: {
+  client: Client;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
+  const address = [client.address, client.zip, client.city, client.country]
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <Credenza open={open} onOpenChange={onOpenChange}>
+      <CredenzaContent className="overflow-hidden p-0 sm:max-w-xl">
+        <div className="flex max-h-[calc(100dvh-3rem)] flex-col">
+          <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-5">
+            <div className="flex items-start gap-4 pr-8">
+              <InitialsBadge name={client.name ?? "Client"} />
+              <CredenzaHeader className="min-w-0 flex-1 gap-1 text-left">
+                <CredenzaTitle className="text-xl font-semibold tracking-tight text-slate-950">
+                  {client.name || "Client sans nom"}
+                </CredenzaTitle>
+                <CredenzaDescription className="text-sm leading-relaxed text-slate-600">
+                  Coordonnées du propriétaire et patients rattachés à cette
+                  fiche.
+                </CredenzaDescription>
+              </CredenzaHeader>
+            </div>
+          </div>
+
+          <div className="grid gap-6 overflow-y-auto px-6 py-5">
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-1">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Email
+                </dt>
+                <dd className="break-words text-sm text-slate-800">
+                  {client.email || "Email non renseigné"}
+                </dd>
+              </div>
+              <div className="grid gap-1">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Téléphone
+                </dt>
+                <dd className="text-sm text-slate-800">
+                  {client.phone || "Téléphone non renseigné"}
+                </dd>
+              </div>
+              <div className="grid gap-1 sm:col-span-2">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Adresse
+                </dt>
+                <dd className="text-sm leading-6 text-slate-800">
+                  {address || "Adresse non renseignée"}
+                </dd>
+              </div>
+            </dl>
+
+            <section aria-labelledby={`client-${client.id}-patients`}>
+              <h3
+                id={`client-${client.id}-patients`}
+                className="text-sm font-semibold text-slate-950"
+              >
+                Patients ({client.pets?.length ?? 0})
+              </h3>
+              {client.pets?.length ? (
+                <ul className="mt-3 grid gap-2">
+                  {client.pets.map((pet) => (
+                    <li
+                      key={pet.id}
+                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800"
+                    >
+                      <PawPrint className="size-4 shrink-0 text-emerald-700" />
+                      {pet.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+                  Aucun patient rattaché
+                </p>
+              )}
+            </section>
+          </div>
+
+          <CredenzaFooter className="mb-0 border-t border-slate-200 bg-white px-6 pb-6 pt-4">
+            <Button type="button" onClick={() => onOpenChange(false)}>
+              Fermer
+            </Button>
+          </CredenzaFooter>
+        </div>
       </CredenzaContent>
     </Credenza>
   );

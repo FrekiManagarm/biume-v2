@@ -30,6 +30,18 @@ export const emptyClientFormValues = {
   country: "France",
 };
 
+export function getClientDeletionDescription(patientCount: number) {
+  if (patientCount === 0) {
+    return "Cette action est irréversible. Ce client n’a aucun patient rattaché ; aucune fiche patient ne sera supprimée.";
+  }
+
+  if (patientCount === 1) {
+    return "Cette action est irréversible. La suppression entraînera également celle de 1 patient, de son dossier et de ses données associées.";
+  }
+
+  return `Cette action est irréversible. La suppression entraînera également celle de ${patientCount} patients, de leurs dossiers et de leurs données associées.`;
+}
+
 export function getClientFormValues(client?: ClientFormSource | null) {
   if (!client) return { ...emptyClientFormValues };
 
