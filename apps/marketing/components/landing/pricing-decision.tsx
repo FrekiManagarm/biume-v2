@@ -54,12 +54,12 @@ export function PricingDecision() {
 
         <div className="mt-10 grid gap-10 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
           <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
               Une offre. Deux rythmes.
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-              Testez tout le parcours pendant 15 jours.
             </h2>
+            <p className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
+              Testez tout le parcours pendant 15 jours.
+            </p>
 
             <ul className="mt-8 grid grid-cols-2 gap-3 border-t border-[color:var(--carnet-line)] pt-6 lg:grid-cols-1">
               {included.map((item) => (

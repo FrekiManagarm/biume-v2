@@ -85,6 +85,10 @@ describe("landing objection handling and close", () => {
     expect(faqHtml).toContain('data-conversion="faq-demo"');
     expect(faqHtml).toContain("carnet-action");
     expect(faqHtml).toContain("Réserver une démonstration");
+    expect(faqHtml).toContain('aria-describedby="faq-demo-new-tab"');
+    expect(faqHtml).toContain('id="faq-demo-new-tab"');
+    expect(faqHtml).toContain("sr-only");
+    expect(faqHtml).toContain("Ouvre dans un nouvel onglet.");
     expect(finalHtml).not.toContain("cal.com");
     expect(finalHtml.match(/<a\b/g)).toHaveLength(1);
   });

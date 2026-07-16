@@ -56,6 +56,13 @@ describe("pricing decision", () => {
     expect(selectorSource).toContain(
       "bg-[color:var(--carnet-violet)]",
     );
+    expect(selectorSource).not.toContain("text-white/70");
+    expect(html).toMatch(
+      /<h2\b[^>]*>\s*Une offre\. Deux rythmes\.\s*<\/h2>/,
+    );
+    expect(html).toMatch(
+      /<p\b[^>]*>\s*Testez tout le parcours pendant 15 jours\.\s*<\/p>/,
+    );
   });
 
   test("keeps lightweight interaction inside the price selector", async () => {

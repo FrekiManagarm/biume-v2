@@ -60,7 +60,7 @@ export function PricingSelector({
               <span
                 className={`relative mt-1 block font-mono text-xs ${
                   isSelected
-                    ? "text-white/70"
+                    ? "text-white"
                     : "text-[color:var(--carnet-muted)]"
                 }`}
               >

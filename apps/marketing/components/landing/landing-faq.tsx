@@ -65,10 +65,14 @@ export function LandingFaq() {
           href="https://cal.com/mathieu-chambaud-biume"
           target="_blank"
           rel="noopener noreferrer"
+          aria-describedby="faq-demo-new-tab"
           data-conversion="faq-demo"
           className="carnet-action mt-6 inline-flex min-h-11 items-center rounded-full border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] px-5 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
         >
           Réserver une démonstration
+          <span id="faq-demo-new-tab" className="sr-only">
+            Ouvre dans un nouvel onglet.
+          </span>
         </Link>
       </div>
 
