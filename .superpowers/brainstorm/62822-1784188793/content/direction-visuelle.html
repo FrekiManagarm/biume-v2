@@ -1,0 +1,109 @@
+<style>
+  .direction-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:28px; }
+  .direction { overflow:hidden; padding:0; }
+  .direction .card-image { height:340px; padding:14px; background:#e9e8e2; }
+  .mini-page { height:100%; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 22px 48px rgba(25,25,22,.14); }
+  .mini-nav { height:34px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font:600 8px/1 Arial,sans-serif; }
+  .mini-brand { display:flex; align-items:center; gap:6px; font-size:10px; }
+  .mini-logo { width:16px; height:16px; border-radius:6px 6px 9px 5px; background:conic-gradient(#4b8568,#d6d447,#638fba,#4b8568); }
+  .mini-links { opacity:.62; word-spacing:7px; }
+  .mini-button { padding:7px 10px; border-radius:999px; font-size:7px; }
+  .mini-copy { position:absolute; left:22px; right:22px; bottom:22px; }
+  .eyebrow { margin-bottom:9px; font:700 6px/1 Arial,sans-serif; text-transform:uppercase; letter-spacing:.14em; }
+  .headline { max-width:230px; font:700 27px/.91 Arial,sans-serif; letter-spacing:-.055em; }
+  .subcopy { margin-top:10px; max-width:190px; font:400 8px/1.4 Arial,sans-serif; opacity:.72; }
+  .actions { display:flex; gap:6px; margin-top:12px; }
+  .actions span { border-radius:999px; padding:7px 10px; font:700 7px/1 Arial,sans-serif; }
+  .system-scene { position:absolute; inset:42px 10px 126px 10px; }
+  .hill { position:absolute; border-radius:50%; filter:saturate(.8); }
+  .hill.one { width:230px; height:130px; background:#81a98a; left:-35px; top:62px; transform:rotate(8deg); }
+  .hill.two { width:220px; height:140px; background:#aec5aa; right:-55px; top:35px; transform:rotate(-11deg); }
+  .doc { position:absolute; width:57px; height:76px; border-radius:7px; background:#fffdf5; box-shadow:0 8px 20px rgba(28,54,40,.14); }
+  .doc:before,.doc:after { content:""; position:absolute; left:10px; right:10px; height:3px; border-radius:3px; background:#aac2b2; }
+  .doc:before { top:17px; box-shadow:0 10px #d1ded5,0 20px #d1ded5; }
+  .doc:after { bottom:11px; width:18px; background:#d1d94e; }
+  .doc.a { top:28px; left:48px; transform:rotate(-10deg); }
+  .doc.b { top:9px; right:54px; transform:rotate(8deg); }
+  .orb { position:absolute; border-radius:50%; box-shadow:inset -5px -6px 10px rgba(0,0,0,.12); }
+  .orb.o1 { width:23px; height:23px; background:#d6d447; left:130px; top:15px; }
+  .orb.o2 { width:15px; height:15px; background:#db765f; right:27px; top:81px; }
+  .orb.o3 { width:12px; height:12px; background:#588ca9; left:25px; top:105px; }
+  .path { position:absolute; left:105px; top:38px; width:90px; height:60px; border:7px solid #3f7b62; border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(14deg); }
+  .a-page { background:#f4f1e8; color:#193c2d; }
+  .a-page .mini-nav { background:rgba(255,255,255,.78); margin:8px; border-radius:12px; }
+  .a-page .mini-button,.a-page .actions span:first-child { background:#213c31; color:white; }
+  .a-page .actions span:last-child { background:#d6d447; color:#213c31; }
+  .a-page .mini-copy { color:#f8f5eb; }
+  .a-page:after { content:""; position:absolute; inset:190px 0 0; background:linear-gradient(180deg,rgba(29,84,58,0),#225b42 24%); }
+  .a-page .mini-copy { z-index:2; }
+
+  .b-page { background:#f7f2e7; color:#2b2923; border:1px solid #d8d0c1; }
+  .b-page .mini-nav { border-bottom:1px solid #d8d0c1; }
+  .b-page .mini-button,.b-page .actions span:first-child { background:#302f2a; color:#fff; }
+  .b-page .actions span:last-child { border:1px solid #aaa190; }
+  .b-page .headline { font-family:Georgia,serif; font-weight:500; font-size:28px; }
+  .b-page .mini-copy { top:70px; bottom:auto; right:90px; }
+  .b-page .editor-sheet { position:absolute; right:-15px; bottom:17px; width:205px; height:175px; border:1px solid #bbb3a4; background:#fffdf8; border-radius:4px; padding:14px; transform:rotate(-2deg); box-shadow:0 16px 40px rgba(70,55,35,.12); }
+  .b-page .editor-sheet:before { content:"Compte rendu — Ulysse"; display:block; font:700 7px Arial; border-bottom:1px solid #ddd5c8; padding-bottom:8px; }
+  .b-page .editor-sheet:after { content:"Observation\A Mobilité thoracique réduite à gauche.\A\A Proposition propriétaire\A Une gêne a été repérée au niveau du thorax. Le suivi est conseillé sous 30 jours."; white-space:pre-wrap; display:block; margin-top:9px; font:400 6px/1.55 Arial; color:#625d54; }
+  .b-page .stamp { position:absolute; left:18px; bottom:26px; width:56px; height:56px; border:1px solid #936e58; color:#936e58; border-radius:50%; display:grid; place-items:center; text-align:center; font:700 6px Arial; transform:rotate(-12deg); }
+
+  .c-page { background:#1f2420; color:#f4f0e5; }
+  .c-page .mini-nav { border-bottom:1px solid rgba(255,255,255,.12); }
+  .c-page .mini-button,.c-page .actions span:first-child { background:#d1d94e; color:#1f2420; }
+  .c-page .actions span:last-child { border:1px solid rgba(255,255,255,.32); }
+  .c-page .mini-copy { top:63px; bottom:auto; }
+  .c-page .headline { font-size:25px; }
+  .c-page .precision-ui { position:absolute; left:18px; right:18px; bottom:18px; height:126px; border:1px solid rgba(255,255,255,.14); border-radius:12px; background:#292f2a; overflow:hidden; }
+  .c-page .ui-side { position:absolute; inset:0 auto 0 0; width:55px; border-right:1px solid rgba(255,255,255,.1); padding:12px 8px; }
+  .c-page .ui-side i { display:block; height:4px; background:#6b726c; margin-bottom:9px; border-radius:4px; }
+  .c-page .ui-side i:first-child { background:#d1d94e; width:65%; }
+  .c-page .ui-main { margin-left:55px; padding:13px; }
+  .c-page .ui-line { height:5px; border-radius:4px; background:#687069; margin-bottom:8px; }
+  .c-page .ui-line.light { background:#e7e1d3; width:73%; }
+  .c-page .ui-line.short { width:45%; }
+  .c-page .ui-pill { position:absolute; right:12px; top:11px; padding:5px 7px; border-radius:99px; background:#d1d94e; color:#283028; font:700 6px Arial; }
+  .c-page .pulse { position:absolute; right:25px; bottom:24px; width:34px; height:34px; border:1px solid #d1d94e; border-radius:50%; }
+  .c-page .pulse:before,.c-page .pulse:after { content:""; position:absolute; inset:7px; border-radius:50%; border:1px solid #d1d94e; }
+  .c-page .pulse:after { inset:14px; background:#d1d94e; }
+  .recommend { display:inline-flex; margin-left:8px; padding:4px 7px; border-radius:999px; background:#e7edb0; color:#34402b; font-size:10px; font-weight:700; vertical-align:middle; }
+  @media (max-width: 980px) { .direction-grid { grid-template-columns:1fr; } .direction .card-image { height:380px; } }
+</style>
+
+<h2>Quelle direction doit guider la nouvelle landing Biume&nbsp;?</h2>
+<p class="subtitle">Les trois pistes reprennent la clarté, la présence visuelle et le rythme de Clay, sans copier son univers.</p>
+
+<div class="cards direction-grid">
+  <div class="card direction" data-choice="systeme-vivant" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-page a-page">
+        <div class="mini-nav"><div class="mini-brand"><span class="mini-logo"></span>Biume</div><div class="mini-links">Produit Tarifs Ressources</div><span class="mini-button">Essayer 15 jours</span></div>
+        <div class="system-scene"><span class="hill one"></span><span class="hill two"></span><span class="path"></span><span class="doc a"></span><span class="doc b"></span><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
+        <div class="mini-copy"><div class="eyebrow">Votre journée, mieux orchestrée</div><div class="headline">Moins d’administratif. Plus de temps pour soigner.</div><div class="subcopy">Des notes précises au suivi propriétaire, Biume garde chaque étape claire et maîtrisée.</div><div class="actions"><span>Essayer 15 jours</span><span>Voir une démo</span></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A — Le système vivant <span class="recommend">Recommandé</span></h3><p>Un univers tactile et mémorable où notes, comptes rendus et suivis circulent comme un mécanisme vivant. Le plus proche de l’énergie Clay, mais ancré dans le soin animal.</p></div>
+  </div>
+
+  <div class="card direction" data-choice="carnet-clinique" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-page b-page">
+        <div class="mini-nav"><div class="mini-brand"><span class="mini-logo"></span>Biume</div><div class="mini-links">Produit Tarifs Ressources</div><span class="mini-button">Essayer 15 jours</span></div>
+        <div class="mini-copy"><div class="eyebrow">Le temps retrouvé</div><div class="headline">La précision du praticien, comprise par le propriétaire.</div><div class="subcopy">Une direction éditoriale, calme et très humaine.</div><div class="actions"><span>Essayer 15 jours</span><span>Réserver une démo</span></div></div>
+        <div class="editor-sheet"></div><div class="stamp">RELUE<br>PAR VOUS</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B — Le carnet clinique</h3><p>Une landing éditoriale, chaleureuse et précise, qui fait du compte rendu la pièce maîtresse. Plus premium et posée, moins spectaculaire.</p></div>
+  </div>
+
+  <div class="card direction" data-choice="precision-lumineuse" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-page c-page">
+        <div class="mini-nav"><div class="mini-brand"><span class="mini-logo"></span>Biume</div><div class="mini-links">Produit Tarifs Ressources</div><span class="mini-button">Essayer 15 jours</span></div>
+        <div class="mini-copy"><div class="eyebrow">Le cabinet sans temps perdu</div><div class="headline">Chaque séance devient un suivi clair.</div><div class="subcopy">La preuve par le produit, avec une interface au premier plan.</div><div class="actions"><span>Essayer 15 jours</span><span>Réserver une démo</span></div></div>
+        <div class="precision-ui"><div class="ui-side"><i></i><i></i><i></i><i></i></div><div class="ui-main"><div class="ui-line light"></div><div class="ui-line"></div><div class="ui-line short"></div><div class="ui-line"></div><span class="ui-pill">Prêt à relire</span><span class="pulse"></span></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C — La précision lumineuse</h3><p>Une direction sombre, technique et très produit. Elle rassure sur la maîtrise, mais exprime moins la chaleur de la relation praticien–propriétaire.</p></div>
+  </div>
+</div>
