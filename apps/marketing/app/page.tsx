@@ -37,7 +37,7 @@ export default function Home() {
       </a>
       <JsonLd data={serviceSchema} />
       <LandingHeader />
-      <main id="contenu">
+      <main id="contenu" tabIndex={-1} className="scroll-mt-24">
         <LandingHero />
         <section
           data-landing-section="reassurance"

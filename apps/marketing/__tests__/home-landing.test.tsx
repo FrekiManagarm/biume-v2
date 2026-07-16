@@ -107,7 +107,11 @@ describe("Biume Carnet vivant homepage", () => {
     expect(html).toContain('href="#contenu"');
     expect(html).toContain("Aller au contenu");
     expect(html).toContain("focus-visible:not-sr-only");
-    expect(html).toContain('<main id="contenu">');
+    const main = html.match(/<main id="contenu"[^>]*>/)?.[0];
+
+    expect(main).toBeDefined();
+    expect(main).toContain('tabindex="-1"');
+    expect(main).toContain("scroll-mt-24");
     expect(html.indexOf('href="#contenu"')).toBeLessThan(
       html.indexOf("<header"),
     );
