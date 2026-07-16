@@ -33,12 +33,32 @@ describe("daily workflow", () => {
     const text = textOnly(html);
     const orderedList = html.match(/<ol\b[^>]*>[\s\S]*?<\/ol>/)?.[0];
     const orderedListText = textOnly(orderedList ?? "");
+    const introParagraphs = Array.from(
+      html.slice(0, html.indexOf("<ol")).matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g),
+      (match) => textOnly(match[1]),
+    );
+    const renderedSteps = Array.from(
+      (orderedList ?? "").matchAll(
+        /<li\b(?=[^>]*data-daily-step="([^"]+)")[^>]*>([\s\S]*?)<\/li>/g,
+      ),
+      (match) => ({ label: match[1], text: textOnly(match[2]) }),
+    );
 
     expect(html).toContain('data-landing-section="daily-flow"');
     expect(html).toContain('id="comment-ca-marche"');
+    expect(introParagraphs[0]).toBe("Le temps retrouvé");
     expect(text).toContain("Une journée de cabinet, sans ressaisie.");
+    expect(introParagraphs[1]).toBe(
+      "De la séance au suivi, Biume garde le même fil pour éviter de recommencer le travail à chaque étape.",
+    );
     expect(orderedList).toBeDefined();
     expect(html.match(/data-daily-step=/g)).toHaveLength(5);
+    expect(renderedSteps.map((step) => step.label)).toEqual(
+      steps.map((step) => step.label),
+    );
+    expect(
+      renderedSteps.map((step) => step.text.match(/^\d{2}\b/)?.[0]),
+    ).toEqual(["01", "02", "03", "04", "05"]);
 
     for (const step of steps) {
       expect(orderedListText).toContain(step.label);
