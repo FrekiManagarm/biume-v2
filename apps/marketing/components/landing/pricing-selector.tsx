@@ -51,7 +51,7 @@ export function PricingSelector({
               {isSelected ? (
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-[0.6rem] bg-[color:var(--carnet-ink)]"
+                  className="absolute inset-0 rounded-[0.6rem] bg-[color:var(--carnet-violet)]"
                 />
               ) : null}
               <span className="relative block text-sm font-semibold">

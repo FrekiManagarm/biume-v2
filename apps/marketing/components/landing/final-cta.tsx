@@ -20,16 +20,14 @@ export function FinalCta() {
       </div>
       <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
-          Votre prochain compte rendu
+          Votre prochaine séance
         </p>
         <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-          La séance est terminée.{" "}
-          <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-            Le suivi peut commencer.
-          </span>
+          Retrouvez du temps dès votre prochaine séance.
         </h2>
         <p className="mt-5 max-w-[42ch] text-base leading-7 text-[color:var(--carnet-muted)]">
-          Créez votre espace et préparez un premier document.
+          Créez votre espace, préparez un premier compte rendu et gardez la
+          main jusqu’à l’envoi.
         </p>
         <Link
           href={webAppPath("/signup")}

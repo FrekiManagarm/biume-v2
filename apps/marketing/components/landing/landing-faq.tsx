@@ -61,6 +61,15 @@ export function LandingFaq() {
           </Link>
           .
         </p>
+        <Link
+          href="https://cal.com/mathieu-chambaud-biume"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-conversion="faq-demo"
+          className="carnet-action mt-6 inline-flex min-h-11 items-center rounded-full border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] px-5 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+        >
+          Réserver une démonstration
+        </Link>
       </div>
 
       <div className="border-t border-[color:var(--carnet-line)]">

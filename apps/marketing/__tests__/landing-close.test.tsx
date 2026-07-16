@@ -61,16 +61,32 @@ describe("landing objection handling and close", () => {
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "final-signup");
 
-    expect(html).toContain("Votre prochain compte rendu");
-    expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
+    expect(html).toContain("Votre prochaine séance");
+    expect(text).toContain("Retrouvez du temps dès votre prochaine séance.");
     expect(text).toContain(
-      "Créez votre espace et préparez un premier document.",
+      "Créez votre espace, préparez un premier compte rendu et gardez la main jusqu’à l’envoi.",
     );
     expect(html).toContain("practitioner-owner-animal.png");
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html.match(/<a\b/g)).toHaveLength(1);
     expect(html).not.toContain("cal.com");
+  });
+
+  test("keeps demo contextual near the FAQ without competing in the final CTA", () => {
+    const faqHtml = renderToStaticMarkup(<LandingFaq />);
+    const finalHtml = renderWithLandingImageConfig(<FinalCta />);
+
+    expect(faqHtml).toContain(
+      'href="https://cal.com/mathieu-chambaud-biume"',
+    );
+    expect(faqHtml).toContain('target="_blank"');
+    expect(faqHtml).toContain('rel="noopener noreferrer"');
+    expect(faqHtml).toContain('data-conversion="faq-demo"');
+    expect(faqHtml).toContain("carnet-action");
+    expect(faqHtml).toContain("Réserver une démonstration");
+    expect(finalHtml).not.toContain("cal.com");
+    expect(finalHtml.match(/<a\b/g)).toHaveLength(1);
   });
 
   test("shared footer keeps legal and demo links without unsupported claims", () => {

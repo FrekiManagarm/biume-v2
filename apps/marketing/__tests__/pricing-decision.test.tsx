@@ -13,7 +13,7 @@ import {
 } from "./landing-test-utils";
 
 describe("pricing decision", () => {
-  test("leads with practitioner control and the annual price", () => {
+  test("leads with the revised offer and the annual price", async () => {
     const html = renderToStaticMarkup(<PricingDecision />);
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "pricing-signup");
@@ -26,6 +26,8 @@ describe("pricing decision", () => {
     expect(html).toContain("par mois, facturé annuellement");
     expect(html).toContain("299,88 € facturés une fois par an");
     expect(html).toContain("29,99 € / mois");
+    expect(text).toContain("Une offre. Deux rythmes.");
+    expect(text).toContain("Testez tout le parcours pendant 15 jours.");
     expect(billingOptions.annual).toEqual({
       label: "Annuel",
       selectorPrice: "24,99 € / mois",
@@ -40,9 +42,6 @@ describe("pricing decision", () => {
       suffix: "par mois",
       detail: "Facturation mensuelle, résiliable en fin de période",
     });
-    expect(text).toContain(
-      "15 jours pour tester l'ensemble du parcours, sans carte bancaire.",
-    );
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html.match(/aria-pressed="false"/g)).toHaveLength(1);
     expect(html).toContain('aria-live="polite"');
@@ -50,6 +49,13 @@ describe("pricing decision", () => {
     expect(signupAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(html).not.toMatch(exactZeroOpacity);
+
+    const selectorSource = await Bun.file(
+      new URL("../components/landing/pricing-selector.tsx", import.meta.url),
+    ).text();
+    expect(selectorSource).toContain(
+      "bg-[color:var(--carnet-violet)]",
+    );
   });
 
   test("keeps lightweight interaction inside the price selector", async () => {
