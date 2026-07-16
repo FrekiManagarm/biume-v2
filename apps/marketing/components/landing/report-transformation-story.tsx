@@ -4,6 +4,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type RefObject,
 } from "react";
@@ -221,6 +222,7 @@ function OwnerDocument({ demo }: { demo: ReportTransformationDemo }) {
 export function ReportTransformationStory({
   demo,
 }: Readonly<{ demo: ReportTransformationDemo }>) {
+  const [replayKey, setReplayKey] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   useReportEnhancement(sectionRef);
 
@@ -238,25 +240,35 @@ export function ReportTransformationStory({
           </p>
           <div>
             <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.05em] md:text-6xl">
-              Le même fond.{" "}
+              Précis pour vous.{" "}
               <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-                Une forme enfin lisible.
+                Clair pour le propriétaire.
               </span>
             </h2>
             <p className="mt-5 max-w-[48ch] text-sm leading-6 text-white/60 md:text-base md:leading-7">
-              Vous notez librement. Biume organise. Vous relisez.
+              Votre observation reste la source. Vous notez librement. Biume
+              organise. Vous relisez.
             </p>
           </div>
         </div>
 
         <div
-          id="comment-ca-marche"
-          className="mt-10 scroll-mt-24 md:mt-14 md:grid md:grid-cols-[0.78fr_0.46fr_1.18fr] md:items-center"
+          key={replayKey}
+          data-report-replay-stage
+          className="report-replay-stage mt-10 md:mt-14 md:grid md:grid-cols-[0.78fr_0.46fr_1.18fr] md:items-center"
         >
           <SourceNote />
           <TransformationBridge />
           <OwnerDocument demo={demo} />
         </div>
+
+        <button
+          type="button"
+          onClick={() => setReplayKey((current) => current + 1)}
+          className="carnet-action mt-8 inline-flex min-h-11 items-center rounded-full border border-white/20 px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-logo-violet)]"
+        >
+          Rejouer la transformation
+        </button>
 
         <ol
           data-report-sequence

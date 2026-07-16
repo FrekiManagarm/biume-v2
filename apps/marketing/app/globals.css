@@ -456,6 +456,19 @@ details[open] [data-faq-indicator] {
   }
 }
 
+@keyframes report-replay {
+  from {
+    transform: translate3d(0, 10px, 0) scale(0.99);
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.report-replay-stage {
+  animation: report-replay 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .report-bridge-line {
   background-image: linear-gradient(
     to bottom,
@@ -546,6 +559,10 @@ details[open] [data-faq-indicator] {
   .carnet-action:hover,
   .carnet-action:active {
     transform: none;
+  }
+
+  .report-replay-stage {
+    animation: none;
   }
 
   .carnet-theme details::details-content {

@@ -123,9 +123,8 @@ describe("report transformation story", () => {
 
     for (const copy of [
       "De vos notes au propriétaire",
-      "Le même fond.",
-      "Une forme enfin lisible.",
-      "Vous notez librement. Biume organise. Vous relisez.",
+      "Précis pour vous. Clair pour le propriétaire.",
+      "Votre observation reste la source.",
       REPORT_NOTE_SUMMARY,
       demo.adaptedProposal,
       "Thorax",
@@ -135,6 +134,7 @@ describe("report transformation story", () => {
       "Biume organise",
       "Vous décidez",
       "Prêt à relire",
+      "Rejouer la transformation",
     ]) {
       expect(text).toContain(copy);
     }
@@ -143,9 +143,16 @@ describe("report transformation story", () => {
     expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-token(?:=|\s|>)/g)).toHaveLength(3);
+    expect(html.match(/data-report-replay-stage(?:=|\s|>)/g)).toHaveLength(1);
     expect(html).toContain('id="produit"');
-    expect(html).toContain('id="comment-ca-marche"');
+    expect(html).not.toContain('id="comment-ca-marche"');
     expect(html).toContain("md:grid-cols-[0.78fr_0.46fr_1.18fr]");
+    expect(html).toMatch(
+      /<button[^>]*type="button"[^>]*>Rejouer la transformation<\/button>/,
+    );
+    expect(html).toMatch(
+      /<button[^>]*class="[^"]*carnet-action[^"]*min-h-11[^"]*focus-visible:[^"]*"/,
+    );
     const bridgeLineClasses =
       html
         .match(/class="([^"]*report-bridge-line[^"]*)"/)?.[1]
@@ -238,9 +245,17 @@ describe("report transformation story", () => {
     expect(source).not.toContain("intersectionRatios");
     expect(source).not.toContain("reportActive");
     expect(source).not.toContain('from "motion/react"');
-    expect(source).not.toContain("useState(");
+    expect(source).toContain("useState");
+    expect(source).toContain(
+      "const [replayKey, setReplayKey] = useState(0);",
+    );
+    expect(source).toContain("key={replayKey}");
+    expect(source).toContain("setReplayKey((current) => current + 1)");
+    expect(source.match(/useState\(/g)).toHaveLength(1);
+    expect(source).not.toContain("useReducer");
     expect(source).not.toContain('addEventListener("scroll"');
     expect(source).not.toContain("requestAnimationFrame");
+    expect(source).not.toContain('id="comment-ca-marche"');
     expect(source).not.toContain("as CSSProperties");
     expect(source).toMatch(
       /type\s+ReportTokenStyle\s*=\s*CSSProperties\s*&\s*{\s*"--token-index":\s*number;?\s*}/s,
@@ -286,5 +301,25 @@ describe("report transformation story", () => {
     expect(css).not.toContain(".report-document-layer");
     expect(css).not.toContain("[data-report-active=");
     expect(css).not.toContain("[data-report-progress]");
+
+    const replayKeyframes = css.match(
+      /@keyframes\s+report-replay\s*{([\s\S]*?)^}/m,
+    )?.[1];
+    expect(replayKeyframes).toBeDefined();
+    expect(replayKeyframes).toContain(
+      "transform: translate3d(0, 10px, 0) scale(0.99);",
+    );
+    expect(replayKeyframes).toContain(
+      "transform: translate3d(0, 0, 0) scale(1);",
+    );
+    expect(replayKeyframes).not.toMatch(
+      /(?:opacity|top|left|width|height)\s*:/,
+    );
+    expect(css).toMatch(
+      /\.report-replay-stage\s*{[^}]*animation:\s*report-replay 680ms cubic-bezier\(0\.16, 1, 0\.3, 1\) both;/s,
+    );
+    expect(css).toMatch(
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.report-replay-stage\s*{[^}]*animation:\s*none;/s,
+    );
   });
 });
