@@ -36,30 +36,14 @@ export function PricingDecision() {
       className="scroll-mt-18 border-y border-[color:var(--carnet-line)] px-4 py-10 sm:px-6 md:py-20 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
-        <div
-          data-control-interlude
-          className="grid gap-6 border-b border-[color:var(--carnet-line)] pb-10 md:pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"
-        >
-          <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-            Biume prépare.{" "}
-            <span className="font-[family-name:var(--font-newsreader)] font-normal italic text-[color:var(--carnet-violet)]">
-              Vous décidez.
-            </span>
-          </h2>
-          <p className="max-w-[60ch] text-base leading-7 text-[color:var(--carnet-muted)] md:text-lg md:leading-8 lg:justify-self-end">
-            Biume ne partage rien automatiquement. Vous relisez, corrigez et
-            déclenchez vous-même le partage.
-          </p>
-        </div>
-
         <div className="mt-10 grid gap-10 md:mt-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-16">
           <div>
-            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
+            <h2 className="text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
               Une offre. Deux rythmes.
             </h2>
-            <p className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
+            <h3 className="mt-4 text-3xl font-semibold leading-[0.98] tracking-[-0.045em] text-[color:var(--carnet-ink)] md:text-5xl">
               Testez tout le parcours pendant 15 jours.
-            </p>
+            </h3>
 
             <ul className="mt-8 grid grid-cols-2 gap-3 border-t border-[color:var(--carnet-line)] pt-6 lg:grid-cols-1">
               {included.map((item) => (

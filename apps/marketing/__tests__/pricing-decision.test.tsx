@@ -18,10 +18,6 @@ describe("pricing decision", () => {
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "pricing-signup");
 
-    expect(text).toContain("Biume prépare. Vous décidez.");
-    expect(text).toContain(
-      "Biume ne partage rien automatiquement. Vous relisez, corrigez et déclenchez vous-même le partage.",
-    );
     expect(html).toContain("24,99 €");
     expect(html).toContain("par mois, facturé annuellement");
     expect(html).toContain("299,88 € facturés une fois par an");
@@ -61,8 +57,10 @@ describe("pricing decision", () => {
       /<h2\b[^>]*>\s*Une offre\. Deux rythmes\.\s*<\/h2>/,
     );
     expect(html).toMatch(
-      /<p\b[^>]*>\s*Testez tout le parcours pendant 15 jours\.\s*<\/p>/,
+      /<h3\b[^>]*>\s*Testez tout le parcours pendant 15 jours\.\s*<\/h3>/,
     );
+    expect(text).not.toContain("Biume prépare. Vous décidez.");
+    expect(html).not.toContain('data-control-interlude');
   });
 
   test("keeps lightweight interaction inside the price selector", async () => {

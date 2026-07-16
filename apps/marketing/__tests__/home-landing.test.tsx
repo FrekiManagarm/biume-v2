@@ -60,6 +60,17 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
+  test("gives reassurance an accessible section name", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const reassurance = landingSectionTag(html, "reassurance");
+
+    expect(reassurance).toBeDefined();
+    expect(reassurance).toContain('aria-labelledby="reassurance-title"');
+    expect(html).toContain(
+      '<h2 id="reassurance-title" class="sr-only">Une prise en main rassurante</h2>',
+    );
+  });
+
   test("keeps the mobile narrative inside the approved height budget", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const hero = landingSectionTag(html, "hero");
@@ -108,6 +119,7 @@ describe("Biume Carnet vivant homepage", () => {
     }
     expect(text).toContain(REPORT_NOTE_SUMMARY);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.adaptedProposal);
+    expect(text.match(/Biume prépare\. Vous décidez\./g)).toHaveLength(1);
     expect(html.match(/data-report-note(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
     expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
@@ -119,6 +131,30 @@ describe("Biume Carnet vivant homepage", () => {
     expect(html.match(/<details/g)).toHaveLength(6);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
     expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("keeps homepage layout, color, motion, and CSS utility guardrails explicit", async () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const [sceneSource, css] = await Promise.all([
+      Bun.file(
+        new URL("../components/landing/living-system-scene.tsx", import.meta.url),
+      ).text(),
+      Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
+    ]);
+    const topLeftCard = html.match(
+      /<article\b(?=[^>]*data-system-index="0")[^>]*>/,
+    )?.[0];
+
+    expect(html).not.toContain("h-screen");
+    expect(html).not.toMatch(/\bbg-black\b/);
+    expect(html).not.toMatch(/(?:#000000|background(?:-color)?\s*:\s*(?:black|#000)\b)/i);
+    expect(topLeftCard).toContain('data-system-motion="static"');
+    expect(sceneSource).toContain(
+      'data-system-motion={index === 0 ? "static" : "animated"}',
+    );
+    expect(css).not.toMatch(
+      /\.(?:landing-reveal-delay-[123]|landing-reassurance(?:-item)?|landing-media-frame)\b/,
+    );
   });
 
   test("keeps homepage ids unique and every navigation anchor live", () => {

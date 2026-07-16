@@ -62,7 +62,27 @@ function DocumentContent({ label }: { label: string }) {
   );
 }
 
+type DocumentMotion = (typeof LIVING_SYSTEM_DOCUMENT_MOTIONS)[number];
+
+function DocumentCard({
+  document,
+  index,
+}: Readonly<{ document: DocumentMotion; index: number }>) {
+  return (
+    <article
+      data-system-document
+      data-system-index={index}
+      data-system-motion={index === 0 ? "static" : "animated"}
+      className="living-system-document"
+    >
+      <DocumentContent label={document.label} />
+    </article>
+  );
+}
+
 function StaticSystemElements() {
+  const [staticDocument, ...movingDocuments] = LIVING_SYSTEM_DOCUMENT_MOTIONS;
+
   return (
     <>
       <div
@@ -70,23 +90,24 @@ function StaticSystemElements() {
         aria-hidden="true"
         className="living-system-orbit"
       />
-      {LIVING_SYSTEM_DOCUMENT_MOTIONS.map((document, index) => (
-        <article
-          key={document.label}
-          data-system-document
-          data-system-index={index}
-          className="living-system-document"
-        >
-          <DocumentContent label={document.label} />
-        </article>
+      {staticDocument ? (
+        <DocumentCard document={staticDocument} index={0} />
+      ) : null}
+      {movingDocuments.map((document, index) => (
+        <DocumentCard key={document.label} document={document} index={index + 1} />
       ))}
     </>
   );
 }
 
 const AnimatedSystemElements = memo(function AnimatedSystemElements() {
+  const [staticDocument, ...movingDocuments] = LIVING_SYSTEM_DOCUMENT_MOTIONS;
+
   return (
     <>
+      {staticDocument ? (
+        <DocumentCard document={staticDocument} index={0} />
+      ) : null}
       <m.div
         data-system-orbit
         aria-hidden="true"
@@ -97,11 +118,12 @@ const AnimatedSystemElements = memo(function AnimatedSystemElements() {
         }}
         transition={LIVING_SYSTEM_ORBIT_MOTION.transition}
       />
-      {LIVING_SYSTEM_DOCUMENT_MOTIONS.map((document, index) => (
+      {movingDocuments.map((document, index) => (
         <m.article
           key={document.label}
           data-system-document
-          data-system-index={index}
+          data-system-index={index + 1}
+          data-system-motion="animated"
           className="living-system-document"
           initial={{
             y: document.initial.y,

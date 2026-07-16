@@ -35,8 +35,12 @@ export default function Home() {
         <LandingHero />
         <section
           data-landing-section="reassurance"
+          aria-labelledby="reassurance-title"
           className="border-y border-[color:var(--carnet-line)] px-4 py-5 sm:px-6 lg:px-8"
         >
+          <h2 id="reassurance-title" className="sr-only">
+            Une prise en main rassurante
+          </h2>
           <ul className="mx-auto grid max-w-[90rem] gap-3 sm:grid-cols-3">
             <li>15 jours pour tout tester</li>
             <li>Sans carte bancaire</li>
