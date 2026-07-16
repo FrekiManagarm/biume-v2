@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import { DailyFlow } from "../components/landing/daily-flow";
-import { exactZeroOpacity, textOnly } from "./landing-test-utils";
+import { textOnly } from "./landing-test-utils";
 
 const steps = [
   {
@@ -27,7 +27,66 @@ const steps = [
   },
 ] as const;
 
+const forbiddenTimeClaims = [
+  "une heure",
+  "deux heures",
+  "minutes gagnées",
+  "gagnez une heure",
+  "gain de temps chiffré",
+] as const;
+
 describe("daily workflow", () => {
+  test("uses high-contrast ink for the decorative step numbers", () => {
+    const html = renderToStaticMarkup(<DailyFlow />);
+    const numberClassLists = Array.from(
+      html.matchAll(
+        /<span\b[^>]*class="([^"]*)"[^>]*>\s*0[1-5]\s*<\/span>/g,
+      ),
+      (match) => match[1].split(/\s+/),
+    );
+
+    expect(numberClassLists).toHaveLength(5);
+    for (const classList of numberClassLists) {
+      expect(classList).toContain("text-[color:var(--carnet-ink)]");
+    }
+  });
+
+  test("hides decorative step numbers from assistive technology", () => {
+    const html = renderToStaticMarkup(<DailyFlow />);
+    const numberOpeningTags = Array.from(
+      html.matchAll(/<span\b[^>]*>(?=\s*0[1-5]\s*<\/span>)/g),
+      (match) => match[0],
+    );
+
+    expect(numberOpeningTags).toHaveLength(5);
+    for (const openingTag of numberOpeningTags) {
+      expect(openingTag).toContain('aria-hidden="true"');
+    }
+  });
+
+  test("keeps every workflow step visible", () => {
+    const html = renderToStaticMarkup(<DailyFlow />);
+    const stepOpeningTags = Array.from(
+      html.matchAll(
+        /<li\b(?=[^>]*data-daily-step="[^"]+")[^>]*>/g,
+      ),
+      (match) => match[0],
+    );
+
+    expect(stepOpeningTags).toHaveLength(5);
+    for (const openingTag of stepOpeningTags) {
+      const classTokens =
+        openingTag.match(/\bclass="([^"]*)"/)?.[1].split(/\s+/) ?? [];
+
+      expect(classTokens).not.toContain("hidden");
+      expect(classTokens).not.toContain("invisible");
+      expect(classTokens).not.toContain("opacity-0");
+      expect(openingTag).not.toMatch(
+        /\shidden(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?(?=\s|>)/,
+      );
+    }
+  });
+
   test("shows the complete five-step cabinet workflow", () => {
     const html = renderToStaticMarkup(<DailyFlow />);
     const text = textOnly(html);
@@ -66,8 +125,11 @@ describe("daily workflow", () => {
       expect(orderedList).toContain(`data-daily-step="${step.label}"`);
     }
 
-    expect(text.toLowerCase()).not.toMatch(/\d+\s*(?:h|heure|minute)/);
-    expect(html).not.toMatch(exactZeroOpacity);
-    expect(html).not.toMatch(/\bhidden(?:=|\b)/);
+    const normalizedText = text.toLowerCase();
+
+    expect(normalizedText).not.toMatch(/\d+\s*(?:h|heure|minute)/);
+    for (const forbiddenClaim of forbiddenTimeClaims) {
+      expect(normalizedText).not.toContain(forbiddenClaim);
+    }
   });
 });
