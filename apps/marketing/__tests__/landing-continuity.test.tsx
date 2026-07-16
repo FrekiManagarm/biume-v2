@@ -15,6 +15,11 @@ describe("landing continuity", () => {
 
     expect(html).toContain('data-landing-section="follow-up"');
     expect(html).toContain("bg-[color:var(--carnet-blue-soft)]");
+    const kicker = html.match(
+      /<p\b[^>]*>La continuité après la séance<\/p>/,
+    )?.[0];
+    expect(kicker).toBeDefined();
+    expect(kicker).toContain("text-[color:var(--carnet-ink)]");
     expect(text).toContain("Le suivi ne repose plus sur votre mémoire.");
     expect(text).toContain("Compte rendu prêt à relire");
     expect(text).toContain("Suivi prévu dans 30 jours");

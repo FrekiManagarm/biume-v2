@@ -6,7 +6,7 @@ export function FollowUpStory() {
     >
       <div className="mx-auto grid max-w-[90rem] gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-center lg:gap-16">
         <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-blue)]">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-ink)]">
             La continuité après la séance
           </p>
           <h2 className="mt-4 max-w-[15ch] text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
