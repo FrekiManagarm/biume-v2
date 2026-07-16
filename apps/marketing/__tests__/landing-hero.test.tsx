@@ -1,5 +1,7 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
+import { HeaderMotion } from "../components/landing/header-motion";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
 import {
@@ -19,13 +21,39 @@ describe("Carnet vivant header and hero", () => {
     const source = await Bun.file(
       new URL("../components/landing/header-motion.tsx", import.meta.url),
     ).text();
+    const landingHeaderSource = await Bun.file(
+      new URL("../components/landing/landing-header.tsx", import.meta.url),
+    ).text();
+    const html = renderToStaticMarkup(
+      <HeaderMotion>
+        <a href="/signup">Essayer</a>
+      </HeaderMotion>,
+    );
+    const surfaceClass = html.match(
+      /data-header-surface[^>]*class="([^"]*)"/,
+    )?.[1];
 
     expect(source).toMatch(/^"use client";/);
     expect(source).toContain('from "motion/react"');
     expect(source).toContain("useReducedMotion");
     expect(source).toContain("useScroll");
     expect(source).toContain("useTransform");
+    expect(source).toContain("useTransform(scrollY, [0, 120], [0, -3])");
+    expect(source).toContain("useTransform(scrollY, [0, 120], [1, 0.985])");
+    expect(source).toContain(
+      "useTransform(scrollY, [0, 120], [0.92, 0.98])",
+    );
+    expect(source).toContain("style={reduceMotion ? undefined : { y, scale }}");
+    expect(source).toContain("opacity: reduceMotion ? 0.98 : surfaceOpacity");
     expect(source).not.toContain('addEventListener("scroll"');
+    expect(landingHeaderSource).not.toContain("use client");
+    expect(html).toContain("data-header-motion");
+    expect(html).toContain("data-header-surface");
+    expect(html).toContain("Essayer");
+    expect(html).not.toMatch(exactZeroOpacity);
+    expect(html).not.toContain("visibility:hidden");
+    expect(surfaceClass).toContain("inset-x-3 top-3 bottom-0");
+    expect(surfaceClass?.split(/\s+/)).not.toContain("inset-3");
   });
 
   test("homepage header keeps trial dominant and demo available", () => {
@@ -43,6 +71,11 @@ describe("Carnet vivant header and hero", () => {
       expect(html).toContain(label);
     }
     expect(html).toContain("Navigation mobile");
+    expect(
+      html.match(
+        /<span class="sr-only"> \(ouvre un nouvel onglet\)<\/span>/g,
+      ),
+    ).toHaveLength(2);
     expect(signupAnchors).toHaveLength(2);
     expect(demoAnchors).toHaveLength(2);
     for (const anchor of signupAnchors) {

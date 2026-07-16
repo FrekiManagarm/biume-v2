@@ -87,6 +87,7 @@ export function LandingHeader() {
           className="carnet-action inline-flex min-h-11 items-center rounded-full bg-[color:var(--carnet-muted-surface)] px-4 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
         >
           Réserver une démo
+          <span className="sr-only"> (ouvre un nouvel onglet)</span>
         </Link>
         <SignupLink />
       </div>
@@ -123,6 +124,7 @@ export function LandingHeader() {
                 className="carnet-action inline-flex min-h-11 items-center rounded-full bg-[color:var(--carnet-muted-surface)] px-4 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
               >
                 Réserver une démo
+                <span className="sr-only"> (ouvre un nouvel onglet)</span>
               </Link>
             </nav>
           </div>
