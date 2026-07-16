@@ -34,17 +34,21 @@ function landingSectionTag(html: string, id: string) {
 }
 
 describe("Biume Carnet vivant homepage", () => {
-  test("assembles four ordered conversion moments", () => {
+  test("assembles the eight ordered living-system sections", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
       'data-landing-section="hero"',
+      'data-landing-section="reassurance"',
+      'data-landing-section="daily-flow"',
       'data-landing-section="transformation"',
+      'data-landing-section="follow-up"',
+      'data-landing-section="control"',
       'data-landing-section="pricing"',
       'data-landing-section="faq-cta"',
     ];
 
     expect(html).toContain("carnet-theme");
-    expect(html.match(/data-landing-section=/g)).toHaveLength(4);
+    expect(html.match(/data-landing-section=/g)).toHaveLength(8);
     expect(html).not.toContain('data-landing-section="product-proof"');
     for (const marker of markers) {
       expect(html).toContain(marker);
@@ -62,7 +66,13 @@ describe("Biume Carnet vivant homepage", () => {
 
     expect(hero).toBeDefined();
     expect(hero).toContain("pb-10");
-    for (const id of ["transformation", "pricing", "faq-cta"]) {
+    for (const id of [
+      "daily-flow",
+      "transformation",
+      "follow-up",
+      "pricing",
+      "faq-cta",
+    ]) {
       const section = landingSectionTag(html, id);
 
       expect(section).toBeDefined();
@@ -71,14 +81,31 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
-  test("renders the approved promise, compact report story, price and close", () => {
+  test("renders the approved living-system promise, proof, offer and close", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain(
-      "Vos observations restent précises. Le propriétaire, lui, comprend.",
-    );
-    expect(text).toContain("Le même fond. Une forme enfin lisible.");
+    for (const copy of [
+      "Votre journée, mieux orchestrée",
+      "Moins d’administratif. Plus de temps pour soigner.",
+      "Biume transforme vos notes en comptes rendus précis et clairs, puis garde le fil du suivi propriétaire.",
+      "15 jours pour tout tester",
+      "Sans carte bancaire",
+      "Rien ne part sans votre validation",
+      "Une journée de cabinet, sans ressaisie.",
+      "Précis pour vous. Clair pour le propriétaire.",
+      "Votre observation reste la source.",
+      "Le suivi ne repose plus sur votre mémoire.",
+      "Biume prépare. Vous décidez.",
+      "Une offre. Deux rythmes.",
+      "Testez tout le parcours pendant 15 jours.",
+      "Retrouvez du temps dès votre prochaine séance.",
+    ]) {
+      expect(text).toContain(copy);
+    }
+    for (const step of ["Séance", "Notes", "Compte rendu", "Partage", "Suivi"]) {
+      expect(text).toContain(step);
+    }
     expect(text).toContain(REPORT_NOTE_SUMMARY);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.adaptedProposal);
     expect(html.match(/data-report-note(?:=|\s|>)/g)).toHaveLength(1);
@@ -91,7 +118,6 @@ describe("Biume Carnet vivant homepage", () => {
     expect(html).toContain("29,99 € / mois");
     expect(html.match(/<details/g)).toHaveLength(6);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
-    expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
     expect(html).not.toMatch(exactZeroOpacity);
   });
 
@@ -112,18 +138,35 @@ describe("Biume Carnet vivant homepage", () => {
 
   test("maps every stable conversion hook to the signup application", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
-    const expectedCounts = {
+    const expectedSignupCounts = {
       "header-signup": 2,
       "hero-signup": 1,
       "pricing-signup": 1,
       "final-signup": 1,
     } as const;
 
-    for (const [id, count] of Object.entries(expectedCounts)) {
+    for (const [id, count] of Object.entries(expectedSignupCounts)) {
       const anchors = conversionAnchors(html, id);
       expect(anchors).toHaveLength(count);
       for (const anchor of anchors) {
         expect(anchor).toContain(`href="${webAppPath("/signup")}"`);
+      }
+    }
+
+    const expectedDemoCounts = {
+      "header-demo": 2,
+      "hero-demo": 1,
+      "faq-demo": 1,
+    } as const;
+
+    for (const [id, count] of Object.entries(expectedDemoCounts)) {
+      const anchors = conversionAnchors(html, id);
+      expect(anchors).toHaveLength(count);
+      for (const anchor of anchors) {
+        expect(anchor).toContain(
+          'href="https://cal.com/mathieu-chambaud-biume"',
+        );
+        expect(anchor).toContain('target="_blank"');
       }
     }
   });
@@ -163,15 +206,19 @@ describe("Biume Carnet vivant homepage", () => {
     expect(service?.offers).toBeUndefined();
   });
 
-  test("limits client hydration to the two interactive islands", async () => {
+  test("limits client hydration to the four interactive islands", async () => {
     const clientIslands = [
+      "../components/landing/header-motion.tsx",
+      "../components/landing/living-system-scene.tsx",
       "../components/landing/report-transformation-story.tsx",
       "../components/landing/pricing-selector.tsx",
     ];
     const serverComponents = [
       "../components/landing/landing-header.tsx",
-      "../components/landing/header-motion.tsx",
       "../components/landing/landing-hero.tsx",
+      "../components/landing/daily-flow.tsx",
+      "../components/landing/follow-up-story.tsx",
+      "../components/landing/practitioner-control.tsx",
       "../components/landing/product-proof.tsx",
       "../components/landing/pricing-decision.tsx",
       "../components/landing/landing-faq.tsx",

@@ -1,8 +1,11 @@
 import LandingFooter from "../components/footer";
+import { DailyFlow } from "../components/landing/daily-flow";
 import { FinalCta } from "../components/landing/final-cta";
+import { FollowUpStory } from "../components/landing/follow-up-story";
 import { LandingFaq } from "../components/landing/landing-faq";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
+import { PractitionerControl } from "../components/landing/practitioner-control";
 import { PricingDecision } from "../components/landing/pricing-decision";
 import { ReportTransformationStory } from "../components/landing/report-transformation-story";
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
@@ -29,10 +32,21 @@ export default function Home() {
       <JsonLd data={serviceSchema} />
       <LandingHeader />
       <main id="contenu">
-        <LandingHero
-          adaptedProposal={REPORT_TRANSFORMATION_DEMO.adaptedProposal}
-        />
+        <LandingHero />
+        <section
+          data-landing-section="reassurance"
+          className="border-y border-[color:var(--carnet-line)] px-4 py-5 sm:px-6 lg:px-8"
+        >
+          <ul className="mx-auto grid max-w-[90rem] gap-3 sm:grid-cols-3">
+            <li>15 jours pour tout tester</li>
+            <li>Sans carte bancaire</li>
+            <li>Rien ne part sans votre validation</li>
+          </ul>
+        </section>
+        <DailyFlow />
         <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />
+        <FollowUpStory />
+        <PractitionerControl />
         <PricingDecision />
         <section
           id="questions"
