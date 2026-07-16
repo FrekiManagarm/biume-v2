@@ -107,6 +107,9 @@ describe("Carnet vivant header and hero", () => {
     expect(heroImage).toBeDefined();
     expect(heroImage?.toLowerCase()).toContain('fetchpriority="high"');
     expect(heroImage).toContain("q=65");
+    expect(heroImage).toContain(
+      'sizes="(min-width: 1504px) 1408px, (min-width: 1024px) calc(100vw - 96px), (min-width: 640px) calc(100vw - 80px), calc(100vw - 53px)"',
+    );
     expect(html).toContain("data-living-system-scene");
     expect(html.match(/data-system-document=/g)).toHaveLength(3);
     expect(html.match(/data-system-orbit=/g)).toHaveLength(1);
@@ -128,6 +131,53 @@ describe("Carnet vivant header and hero", () => {
     expect(text).not.toContain("Sans carte bancaire");
     expect(text).not.toContain("Rien ne part sans vous");
     expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("living-system motion cycles from explicit base transforms", async () => {
+    const sceneModule = await import(
+      "../components/landing/living-system-scene"
+    );
+    const orbitMotion = sceneModule.LIVING_SYSTEM_ORBIT_MOTION;
+    const documentMotions = sceneModule.LIVING_SYSTEM_DOCUMENT_MOTIONS;
+
+    expect(orbitMotion).toBeDefined();
+    expect(orbitMotion?.initial).toEqual({ rotate: -7 });
+    expect(orbitMotion?.animate).toEqual({ rotate: [-7, 353] });
+    expect(orbitMotion?.transition).toMatchObject({
+      type: "spring",
+      stiffness: 100,
+      damping: 20,
+      repeat: Infinity,
+    });
+
+    const expectedDocuments = [
+      { baseRotation: -2, drift: -8, delta: -0.7 },
+      { baseRotation: 1.2, drift: -10, delta: 0.6 },
+      { baseRotation: 2, drift: -7, delta: 0.8 },
+    ] as const;
+
+    expect(documentMotions).toHaveLength(expectedDocuments.length);
+    for (const [index, expected] of expectedDocuments.entries()) {
+      const motion = documentMotions?.[index];
+      expect(motion?.initial).toEqual({
+        y: 0,
+        rotate: expected.baseRotation,
+      });
+      expect(motion?.animate).toEqual({
+        y: [0, expected.drift, 0],
+        rotate: [
+          expected.baseRotation,
+          expected.baseRotation + expected.delta,
+          expected.baseRotation,
+        ],
+      });
+      expect(motion?.transition).toMatchObject({
+        type: "spring",
+        stiffness: 100,
+        damping: 20,
+        repeat: Infinity,
+      });
+    }
   });
 
   test("living-system motion is isolated, transform-only, and accessible", async () => {
@@ -166,6 +216,7 @@ describe("Carnet vivant header and hero", () => {
     expect(sceneSource).toContain("stiffness: 100");
     expect(sceneSource).toContain("damping: 20");
     expect(sceneSource).toMatch(/if\s*\(reduceMotion\)\s*\{[\s\S]*?return/);
+    expect(sceneSource).not.toContain("initial={false}");
     expect(sceneSource).not.toMatch(
       /\b(?:animate|initial|exit)\s*=\s*\{\{[^}]*\b(?:top|left|width|height)\s*:/s,
     );
