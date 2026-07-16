@@ -41,7 +41,7 @@ export function LandingHero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-conversion="hero-demo"
-                className="carnet-action inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--carnet-surface)] px-6 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px active:scale-[0.98]"
+                className="carnet-action hidden min-h-12 items-center justify-center rounded-full bg-[color:var(--carnet-surface)] px-6 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px active:scale-[0.98] sm:inline-flex"
               >
                 Réserver une démo
                 <span className="sr-only"> (ouvre un nouvel onglet)</span>

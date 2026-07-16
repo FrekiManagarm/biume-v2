@@ -29,6 +29,12 @@ const serviceSchema = {
 export default function Home() {
   return (
     <div className="carnet-theme min-h-dvh overflow-x-clip bg-[color:var(--carnet-canvas)] text-[color:var(--carnet-ink)] selection:bg-[color:var(--carnet-violet-soft)]">
+      <a
+        href="#contenu"
+        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:left-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-full focus-visible:bg-[color:var(--carnet-violet)] focus-visible:px-5 focus-visible:py-3 focus-visible:text-sm focus-visible:font-semibold focus-visible:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+      >
+        Aller au contenu
+      </a>
       <JsonLd data={serviceSchema} />
       <LandingHeader />
       <main id="contenu">

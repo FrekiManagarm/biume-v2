@@ -69,10 +69,19 @@ const LandingFooter = () => {
                     href={link.href}
                     className="flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     {...(link.href.startsWith("http")
-                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      ? {
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                          "aria-describedby": "footer-demo-new-tab",
+                        }
                       : {})}
                   >
                     {link.label}
+                    {link.href.startsWith("http") ? (
+                      <span id="footer-demo-new-tab" className="sr-only">
+                        Ouvre dans un nouvel onglet.
+                      </span>
+                    ) : null}
                   </Link>
                 </li>
               ))}

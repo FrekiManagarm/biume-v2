@@ -77,6 +77,19 @@ export function Header() {
               </Link>
             ))}
             <Link
+              href="https://cal.com/mathieu-chambaud-biume"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-describedby="header-demo-new-tab"
+              data-conversion="header-demo"
+              className={navigationLinkClassName}
+            >
+              Réserver une démo
+              <span id="header-demo-new-tab" className="sr-only">
+                Ouvre dans un nouvel onglet.
+              </span>
+            </Link>
+            <Link
               href={webAppPath("/signin")}
               prefetch={false}
               className={navigationLinkClassName}

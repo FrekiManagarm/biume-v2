@@ -92,6 +92,27 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
+  test("keeps only the signup CTA visible in the hero on mobile", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const heroDemo = conversionAnchors(html, "hero-demo");
+
+    expect(heroDemo).toHaveLength(1);
+    expect(heroDemo[0]).toContain("hidden");
+    expect(heroDemo[0]).toContain("sm:inline-flex");
+  });
+
+  test("starts the homepage with a focus-visible skip link to the main content", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+
+    expect(html).toContain('href="#contenu"');
+    expect(html).toContain("Aller au contenu");
+    expect(html).toContain("focus-visible:not-sr-only");
+    expect(html).toContain('<main id="contenu">');
+    expect(html.indexOf('href="#contenu"')).toBeLessThan(
+      html.indexOf("<header"),
+    );
+  });
+
   test("renders the approved living-system promise, proof, offer and close", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);

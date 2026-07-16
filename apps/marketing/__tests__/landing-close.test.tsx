@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import LandingFooter from "../components/footer";
+import { Header } from "../components/header";
 import { FinalCta } from "../components/landing/final-cta";
 import { LandingFaq } from "../components/landing/landing-faq";
 import { webAppPath } from "../lib/web-app-url";
@@ -93,6 +94,19 @@ describe("landing objection handling and close", () => {
     expect(finalHtml.match(/<a\b/g)).toHaveLength(1);
   });
 
+  test("adds the external demo to the generic mobile header navigation", () => {
+    const html = renderToStaticMarkup(<Header />);
+
+    expect(html).toContain(
+      'href="https://cal.com/mathieu-chambaud-biume"',
+    );
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('aria-describedby="header-demo-new-tab"');
+    expect(html).toContain('id="header-demo-new-tab"');
+    expect(html).toContain("Ouvre dans un nouvel onglet.");
+  });
+
   test("shared footer keeps legal and demo links without unsupported claims", () => {
     const html = renderWithLandingImageConfig(<LandingFooter />);
     const anchors = html.match(/<a\b[^>]*>/g) ?? [];
@@ -100,6 +114,9 @@ describe("landing objection handling and close", () => {
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/cgu"');
     expect(html).toContain('href="https://cal.com/mathieu-chambaud-biume"');
+    expect(html).toContain('aria-describedby="footer-demo-new-tab"');
+    expect(html).toContain('id="footer-demo-new-tab"');
+    expect(html).toContain("Ouvre dans un nouvel onglet.");
     expect(html).not.toContain('href="/contact"');
     expect(html).not.toContain("Hébergé en France");
     expect(html).not.toContain("conforme au RGPD");
