@@ -133,7 +133,7 @@ describe("Carnet vivant header and hero", () => {
     expect(html).not.toMatch(exactZeroOpacity);
   });
 
-  test("living-system motion cycles from explicit base transforms", async () => {
+  test("living-system documents use valid reversing scalar springs", async () => {
     const sceneModule = await import(
       "../components/landing/living-system-scene"
     );
@@ -151,9 +151,9 @@ describe("Carnet vivant header and hero", () => {
     });
 
     const expectedDocuments = [
-      { baseRotation: -2, drift: -8, delta: -0.7 },
-      { baseRotation: 1.2, drift: -10, delta: 0.6 },
-      { baseRotation: 2, drift: -7, delta: 0.8 },
+      { baseRotation: -2, targetY: -8, delta: -0.7 },
+      { baseRotation: 1.2, targetY: -10, delta: 0.6 },
+      { baseRotation: 2, targetY: -7, delta: 0.8 },
     ] as const;
 
     expect(documentMotions).toHaveLength(expectedDocuments.length);
@@ -163,19 +163,18 @@ describe("Carnet vivant header and hero", () => {
         y: 0,
         rotate: expected.baseRotation,
       });
+      expect(Array.isArray(motion?.animate.y)).toBe(false);
+      expect(Array.isArray(motion?.animate.rotate)).toBe(false);
       expect(motion?.animate).toEqual({
-        y: [0, expected.drift, 0],
-        rotate: [
-          expected.baseRotation,
-          expected.baseRotation + expected.delta,
-          expected.baseRotation,
-        ],
+        y: expected.targetY,
+        rotate: expected.baseRotation + expected.delta,
       });
       expect(motion?.transition).toMatchObject({
         type: "spring",
         stiffness: 100,
         damping: 20,
         repeat: Infinity,
+        repeatType: "reverse",
       });
     }
   });

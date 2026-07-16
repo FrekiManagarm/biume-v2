@@ -31,14 +31,14 @@ function createDocumentMotion(
     label,
     initial: Object.freeze({ y: 0, rotate: baseRotation }),
     animate: Object.freeze({
-      y: Object.freeze([0, drift, 0]),
-      rotate: Object.freeze([
-        baseRotation,
-        baseRotation + rotationDelta,
-        baseRotation,
-      ]),
+      y: drift,
+      rotate: baseRotation + rotationDelta,
     }),
-    transition: Object.freeze({ ...springTransition, delay }),
+    transition: Object.freeze({
+      ...springTransition,
+      repeatType: "reverse" as const,
+      delay,
+    }),
   });
 }
 
@@ -108,8 +108,8 @@ const AnimatedSystemElements = memo(function AnimatedSystemElements() {
             rotate: document.initial.rotate,
           }}
           animate={{
-            y: [...document.animate.y],
-            rotate: [...document.animate.rotate],
+            y: document.animate.y,
+            rotate: document.animate.rotate,
           }}
           transition={document.transition}
         >
