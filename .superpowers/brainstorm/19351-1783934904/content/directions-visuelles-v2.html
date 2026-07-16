@@ -1,0 +1,351 @@
+<style>
+  :root {
+    --biume-violet: #8e82e8;
+    --biume-green: #28c978;
+    --biume-blue: #62a8c8;
+    --ink: #202024;
+    --paper: #f8f8f4;
+  }
+
+  .intro-note {
+    max-width: 760px;
+    margin-bottom: 28px;
+  }
+
+  .direction-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .direction {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #deded8;
+    border-radius: 22px;
+    background: #fff;
+    cursor: pointer;
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+  }
+
+  .direction:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 24px 54px -40px rgba(32, 32, 36, 0.48);
+  }
+
+  .direction.selected {
+    border-color: var(--biume-violet);
+    box-shadow: 0 0 0 3px rgba(142, 130, 232, 0.16);
+  }
+
+  .preview {
+    min-height: 555px;
+    padding: 14px;
+    background: var(--paper);
+  }
+
+  .preview-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font: 700 9px/1.2 ui-monospace, monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #65656b;
+  }
+
+  .recommended {
+    padding: 5px 8px;
+    border-radius: 999px;
+    color: #4e438e;
+    background: rgba(142, 130, 232, 0.16);
+  }
+
+  .mini-hero,
+  .mini-flow,
+  .mini-follow {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(32, 32, 36, 0.11);
+  }
+
+  .mini-hero {
+    min-height: 188px;
+    margin-bottom: 8px;
+  }
+
+  .mini-flow {
+    min-height: 166px;
+    margin-bottom: 8px;
+  }
+
+  .mini-follow {
+    min-height: 146px;
+  }
+
+  .micro {
+    font: 700 7px/1.2 ui-monospace, monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .title {
+    max-width: 14ch;
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+  }
+
+  .copy {
+    max-width: 27ch;
+    margin-top: 10px;
+    color: #68686f;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .direction-body {
+    padding: 16px 17px 18px;
+  }
+
+  .direction-body h3 {
+    margin: 0 0 7px;
+    color: var(--ink);
+    font-size: 18px;
+  }
+
+  .direction-body p {
+    margin: 0;
+    color: #68686f;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* A — dossier vivant */
+  .a .mini-hero {
+    padding: 22px;
+    color: white;
+    border-radius: 9px 9px 34px 9px;
+    background: var(--ink);
+  }
+
+  .a .title {
+    position: relative;
+    z-index: 2;
+    font-size: 24px;
+  }
+
+  .a .copy { color: rgba(255, 255, 255, 0.62); }
+
+  .a .sheet-stack {
+    position: absolute;
+    right: -15px;
+    bottom: 16px;
+    width: 44%;
+    height: 124px;
+  }
+
+  .a .sheet {
+    position: absolute;
+    inset: 0;
+    padding: 12px;
+    border-radius: 7px 7px 23px 7px;
+    background: white;
+    box-shadow: 0 16px 30px -18px #000;
+  }
+
+  .a .sheet:nth-child(1) { transform: translate(-28px, 15px) rotate(-5deg); opacity: .38; }
+  .a .sheet:nth-child(2) { transform: translate(-13px, 7px) rotate(-2deg); opacity: .72; }
+  .a .sheet-line { height: 4px; margin: 7px 0; border-radius: 8px; background: #e4e3df; }
+  .a .sheet-line.brand { width: 56%; background: linear-gradient(90deg, var(--biume-violet), var(--biume-green)); }
+
+  .a .mini-flow {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr 1fr;
+    border-radius: 22px 8px 22px 8px;
+    background: white;
+  }
+
+  .a .flow-stage {
+    position: relative;
+    padding: 17px 10px;
+    border-right: 1px solid #e2e1dc;
+  }
+
+  .a .flow-stage:last-child { border-right: 0; }
+  .a .flow-no { color: var(--biume-violet); }
+  .a .flow-word { margin-top: 9px; font-size: 11px; font-weight: 760; }
+  .a .flow-text { margin-top: 8px; color: #77777d; font-size: 7px; line-height: 1.5; }
+  .a .flow-stage:nth-child(2)::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 16px;
+    height: 4px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--biume-violet), var(--biume-blue), var(--biume-green));
+  }
+
+  .a .mini-follow {
+    padding: 18px;
+    border-radius: 8px 26px 8px 26px;
+    background: #fff;
+  }
+
+  .a .timeline { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 20px; }
+  .a .event { position: relative; padding-top: 17px; border-top: 1px solid #cfcec8; }
+  .a .event::before { content: ""; position: absolute; top: -4px; left: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--biume-violet); }
+  .a .event:nth-child(2)::before { background: var(--biume-blue); }
+  .a .event:nth-child(3)::before { background: var(--biume-green); }
+  .a .event strong { display: block; font-size: 9px; }
+  .a .event span { color: #77777d; font-size: 7px; }
+
+  /* B — avant/après */
+  .b .mini-hero {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .b .hero-copy { padding: 21px 16px; }
+  .b .photo-shape { position: relative; background: linear-gradient(150deg, #d4d1c9, #6d6a61); }
+  .b .photo-shape::after { content: ""; position: absolute; inset: 16px 12px 18px -10px; border-radius: 42% 8px 38% 8px; background: linear-gradient(155deg, rgba(142,130,232,.96), rgba(40,201,120,.92)); mix-blend-mode: multiply; }
+
+  .b .mini-flow {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: white;
+  }
+
+  .b .compare-card { min-height: 120px; padding: 13px; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; background: rgba(255,255,255,.055); }
+  .b .compare-card.owner { color: var(--ink); background: #fdfdfb; }
+  .b .compare-lines { margin-top: 13px; }
+  .b .compare-lines i { display: block; height: 4px; margin: 7px 0; border-radius: 8px; background: currentColor; opacity: .16; }
+  .b .arrow { text-align: center; color: var(--biume-green); font-size: 16px; }
+
+  .b .mini-follow {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .b .follow-copy { padding: 16px; }
+  .b .follow-card { margin: 11px; padding: 13px; border-radius: 9px; color: #17442c; background: rgba(40,201,120,.15); }
+  .b .follow-card strong { display: block; margin-top: 10px; font-size: 10px; }
+
+  /* C — interface en mouvement */
+  .c .preview { background: #1f1f23; }
+  .c .preview-label { color: rgba(255,255,255,.6); }
+  .c .mini-hero { padding: 20px; border-color: rgba(255,255,255,.14); border-radius: 26px 8px 8px 8px; color: white; background: radial-gradient(circle at 90% 0%, rgba(142,130,232,.24), transparent 42%), #26262b; }
+  .c .title { max-width: 12ch; font-size: 23px; }
+  .c .copy { color: rgba(255,255,255,.58); }
+  .c .orbital { position: absolute; right: 12px; bottom: -8px; width: 128px; height: 128px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; }
+  .c .orbital::before, .c .orbital::after { content: ""; position: absolute; border-radius: 50%; }
+  .c .orbital::before { inset: 23px; border: 1px solid rgba(255,255,255,.16); }
+  .c .orbital::after { width: 18px; height: 18px; top: 14px; left: 24px; background: linear-gradient(135deg, var(--biume-violet), var(--biume-green)); }
+
+  .c .mini-flow { padding: 13px; border-color: rgba(255,255,255,.13); border-radius: 8px 24px 8px 8px; background: #26262b; }
+  .c .command { display: flex; align-items: center; gap: 7px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; color: white; background: rgba(255,255,255,.04); font-size: 8px; }
+  .c .cursor { width: 5px; height: 10px; background: var(--biume-green); }
+  .c .chips { display: flex; gap: 5px; margin-top: 12px; }
+  .c .chip { padding: 6px 7px; border-radius: 999px; color: rgba(255,255,255,.7); background: rgba(255,255,255,.07); font-size: 7px; }
+  .c .result-line { height: 5px; margin-top: 10px; border-radius: 9px; background: linear-gradient(90deg, rgba(142,130,232,.9), rgba(40,201,120,.9)); }
+  .c .result-line:nth-of-type(2) { width: 72%; opacity: .38; }
+
+  .c .mini-follow { padding: 14px; border-color: rgba(255,255,255,.13); border-radius: 8px; color: white; background: #26262b; }
+  .c .stream { display: flex; gap: 7px; margin-top: 14px; transform: translateX(-18px); }
+  .c .stream-card { min-width: 100px; padding: 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(255,255,255,.04); }
+  .c .stream-card.active { color: #173f2b; background: var(--biume-green); }
+  .c .stream-card strong { display: block; font-size: 9px; }
+  .c .stream-card span { display: block; margin-top: 7px; opacity: .62; font-size: 7px; }
+
+  @media (max-width: 980px) {
+    .direction-grid { grid-template-columns: 1fr; }
+    .preview { min-height: auto; }
+  }
+</style>
+
+<div class="intro-note">
+  <h2>Quelle direction doit guider les trois sections ?</h2>
+  <p class="subtitle">Chaque piste raconte le même parcours : vos notes deviennent un compte rendu clair, puis un suivi utile pour le propriétaire. Cliquez sur celle qui vous ressemble le plus.</p>
+</div>
+
+<div class="direction-grid">
+  <article class="direction a" data-choice="dossier-vivant" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="preview-label"><span>Direction A</span><span class="recommended">Recommandée</span></div>
+      <section class="mini-hero">
+        <div class="micro" style="color:var(--biume-green)">Après la séance</div>
+        <div class="title">Des observations précises. Des mots qui rassurent.</div>
+        <div class="copy">Biume transforme vos notes en un document clair, toujours relu par vous.</div>
+        <div class="sheet-stack">
+          <div class="sheet"></div><div class="sheet"></div>
+          <div class="sheet"><div class="sheet-line brand"></div><div class="sheet-line"></div><div class="sheet-line"></div><div class="sheet-line" style="width:68%"></div></div>
+        </div>
+      </section>
+      <section class="mini-flow">
+        <div class="flow-stage"><div class="micro flow-no">01</div><div class="flow-word">Vous notez</div><div class="flow-text">Vos mots, votre vocabulaire métier.</div></div>
+        <div class="flow-stage"><div class="micro flow-no">02</div><div class="flow-word">Biume structure</div><div class="flow-text">Le fond ne change pas. La lecture devient fluide.</div></div>
+        <div class="flow-stage"><div class="micro flow-no">03</div><div class="flow-word">Vous partagez</div><div class="flow-text">Une version claire, validée par vous.</div></div>
+      </section>
+      <section class="mini-follow">
+        <div class="micro" style="color:var(--biume-violet)">Le suivi continue</div>
+        <div class="timeline">
+          <div class="event"><strong>Séance</strong><span>Notes saisies</span></div>
+          <div class="event"><strong>Compte rendu</strong><span>PDF partagé</span></div>
+          <div class="event"><strong>J+30</strong><span>Relance choisie</span></div>
+        </div>
+      </section>
+    </div>
+    <div class="direction-body"><h3>Le dossier vivant</h3><p>Éditorial, premium et très lisible. Une pile de documents devient un fil chronologique, avec le violet et le vert comme début et aboutissement.</p></div>
+  </article>
+
+  <article class="direction b" data-choice="avant-apres" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="preview-label"><span>Direction B</span></div>
+      <section class="mini-hero">
+        <div class="hero-copy"><div class="micro" style="color:var(--biume-violet)">Compte rendu propriétaire</div><div class="title">La séance reste claire, même après.</div><div class="copy">Montrez ce qui change entre vos notes et le document final.</div></div>
+        <div class="photo-shape"></div>
+      </section>
+      <section class="mini-flow">
+        <div class="compare-card"><div class="micro" style="color:var(--biume-violet)">Vos notes</div><div class="compare-lines"><i></i><i></i><i style="width:64%"></i></div></div>
+        <div class="arrow">→</div>
+        <div class="compare-card owner"><div class="micro" style="color:var(--biume-green)">Version propriétaire</div><div class="compare-lines"><i></i><i></i><i style="width:78%"></i></div></div>
+      </section>
+      <section class="mini-follow">
+        <div class="follow-copy"><div class="micro" style="color:var(--biume-violet)">Un seul flux</div><div class="title" style="font-size:17px">Relire. Partager. Recontacter.</div><div class="copy">Trois actions concrètes, sans détour.</div></div>
+        <div class="follow-card"><div class="micro">Prochaine étape</div><strong>Relance dans 30 jours</strong></div>
+      </section>
+    </div>
+    <div class="direction-body"><h3>L’avant / après</h3><p>La piste la plus pédagogique. La différence entre note technique et texte propriétaire saute aux yeux, mais l’ensemble est plus démonstratif que singulier.</p></div>
+  </article>
+
+  <article class="direction c" data-choice="interface-mouvement" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="preview-label"><span>Direction C</span></div>
+      <section class="mini-hero">
+        <div class="micro" style="color:var(--biume-green)">Biume en action</div><div class="title">De la note au suivi, sans perdre le fil.</div><div class="copy">Une lecture plus technologique et immersive du produit.</div><div class="orbital"></div>
+      </section>
+      <section class="mini-flow">
+        <div class="command"><span class="cursor"></span> Mobilité réduite à gauche, thorax…</div>
+        <div class="chips"><span class="chip">Zone : thorax</span><span class="chip">Côté : gauche</span><span class="chip">Ton : clair</span></div>
+        <div class="result-line"></div><div class="result-line"></div>
+      </section>
+      <section class="mini-follow">
+        <div class="micro" style="color:var(--biume-violet)">Flux de suivi</div>
+        <div class="stream"><div class="stream-card"><strong>Compte rendu</strong><span>Prêt à relire</span></div><div class="stream-card active"><strong>PDF partagé</strong><span>Par le praticien</span></div><div class="stream-card"><strong>Relance</strong><span>J+30</span></div></div>
+      </section>
+    </div>
+    <div class="direction-body"><h3>L’interface en mouvement</h3><p>La plus graphique et technologique. Elle valorise l’outil, mais son univers sombre peut prendre le dessus sur la chaleur de la relation praticien-propriétaire.</p></div>
+  </article>
+</div>

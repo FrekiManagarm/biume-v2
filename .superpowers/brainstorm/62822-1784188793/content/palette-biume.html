@@ -1,0 +1,37 @@
+<style>
+  .palette-layout { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:24px; margin-top:26px; }
+  .preview { position:relative; min-height:520px; overflow:hidden; border-radius:28px; color:#fdfdfb; background:#202024; box-shadow:0 30px 75px rgba(32,32,36,.2); }
+  .preview-nav { position:absolute; z-index:5; left:20px; right:20px; top:18px; height:50px; display:flex; align-items:center; gap:22px; padding:0 15px; border-radius:17px; color:#202024; background:rgba(253,253,251,.95); font:600 9px Arial; }
+  .brand { display:flex; align-items:center; gap:8px; font-size:13px; }.mark { width:24px; height:24px; border-radius:9px 9px 13px 7px; background:linear-gradient(135deg,#8e82e8 0 34%,#62a8c8 34% 67%,#28c978 67%); }
+  .links { display:flex; gap:16px; opacity:.62; }.actions { margin-left:auto; display:flex; gap:7px; align-items:center; }.actions span { padding:9px 11px; border-radius:999px; }.actions .trial { color:#fff; background:#6b5ac8; }
+  .scene { position:absolute; inset:0 0 230px; overflow:hidden; background:linear-gradient(160deg,#e8f1f5,#c9dfe8); }
+  .shape { position:absolute; border-radius:50%; filter:saturate(.88); }
+  .violet-land { width:510px; height:210px; left:-100px; bottom:-135px; background:#8e82e8; transform:rotate(5deg); }
+  .green-land { width:430px; height:190px; right:-80px; bottom:-115px; background:#79c99d; transform:rotate(-7deg); }
+  .orbit { position:absolute; left:37%; top:85px; width:190px; height:95px; border:13px solid #5d9bb8; border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(7deg); }
+  .document { position:absolute; width:75px; height:96px; border-radius:12px; background:#fdfdfb; box-shadow:0 17px 30px rgba(51,59,69,.16); }
+  .document:before { content:""; position:absolute; left:13px; right:13px; top:22px; height:4px; border-radius:4px; background:#9d97ce; box-shadow:0 14px #d5d4de,0 28px #d5d4de,0 42px #d5d4de; }
+  .document.d1 { left:24%; top:104px; transform:rotate(-9deg); }.document.d2 { right:18%; top:72px; transform:rotate(8deg); }.document.d2:after { content:"PRÊT"; position:absolute; right:9px; bottom:9px; padding:4px 6px; border-radius:999px; color:#21734d; background:#e7f3ed; font:700 6px Arial; }
+  .orb { position:absolute; border-radius:50%; box-shadow:inset -5px -7px 9px rgba(31,40,44,.13); }.o1 { width:24px; height:24px; left:42%; top:68px; background:#6b5ac8; }.o2 { width:17px; height:17px; right:31%; top:176px; background:#2e9866; }.o3 { width:18px; height:18px; left:18%; top:176px; background:#5d9bb8; }
+  .copy { position:absolute; left:0; right:0; bottom:0; min-height:240px; padding:31px 36px; background:#202024; border-radius:34px 34px 0 0; }
+  .eyebrow { font:700 8px Arial; letter-spacing:.15em; text-transform:uppercase; color:#8e82e8; }
+  .copy-grid { display:grid; grid-template-columns:1.25fr .75fr; gap:32px; align-items:end; }
+  .copy h3 { margin:12px 0 0; max-width:480px; font:700 38px/.94 Arial; letter-spacing:-.05em; }.copy p { margin:0; font:400 12px/1.5 Arial; color:rgba(255,255,255,.66); }
+  .cta { display:flex; gap:8px; margin-top:17px; }.cta span { padding:11px 13px; border-radius:999px; font:700 8px Arial; }.cta .primary { color:#fff; background:#6b5ac8; }.cta .secondary { color:#202024; background:#fdfdfb; }
+  .rail { display:grid; grid-template-columns:repeat(3,1fr); margin-top:23px; border-top:1px solid rgba(255,255,255,.12); }.rail span { padding-top:12px; font:600 8px Arial; color:rgba(255,255,255,.6); }
+  .swatches { display:grid; gap:12px; }.swatch { overflow:hidden; border:1px solid #dddde1; border-radius:16px; background:#fff; }.swatch-color { height:74px; }.swatch-copy { padding:12px 14px; }.swatch h3 { margin:0; font-size:14px; }.swatch p { margin:4px 0 0; font-size:11px; line-height:1.4; color:#686870; }.swatch code { font-size:10px; }.violet { background:#6b5ac8; }.blue { background:#5d9bb8; }.green { background:#2e9866; }.neutral { background:linear-gradient(90deg,#f7f7f4 0 50%,#202024 50%); }
+  .rule { margin-top:14px; padding:14px; border-left:3px solid #6b5ac8; border-radius:0 12px 12px 0; background:#eeebfb; color:#3f3b55; font-size:12px; line-height:1.5; }
+  @media (max-width:900px) { .palette-layout { grid-template-columns:1fr; }.preview { min-height:560px; }.links { display:none; }.copy-grid { grid-template-columns:1fr; }.copy h3 { font-size:32px; }.swatches { grid-template-columns:repeat(2,1fr); } }
+</style>
+
+<h2>« Le système vivant » avec les couleurs Biume</h2>
+<p class="subtitle">Même direction tactile, mais sans nouvelle palette : violet pour l’action, bleu pour la circulation, vert pour le suivi et la validation.</p>
+
+<div class="palette-layout">
+  <div class="preview">
+    <div class="preview-nav"><div class="brand"><span class="mark"></span>Biume</div><div class="links"><span>Produit</span><span>Comment ça marche</span><span>Tarifs</span></div><div class="actions"><span>Réserver une démo</span><span class="trial">Essayer 15 jours</span></div></div>
+    <div class="scene"><span class="shape violet-land"></span><span class="shape green-land"></span><span class="orbit"></span><span class="document d1"></span><span class="document d2"></span><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
+    <div class="copy"><div class="eyebrow">Votre journée, mieux orchestrée</div><div class="copy-grid"><h3>Moins d’administratif. Plus de temps pour soigner.</h3><div><p>Biume transforme vos notes en comptes rendus précis et clairs, puis garde le fil du suivi propriétaire.</p><div class="cta"><span class="primary">Essayer gratuitement</span><span class="secondary">Réserver une démo</span></div></div></div><div class="rail"><span>15 jours d’essai</span><span>Sans carte bancaire</span><span>Rien ne part sans vous</span></div></div>
+  </div>
+  <div><div class="swatches"><div class="swatch"><div class="swatch-color violet"></div><div class="swatch-copy"><h3>Violet Biume</h3><p>Actions et hiérarchie principale</p><code>#6b5ac8</code></div></div><div class="swatch"><div class="swatch-color blue"></div><div class="swatch-copy"><h3>Bleu Biume</h3><p>Flux et transitions</p><code>#5d9bb8</code></div></div><div class="swatch"><div class="swatch-color green"></div><div class="swatch-copy"><h3>Vert Biume</h3><p>Validation et suivi</p><code>#2e9866</code></div></div><div class="swatch"><div class="swatch-color neutral"></div><div class="swatch-copy"><h3>Ivoire + anthracite</h3><p>Surfaces et contraste</p><code>#f7f7f4 / #202024</code></div></div></div><div class="rule"><strong>Règle :</strong> pas de halos ni de dégradés de texte. Les trois couleurs ont chacune un rôle fonctionnel.</div></div>
+</div>

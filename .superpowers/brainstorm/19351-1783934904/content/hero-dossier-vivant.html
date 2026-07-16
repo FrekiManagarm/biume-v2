@@ -1,0 +1,186 @@
+<style>
+  :root {
+    --violet: #8e82e8;
+    --green: #28c978;
+    --blue: #62a8c8;
+    --ink: #202024;
+    --paper: #f7f7f4;
+    --line: #dcdcd5;
+  }
+
+  body { background: #eeeee9 !important; }
+  .companion-content { max-width: 1500px !important; padding: 28px !important; }
+  .question { margin: 0 auto 18px; max-width: 1420px; }
+  .question h2 { margin-bottom: 5px; }
+
+  .landing-frame {
+    position: relative;
+    overflow: hidden;
+    min-height: 720px;
+    max-width: 1420px;
+    margin: 0 auto;
+    border: 1px solid #d8d8d1;
+    border-radius: 18px;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: 0 36px 90px -66px rgba(32,32,36,.5);
+  }
+
+  .landing-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .34;
+    background-image: linear-gradient(to right, rgba(32,32,36,.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(32,32,36,.055) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, #000, transparent 92%);
+  }
+
+  .nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    padding: 0 42px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(247,247,244,.88);
+  }
+
+  .brand { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:760; }
+  .brand-mark { width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg,var(--violet),var(--blue),var(--green)); }
+  .nav-links { display:flex; align-items:center; gap:26px; color:#626269; font-size:12px; }
+  .nav-cta { padding:10px 15px; border-radius:999px; color:#fff; background:var(--ink); font-weight:700; }
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: .86fr 1.14fr;
+    align-items: center;
+    gap: 54px;
+    min-height: 648px;
+    padding: 48px 52px 62px;
+  }
+
+  .eyebrow { display:flex; align-items:center; gap:10px; color:#6558ae; font:700 10px/1.2 ui-monospace,monospace; letter-spacing:.15em; text-transform:uppercase; }
+  .eyebrow::before { content:""; width:22px; height:2px; background:linear-gradient(90deg,var(--violet),var(--green)); }
+  h1 { max-width: 720px; margin: 18px 0 0; font-size: clamp(46px,5vw,76px); line-height:.91; letter-spacing:-.064em; }
+  h1 span { display:block; color:#5e5e66; font-family:"Iowan Old Style",Baskerville,serif; font-style:italic; font-weight:400; letter-spacing:-.045em; }
+  .lead { max-width:55ch; margin:24px 0 0; color:#68686f; font-size:16px; line-height:1.65; }
+  .actions { display:flex; gap:10px; margin-top:28px; }
+  .button { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 20px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:760; background:white; }
+  .button.primary { border-color:#7569c9; color:white; background:#7569c9; }
+  .reassurance { display:grid; grid-template-columns:repeat(3,1fr); margin-top:30px; border-block:1px solid var(--line); }
+  .reassurance span { display:flex; align-items:center; gap:8px; min-height:54px; padding:0 10px; border-right:1px solid var(--line); font:700 9px/1.35 ui-monospace,monospace; }
+  .reassurance span:first-child { padding-left:0; }
+  .reassurance span:last-child { border-right:0; }
+  .reassurance i { width:6px; height:6px; border-radius:50%; background:var(--green); }
+
+  .visual { position:relative; min-height:560px; }
+  .photo {
+    position:absolute;
+    inset:0 24px 72px 54px;
+    overflow:hidden;
+    border-radius:46% 12px 42px 12px;
+    background:#d2d0c8;
+  }
+  .photo img { width:100%; height:100%; object-fit:cover; object-position:center; filter:saturate(.84) contrast(.96); }
+  .brand-rail { position:absolute; top:22px; right:0; width:13px; height:72%; border-radius:20px; background:linear-gradient(to bottom,var(--violet) 0%,var(--blue) 48%,var(--green) 100%); }
+
+  .raw-note {
+    position:absolute;
+    top:30px;
+    left:0;
+    width:210px;
+    padding:17px;
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:10px 10px 28px 10px;
+    color:white;
+    background:rgba(32,32,36,.92);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .raw-note .label, .report .label { font:700 8px/1.2 ui-monospace,monospace; letter-spacing:.15em; text-transform:uppercase; opacity:.68; }
+  .raw-note p { margin:10px 0 0; font-size:11px; line-height:1.55; }
+  .raw-note::after { content:""; position:absolute; right:-52px; top:48%; width:52px; height:1px; background:linear-gradient(90deg,var(--violet),var(--green)); }
+
+  .report {
+    position:absolute;
+    right:0;
+    bottom:0;
+    width:74%;
+    padding:22px 24px 20px;
+    border:1px solid rgba(32,32,36,.12);
+    border-radius:11px 11px 36px 11px;
+    background:rgba(253,253,251,.97);
+    box-shadow:0 35px 80px -44px rgba(32,32,36,.68),inset 0 1px 0 white;
+  }
+  .report-head { display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .status { display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:999px; color:#21593b; background:rgba(40,201,120,.13); font:700 8px/1 ui-monospace,monospace; }
+  .status i { width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .report h3 { margin:16px 0 8px; color:var(--ink); font-size:16px; letter-spacing:-.025em; }
+  .report p { margin:0; color:#404047; font-size:12px; line-height:1.55; }
+  .report-foot { display:flex; align-items:center; justify-content:space-between; margin-top:17px; padding-top:14px; border-top:1px solid var(--line); color:#77777d; font-size:9px; }
+  .report-action { padding:8px 11px; border-radius:999px; color:white; background:var(--ink); font-weight:700; }
+
+  .journey {
+    position:absolute;
+    left:28px;
+    bottom:25px;
+    width:190px;
+    padding:13px 14px;
+    border:1px solid rgba(32,32,36,.1);
+    border-radius:9px 24px 9px 9px;
+    background:rgba(247,247,244,.96);
+  }
+  .journey .line { display:grid; grid-template-columns:repeat(3,1fr); margin-top:11px; border-top:1px solid #c7c7c0; }
+  .journey .point { position:relative; padding-top:9px; font:700 7px/1.2 ui-monospace,monospace; }
+  .journey .point::before { content:""; position:absolute; top:-4px; left:0; width:7px; height:7px; border-radius:50%; background:var(--violet); }
+  .journey .point:nth-child(2)::before { background:var(--blue); }
+  .journey .point:nth-child(3)::before { background:var(--green); }
+
+  .annotation { position:absolute; right:18px; bottom:12px; color:#77777d; font:700 8px/1 ui-monospace,monospace; letter-spacing:.08em; text-transform:uppercase; transform:rotate(-90deg); transform-origin:right bottom; }
+
+  @media (max-width: 900px) {
+    .landing-frame { min-height:auto; }
+    .nav-links span { display:none; }
+    .hero { grid-template-columns:1fr; padding:34px 24px 46px; }
+    .visual { min-height:520px; }
+    .reassurance { grid-template-columns:1fr; }
+    .reassurance span { border-right:0; border-bottom:1px solid var(--line); }
+  }
+</style>
+
+<div class="question">
+  <h2>Section 1 sur 3 — Hero « dossier vivant »</h2>
+  <p class="subtitle">Le produit n’est plus une carte posée sur une photo : les notes, le compte rendu et le suivi forment un seul visuel. Est-ce que cette direction vous paraît juste ?</p>
+</div>
+
+<div class="landing-frame">
+  <header class="nav">
+    <div class="brand"><span class="brand-mark"></span>Biume</div>
+    <div class="nav-links"><span>Produit</span><span>Comment ça marche</span><span>Tarifs</span><span class="nav-cta">Essayer gratuitement</span></div>
+  </header>
+  <main class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Le lien après la séance</div>
+      <h1>Vos observations restent précises.<span>Le propriétaire, lui, comprend.</span></h1>
+      <p class="lead">Biume part de vos mots, structure un compte rendu clair, puis vous aide à garder le fil après la séance. Vous relisez et décidez de chaque envoi.</p>
+      <div class="actions"><span class="button primary">Essayer gratuitement</span><span class="button">Voir le parcours</span></div>
+      <div class="reassurance"><span><i></i>15 jours d’essai</span><span><i></i>Sans carte bancaire</span><span><i></i>Rien ne part sans vous</span></div>
+    </div>
+    <div class="visual">
+      <div class="photo"><img src="/files/hero-practitioner-horse.png" alt="Aperçu d’une praticienne avec un cheval"></div>
+      <div class="brand-rail"></div>
+      <aside class="raw-note"><div class="label">Votre note de séance</div><p>Mobilité réduite à gauche et tension modérée au niveau thoracique.</p></aside>
+      <article class="report">
+        <div class="report-head"><div class="label">Compte rendu propriétaire</div><div class="status"><i></i>Prêt à relire</div></div>
+        <h3>Une formulation claire, fidèle à votre observation</h3>
+        <p>Une tension plus présente a été observée du côté gauche, au niveau du thorax. La mobilité s’est améliorée au cours de la séance.</p>
+        <div class="report-foot"><span>Vous pouvez encore modifier ce texte</span><span class="report-action">Prévisualiser</span></div>
+      </article>
+      <div class="journey"><div class="label">Le fil reste actif</div><div class="line"><span class="point">SÉANCE</span><span class="point">PDF</span><span class="point">SUIVI</span></div></div>
+      <div class="annotation">Notes → compte rendu → suivi</div>
+    </div>
+  </main>
+</div>

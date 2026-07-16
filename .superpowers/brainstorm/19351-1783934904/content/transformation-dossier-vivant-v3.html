@@ -1,0 +1,158 @@
+<style>
+  :root { --violet:#8e82e8; --green:#28c978; --blue:#62a8c8; --ink:#202024; --paper:#f7f7f4; }
+  body { background:#e9e9e5 !important; }
+  .companion-content { max-width:1500px !important; padding:28px !important; }
+  .question { max-width:1420px; margin:0 auto 18px; }
+  .question h2 { margin-bottom:5px; }
+
+  .section-frame {
+    position:relative;
+    overflow:hidden;
+    max-width:1420px;
+    min-height:640px;
+    margin:0 auto;
+    padding:52px 56px 42px;
+    border-radius:18px;
+    color:white;
+    background:#202024;
+    box-shadow:0 38px 100px -68px rgba(0,0,0,.8);
+  }
+  .section-frame::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    opacity:.18;
+    background-image:radial-gradient(rgba(255,255,255,.7) .45px,transparent .65px);
+    background-size:5px 5px;
+  }
+  .section-frame::after {
+    content:"";
+    position:absolute;
+    top:0;
+    right:8%;
+    width:34%;
+    height:4px;
+    background:linear-gradient(90deg,var(--violet),var(--blue),var(--green));
+  }
+
+  .story-head { position:relative; display:grid; grid-template-columns:1.08fr .72fr; gap:90px; align-items:end; }
+  .eyebrow { display:flex; align-items:center; gap:11px; color:var(--green); font:700 10px/1.2 ui-monospace,monospace; letter-spacing:.15em; text-transform:uppercase; }
+  .eyebrow::before { content:""; width:25px; height:2px; background:linear-gradient(90deg,var(--violet),var(--green)); }
+  h1 { max-width:12ch; margin:17px 0 0; font-size:58px; line-height:.94; letter-spacing:-.06em; }
+  h1 em { color:#f1f0ec; font-family:"Iowan Old Style",Baskerville,serif; font-weight:400; }
+  .intro { max-width:32ch; margin:0 0 4px; color:rgba(255,255,255,.61); font-size:18px; line-height:1.55; }
+  .intro strong { color:white; font-weight:650; }
+
+  .transformation {
+    position:relative;
+    display:grid;
+    grid-template-columns:.78fr .46fr 1.18fr;
+    align-items:stretch;
+    gap:0;
+    min-height:286px;
+    margin-top:36px;
+  }
+  .input-panel,
+  .output-panel { position:relative; z-index:1; overflow:hidden; }
+  .input-panel {
+    align-self:center;
+    padding:24px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:12px 12px 38px 12px;
+    background:#29292e;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+  }
+  .panel-label { display:flex; align-items:center; justify-content:space-between; gap:16px; font:700 9px/1.2 ui-monospace,monospace; letter-spacing:.14em; text-transform:uppercase; }
+  .input-panel .panel-label { color:var(--violet); }
+  .number { color:rgba(255,255,255,.38); }
+  .input-panel blockquote { margin:22px 0 0; padding-left:17px; border-left:2px solid var(--violet); color:rgba(255,255,255,.84); font-size:16px; line-height:1.55; }
+  .input-note { display:flex; gap:8px; margin-top:28px; color:rgba(255,255,255,.45); font:700 8px/1 ui-monospace,monospace; text-transform:uppercase; letter-spacing:.08em; }
+  .input-note i { width:6px; height:6px; border-radius:50%; background:var(--violet); }
+
+  .bridge { position:relative; display:flex; align-items:center; justify-content:center; }
+  .bridge::before { content:""; position:absolute; left:-1px; right:-1px; top:50%; height:1px; background:linear-gradient(90deg,var(--violet),var(--blue),var(--green)); }
+  .bridge-core { position:relative; width:128px; padding:18px 12px; border:1px solid rgba(255,255,255,.17); border-radius:999px; text-align:center; background:#202024; box-shadow:0 0 0 12px #202024; }
+  .bridge-mark { width:34px; height:34px; margin:0 auto 11px; border-radius:12px; background:linear-gradient(135deg,var(--violet),var(--blue),var(--green)); transform:rotate(8deg); }
+  .bridge-core strong { display:block; font-size:10px; }
+  .bridge-core span { display:block; margin-top:5px; color:rgba(255,255,255,.47); font-size:8px; line-height:1.4; }
+  .tokens { position:absolute; left:50%; bottom:14px; display:flex; gap:5px; transform:translateX(-50%); }
+  .token { padding:6px 8px; border:1px solid rgba(255,255,255,.13); border-radius:999px; color:rgba(255,255,255,.64); background:#29292e; font:700 7px/1 ui-monospace,monospace; white-space:nowrap; }
+
+  .output-panel {
+    min-height:286px;
+    padding:26px 28px 24px;
+    border:1px solid rgba(0,0,0,.12);
+    border-radius:12px 12px 46px 12px;
+    color:var(--ink);
+    background:#fdfdfb;
+    box-shadow:0 40px 80px -46px rgba(0,0,0,.75),inset 0 1px 0 white;
+  }
+  .output-panel::after { content:""; position:absolute; right:0; bottom:0; width:92px; height:92px; border-radius:90px 0 0 0; background:linear-gradient(135deg,transparent 24%,rgba(40,201,120,.13)); }
+  .output-panel .panel-label { color:#23774c; }
+  .output-panel .number { color:#9b9ba1; }
+  .output-title { margin-top:22px; color:#77777d; font:700 9px/1.2 ui-monospace,monospace; letter-spacing:.13em; text-transform:uppercase; }
+  .output-copy { max-width:45ch; margin-top:11px; font-size:18px; line-height:1.5; letter-spacing:-.022em; }
+  .output-meta { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:20px; padding-top:15px; border-top:1px solid #deded7; }
+  .status { display:flex; align-items:center; gap:8px; color:#286244; font:700 9px/1 ui-monospace,monospace; }
+  .status i { width:7px; height:7px; border-radius:50%; background:var(--green); }
+  .edit { color:#74747a; font-size:10px; }
+
+  .principles { position:relative; display:grid; grid-template-columns:repeat(3,1fr); margin-top:26px; border-top:1px solid rgba(255,255,255,.15); }
+  .principle { display:grid; grid-template-columns:38px 1fr; gap:10px; padding:18px 20px 0 0; border-right:1px solid rgba(255,255,255,.15); }
+  .principle:nth-child(2) { padding-left:20px; }
+  .principle:nth-child(3) { padding-left:20px; border-right:0; }
+  .principle-no { color:var(--violet); font:700 9px/1 ui-monospace,monospace; }
+  .principle:nth-child(2) .principle-no { color:var(--blue); }
+  .principle:nth-child(3) .principle-no { color:var(--green); }
+  .principle strong { display:block; font-size:12px; }
+
+  @media (max-width:950px) {
+    .section-frame { padding:40px 24px; }
+    .story-head { grid-template-columns:1fr; gap:24px; }
+    h1 { font-size:46px; }
+    .transformation { grid-template-columns:1fr; gap:12px; }
+    .bridge { min-height:120px; }
+    .bridge::before { top:0; bottom:0; left:50%; right:auto; width:1px; height:auto; background:linear-gradient(var(--violet),var(--green)); }
+    .principles { grid-template-columns:1fr; }
+    .principle,.principle:nth-child(2),.principle:nth-child(3) { padding:20px 0; border-right:0; border-bottom:1px solid rgba(255,255,255,.15); }
+  }
+</style>
+
+<div class="question">
+  <h2>Section 2 sur 3 — La transformation en un regard</h2>
+  <p class="subtitle">Version recomposée : hauteur ajustée au contenu et styles isolés pour supprimer la bande blanche parasite.</p>
+</div>
+
+<section class="section-frame">
+  <div class="story-head">
+    <div><div class="eyebrow">De vos notes au propriétaire</div><h1>Le même fond. <em>Une forme enfin lisible.</em></h1></div>
+    <p class="intro">Vous notez librement. <strong>Biume organise.</strong> Vous relisez.</p>
+  </div>
+
+  <div class="transformation">
+    <article class="input-panel">
+      <div class="panel-label"><span>Votre note de séance</span><span class="number">01</span></div>
+      <blockquote>Mobilité réduite à gauche · thorax. Amélioration pendant la séance.</blockquote>
+      <div class="input-note"><i></i>Vos mots restent la source</div>
+    </article>
+
+    <div class="bridge">
+      <div class="bridge-core"><div class="bridge-mark"></div><strong>Biume organise</strong><span>sans changer le fond</span></div>
+      <div class="tokens"><span class="token">THORAX</span><span class="token">GAUCHE</span><span class="token">ÉVOLUTION</span></div>
+    </div>
+
+    <article class="output-panel">
+      <div class="panel-label"><span>Proposition propriétaire</span><span class="number">02</span></div>
+      <div class="output-title">Ce que le propriétaire peut lire</div>
+      <p class="output-copy">Une tension plus présente a été observée du côté gauche, au niveau du thorax. La mobilité s’est améliorée au cours de la séance.</p>
+      <div class="output-meta"><span class="edit">Texte encore modifiable</span><span class="status"><i></i>Prêt à relire</span></div>
+    </article>
+  </div>
+
+  <div class="principles">
+    <div class="principle"><span class="principle-no">01</span><div><strong>Vous notez</strong></div></div>
+    <div class="principle"><span class="principle-no">02</span><div><strong>Biume organise</strong></div></div>
+    <div class="principle"><span class="principle-no">03</span><div><strong>Vous décidez</strong></div></div>
+  </div>
+</section>

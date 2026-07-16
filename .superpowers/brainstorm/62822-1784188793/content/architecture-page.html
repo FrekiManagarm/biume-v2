@@ -1,0 +1,80 @@
+<style>
+  .storyboard { margin-top:28px; overflow:hidden; border:1px solid #d9ddd7; border-radius:28px; background:#f5f2e8; box-shadow:0 28px 70px rgba(35,54,43,.12); }
+  .section-row { position:relative; display:grid; grid-template-columns:76px 1fr 1.25fr; min-height:155px; border-bottom:1px solid rgba(29,59,43,.14); }
+  .section-row:last-child { border-bottom:0; }
+  .section-num { display:flex; align-items:flex-start; justify-content:center; padding-top:26px; border-right:1px solid rgba(29,59,43,.12); font:700 11px/1 Arial; letter-spacing:.12em; opacity:.58; }
+  .section-copy { padding:25px 28px; }
+  .section-copy .label { font:700 9px/1 Arial; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .section-copy h3 { margin:10px 0 0; max-width:380px; font:700 25px/.98 Arial; letter-spacing:-.04em; }
+  .section-copy p { margin:11px 0 0; max-width:420px; font:400 12px/1.48 Arial; opacity:.7; }
+  .section-visual { position:relative; min-height:155px; overflow:hidden; border-left:1px solid rgba(29,59,43,.12); }
+  .hero-row { min-height:220px; color:#f7f4e9; background:#205d42; }
+  .hero-row .section-num,.hero-row .section-visual { border-color:rgba(255,255,255,.17); }
+  .hero-row .section-visual { background:linear-gradient(#add2d8 0 44%,#8fb59b 44%); }
+  .hero-row .hill { position:absolute; width:290px; height:140px; bottom:-89px; border-radius:50%; background:#719c80; }
+  .hero-row .hill.r { right:-70px; background:#abc39e; }
+  .hero-row .flow { position:absolute; left:85px; top:48px; width:150px; height:70px; border:10px solid #33785a; border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(4deg); }
+  .hero-row .paper { position:absolute; width:55px; height:70px; top:48px; border-radius:8px; background:#fffdf7; box-shadow:0 10px 22px rgba(31,65,45,.19); }
+  .hero-row .paper.p1 { left:62px; transform:rotate(-9deg); }.hero-row .paper.p2 { right:80px; transform:rotate(8deg); }
+  .proof-row { background:#eeece5; min-height:110px; }
+  .proof-row .section-copy { grid-column:2 / 3; }
+  .proof-rail { display:grid; grid-template-columns:repeat(3,1fr); height:100%; }
+  .proof-rail div { display:flex; flex-direction:column; justify-content:center; padding:18px; border-right:1px solid rgba(29,59,43,.11); }
+  .proof-rail div:last-child { border-right:0; }
+  .proof-rail strong { font:700 17px Arial; letter-spacing:-.04em; }
+  .proof-rail span { margin-top:5px; font:500 9px Arial; opacity:.58; }
+  .day-row { background:#f8f5ec; }
+  .day-map { display:flex; align-items:center; padding:24px; }
+  .day-map .line { position:absolute; left:35px; right:35px; top:50%; height:2px; background:#cbd4cc; }
+  .day-map .step { position:relative; flex:1; text-align:center; font:700 9px Arial; }
+  .day-map .step i { display:block; width:17px; height:17px; margin:0 auto 8px; border:5px solid #f8f5ec; border-radius:50%; background:#4f8668; box-shadow:0 0 0 2px #4f8668; }
+  .day-map .step:nth-child(3) i { background:#d3d94f; box-shadow:0 0 0 2px #d3d94f; }
+  .transformation-row { min-height:210px; color:#f6f2e7; background:#202722; }
+  .transformation-row .section-num,.transformation-row .section-visual { border-color:rgba(255,255,255,.12); }
+  .transform-stage { display:grid; grid-template-columns:1fr 50px 1fr; gap:8px; align-items:center; height:100%; padding:22px; }
+  .transform-card { min-height:120px; padding:15px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:#2a322c; color:#ece9df; }
+  .transform-card.light { color:#26342c; background:#f8f5ec; }
+  .transform-card b { display:block; font:700 8px Arial; letter-spacing:.1em; text-transform:uppercase; }
+  .transform-card i { display:block; height:5px; margin-top:12px; border-radius:5px; background:#6e796f; box-shadow:0 13px #6e796f,0 26px #6e796f,0 39px #6e796f; }
+  .transform-card.light i { background:#aebbb1; box-shadow:0 13px #d5ddd6,0 26px #d5ddd6,0 39px #d5ddd6; }
+  .transform-arrow { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:#d3d94f; color:#27352c; font:700 16px Arial; }
+  .follow-row { background:#d9ddd0; }
+  .follow-stack { position:absolute; inset:22px 28px; }
+  .message { position:absolute; width:60%; padding:14px 16px; border-radius:15px; background:#fffdf6; box-shadow:0 12px 24px rgba(44,67,52,.1); font:600 9px/1.45 Arial; }
+  .message.m1 { left:0; top:0; }.message.m2 { right:0; bottom:0; background:#f3a679; }
+  .control-row { background:#f8f5ec; }
+  .control-panel { display:flex; align-items:center; justify-content:center; gap:14px; height:100%; }
+  .control-panel .toggle { width:54px; height:29px; padding:4px; border-radius:99px; background:#205d42; }
+  .control-panel .toggle i { display:block; width:21px; height:21px; margin-left:auto; border-radius:50%; background:#d3d94f; }
+  .control-panel b { max-width:180px; font:700 13px/1.2 Arial; }
+  .offer-row { min-height:190px; background:#d3d94f; color:#24372b; }
+  .offer-row .section-num,.offer-row .section-visual { border-color:rgba(36,55,43,.14); }
+  .price-panel { position:absolute; inset:20px 30px; padding:18px 20px; border-radius:18px; background:#fffdf6; box-shadow:0 14px 30px rgba(58,70,45,.12); }
+  .price-panel .price { font:700 29px/.9 Arial; letter-spacing:-.05em; }
+  .price-panel .price small { font-size:10px; letter-spacing:0; opacity:.6; }
+  .price-panel button { width:100%; margin-top:16px; padding:11px; border:0; border-radius:999px; background:#205d42; color:#fff; font:700 9px Arial; }
+  .close-row { min-height:135px; color:#f7f4ea; background:#205d42; }
+  .close-row .section-num,.close-row .section-visual { border-color:rgba(255,255,255,.15); }
+  .close-actions { display:flex; align-items:center; justify-content:center; gap:9px; height:100%; }
+  .close-actions span { padding:12px 16px; border-radius:999px; background:#fffdf6; color:#203d2f; font:700 9px Arial; }
+  .close-actions span:last-child { background:#d3d94f; }
+  .principles { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px; }
+  .principle { padding:15px; border:1px solid #dfe2dc; border-radius:14px; background:#f7f7f3; font-size:12px; line-height:1.45; color:#4b514c; }
+  @media (max-width:850px) { .section-row { grid-template-columns:48px 1fr; }.section-visual { grid-column:1 / -1; min-height:145px; border-left:0; border-top:1px solid rgba(29,59,43,.12); }.section-num { padding-top:24px; }.section-copy { padding:22px; }.proof-row .section-copy { grid-column:auto; }.principles { grid-template-columns:1fr; } }
+</style>
+
+<h2>Architecture narrative proposée</h2>
+<p class="subtitle">La page avance comme une démonstration : le temps gagné d’abord, la précision ensuite, puis la confiance et la décision.</p>
+
+<div class="storyboard">
+  <section class="section-row hero-row"><div class="section-num">01</div><div class="section-copy"><div class="label">Promesse</div><h3>Moins d’administratif. Plus de temps pour soigner.</h3><p>Hero signature, essai de 15 jours en premier, démonstration en alternative.</p></div><div class="section-visual"><span class="hill"></span><span class="hill r"></span><span class="flow"></span><span class="paper p1"></span><span class="paper p2"></span></div></section>
+  <section class="section-row proof-row"><div class="section-num">02</div><div class="section-copy"><div class="label">Réassurance immédiate</div><h3>Une décision simple</h3><p>Les trois conditions qui lèvent le risque avant même de parler des fonctions.</p></div><div class="section-visual"><div class="proof-rail"><div><strong>15 jours</strong><span>pour tout tester</span></div><div><strong>0 carte</strong><span>à l’inscription</span></div><div><strong>100 % relu</strong><span>avant tout envoi</span></div></div></div></section>
+  <section class="section-row day-row"><div class="section-num">03</div><div class="section-copy"><div class="label">Le temps retrouvé</div><h3>Une journée de cabinet, sans ressaisie</h3><p>Un parcours horizontal montre où Biume enlève les tâches répétitives : séance, notes, compte rendu, envoi, suivi.</p></div><div class="section-visual day-map"><span class="line"></span><div class="step"><i></i>Séance</div><div class="step"><i></i>Notes</div><div class="step"><i></i>Compte rendu</div><div class="step"><i></i>Suivi</div></div></section>
+  <section class="section-row transformation-row"><div class="section-num">04</div><div class="section-copy"><div class="label">Preuve produit</div><h3>Précis pour vous. Clair pour le propriétaire.</h3><p>La transformation se joue sous les yeux : note clinique brute à gauche, version structurée et compréhensible à droite.</p></div><div class="section-visual"><div class="transform-stage"><div class="transform-card"><b>Vos observations</b><i></i></div><div class="transform-arrow">→</div><div class="transform-card light"><b>Compte rendu propriétaire</b><i></i></div></div></div></section>
+  <section class="section-row follow-row"><div class="section-num">05</div><div class="section-copy"><div class="label">Continuité</div><h3>Le suivi ne repose plus sur votre mémoire</h3><p>Relances et échéances s’inscrivent dans le même parcours, avec des messages toujours maîtrisés par le praticien.</p></div><div class="section-visual"><div class="follow-stack"><div class="message m1">Compte rendu prêt à relire</div><div class="message m2">Suivi prévu dans 30 jours</div></div></div></section>
+  <section class="section-row control-row"><div class="section-num">06</div><div class="section-copy"><div class="label">Confiance</div><h3>Biume prépare. Vous décidez.</h3><p>Une section courte et calme sur le contrôle, la confidentialité et l’absence d’envoi automatique.</p></div><div class="section-visual"><div class="control-panel"><span class="toggle"><i></i></span><b>Rien ne part sans votre validation</b></div></div></section>
+  <section class="section-row offer-row"><div class="section-num">07</div><div class="section-copy"><div class="label">Décision</div><h3>Une offre, deux rythmes</h3><p>Prix mensuel ou annuel, liste concise des fonctions, CTA vers l’essai.</p></div><div class="section-visual"><div class="price-panel"><div class="price">24,99 € <small>/ mois</small></div><p style="font:500 9px Arial;opacity:.6">Facturé annuellement</p><button>Essayer gratuitement</button></div></div></section>
+  <section class="section-row close-row"><div class="section-num">08</div><div class="section-copy"><div class="label">Clôture</div><h3>FAQ courte, puis dernier appel à l’action</h3><p>Le visiteur peut encore lever ses objections ou réserver une démonstration.</p></div><div class="section-visual"><div class="close-actions"><span>Essayer 15 jours</span><span>Réserver une démo</span></div></div></section>
+</div>
+
+<div class="principles"><div class="principle"><strong>Rythme Clay</strong><br>Grandes scènes alternées, couleurs franches et transitions visuelles fortes.</div><div class="principle"><strong>Pas de grille générique</strong><br>Chaque section raconte une étape ; aucune rangée de trois cartes interchangeables.</div><div class="principle"><strong>Preuves avant promesses</strong><br>Le produit et le parcours réel restent au centre, sans chiffres clients inventés.</div></div>
