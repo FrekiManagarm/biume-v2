@@ -1,7 +1,5 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
-import { HeaderMotion } from "../components/landing/header-motion";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
 import {
@@ -17,26 +15,26 @@ import {
 } from "./landing-test-utils";
 
 describe("Carnet vivant header and hero", () => {
-  test("header motion is visible in server markup", () => {
-    const html = renderToStaticMarkup(
-      <HeaderMotion>
-        <a href="/signup">Essayer</a>
-      </HeaderMotion>,
-    );
+  test("header motion compacts with Motion and preserves reduced motion", async () => {
+    const source = await Bun.file(
+      new URL("../components/landing/header-motion.tsx", import.meta.url),
+    ).text();
 
-    expect(html).toContain("data-header-motion");
-    expect(html).toContain("data-header-surface");
-    expect(html).toContain("Essayer");
-    expect(html).not.toMatch(exactZeroOpacity);
-    expect(html).not.toContain("visibility:hidden");
+    expect(source).toMatch(/^"use client";/);
+    expect(source).toContain('from "motion/react"');
+    expect(source).toContain("useReducedMotion");
+    expect(source).toContain("useScroll");
+    expect(source).toContain("useTransform");
+    expect(source).not.toContain('addEventListener("scroll"');
   });
 
-  test("homepage header keeps signup visible and navigation factual", () => {
+  test("homepage header keeps trial dominant and demo available", () => {
     const html = renderWithLandingImageConfig(<LandingHeader />);
     const signupAnchors = conversionAnchors(html, "header-signup");
+    const demoAnchors = conversionAnchors(html, "header-demo");
 
     for (const label of [
-      "Le produit",
+      "Produit",
       "Comment ça marche",
       "Tarifs",
       "Ressources",
@@ -45,10 +43,17 @@ describe("Carnet vivant header and hero", () => {
       expect(html).toContain(label);
     }
     expect(html).toContain("Navigation mobile");
-    expect(html).toContain(">Essayer</a>");
     expect(signupAnchors).toHaveLength(2);
+    expect(demoAnchors).toHaveLength(2);
     for (const anchor of signupAnchors) {
       expect(anchor).toContain(`href="${webAppPath("/signup")}"`);
+    }
+    for (const anchor of demoAnchors) {
+      expect(anchor).toContain(
+        'href="https://cal.com/mathieu-chambaud-biume"',
+      );
+      expect(anchor).toContain('target="_blank"');
+      expect(anchor).toContain('rel="noopener noreferrer"');
     }
   });
 

@@ -5,11 +5,13 @@ import { webAppPath } from "../../lib/web-app-url";
 import { HeaderMotion } from "./header-motion";
 
 const navigation = [
-  { href: "#produit", label: "Le produit" },
+  { href: "#produit", label: "Produit" },
   { href: "#comment-ca-marche", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "/blog", label: "Ressources" },
 ] as const;
+
+const demoUrl = "https://cal.com/mathieu-chambaud-biume";
 
 const navigationLinkClassName =
   "inline-flex min-h-11 items-center px-3 text-sm font-medium text-[color:var(--carnet-muted)] transition-colors hover:text-[color:var(--carnet-ink)] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]";
@@ -77,6 +79,15 @@ export function LandingHeader() {
         >
           Connexion
         </Link>
+        <Link
+          href={demoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-conversion="header-demo"
+          className="carnet-action inline-flex min-h-11 items-center rounded-full bg-[color:var(--carnet-muted-surface)] px-4 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+        >
+          Réserver une démo
+        </Link>
         <SignupLink />
       </div>
 
@@ -103,6 +114,15 @@ export function LandingHeader() {
                 className={navigationLinkClassName}
               >
                 Connexion
+              </Link>
+              <Link
+                href={demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-conversion="header-demo"
+                className="carnet-action inline-flex min-h-11 items-center rounded-full bg-[color:var(--carnet-muted-surface)] px-4 text-sm font-semibold text-[color:var(--carnet-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+              >
+                Réserver une démo
               </Link>
             </nav>
           </div>
