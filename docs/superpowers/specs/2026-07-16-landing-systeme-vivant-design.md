@@ -27,17 +27,20 @@ L’univers propre à Biume raconte le parcours « séance → notes → compte 
 ## Ton et système visuel
 
 - Ton : confiant, concret, chaleureux et précis.
-- Fond principal : ivoire chaud.
-- Couleur dominante : vert forêt désaturé.
-- Accent unique : jaune anis doux, réservé aux actions et aux états positifs.
-- Couleurs de soutien : vert sauge et bleu ciel grisé dans les illustrations.
-- Texte : anthracite ou ivoire, jamais noir pur.
+- Fond principal : ivoire Biume `--carnet-canvas` (`#f7f7f4`).
+- Surface claire : `--carnet-surface` (`#fdfdfb`).
+- Couleur dominante et couleur des actions : violet Biume `--carnet-violet` (`#6b5ac8`).
+- Couleur de transition et de circulation : bleu Biume `--carnet-blue` (`#5d9bb8`).
+- Couleur des états positifs et du suivi : vert Biume `--carnet-green` (`#2e9866`).
+- Texte et sections sombres : anthracite Biume `--carnet-anthracite` (`#202024`), jamais noir pur.
 - Typographie : Geist Sans et Geist Mono déjà disponibles dans le projet. Aucun nouvel import de police.
 - Formes : grands rayons organiques, trajectoires courbes, surfaces tactiles et bordures fines.
 - Ombres : diffuses et teintées selon la surface, sans halo extérieur.
 - Iconographie : le logo existant et des primitives graphiques simples. Aucun nouvel ensemble d’icônes n’est requis.
 
-Le design évite les gradients de texte, les cartes génériques, les rangées de trois fonctionnalités identiques et l’esthétique violet/bleu associée aux landing pages IA.
+Le violet reste la couleur d’action principale. Le bleu et le vert ne deviennent pas des accents concurrents : ils servent respectivement la circulation de l’information et les états de validation ou de suivi. Les trois couleurs peuvent se retrouver ensemble dans la scène signature et les détails du logo, avec une saturation maîtrisée.
+
+Le design évite les gradients de texte, les halos violets ou bleus, les cartes génériques, les rangées de trois fonctionnalités identiques et l’esthétique néon associée aux landing pages IA.
 
 ## Hero
 
@@ -47,7 +50,7 @@ Le hero utilise une hauteur minimale stable et ne dépend jamais de `h-screen`.
 
 1. Navigation flottante sur fond ivoire : logo, Produit, Comment ça marche, Tarifs, Ressources, Connexion, Réserver une démo, Essayer 15 jours.
 2. Scène visuelle plein cadre représentant le flux Biume autour d’une séance animale.
-3. Panneau vert forêt en partie basse avec une grille asymétrique : promesse à gauche, explication et actions à droite.
+3. Panneau anthracite ou violet Biume en partie basse avec une grille asymétrique : promesse à gauche, explication et actions à droite.
 4. Rail de réassurance sous les actions.
 
 ### Contenu principal
@@ -97,7 +100,7 @@ Une section courte, visuellement calme, traite le contrôle : aucune communicati
 
 Le sélecteur mensuel/annuel et les données de `billingOptions` sont conservés. L’offre reste unique et la liste des fonctionnalités est concise.
 
-Le CTA renvoie vers l’inscription. Le style du panneau tarifaire suit la direction verte et ivoire sans reprendre la carte générique actuelle.
+Le CTA renvoie vers l’inscription. Le style du panneau tarifaire suit la palette Biume — ivoire, violet dominant et vert de validation — sans reprendre la carte générique actuelle.
 
 ### 8. FAQ et clôture
 
