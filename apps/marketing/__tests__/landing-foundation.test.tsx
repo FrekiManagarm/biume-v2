@@ -9,13 +9,13 @@ const { LandingShell } = await import(
   "../components/landing/landing-shell"
 );
 
-describe("soft machine landing foundation", () => {
+describe("atelier precision landing foundation", () => {
   test("scopes the approved theme and font to the homepage", () => {
     const html = renderToStaticMarkup(
       <LandingShell><main>Contenu</main></LandingShell>,
     );
 
-    expect(html).toContain("soft-machine-theme");
+    expect(html).toContain("atelier-theme");
     expect(html).toContain("font-[family-name:var(--font-hanken)]");
     expect(html).toContain("Contenu");
   });
@@ -33,11 +33,16 @@ describe("soft machine landing foundation", () => {
   test("defines semantic colors, restrained radii and reduced motion", async () => {
     const css = await Bun.file(new URL("../app/globals.css", import.meta.url)).text();
 
-    expect(css).toMatch(/--machine-violet:\s*#6b5ac8;/i);
-    expect(css).toMatch(/--machine-blue:\s*#5d9bb8;/i);
-    expect(css).toMatch(/--machine-green:\s*#2e9866;/i);
-    expect(css).toMatch(/--machine-surface-radius:\s*1rem;/);
-    expect(css).toMatch(/--machine-media-radius:\s*1\.5rem;/);
+    expect(css).toMatch(/--atelier-violet:\s*#6b5ac8;/i);
+    expect(css).toMatch(/--atelier-blue:\s*#5d9bb8;/i);
+    expect(css).toMatch(/--atelier-green:\s*#2e9866;/i);
+    expect(css).toMatch(/--atelier-surface-radius:\s*1rem;/);
+    expect(css).toMatch(/--atelier-media-radius:\s*1\.5rem;/);
+    expect(css).toMatch(/\.atelier-reveal\s*{[^}]*animation:/s);
+    expect(css).toMatch(/@keyframes atelier-reveal[\s\S]*opacity:\s*0\.[1-9]/);
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.atelier-reveal\s*{[^}]*animation:\s*none;/,
+    );
     expect(css).toContain("prefers-reduced-motion: reduce");
     expect(css).not.toContain("background-clip: text");
     expect(css).not.toContain("repeating-linear-gradient");

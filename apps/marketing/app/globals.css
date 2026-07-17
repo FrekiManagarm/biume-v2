@@ -171,60 +171,74 @@ details[open] [data-faq-indicator] {
   }
 }
 
-.soft-machine-theme {
+.atelier-theme {
   --background: #f7f7f4;
   --foreground: #1d1d21;
   --card: #fdfdfb;
   --card-foreground: #1d1d21;
   --muted: #ecece7;
-  --muted-foreground: #696970;
+  --muted-foreground: #5f5f66;
   --border: #deded7;
   --primary: #6b5ac8;
   --primary-foreground: #ffffff;
   --secondary: #5d9bb8;
   --secondary-foreground: #ffffff;
   --ring: #6b5ac8;
-  --machine-canvas: #f7f7f4;
-  --machine-surface: #fdfdfb;
-  --machine-muted-surface: #ecece7;
-  --machine-ink: #1d1d21;
-  --machine-muted: #696970;
-  --machine-line: #deded7;
-  --machine-anthracite: #202024;
-  --machine-violet: #6b5ac8;
-  --machine-violet-soft: #eeebfb;
-  --machine-blue: #5d9bb8;
-  --machine-blue-ink: #4f859f;
-  --machine-blue-soft: #e8f1f5;
-  --machine-green: #2e9866;
-  --machine-green-ink: #21734d;
-  --machine-green-soft: #e7f3ed;
-  --machine-control-radius: 0.625rem;
-  --machine-surface-radius: 1rem;
-  --machine-media-radius: 1.5rem;
-  --machine-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --atelier-canvas: #f7f7f4;
+  --atelier-surface: #fdfdfb;
+  --atelier-muted-surface: #ecece7;
+  --atelier-ink: #1d1d21;
+  --atelier-muted: #5f5f66;
+  --atelier-line: #deded7;
+  --atelier-anthracite: #202024;
+  --atelier-violet: #6b5ac8;
+  --atelier-violet-soft: #eeebfb;
+  --atelier-blue: #5d9bb8;
+  --atelier-blue-soft: #e8f1f5;
+  --atelier-green: #2e9866;
+  --atelier-green-ink: #21734d;
+  --atelier-green-soft: #e7f3ed;
+  --atelier-surface-radius: 1rem;
+  --atelier-media-radius: 1.5rem;
+  --atelier-ease: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: light;
   isolation: isolate;
 }
 
-.machine-action {
+.atelier-action {
   transition:
-    transform 180ms var(--machine-ease),
+    transform 180ms var(--atelier-ease),
     background-color 180ms ease,
     border-color 180ms ease,
     color 180ms ease;
 }
 
-.machine-action:hover {
+.atelier-action:hover {
   transform: translateY(-2px);
 }
 
-.machine-action:active {
+.atelier-action:active {
   transform: scale(0.98);
 }
 
+.atelier-reveal {
+  animation: atelier-reveal 520ms var(--atelier-ease) both;
+}
+
+@keyframes atelier-reveal {
+  from {
+    opacity: 0.72;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @supports selector(details::details-content) {
-  .soft-machine-theme details::details-content {
+  .atelier-theme details::details-content {
     block-size: 0;
     overflow-y: clip;
     opacity: 0;
@@ -234,23 +248,27 @@ details[open] [data-faq-indicator] {
       opacity 240ms ease;
   }
 
-  .soft-machine-theme details[open]::details-content {
+  .atelier-theme details[open]::details-content {
     block-size: auto;
     opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .machine-action {
+  .atelier-action {
     transition: none;
   }
 
-  .machine-action:hover,
-  .machine-action:active {
+  .atelier-action:hover,
+  .atelier-action:active {
     transform: none;
   }
 
-  .soft-machine-theme details::details-content {
+  .atelier-reveal {
+    animation: none;
+  }
+
+  .atelier-theme details::details-content {
     transition: none;
   }
 
