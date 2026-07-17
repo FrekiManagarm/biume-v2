@@ -112,16 +112,24 @@ describe("Biume atelier precision homepage", () => {
   test("keeps the homepage free of superseded UI and unsupported claims", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const normalized = textOnly(html).toLowerCase();
+    const approvedAutomaticStatement = "rien n’est partagé automatiquement";
+    const normalizedWithoutApprovedAutomatic = normalized.replace(
+      approvedAutomaticStatement,
+      "",
+    );
 
     expect(html).not.toContain("carnet-theme");
     expect(html).not.toContain(["Product", "Proof"].join(""));
     expect(html).not.toContain("data-product-output=");
     expect(normalized).not.toMatch(/\b\d(?:[,.]\d)?\s*\/\s*5\b/);
     expect(normalized).not.toMatch(/\b\d+(?:[,.]\d+)?\s*%\b/);
+    expect(
+      normalized.match(new RegExp(approvedAutomaticStatement, "g")),
+    ).toHaveLength(1);
+    expect(normalizedWithoutApprovedAutomatic).not.toContain("automatique");
     for (const forbidden of [
       "hébergé en france",
       "conforme au rgpd",
-      "envoi automatique au propriétaire",
       "naya va mieux depuis la séance",
       "réponse propriétaire centralisée",
       "questionnaire",

@@ -17,4 +17,18 @@ describe("practitioner control", () => {
     expect(text).toContain("Rien n’est partagé automatiquement");
     expect(html).toContain('data-control-status="ready"');
   });
+
+  test("keeps the local alternate reformulation factual", async () => {
+    const source = await Bun.file(
+      new URL(
+        "../components/landing/practitioner-control-demo.tsx",
+        import.meta.url,
+      ),
+    ).text();
+
+    expect(source).toContain(
+      "La mobilité du thorax s’est améliorée après le travail manuel.",
+    );
+    expect(source).not.toContain("Le travail manuel a amélioré");
+  });
 });

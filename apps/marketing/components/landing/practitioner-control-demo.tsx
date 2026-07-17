@@ -10,7 +10,7 @@ const passages = [
     owner:
       "La mobilité du thorax s’est améliorée pendant le travail manuel.",
     alternate:
-      "Le travail manuel a amélioré la mobilité au niveau du thorax.",
+      "La mobilité du thorax s’est améliorée après le travail manuel.",
   },
   {
     id: "advice",
