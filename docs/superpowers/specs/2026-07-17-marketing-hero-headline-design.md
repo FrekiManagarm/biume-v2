@@ -20,11 +20,12 @@ The first sentence states the primary outcome for the animal owner. The second r
 - Set `comprend.` in `#4F859F`, a darker tonal version of the Biume connection blue. It reaches 3.77:1 against the hero canvas, above the 3:1 requirement for large text; expose it as `--machine-blue-ink` for reuse.
 - Set `Vous` in the main ink color and `décidez.` in the existing decision violet `#6B5AC8`, which reaches 4.99:1 against the canvas.
 - Do not use gradient text. Solid color preserves legibility and keeps each brand color tied to a clear meaning.
+- Add one short, centered decorative rule below the headline. Use a restrained left-to-right gradient from connection blue `#5D9BB8` to decision violet `#6B5AC8`, with a maximum width of `8rem`, a height of `3px`, fully rounded ends, no shadow, and no animation. Keep it separate from the glyphs and mark it `aria-hidden`.
 - Do not use green in this headline because the copy does not describe a confirmed or completed state.
 
 ## Scope
 
-Change only the hero headline markup and the minimum supporting color token or utility needed for accessible blue text. Keep the supporting paragraph, calls to action, hero image, reassurance row, spacing rhythm, and motion behavior unchanged unless a small width adjustment is required to preserve the intended line breaks.
+Change only the hero headline markup, its restrained decorative rule, and the minimum supporting color token or utility needed for accessible blue text. Keep the supporting paragraph, calls to action, hero image, reassurance row, spacing rhythm, and motion behavior unchanged unless a small width adjustment is required to preserve the intended line breaks.
 
 ## Responsive and accessibility requirements
 
@@ -37,4 +38,4 @@ Change only the hero headline markup and the minimum supporting color token or u
 
 - Update the landing hero test to assert the new complete headline.
 - Run the focused marketing hero test and the marketing type check.
-- Inspect the hero at representative mobile and desktop widths to confirm line breaks, contrast, and visual balance.
+- Inspect the hero at representative mobile and desktop widths to confirm line breaks, contrast, visual balance, and that the gradient rule remains a subtle accent rather than competing with the headline.
