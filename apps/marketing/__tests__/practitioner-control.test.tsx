@@ -31,4 +31,15 @@ describe("practitioner control", () => {
     );
     expect(source).not.toContain("Le travail manuel a amélioré");
   });
+
+  test("keeps normal-size body copy AA against the violet surface", () => {
+    const html = renderToStaticMarkup(<PractitionerControl />);
+    const bodyCopyClass = html.match(
+      /<p class="([^"]*)">Biume structure vos notes/,
+    )?.[1];
+
+    expect(bodyCopyClass).toBeDefined();
+    expect(bodyCopyClass).toContain("text-white");
+    expect(bodyCopyClass).not.toMatch(/text-white\/\d+/);
+  });
 });

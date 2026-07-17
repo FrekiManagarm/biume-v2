@@ -13,7 +13,7 @@ export function PractitionerControl(): JSX.Element {
           <h2 className="max-w-[11ch] text-balance text-[clamp(2.5rem,5vw,5rem)] font-semibold leading-[0.96] tracking-[-0.035em]">
             Biume prépare. Vous gardez la main.
           </h2>
-          <p className="mt-6 max-w-[54ch] text-pretty text-base leading-7 text-white/85 md:text-lg">
+          <p className="mt-6 max-w-[54ch] text-pretty text-base leading-7 text-white md:text-lg">
             Biume structure vos notes sans décider à votre place. Vous
             relisez, reformulez et validez chaque passage. Rien n’est partagé
             automatiquement.
