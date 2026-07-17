@@ -99,6 +99,37 @@ describe("atelier header and hero", () => {
     expect(headerMotionSource).toContain("var(--atelier-line)");
     expect(headerMotionSource).toContain("var(--atelier-canvas)");
     expect(headerMotionSource).not.toContain("var(--machine-");
+    expect(headerMotionSource).not.toContain("backdrop-blur");
+    expect(headerMotionSource).not.toMatch(/opacity-\[/);
+    const heroFrameClass = heroSource.match(
+      /<section[\s\S]*?<div className="([^"]+)"/,
+    )?.[1];
+    const heroCopyClass = heroSource.match(
+      /<div className="([^"]+)">\s*<h1/,
+    )?.[1];
+    const heroPhotoClass = heroSource.match(
+      /<div className="([^"]+)">\s*<Image\s*src="\/assets\/images\/landing\/atelier-hero\.webp"/,
+    )?.[1];
+    const productPreviewClass = heroSource.match(
+      /data-hero-product-preview="true"\s*className="([^"]+)"/,
+    )?.[1];
+    expect(heroFrameClass).toBeDefined();
+    expect(heroFrameClass).not.toMatch(/(?:^|\s)min-h-/);
+    expect(heroFrameClass).toContain("lg:min-h-[44rem]");
+    expect(heroCopyClass).toContain("lg:w-[48%]");
+    expect(heroPhotoClass).toBeDefined();
+    expect(heroPhotoClass).not.toMatch(/(?:^|\s)absolute(?:\s|$)/);
+    expect(heroPhotoClass).toContain("lg:absolute");
+    expect(productPreviewClass).toBeDefined();
+    expect(productPreviewClass).not.toMatch(/(?:^|\s)absolute(?:\s|$)/);
+    expect(productPreviewClass).toContain("lg:absolute");
+    expect(productPreviewClass).toContain("lg:left-[50%]");
+    expect(productPreviewClass).toContain("lg:w-[50%]");
+    expect(productPreviewClass).toContain("xl:left-[40%]");
+    expect(productPreviewClass).toContain("xl:w-[min(34rem,88%)]");
+    expect(heroSource).toContain("object-[position:82%_center]");
+    expect(heroSource).toContain("sm:object-[position:78%_center]");
+    expect(heroSource).toContain("lg:object-[position:74%_center]");
     const desktopActionsSource = headerSource.match(
       /<div className="ml-auto hidden shrink-0 items-center gap-1 lg:flex">([\s\S]*?)<\/div>/,
     )?.[1];
