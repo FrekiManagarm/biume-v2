@@ -1,7 +1,13 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { LandingShell } from "../components/landing/landing-shell";
+mock.module("next/font/google", () => ({
+  Hanken_Grotesk: () => ({ variable: "font-hanken" }),
+}));
+
+const { LandingShell } = await import(
+  "../components/landing/landing-shell"
+);
 
 describe("soft machine landing foundation", () => {
   test("scopes the approved theme and font to the homepage", () => {
@@ -37,10 +43,21 @@ describe("soft machine landing foundation", () => {
     expect(css).not.toContain("repeating-linear-gradient");
   });
 
-  test("loads Hanken Grotesk through next font", async () => {
-    const layout = await Bun.file(new URL("../app/layout.tsx", import.meta.url)).text();
+  test("loads Hanken Grotesk only from the homepage shell", async () => {
+    const [shell, layout] = await Promise.all([
+      Bun.file(
+        new URL("../components/landing/landing-shell.tsx", import.meta.url),
+      ).text(),
+      Bun.file(new URL("../app/layout.tsx", import.meta.url)).text(),
+    ]);
 
-    expect(layout).toContain('import { Hanken_Grotesk } from "next/font/google"');
-    expect(layout).toContain('variable: "--font-hanken"');
+    expect(shell).toContain(
+      'import { Hanken_Grotesk } from "next/font/google"',
+    );
+    expect(shell).toContain('variable: "--font-hanken"');
+    expect(shell).toContain("hanken.variable");
+    expect(layout).not.toContain("Hanken_Grotesk");
+    expect(layout).not.toContain("--font-hanken");
+    expect(layout).toMatch(/<html[\s\S]*className="antialiased"/);
   });
 });

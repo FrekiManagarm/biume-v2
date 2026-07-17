@@ -26,6 +26,12 @@ describe("report transformation story", () => {
     }
 
     expect(html.match(/data-transformation-stage=/g)).toHaveLength(3);
+    const reviewStage = html.match(
+      /<article\b[^>]*data-transformation-stage="review"[^>]*>([\s\S]*?)<\/article>/,
+    )?.[1];
+    expect(reviewStage).toContain("machine-violet-soft");
+    expect(reviewStage).toContain("machine-violet");
+    expect(reviewStage).not.toContain("machine-green");
     expect(html).not.toMatch(exactZeroOpacity);
     expect(html).not.toContain("visibility:hidden");
   });

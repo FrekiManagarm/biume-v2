@@ -10,13 +10,7 @@ const reassurance = [
   "Rien ne part sans vous",
 ] as const;
 
-export function LandingHero({
-  adaptedProposal,
-}: {
-  adaptedProposal?: string;
-}) {
-  void adaptedProposal;
-
+export function LandingHero() {
   return (
     <section
       data-landing-section="hero"

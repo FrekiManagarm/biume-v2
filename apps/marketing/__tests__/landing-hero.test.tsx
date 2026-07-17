@@ -48,7 +48,7 @@ describe("soft machine header and hero", () => {
   });
 
   test("hero renders the demonstrative promise and conversion paths in server markup", () => {
-    const html = renderWithLandingImageConfig(<LandingHero adaptedProposal="" />);
+    const html = renderWithLandingImageConfig(<LandingHero />);
     const text = textOnly(html);
 
     expect(text).toContain(
@@ -92,6 +92,7 @@ describe("soft machine header and hero", () => {
 
     expect(heroSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(heroSource).not.toMatch(/from\s+["']motion\/react["']/);
+    expect(heroSource).not.toContain("adaptedProposal");
     expect(headerSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(headerSource).not.toMatch(/from\s+["']motion\/react["']/);
     expect(headerMotionSource).toContain("var(--machine-line)");
@@ -101,9 +102,12 @@ describe("soft machine header and hero", () => {
       /<div className="ml-auto hidden shrink-0 items-center gap-1 lg:flex">([\s\S]*?)<\/div>/,
     )?.[1];
     expect(desktopActionsSource).toBeDefined();
-    expect(desktopActionsSource?.indexOf("<DemoLink />")).toBeLessThan(
-      desktopActionsSource?.indexOf("<SignupLink />") ?? Infinity,
-    );
+    const demoLinkIndex = desktopActionsSource?.indexOf("<DemoLink />") ?? -1;
+    const signupLinkIndex =
+      desktopActionsSource?.indexOf("<SignupLink />") ?? -1;
+    expect(demoLinkIndex).toBeGreaterThanOrEqual(0);
+    expect(signupLinkIndex).toBeGreaterThanOrEqual(0);
+    expect(demoLinkIndex).toBeLessThan(signupLinkIndex);
     expect(mechanismSource).toMatch(/^"use client";/);
     expect(mechanismSource).toMatch(/from\s+["']motion\/react["']/);
     expect(mechanismSource).toContain("useReducedMotion");

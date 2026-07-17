@@ -21,6 +21,7 @@ describe("pricing decision", () => {
     expect(text).toContain("Un prix simple pour prolonger chaque séance.");
     expect(html).toContain("bg-[color:var(--machine-violet-soft)]");
     expect(html).not.toContain("var(--machine-green-soft)");
+    expect(html).not.toContain("shadow-[");
     expect(html).toContain("24,99 €");
     expect(html).toContain("par mois, facturé annuellement");
     expect(html).toContain("299,88 € facturés une fois par an");

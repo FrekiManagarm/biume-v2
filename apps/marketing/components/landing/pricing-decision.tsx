@@ -62,7 +62,7 @@ export function PricingDecision() {
             </ul>
           </div>
 
-          <div className="rounded-[var(--machine-surface-radius)] border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] p-6 shadow-[0_36px_90px_-62px_rgba(29,29,33,0.38)] sm:p-8 lg:p-10">
+          <div className="rounded-[var(--machine-surface-radius)] border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] p-6 sm:p-8 lg:p-10">
             <PricingSelector options={billingOptions} />
             <Link
               href={webAppPath("/signup")}

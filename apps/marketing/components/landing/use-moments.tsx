@@ -46,10 +46,10 @@ export function UseMoments() {
               </h3>
               <div className="mt-8 rounded-[var(--machine-control-radius)] bg-[color:var(--machine-surface)] p-4">
                 <span className="font-mono text-xs text-[color:var(--machine-muted)]">
-                  J+7 · À PRÉPARER
+                  DATE CHOISIE · À PRÉPARER
                 </span>
                 <p className="mt-3 text-sm leading-6">
-                  Faire le point sur le confort et l’évolution observée.
+                  Préparer le message destiné au propriétaire.
                 </p>
               </div>
             </article>
@@ -68,7 +68,9 @@ export function UseMoments() {
                 </li>
                 <li>
                   <span className="font-mono text-xs text-white/50">19 MAI</span>
-                  <p className="mt-1 text-sm">Suivi ajouté à la timeline</p>
+                  <p className="mt-1 text-sm">
+                    Rappel programmé pour le propriétaire
+                  </p>
                 </li>
               </ol>
             </article>

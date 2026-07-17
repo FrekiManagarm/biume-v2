@@ -71,7 +71,7 @@ export function ReportTransformationStory({
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-semibold">Synthèse propriétaire</h3>
-              <span className="rounded-full bg-[color:var(--machine-green-soft)] px-3 py-1.5 text-xs font-semibold text-[color:var(--machine-green-ink)]">
+              <span className="rounded-full bg-[color:var(--machine-violet-soft)] px-3 py-1.5 text-xs font-semibold text-[color:var(--machine-violet)]">
                 Prêt à relire
               </span>
             </div>

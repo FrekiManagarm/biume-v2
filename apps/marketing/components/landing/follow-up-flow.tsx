@@ -4,18 +4,18 @@ import { motion, useReducedMotion } from "motion/react";
 
 const steps = [
   {
-    title: "Compte rendu envoyé",
-    body: "Le propriétaire reçoit le document que vous avez validé.",
+    title: "Compte rendu finalisé",
+    body: "Vous relisez et finalisez le document après la séance.",
     confirmed: false,
   },
   {
-    title: "Retour à J+7",
-    body: "Le prochain échange reste visible au bon moment.",
+    title: "Suivi préparé",
+    body: "Vous préparez le rappel et choisissez sa date ainsi que son message.",
     confirmed: false,
   },
   {
-    title: "Timeline enrichie",
-    body: "La séance et son suivi restent disponibles pour la prochaine consultation.",
+    title: "Rappel programmé",
+    body: "Le rappel est enregistré pour le propriétaire à la date choisie.",
     confirmed: true,
   },
 ] as const;
@@ -31,11 +31,11 @@ export function FollowUpFlow() {
     >
       <div className="mx-auto max-w-[90rem]">
         <h2 className="max-w-[14ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-bold leading-none tracking-[-0.03em]">
-          La séance se termine. Le fil continue.
+          La séance se termine. Le suivi se prépare.
         </h2>
         <p className="mt-5 max-w-[60ch] text-base leading-7 text-white/70 md:text-lg">
-          Le compte rendu, le prochain échange et l’historique de l’animal
-          restent reliés.
+          Vous finalisez le compte rendu, préparez le suivi, puis programmez le
+          rappel que vous avez choisi.
         </p>
         <ol className="mt-10 grid gap-4 lg:grid-cols-3">
           {steps.map((step, index) => (

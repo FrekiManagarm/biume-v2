@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { webAppPath } from "../lib/web-app-url";
@@ -8,6 +8,10 @@ import {
   renderWithLandingImageConfig,
   textOnly,
 } from "./landing-test-utils";
+
+mock.module("next/font/google", () => ({
+  Hanken_Grotesk: () => ({ variable: "font-hanken" }),
+}));
 
 const { default: HomePage } = await import("../app/page");
 
@@ -52,7 +56,7 @@ describe("Biume soft machine homepage", () => {
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
     expect(text).toContain("Biume prépare. Vous décidez.");
-    expect(text).toContain("La séance se termine. Le fil continue.");
+    expect(text).toContain("La séance se termine. Le suivi se prépare.");
     expect(text).toContain("Trois moments où Biume fait la différence.");
     expect(html).toContain("24,99 €");
     expect(html).toContain("29,99 € / mois");
@@ -89,6 +93,23 @@ describe("Biume soft machine homepage", () => {
     }
   });
 
+  test("puts a keyboard-visible skip link before navigation with a focusable target", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const firstAnchor = html.match(/<a\b[^>]*>/)?.[0];
+    const skipLinkIndex = html.indexOf('href="#contenu"');
+    const headerIndex = html.indexOf("<header");
+    const mainTarget = html.match(/<main\b[^>]*id="contenu"[^>]*>/)?.[0];
+
+    expect(firstAnchor).toContain('href="#contenu"');
+    expect(firstAnchor).toContain("sr-only");
+    expect(firstAnchor).toContain("focus:not-sr-only");
+    expect(firstAnchor).toContain("focus-visible:outline-[color:var(--machine-violet)]");
+    expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
+    expect(headerIndex).toBeGreaterThan(skipLinkIndex);
+    expect(mainTarget).toBeDefined();
+    expect(mainTarget).toContain('tabindex="-1"');
+  });
+
   test("keeps the homepage free of superseded UI and unsupported claims", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const normalized = textOnly(html).toLowerCase();
@@ -105,6 +126,10 @@ describe("Biume soft machine homepage", () => {
       "naya va mieux depuis la séance",
       "réponse propriétaire centralisée",
       "questionnaire",
+      "retour à j+7",
+      "timeline enrichie",
+      "suivi ajouté à la timeline",
+      "tableau de bord connecté",
     ]) {
       expect(normalized).not.toContain(forbidden);
     }

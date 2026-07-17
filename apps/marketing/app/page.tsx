@@ -31,8 +31,14 @@ export default function Home() {
   return (
     <LandingShell>
       <JsonLd data={serviceSchema} />
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-full focus:bg-[color:var(--machine-violet)] focus:px-4 focus:text-sm focus:font-semibold focus:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+      >
+        Aller au contenu
+      </a>
       <LandingHeader />
-      <main id="contenu">
+      <main id="contenu" tabIndex={-1}>
         <LandingHero />
         <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />
         <PractitionerControl />

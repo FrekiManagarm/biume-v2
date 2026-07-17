@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { webAppPath } from "../../lib/web-app-url";
 import { HeaderMotion } from "./header-motion";
+import { MobileMenu } from "./mobile-menu";
 
 const navigation = [
   { href: "#produit", label: "Le produit" },
@@ -96,7 +97,7 @@ export function LandingHeader() {
 
       <div className="ml-auto flex items-center gap-2 lg:hidden">
         <SignupLink compact />
-        <details className="group relative">
+        <MobileMenu>
           <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] px-4 text-sm font-semibold marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]">
             Menu
           </summary>
@@ -120,7 +121,7 @@ export function LandingHeader() {
               </Link>
             </nav>
           </div>
-        </details>
+        </MobileMenu>
       </div>
     </HeaderMotion>
   );
