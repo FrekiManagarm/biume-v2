@@ -14,6 +14,16 @@ describe("soft machine landing foundation", () => {
     expect(html).toContain("Contenu");
   });
 
+  test("integrates the shell around the homepage structure", async () => {
+    const page = await Bun.file(new URL("../app/page.tsx", import.meta.url)).text();
+
+    expect(page).toContain(
+      'import { LandingShell } from "../components/landing/landing-shell"',
+    );
+    expect(page).toMatch(/<LandingShell>[\s\S]*<JsonLd[\s\S]*<LandingFooter[\s\S]*<\/LandingShell>/);
+    expect(page).not.toContain("carnet-theme");
+  });
+
   test("defines semantic colors, restrained radii and reduced motion", async () => {
     const css = await Bun.file(new URL("../app/globals.css", import.meta.url)).text();
 

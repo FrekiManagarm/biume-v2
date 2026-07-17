@@ -43,7 +43,7 @@ describe("Biume Carnet vivant homepage", () => {
       'data-landing-section="faq-cta"',
     ];
 
-    expect(html).toContain("carnet-theme");
+    expect(html).toContain("soft-machine-theme");
     expect(html.match(/data-landing-section=/g)).toHaveLength(4);
     expect(html).not.toContain('data-landing-section="product-proof"');
     for (const marker of markers) {
@@ -188,7 +188,7 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
-  test("uses stable system font stacks without delaying first paint", async () => {
+  test("loads the homepage font without changing secondary font tokens", async () => {
     const [source, layoutSource, css] = await Promise.all([
       Bun.file(new URL("../app/page.tsx", import.meta.url)).text(),
       Bun.file(new URL("../app/layout.tsx", import.meta.url)).text(),
@@ -196,7 +196,8 @@ describe("Biume Carnet vivant homepage", () => {
     ]);
 
     expect(source).not.toContain("next/font/google");
-    expect(layoutSource).not.toContain("next/font/google");
+    expect(layoutSource).toContain('import { Hanken_Grotesk } from "next/font/google"');
+    expect(layoutSource).toContain('variable: "--font-hanken"');
     expect(css).toMatch(/--font-geist-sans:\s*ui-sans-serif/);
     expect(css).toMatch(/--font-geist-mono:\s*ui-monospace/);
     expect(css).toMatch(/--font-newsreader:[^;]*Iowan Old Style/s);

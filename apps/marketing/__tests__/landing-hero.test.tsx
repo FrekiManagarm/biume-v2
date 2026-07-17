@@ -143,9 +143,9 @@ describe("Carnet vivant header and hero", () => {
     expect(heroSource).toContain("var(--carnet-logo-green)");
     expect(heroSource).toContain("carnet-hero-sans");
     expect(heroSource).toContain("carnet-hero-serif");
-    expect(css).toMatch(/--carnet-logo-violet:\s*#8e82e8;/);
-    expect(css).toMatch(/--carnet-logo-blue:\s*#62a8c8;/);
-    expect(css).toMatch(/--carnet-logo-green:\s*#28c978;/);
+    expect(css).toContain("--carnet-logo-violet: var(--machine-violet);");
+    expect(css).toContain("--carnet-logo-blue: var(--machine-blue);");
+    expect(css).toContain("--carnet-logo-green: var(--machine-green);");
     expect(css).toMatch(
       /\.carnet-hero-sans\s*{[^}]*font-family:\s*ui-sans-serif/s,
     );

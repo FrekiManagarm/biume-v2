@@ -3,6 +3,7 @@ import { FinalCta } from "../components/landing/final-cta";
 import { LandingFaq } from "../components/landing/landing-faq";
 import { LandingHeader } from "../components/landing/landing-header";
 import { LandingHero } from "../components/landing/landing-hero";
+import { LandingShell } from "../components/landing/landing-shell";
 import { PricingDecision } from "../components/landing/pricing-decision";
 import { ReportTransformationStory } from "../components/landing/report-transformation-story";
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
@@ -25,7 +26,7 @@ const serviceSchema = {
 
 export default function Home() {
   return (
-    <div className="carnet-theme min-h-dvh overflow-x-clip bg-[color:var(--carnet-canvas)] text-[color:var(--carnet-ink)] selection:bg-[color:var(--carnet-violet-soft)]">
+    <LandingShell>
       <JsonLd data={serviceSchema} />
       <LandingHeader />
       <main id="contenu">
@@ -46,6 +47,6 @@ export default function Home() {
         </section>
       </main>
       <LandingFooter />
-    </div>
+    </LandingShell>
   );
 }

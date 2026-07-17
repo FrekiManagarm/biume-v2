@@ -202,6 +202,23 @@ details[open] [data-faq-indicator] {
   --machine-surface-radius: 1rem;
   --machine-media-radius: 1.5rem;
   --machine-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --carnet-canvas: var(--machine-canvas);
+  --carnet-surface: var(--machine-surface);
+  --carnet-muted-surface: var(--machine-muted-surface);
+  --carnet-ink: var(--machine-ink);
+  --carnet-muted: var(--machine-muted);
+  --carnet-line: var(--machine-line);
+  --carnet-anthracite: var(--machine-anthracite);
+  --carnet-violet: var(--machine-violet);
+  --carnet-violet-soft: var(--machine-violet-soft);
+  --carnet-blue: var(--machine-blue);
+  --carnet-blue-soft: var(--machine-blue-soft);
+  --carnet-green: var(--machine-green);
+  --carnet-green-ink: var(--machine-green-ink);
+  --carnet-green-soft: var(--machine-green-soft);
+  --carnet-logo-violet: var(--machine-violet);
+  --carnet-logo-blue: var(--machine-blue);
+  --carnet-logo-green: var(--machine-green);
   color-scheme: light;
   isolation: isolate;
 }
@@ -222,6 +239,198 @@ details[open] [data-faq-indicator] {
   transform: scale(0.98);
 }
 
+/* Temporary compatibility for homepage components pending Tasks 3–7. */
+.carnet-construction {
+  opacity: 0.32;
+  background-image:
+    linear-gradient(to right, rgb(29 29 33 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(29 29 33 / 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 94%);
+}
+
+.carnet-hero-sans {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.carnet-hero-serif {
+  font-family:
+    "Iowan Old Style", Baskerville, "Times New Roman", serif;
+}
+
+.landing-hero-photo {
+  box-shadow: 0 42px 110px -72px rgb(29 29 33 / 0.45);
+}
+
+@media (min-width: 768px) {
+  .landing-hero-entry {
+    animation: landing-hero-enter 400ms cubic-bezier(0.16, 1, 0.3, 1)
+      var(--hero-delay, 0ms) both;
+  }
+
+  .landing-hero-photo {
+    animation: landing-hero-photo-enter 720ms cubic-bezier(0.16, 1, 0.3, 1)
+      both;
+  }
+
+  .landing-hero-note {
+    animation: landing-hero-note 620ms cubic-bezier(0.16, 1, 0.3, 1) 260ms
+      both;
+  }
+
+  .landing-hero-report {
+    animation: landing-hero-report 720ms cubic-bezier(0.16, 1, 0.3, 1) 360ms
+      both;
+  }
+}
+
+.carnet-action {
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+.carnet-action:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+.carnet-action:active {
+  transform: scale(0.98);
+}
+
+@supports selector(details::details-content) {
+  .soft-machine-theme details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 360ms cubic-bezier(0.16, 1, 0.3, 1),
+      content-visibility 360ms allow-discrete,
+      opacity 240ms ease;
+  }
+
+  .soft-machine-theme details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+@keyframes landing-hero-enter {
+  from {
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes landing-hero-photo-enter {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes landing-hero-note {
+  from {
+    transform: translate3d(-14px, 12px, 0) rotate(-1deg);
+  }
+  to {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes landing-hero-report {
+  from {
+    transform: translate3d(18px, 16px, 0) scale(0.985);
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.report-bridge-line {
+  background-image: linear-gradient(
+    to bottom,
+    var(--carnet-logo-violet),
+    var(--carnet-logo-blue),
+    var(--carnet-logo-green)
+  );
+  transform-origin: center top;
+}
+
+@media (min-width: 768px) {
+  .report-bridge-line {
+    background-image: linear-gradient(
+      to right,
+      var(--carnet-logo-violet),
+      var(--carnet-logo-blue),
+      var(--carnet-logo-green)
+    );
+    transform-origin: left center;
+  }
+
+  [data-report-motion="ready"] .report-note-card,
+  [data-report-motion="ready"] .report-owner-document,
+  [data-report-motion="ready"] [data-report-token] {
+    opacity: 0;
+  }
+
+  [data-report-motion="ready"] .report-note-card {
+    transform: translate3d(0, 18px, 0);
+  }
+
+  [data-report-motion="ready"] .report-owner-document {
+    transform: translate3d(18px, 12px, 0);
+  }
+
+  [data-report-motion="ready"] [data-report-token] {
+    transform: translate3d(0, 10px, 0);
+  }
+
+  [data-report-motion="ready"] .report-bridge-line {
+    transform: scaleX(0);
+  }
+
+  [data-report-enhanced="true"] .report-note-card {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-report-enhanced="true"] .report-owner-document {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: 300ms;
+  }
+
+  [data-report-enhanced="true"] .report-bridge-line {
+    transform: scaleX(1);
+    transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1) 140ms;
+  }
+
+  [data-report-enhanced="true"] [data-report-token] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)
+        calc(220ms + var(--token-index) * 80ms),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1)
+        calc(220ms + var(--token-index) * 80ms);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .machine-action {
     transition: none;
@@ -230,6 +439,35 @@ details[open] [data-faq-indicator] {
   .machine-action:hover,
   .machine-action:active {
     transform: none;
+  }
+
+  .landing-hero-entry,
+  .landing-hero-photo,
+  .landing-hero-note,
+  .landing-hero-report {
+    animation: none;
+  }
+
+  .carnet-action {
+    transition: none;
+  }
+
+  .carnet-action:hover,
+  .carnet-action:active {
+    transform: none;
+  }
+
+  .soft-machine-theme details::details-content {
+    transition: none;
+  }
+
+  .report-note-card,
+  .report-owner-document,
+  [data-report-token],
+  .report-bridge-line {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 
   html:focus-within {
