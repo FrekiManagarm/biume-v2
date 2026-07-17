@@ -20,8 +20,10 @@ describe("generated Open Graph image", () => {
   test("keeps the preview minimal and anchored to the Biume brand", () => {
     expect(brandLogoSrc.startsWith("data:image/svg+xml;utf8,")).toBe(true);
     expect(brandLogoSrc).toContain("biume-gradient");
-    expect(brandSubtitle).toBe("");
-    expect(headline).toBe("Chaque séance mérite une suite.");
+    expect(headline).toBe("De vos notes au propriétaire.");
+    expect(brandSubtitle).toBe(
+      "Un compte rendu clair, un suivi qui continue après la séance.",
+    );
     expect(headlineStyle.fontSize).toBeLessThanOrEqual(72);
   });
 

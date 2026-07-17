@@ -25,10 +25,7 @@ export function ReportTransformationStory({
           Le même regard métier, organisé pour être compris sans perdre sa
           précision.
         </p>
-        <div
-          id="comment-ca-marche"
-          className="mt-10 grid items-stretch gap-4 lg:grid-cols-[0.8fr_auto_1fr_auto_1.1fr]"
-        >
+        <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-[0.8fr_auto_1fr_auto_1.1fr]">
           <article
             data-transformation-stage="notes"
             className="rounded-[var(--machine-surface-radius)] bg-[color:var(--machine-anthracite)] p-6 text-white"

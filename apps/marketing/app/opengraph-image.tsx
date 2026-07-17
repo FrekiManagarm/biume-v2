@@ -7,9 +7,10 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export const headline = "Chaque séance mérite une suite.";
+export const headline = "De vos notes au propriétaire.";
 
-export const brandSubtitle = "";
+export const brandSubtitle =
+  "Un compte rendu clair, un suivi qui continue après la séance.";
 
 export const headlineStyle = {
   fontSize: 70,
@@ -163,7 +164,7 @@ export default function OpenGraphImage() {
                 fontWeight: 480,
               }}
             >
-              Séances structurées, résumés propriétaires, suivi post-séance.
+              {brandSubtitle}
             </div>
           </div>
 
