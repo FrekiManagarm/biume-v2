@@ -17,9 +17,21 @@ export function LandingHero() {
       className="px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-20"
     >
       <div className="mx-auto max-w-[90rem] text-center">
-        <h1 className="mx-auto max-w-[15ch] text-balance text-[clamp(3rem,7vw,6rem)] font-bold leading-[0.92] tracking-[-0.035em]">
-          De vos notes au propriétaire, sans perdre votre regard métier.
+        <h1 className="mx-auto max-w-[19ch] text-balance text-[clamp(3rem,7vw,6rem)] font-bold leading-[0.92] tracking-[-0.035em]">
+          <span className="block">
+            Le propriétaire{" "}
+            <span className="text-[color:var(--machine-blue-ink)]">comprend.</span>
+          </span>
+          <span className="block">
+            Vous{" "}
+            <span className="text-[color:var(--machine-violet)]">décidez.</span>
+          </span>
         </h1>
+        <span
+          aria-hidden="true"
+          data-hero-headline-accent="true"
+          className="mx-auto mt-4 block h-[3px] w-[clamp(5rem,10vw,8rem)] rounded-full bg-linear-to-r from-[color:var(--machine-blue)] to-[color:var(--machine-violet)]"
+        />
         <p className="mx-auto mt-6 max-w-[62ch] text-pretty text-base leading-7 text-[color:var(--machine-muted)] md:text-lg md:leading-8">
           Biume organise vos observations en un compte rendu clair, puis vous
           aide à garder le fil après la séance. Vous relisez et décidez de

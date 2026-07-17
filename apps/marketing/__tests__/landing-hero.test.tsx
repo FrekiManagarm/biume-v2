@@ -51,9 +51,12 @@ describe("soft machine header and hero", () => {
     const html = renderWithLandingImageConfig(<LandingHero />);
     const text = textOnly(html);
 
-    expect(text).toContain(
+    expect(text).toContain("Le propriétaire comprend. Vous décidez.");
+    expect(text).not.toContain(
       "De vos notes au propriétaire, sans perdre votre regard métier.",
     );
+    expect(html).toContain('data-hero-headline-accent="true"');
+    expect(html).toContain('aria-hidden="true"');
     expect(text).toContain(
       "Biume organise vos observations en un compte rendu clair, puis vous aide à garder le fil après la séance. Vous relisez et décidez de chaque partage.",
     );
@@ -93,6 +96,10 @@ describe("soft machine header and hero", () => {
     expect(heroSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(heroSource).not.toMatch(/from\s+["']motion\/react["']/);
     expect(heroSource).not.toContain("adaptedProposal");
+    expect(heroSource).toContain("var(--machine-blue-ink)");
+    expect(heroSource).toContain("bg-linear-to-r");
+    expect(heroSource).not.toContain("bg-clip-text");
+    expect(heroSource).not.toContain("text-transparent");
     expect(headerSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(headerSource).not.toMatch(/from\s+["']motion\/react["']/);
     expect(headerMotionSource).toContain("var(--machine-line)");
