@@ -135,3 +135,78 @@ Inspect `/` at approximately `375x812` and `1440x1000`. Confirm that the first s
 git add apps/marketing/__tests__/landing-hero.test.tsx apps/marketing/app/globals.css apps/marketing/components/landing/landing-hero.tsx
 git commit -m "feat(marketing): refine hero headline"
 ```
+
+### Task 2: Tighten the CTA-to-media spacing
+
+**Files:**
+- Modify: `apps/marketing/__tests__/landing-hero.test.tsx:76-105`
+- Modify: `apps/marketing/components/landing/landing-hero.tsx:58-72`
+
+- [ ] **Step 1: Write the failing spacing contract test**
+
+In the existing source-level hero test in `apps/marketing/__tests__/landing-hero.test.tsx`, add these assertions next to the other `heroSource` layout constraints:
+
+```tsx
+expect(heroSource).toContain("mx-auto mt-8 aspect-[16/10]");
+expect(heroSource).not.toContain("mx-auto mt-12 aspect-[16/10]");
+```
+
+- [ ] **Step 2: Run the focused test and confirm the expected failure**
+
+Run:
+
+```bash
+bun test apps/marketing/__tests__/landing-hero.test.tsx
+```
+
+Expected: FAIL because the media container still uses `mt-12`.
+
+- [ ] **Step 3: Move the hero image upward by one spacing step**
+
+In `apps/marketing/components/landing/landing-hero.tsx`, change only the media container's top-margin utility:
+
+```diff
+- className="relative mx-auto mt-12 aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-[var(--machine-media-radius)] bg-[color:var(--machine-violet-soft)]"
++ className="relative mx-auto mt-8 aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-[var(--machine-media-radius)] bg-[color:var(--machine-violet-soft)]"
+```
+
+Do not alter CTA spacing, media dimensions, image crop, reassurance spacing, section padding, or responsive structure.
+
+- [ ] **Step 4: Run the focused test and confirm it passes**
+
+Run:
+
+```bash
+bun test apps/marketing/__tests__/landing-hero.test.tsx
+```
+
+Expected: all tests in `landing-hero.test.tsx` PASS.
+
+- [ ] **Step 5: Run scoped static verification**
+
+Run:
+
+```bash
+bun --filter @biume/marketing lint -- components/landing/landing-hero.tsx __tests__/landing-hero.test.tsx
+```
+
+Expected: exit code 0 with no ESLint errors.
+
+Run:
+
+```bash
+git diff --check
+```
+
+Expected: exit code 0 with no whitespace errors.
+
+- [ ] **Step 6: Inspect responsive rendering**
+
+Start the marketing app on an available local port and inspect `/` at approximately `390x844` and `1440x1000`. Confirm that the media container begins exactly `32px` below the CTA group, enters the composition earlier on mobile and desktop, does not crowd either CTA, and introduces no horizontal overflow.
+
+- [ ] **Step 7: Commit the spacing refinement**
+
+```bash
+git add apps/marketing/__tests__/landing-hero.test.tsx apps/marketing/components/landing/landing-hero.tsx
+git commit -m "fix(marketing): tighten hero media spacing"
+```
