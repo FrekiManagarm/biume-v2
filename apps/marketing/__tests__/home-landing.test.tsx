@@ -51,7 +51,7 @@ describe("Biume soft machine homepage", () => {
     const text = textOnly(html);
 
     expect(text).toContain(
-      "De vos notes au propriétaire, sans perdre votre regard métier.",
+      "Le propriétaire comprend. Vous décidez.",
     );
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
