@@ -21,7 +21,7 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
-describe("Biume soft machine homepage", () => {
+describe("Biume atelier precision homepage", () => {
   test("assembles the seven approved sections once and in order", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
@@ -34,7 +34,7 @@ describe("Biume soft machine homepage", () => {
       'data-landing-section="faq-cta"',
     ] as const;
 
-    expect(html).toContain("soft-machine-theme");
+    expect(html).toContain("atelier-theme");
     expect(html.match(/data-landing-section=/g)).toHaveLength(markers.length);
     for (const marker of markers) {
       expect(html.match(new RegExp(marker, "g"))).toHaveLength(1);
