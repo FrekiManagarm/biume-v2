@@ -50,13 +50,17 @@ describe("soft machine header and hero", () => {
   test("hero renders the demonstrative promise and conversion paths in server markup", () => {
     const html = renderWithLandingImageConfig(<LandingHero />);
     const text = textOnly(html);
+    const headlineAccentTags =
+      html.match(
+        /<[^>]+\bdata-hero-headline-accent="true"[^>]*>/g,
+      ) ?? [];
 
     expect(text).toContain("Le propriétaire comprend. Vous décidez.");
     expect(text).not.toContain(
       "De vos notes au propriétaire, sans perdre votre regard métier.",
     );
-    expect(html).toContain('data-hero-headline-accent="true"');
-    expect(html).toContain('aria-hidden="true"');
+    expect(headlineAccentTags).toHaveLength(1);
+    expect(headlineAccentTags[0]).toContain('aria-hidden="true"');
     expect(text).toContain(
       "Biume organise vos observations en un compte rendu clair, puis vous aide à garder le fil après la séance. Vous relisez et décidez de chaque partage.",
     );
