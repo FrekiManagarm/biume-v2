@@ -1,277 +1,89 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  type CSSProperties,
-  type RefObject,
-} from "react";
+import { motion, useReducedMotion } from "motion/react";
 
-import {
-  REPORT_NOTE_SUMMARY,
-  type ReportTransformationDemo,
-} from "./report-transformation-demo";
-
-const reducedMotionMediaQuery = "(prefers-reduced-motion: reduce)";
-const reportRevealThreshold = 0.24;
-const reportTokens = ["Thorax", "Gauche", "Évolution"] as const;
-const useIsomorphicLayoutEffect =
-  typeof window === "undefined" ? useEffect : useLayoutEffect;
-
-type ReportTokenStyle = CSSProperties & { "--token-index": number };
-
-export function getReportTokenStyle(tokenIndex: number): ReportTokenStyle {
-  return { "--token-index": tokenIndex };
-}
-
-type ReportIntersectionEntry = Pick<
-  IntersectionObserverEntry,
-  "isIntersecting" | "intersectionRatio"
->;
-
-type ReportObserver = Readonly<{
-  observe: (target: HTMLElement) => void;
-  disconnect: () => void;
-}>;
-
-type CreateReportObserver = (
-  callback: (entries: readonly ReportIntersectionEntry[]) => void,
-  options: Readonly<{ threshold: number }>,
-) => ReportObserver;
-
-export function shouldEnhanceReport(
-  entry: ReportIntersectionEntry | undefined,
-) {
-  return Boolean(
-    entry?.isIntersecting &&
-      entry.intersectionRatio >= reportRevealThreshold,
-  );
-}
-
-export function setupReportEnhancement({
-  section,
-  reduceMotion,
-  createObserver,
-}: Readonly<{
-  section: HTMLElement | null;
-  reduceMotion: boolean;
-  createObserver: CreateReportObserver | undefined;
-}>) {
-  if (!section || reduceMotion || !createObserver) {
-    return;
-  }
-
-  section.dataset.reportMotion = "ready";
-
-  const observer = createObserver(
-    (entries) => {
-      const entry = entries[0];
-
-      if (!shouldEnhanceReport(entry)) {
-        return;
-      }
-
-      section.dataset.reportEnhanced = "true";
-      observer.disconnect();
-    },
-    { threshold: reportRevealThreshold },
-  );
-
-  observer.observe(section);
-
-  return () => {
-    observer.disconnect();
-    delete section.dataset.reportMotion;
-    delete section.dataset.reportEnhanced;
-  };
-}
-
-function useReportEnhancement(sectionRef: RefObject<HTMLElement | null>) {
-  useIsomorphicLayoutEffect(() => {
-    const section = sectionRef.current;
-    const reduceMotion = window.matchMedia(reducedMotionMediaQuery).matches;
-    const createObserver: CreateReportObserver | undefined =
-      "IntersectionObserver" in window
-        ? (callback, options) =>
-            new IntersectionObserver((entries) => callback(entries), options)
-        : undefined;
-
-    return setupReportEnhancement({
-      section,
-      reduceMotion,
-      createObserver,
-    });
-  }, [sectionRef]);
-}
-
-function SourceNote() {
-  return (
-    <article
-      data-report-note
-      aria-labelledby="report-note-title"
-      className="report-note-card self-center rounded-[0.75rem_0.75rem_2rem_0.75rem] border border-white/12 bg-white/[0.045] p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_28px_70px_-52px_rgb(0_0_0/0.8)]"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <h3
-          id="report-note-title"
-          className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-logo-violet)]"
-        >
-          Votre note de séance
-        </h3>
-        <span aria-hidden="true" className="font-mono text-xs text-white/55">
-          01
-        </span>
-      </div>
-      <p className="mt-6 border-l-2 border-[color:var(--carnet-violet)] pl-4 text-base leading-7 text-white/82">
-        {REPORT_NOTE_SUMMARY}
-      </p>
-      <div className="mt-7 flex items-center gap-2 border-t border-white/10 pt-4 font-mono text-[0.65rem] text-white/55">
-        <span
-          aria-hidden="true"
-          className="size-1.5 rounded-full bg-[color:var(--carnet-violet)]"
-        />
-        Vos mots restent la source
-      </div>
-    </article>
-  );
-}
-
-function TransformationBridge() {
-  return (
-    <div
-      data-report-bridge
-      className="relative flex min-h-52 items-center justify-center py-8 md:min-h-0 md:py-0"
-    >
-      <span
-        aria-hidden="true"
-        className="report-bridge-line absolute inset-y-4 left-1/2 w-px md:inset-x-0 md:top-1/2 md:bottom-auto md:h-px md:w-auto"
-      />
-      <div className="relative z-10 flex flex-col items-center gap-4">
-        <div className="flex flex-col items-center gap-2 rounded-xl bg-[color:var(--carnet-anthracite)] px-4 py-3">
-          <span aria-hidden="true" className="flex items-center gap-1">
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-violet)]" />
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-blue)]" />
-            <span className="size-1.5 rounded-full bg-[color:var(--carnet-logo-green)]" />
-          </span>
-          <span className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/78">
-            Biume organise
-          </span>
-        </div>
-        <div className="flex max-w-44 flex-wrap justify-center gap-2">
-          {reportTokens.map((token, index) => (
-            <span
-              key={token}
-              data-report-token
-              style={getReportTokenStyle(index)}
-              className="rounded-full border border-white/12 bg-[color:var(--carnet-anthracite)] px-2.5 py-1 font-mono text-[0.6rem] text-white/64"
-            >
-              {token}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OwnerDocument({ demo }: { demo: ReportTransformationDemo }) {
-  return (
-    <article
-      data-report-document
-      aria-labelledby="report-document-title"
-      className="report-owner-document self-center rounded-[0.75rem_0.75rem_0.75rem_2rem] border border-black/8 bg-[color:var(--carnet-surface)] p-6 text-[color:var(--carnet-ink)] shadow-[0_38px_90px_-54px_rgb(0_0_0/0.72)]"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <h3
-          id="report-document-title"
-          className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--carnet-muted)]"
-        >
-          Proposition propriétaire
-        </h3>
-        <span
-          aria-hidden="true"
-          className="font-mono text-xs text-[color:var(--carnet-muted)]"
-        >
-          02
-        </span>
-      </div>
-      <div className="mt-6">
-        <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--carnet-green-ink)]">
-          Ce que le propriétaire peut lire
-        </p>
-        <p className="mt-3 text-base leading-7">{demo.adaptedProposal}</p>
-      </div>
-      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--carnet-line)] pt-4 font-mono text-[0.65rem]">
-        <span className="text-[color:var(--carnet-muted)]">
-          Texte encore modifiable
-        </span>
-        <span className="inline-flex items-center gap-2 font-semibold text-[color:var(--carnet-green-ink)]">
-          <span
-            aria-hidden="true"
-            className="size-1.5 rounded-full bg-[color:var(--carnet-green-ink)]"
-          />
-          Prêt à relire
-        </span>
-      </div>
-    </article>
-  );
-}
+import type { ReportTransformationDemo } from "./report-transformation-demo";
 
 export function ReportTransformationStory({
   demo,
-}: Readonly<{ demo: ReportTransformationDemo }>) {
-  const sectionRef = useRef<HTMLElement>(null);
-  useReportEnhancement(sectionRef);
+}: {
+  demo: ReportTransformationDemo;
+}) {
+  const reduceMotion = useReducedMotion();
 
   return (
     <section
-      ref={sectionRef}
       id="produit"
       data-landing-section="transformation"
-      className="report-story-section scroll-mt-18 bg-[color:var(--carnet-anthracite)] px-4 py-10 text-white sm:px-6 md:py-20 lg:px-8"
+      className="scroll-mt-20 bg-[color:var(--machine-blue-soft)] px-4 py-16 sm:px-6 md:py-24 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
-        <div className="grid gap-5 md:grid-cols-[0.72fr_1.28fr] md:gap-10">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-logo-green)]">
-            De vos notes au propriétaire
-          </p>
-          <div>
-            <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.05em] md:text-6xl">
-              Le même fond.{" "}
-              <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-                Une forme enfin lisible.
-              </span>
-            </h2>
-            <p className="mt-5 max-w-[48ch] text-sm leading-6 text-white/60 md:text-base md:leading-7">
-              Vous notez librement. Biume organise. Vous relisez.
-            </p>
-          </div>
-        </div>
-
+        <h2 className="max-w-[14ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-bold leading-none tracking-[-0.03em]">
+          Voyez vos notes prendre forme.
+        </h2>
+        <p className="mt-5 max-w-[65ch] text-pretty text-base leading-7 text-[color:var(--machine-muted)] md:text-lg">
+          Le même regard métier, organisé pour être compris sans perdre sa
+          précision.
+        </p>
         <div
           id="comment-ca-marche"
-          className="mt-10 scroll-mt-24 md:mt-14 md:grid md:grid-cols-[0.78fr_0.46fr_1.18fr] md:items-center"
+          className="mt-10 grid items-stretch gap-4 lg:grid-cols-[0.8fr_auto_1fr_auto_1.1fr]"
         >
-          <SourceNote />
-          <TransformationBridge />
-          <OwnerDocument demo={demo} />
+          <article
+            data-transformation-stage="notes"
+            className="rounded-[var(--machine-surface-radius)] bg-[color:var(--machine-anthracite)] p-6 text-white"
+          >
+            <h3 className="text-lg font-semibold">Notes de séance</h3>
+            <p className="mt-5 text-sm leading-6 text-white/75">{demo.note}</p>
+          </article>
+          <motion.div
+            aria-hidden="true"
+            initial={false}
+            whileInView={{ scaleX: 1 }}
+            style={{ scaleX: reduceMotion ? 1 : 0.4 }}
+            viewport={{ once: true, amount: 0.6 }}
+            className="hidden h-1 w-12 self-center rounded-full bg-[color:var(--machine-blue)] lg:block"
+          />
+          <article
+            data-transformation-stage="organized"
+            className="rounded-[var(--machine-surface-radius)] bg-[color:var(--machine-surface)] p-6"
+          >
+            <h3 className="text-lg font-semibold">Biume organise</h3>
+            <dl className="mt-5 space-y-4">
+              {demo.sections.map((section) => (
+                <div key={section.label}>
+                  <dt className="text-xs font-semibold text-[color:var(--machine-muted)]">
+                    {section.label}
+                  </dt>
+                  <dd className="mt-1 text-sm leading-6">{section.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+          <motion.div
+            aria-hidden="true"
+            initial={false}
+            whileInView={{ scaleX: 1 }}
+            style={{ scaleX: reduceMotion ? 1 : 0.4 }}
+            viewport={{ once: true, amount: 0.6 }}
+            className="hidden h-1 w-12 self-center rounded-full bg-[color:var(--machine-blue)] lg:block"
+          />
+          <article
+            data-transformation-stage="review"
+            className="rounded-[var(--machine-surface-radius)] bg-[color:var(--machine-surface)] p-6"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold">Synthèse propriétaire</h3>
+              <span className="rounded-full bg-[color:var(--machine-green-soft)] px-3 py-1.5 text-xs font-semibold text-[color:var(--machine-green-ink)]">
+                Prêt à relire
+              </span>
+            </div>
+            <p className="mt-5 text-sm leading-6">{demo.ownerSummary}</p>
+            <p className="mt-5 border-t border-[color:var(--machine-line)] pt-4 text-xs text-[color:var(--machine-muted)]">
+              Vous relisez avant chaque partage.
+            </p>
+          </article>
         </div>
-
-        <ol
-          data-report-sequence
-          className="mt-8 grid grid-cols-3 border-t border-white/12 pt-4 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-white/55 md:mt-10 md:text-xs"
-        >
-          {["Vous notez", "Biume organise", "Vous décidez"].map((label) => (
-            <li
-              key={label}
-              data-report-sequence-item
-              className="border-r border-white/10 px-2 first:pl-0 last:border-r-0 last:pr-0 md:px-4"
-            >
-              {label}
-            </li>
-          ))}
-        </ol>
       </div>
     </section>
   );

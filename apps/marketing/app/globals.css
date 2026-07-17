@@ -274,82 +274,6 @@ details[open] [data-faq-indicator] {
   }
 }
 
-.report-bridge-line {
-  background-image: linear-gradient(
-    to bottom,
-    var(--carnet-logo-violet),
-    var(--carnet-logo-blue),
-    var(--carnet-logo-green)
-  );
-  transform-origin: center top;
-}
-
-@media (min-width: 768px) {
-  .report-bridge-line {
-    background-image: linear-gradient(
-      to right,
-      var(--carnet-logo-violet),
-      var(--carnet-logo-blue),
-      var(--carnet-logo-green)
-    );
-    transform-origin: left center;
-  }
-
-  [data-report-motion="ready"] .report-note-card,
-  [data-report-motion="ready"] .report-owner-document,
-  [data-report-motion="ready"] [data-report-token] {
-    opacity: 0;
-  }
-
-  [data-report-motion="ready"] .report-note-card {
-    transform: translate3d(0, 18px, 0);
-  }
-
-  [data-report-motion="ready"] .report-owner-document {
-    transform: translate3d(18px, 12px, 0);
-  }
-
-  [data-report-motion="ready"] [data-report-token] {
-    transform: translate3d(0, 10px, 0);
-  }
-
-  [data-report-motion="ready"] .report-bridge-line {
-    transform: scaleX(0);
-  }
-
-  [data-report-enhanced="true"] .report-note-card {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    transition:
-      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  [data-report-enhanced="true"] .report-owner-document {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    transition:
-      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
-    transition-delay: 300ms;
-  }
-
-  [data-report-enhanced="true"] .report-bridge-line {
-    transform: scaleX(1);
-    transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1) 140ms;
-  }
-
-  [data-report-enhanced="true"] [data-report-token] {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    transition:
-      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)
-        calc(220ms + var(--token-index) * 80ms),
-      transform 480ms cubic-bezier(0.16, 1, 0.3, 1)
-        calc(220ms + var(--token-index) * 80ms);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .machine-action {
     transition: none;
@@ -371,15 +295,6 @@ details[open] [data-faq-indicator] {
 
   .soft-machine-theme details::details-content {
     transition: none;
-  }
-
-  .report-note-card,
-  .report-owner-document,
-  [data-report-token],
-  .report-bridge-line {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
   }
 
   html:focus-within {

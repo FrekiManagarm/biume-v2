@@ -1,9 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 
-import {
-  REPORT_NOTE_SUMMARY,
-  REPORT_TRANSFORMATION_DEMO,
-} from "../components/landing/report-transformation-demo";
+import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
@@ -71,19 +68,17 @@ describe("Biume Carnet vivant homepage", () => {
     }
   });
 
-  test("renders the approved promise, compact report story, price and close", () => {
+  test("renders the approved promise, report transformation, price and close", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
     expect(text).toContain(
       "Vos observations restent précises. Le propriétaire, lui, comprend.",
     );
-    expect(text).toContain("Le même fond. Une forme enfin lisible.");
-    expect(text).toContain(REPORT_NOTE_SUMMARY);
-    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.adaptedProposal);
-    expect(html.match(/data-report-note(?:=|\s|>)/g)).toHaveLength(1);
-    expect(html.match(/data-report-bridge(?:=|\s|>)/g)).toHaveLength(1);
-    expect(html.match(/data-report-document(?:=|\s|>)/g)).toHaveLength(1);
+    expect(text).toContain("Voyez vos notes prendre forme.");
+    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
+    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
+    expect(html.match(/data-transformation-stage=/g)).toHaveLength(3);
     expect(html).not.toContain("Pas une promesse abstraite.");
     expect(html).not.toContain("Les outils réellement disponibles.");
     expect(html).not.toContain("data-product-output=");

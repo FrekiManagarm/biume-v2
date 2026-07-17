@@ -30,9 +30,7 @@ export default function Home() {
       <JsonLd data={serviceSchema} />
       <LandingHeader />
       <main id="contenu">
-        <LandingHero
-          adaptedProposal={REPORT_TRANSFORMATION_DEMO.adaptedProposal}
-        />
+        <LandingHero />
         <ReportTransformationStory demo={REPORT_TRANSFORMATION_DEMO} />
         <PricingDecision />
         <section
