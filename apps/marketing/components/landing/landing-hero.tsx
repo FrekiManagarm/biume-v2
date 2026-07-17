@@ -57,7 +57,7 @@ export function LandingHero() {
           </Link>
         </div>
         <HeroMechanism>
-          <div className="relative mx-auto mt-12 aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-[var(--machine-media-radius)] bg-[color:var(--machine-violet-soft)]">
+          <div className="relative mx-auto mt-8 aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-[var(--machine-media-radius)] bg-[color:var(--machine-violet-soft)]">
             <Image
               src="/assets/images/landing/soft-machine-hero.png"
               alt="Un mécanisme abstrait transforme des notes en document structuré puis en suivi validé"

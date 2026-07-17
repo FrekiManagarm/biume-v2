@@ -103,6 +103,8 @@ describe("soft machine header and hero", () => {
     expect(heroSource).toContain("var(--machine-blue-ink)");
     expect(heroSource).toContain("bg-linear-to-r");
     expect(heroSource).toContain("lg:max-w-[24ch]");
+    expect(heroSource).toContain("mx-auto mt-8 aspect-[16/10]");
+    expect(heroSource).not.toContain("mx-auto mt-12 aspect-[16/10]");
     expect(heroSource).not.toContain("bg-clip-text");
     expect(heroSource).not.toContain("text-transparent");
     expect(headerSource).not.toMatch(/^\s*["']use client["'];/m);
