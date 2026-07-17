@@ -17,7 +17,7 @@ export function LandingHero() {
       className="px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-20"
     >
       <div className="mx-auto max-w-[90rem] text-center">
-        <h1 className="mx-auto max-w-[19ch] text-balance text-[clamp(3rem,7vw,6rem)] font-bold leading-[0.92] tracking-[-0.035em]">
+        <h1 className="mx-auto max-w-[19ch] text-balance text-[clamp(3rem,7vw,6rem)] font-bold leading-[0.92] tracking-[-0.035em] lg:max-w-[24ch]">
           <span className="block">
             Le propriétaire{" "}
             <span className="text-[color:var(--machine-blue-ink)]">comprend.</span>
