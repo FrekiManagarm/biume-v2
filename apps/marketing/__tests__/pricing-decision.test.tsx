@@ -13,15 +13,15 @@ import {
 } from "./landing-test-utils";
 
 describe("pricing decision", () => {
-  test("leads with practitioner control and the annual price", () => {
+  test("leads with a simple price and the annual price", () => {
     const html = renderToStaticMarkup(<PricingDecision />);
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "pricing-signup");
 
-    expect(text).toContain("Biume prépare. Vous décidez.");
-    expect(text).toContain(
-      "Biume ne partage rien automatiquement. Vous relisez, corrigez et déclenchez vous-même le partage.",
-    );
+    expect(text).toContain("Un prix simple pour prolonger chaque séance.");
+    expect(html).toContain("bg-[color:var(--machine-violet-soft)]");
+    expect(html).not.toContain("var(--machine-green-soft)");
+    expect(html).not.toContain("shadow-[");
     expect(html).toContain("24,99 €");
     expect(html).toContain("par mois, facturé annuellement");
     expect(html).toContain("299,88 € facturés une fois par an");

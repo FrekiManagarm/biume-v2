@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-16T00:00:00.000Z",
+  "title": "Design System: Biume Marketing",
+  "extensions": {
+    "colorMeta": {
+      "decision-violet": {
+        "role": "primary",
+        "displayName": "Violet de décision",
+        "canonical": "#6B5AC8",
+        "tonalRamp": ["#241E49", "#372D70", "#4C3F98", "#6B5AC8", "#8D7DDD", "#B2A7EB", "#D8D2F6", "#F2F0FC"]
+      },
+      "connection-blue": {
+        "role": "secondary",
+        "displayName": "Bleu de liaison",
+        "canonical": "#5D9BB8",
+        "tonalRamp": ["#183341", "#244C60", "#376A83", "#5D9BB8", "#7FB3CA", "#A7CDDD", "#D0E5ED", "#EEF7FA"]
+      },
+      "validation-green": {
+        "role": "tertiary",
+        "displayName": "Vert de validation",
+        "canonical": "#2E9866",
+        "tonalRamp": ["#123723", "#1A5235", "#216F48", "#2E9866", "#57B181", "#86CBA5", "#BCE3CE", "#ECF8F1"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Blanc atelier",
+        "canonical": "#F7F7F4",
+        "tonalRamp": ["#252522", "#41413D", "#62625D", "#85857F", "#AAAAA4", "#CECEC9", "#E8E8E4", "#F7F7F4"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Anthracite précis",
+        "canonical": "#1D1D21",
+        "tonalRamp": ["#1D1D21", "#34343A", "#515158", "#73737B", "#97979E", "#BDBDC2", "#DEDEE1", "#F4F4F5"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hanken Grotesk pour la promesse principale et les moments de chapitre seulement."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explication lisible, limitée à environ 70 caractères par ligne."
+      },
+      "functional": {
+        "displayName": "Functional",
+        "purpose": "Prix, dates, statuts et valeurs mesurables uniquement."
+      }
+    },
+    "shadows": [
+      {
+        "name": "manipulation-legere",
+        "value": "0 4px 8px rgba(29, 29, 33, 0.14)",
+        "purpose": "Objet momentanément élevé ou menu ouvert."
+      },
+      {
+        "name": "focus-produit",
+        "value": "0 6px 8px rgba(107, 90, 200, 0.16)",
+        "purpose": "Élément produit important sans contour simultané."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrées de séquence et réactions tactiles."
+      },
+      {
+        "name": "state-fast",
+        "value": "180ms",
+        "purpose": "Hover, focus et changement d'état."
+      },
+      {
+        "name": "sequence-medium",
+        "value": "520ms",
+        "purpose": "Transformation produit orchestrée."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Bouton principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action de conversion principale, tactile et directe.",
+      "html": "<button class=\"ds-btn-primary\">Essayer gratuitement</button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 14px 24px; border: 0; border-radius: 9999px; background: var(--carnet-violet, #6B5AC8); color: #fff; font: 600 14px/1 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; transition: transform 180ms cubic-bezier(0.16,1,0.3,1), background-color 180ms ease; } .ds-btn-primary:hover { transform: translateY(-2px); background: #5E4DB8; } .ds-btn-primary:active { transform: scale(.98); } .ds-btn-primary:focus-visible { outline: 2px solid var(--carnet-violet, #6B5AC8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Bouton secondaire",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Action de soutien sans concurrencer la conversion principale.",
+      "html": "<button class=\"ds-btn-secondary\">Demander une démo</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; padding: 14px 24px; border: 1px solid var(--carnet-line, #DEDED7); border-radius: 9999px; background: var(--carnet-surface, #FDFDFB); color: var(--carnet-ink, #1D1D21); font: 600 14px/1 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; transition: transform 180ms cubic-bezier(0.16,1,0.3,1), border-color 180ms ease; } .ds-btn-secondary:hover { transform: translateY(-2px); border-color: var(--carnet-violet, #6B5AC8); } .ds-btn-secondary:active { transform: scale(.98); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--carnet-violet, #6B5AC8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Champ de notes",
+      "kind": "input",
+      "description": "Surface de saisie nette pour matérialiser le point de départ du produit.",
+      "html": "<label class=\"ds-field\"><span>Notes de séance</span><textarea>Restriction thoracique gauche, mobilité améliorée après travail.</textarea></label>",
+      "css": ".ds-field { display: grid; gap: 8px; color: var(--carnet-ink, #1D1D21); font: 600 13px/1.3 ui-sans-serif, system-ui, sans-serif; } .ds-field textarea { min-height: 108px; resize: vertical; padding: 14px; border: 1px solid var(--carnet-line, #DEDED7); border-radius: 10px; background: var(--carnet-surface, #FDFDFB); color: var(--carnet-ink, #1D1D21); font: 400 15px/1.55 ui-sans-serif, system-ui, sans-serif; } .ds-field textarea:focus-visible { border-color: var(--carnet-violet, #6B5AC8); outline: 2px solid color-mix(in srgb, var(--carnet-violet, #6B5AC8) 35%, transparent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Statut validé",
+      "kind": "chip",
+      "refersTo": "status-validated",
+      "description": "Réservé aux états confirmés, envoyés ou reçus.",
+      "html": "<span class=\"ds-status-validated\"><span aria-hidden=\"true\">✓</span> Prêt à envoyer</span>",
+      "css": ".ds-status-validated { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; background: var(--carnet-green-soft, #E7F3ED); color: var(--carnet-green-ink, #21734D); font: 600 12px/1.2 ui-sans-serif, system-ui, sans-serif; }"
+    },
+    {
+      "name": "Navigation principale",
+      "kind": "nav",
+      "description": "Navigation compacte laissant la démonstration produit dominer.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#produit\">Le produit</a><a href=\"#fonctionnement\">Comment ça marche</a><a href=\"#tarifs\">Tarifs</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 4px; } .ds-nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 10px; color: var(--carnet-muted, #696970); text-decoration: none; font: 500 14px/1 ui-sans-serif, system-ui, sans-serif; transition: color 180ms ease, background-color 180ms ease; } .ds-nav a:hover { color: var(--carnet-ink, #1D1D21); background: var(--carnet-muted-surface, #ECECE7); } .ds-nav a:focus-visible { outline: 2px solid var(--carnet-violet, #6B5AC8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Transformation produit",
+      "kind": "custom",
+      "refersTo": "product-surface",
+      "description": "Relie notes, proposition et validation selon les rôles sémantiques de couleur.",
+      "html": "<section class=\"ds-transform\"><div><small>VOS NOTES</small><p>Restriction thoracique gauche…</p></div><span aria-hidden=\"true\">→</span><div><small>COMPTE RENDU</small><p>La mobilité du thorax a été travaillée…</p><b>Prêt à relire</b></div></section>",
+      "css": ".ds-transform { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 24px; border-radius: 16px; background: var(--carnet-surface, #FDFDFB); color: var(--carnet-ink, #1D1D21); } .ds-transform > span { color: var(--carnet-blue, #5D9BB8); font-size: 24px; } .ds-transform small { color: var(--carnet-muted, #696970); font: 600 11px/1.2 ui-monospace, monospace; letter-spacing: .02em; } .ds-transform p { margin: 8px 0 0; font: 400 14px/1.55 ui-sans-serif, system-ui, sans-serif; } .ds-transform b { display: inline-flex; margin-top: 12px; padding: 6px 10px; border-radius: 9999px; background: var(--carnet-green-soft, #E7F3ED); color: var(--carnet-green-ink, #21734D); font: 600 12px/1.2 ui-sans-serif, system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La mécanique douce",
+    "overview": "Biume donne une forme visible à un travail habituellement dispersé : observer, noter, reformuler, valider et suivre. Le système doit faire penser à une mécanique précise que l'on comprend en la regardant fonctionner, mais dont chaque mouvement reste calme, humain et maîtrisé par le praticien. La landing est vivante, ingénieuse et rassurante. Elle utilise les couleurs existantes avec davantage d'amplitude, varie franchement la composition des sections et fait du produit sa principale preuve.",
+    "keyCharacteristics": [
+      "Démonstrations produit lisibles comme des transformations, pas comme des captures décoratives.",
+      "Violet, bleu et vert employés selon des rôles stables et compréhensibles.",
+      "Rythme narratif variable, avec une idée dominante par séquence.",
+      "Formes tactiles et mouvement précis, sans effet jouet.",
+      "Contrôle du praticien rendu visible à chaque étape importante."
+    ],
+    "rules": [
+      { "name": "The Semantic Color Rule", "body": "Le violet décide, le bleu relie, le vert confirme. Aucun accent n'est utilisé au hasard pour embellir une section.", "section": "colors" },
+      { "name": "The Green Means Done Rule", "body": "Le vert est interdit pour une promesse, une décoration ou un état non confirmé.", "section": "colors" },
+      { "name": "The One Clear Voice Rule", "body": "Les titres et le corps utilisent la même logique sans-serif. Le contraste vient de l'échelle et de la composition, pas d'un effet magazine.", "section": "typography" },
+      { "name": "The Functional Mono Rule", "body": "La monospace est interdite pour les accroches de section répétitives ; elle n'apparaît que lorsque la donnée est réellement fonctionnelle.", "section": "typography" },
+      { "name": "The Structural Layering Rule", "body": "Une ombre doit expliquer qu'un objet flotte ou bouge. Si elle ne porte aucune information, elle est supprimée.", "section": "elevation" },
+      { "name": "The Border Or Shadow Rule", "body": "Une même surface n'utilise jamais une bordure décorative et une large ombre douce en même temps.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do conserver exactement le violet #6B5AC8, le bleu #5D9BB8 et le vert #2E9866 dans leurs rôles sémantiques.",
+      "Do montrer des transformations produit fidèles comme principale preuve tant qu'aucun témoignage ou chiffre validé n'existe.",
+      "Do alterner les compositions et les densités pour créer un récit, avec une idée dominante par séquence.",
+      "Do garantir WCAG 2.2 AA, une navigation clavier complète et un contenu entièrement lisible sous prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't produire une landing SaaS générique remplie de cartes identiques.",
+      "Don't installer un univers vétérinaire froid ou clinique.",
+      "Don't utiliser une esthétique enfantine de marque pour animaux ou des composants qui ressemblent à des jouets.",
+      "Don't surjouer l'intelligence artificielle dans les visuels ou le discours.",
+      "Don't copier littéralement Clay, ses illustrations, ses compositions ou ses mécaniques de marque."
+    ]
+  }
+}

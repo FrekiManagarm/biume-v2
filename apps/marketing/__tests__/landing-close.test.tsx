@@ -12,10 +12,13 @@ import {
 } from "./landing-test-utils";
 
 describe("landing objection handling and close", () => {
-  test("answers the five approved objections with native disclosures", () => {
+  test("preserves the five approved FAQ answers in native disclosures", () => {
     const html = renderToStaticMarkup(<LandingFaq />);
     const text = textOnly(html);
 
+    expect(text).toContain("Les questions qui comptent avant de commencer.");
+    expect(html).not.toContain("Avant de commencer");
+    expect(html).not.toContain("font-newsreader");
     expect(html.match(/<details/g)).toHaveLength(5);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
     for (const question of [
@@ -36,13 +39,11 @@ describe("landing objection handling and close", () => {
     ]) {
       expect(text).toContain(answer);
     }
-    expect(html).toContain('href="/privacy"');
-    expect(html).toContain('href="/cgu"');
     expect(html).not.toContain("hébergé en France");
     expect(html).not.toContain("conforme au RGPD");
   });
 
-  test("gives the inline legal links a 44-pixel minimum target", () => {
+  test("keeps legal links as 44-pixel targets", () => {
     const html = renderToStaticMarkup(<LandingFaq />);
 
     for (const href of ["/privacy", "/cgu"]) {
@@ -56,34 +57,62 @@ describe("landing objection handling and close", () => {
     }
   });
 
-  test("final moment presents one signup action and no competing demo", () => {
+  test("closes with the documentary image and both approved conversions", () => {
     const html = renderWithLandingImageConfig(<FinalCta />);
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "final-signup");
+    const demoAnchors = conversionAnchors(html, "final-demo");
 
-    expect(html).toContain("Votre prochain compte rendu");
-    expect(text).toContain("La séance est terminée. Le suivi peut commencer.");
-    expect(text).toContain(
-      "Créez votre espace et préparez un premier document.",
-    );
+    expect(text).toContain("Prêt à transformer votre prochain compte rendu ?");
     expect(html).toContain("practitioner-owner-animal.png");
+    expect(html).toContain("rounded-[var(--machine-surface-radius)]");
     expect(signupAnchors).toHaveLength(1);
+    expect(demoAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
-    expect(html.match(/<a\b/g)).toHaveLength(1);
-    expect(html).not.toContain("cal.com");
+    expect(signupAnchors[0]).toContain("whitespace-nowrap");
+    expect(demoAnchors[0]).toContain(
+      'href="https://cal.com/mathieu-chambaud-biume"',
+    );
+    expect(demoAnchors[0]).toContain('target="_blank"');
+    expect(demoAnchors[0]).toContain('rel="noopener noreferrer"');
+    expect(demoAnchors[0]).toContain("whitespace-nowrap");
   });
 
-  test("shared footer keeps legal and demo links without unsupported claims", () => {
+  test("keeps every footer destination and external attribute on machine tokens", () => {
     const html = renderWithLandingImageConfig(<LandingFooter />);
     const anchors = html.match(/<a\b[^>]*>/g) ?? [];
+    const hrefs = anchors.map(
+      (anchor) => anchor.match(/\shref="([^"]+)"/)?.[1],
+    );
 
-    expect(html).toContain('href="/privacy"');
-    expect(html).toContain('href="/cgu"');
-    expect(html).toContain('href="https://cal.com/mathieu-chambaud-biume"');
+    expect(hrefs).toEqual([
+      "/",
+      "/osteopathe-animalier",
+      "/logiciel-osteopathe-animalier",
+      "/compte-rendu-osteopathe-animalier",
+      "/modele-compte-rendu-osteopathe-animalier",
+      "/suivi-post-seance-animal",
+      "/blog",
+      "/tarifs",
+      "/comparatifs",
+      "/alternatives/animalib",
+      "/alternatives/kiwiappli",
+      "/alternatives/mytour",
+      "/comparatifs/neovoice-vs-biume",
+      "/alternatives/neovoice",
+      "https://cal.com/mathieu-chambaud-biume",
+      "/privacy",
+      "/cgu",
+    ]);
+    const demoAnchor = anchors.find((anchor) => anchor.includes("cal.com"));
+    expect(demoAnchor).toContain('target="_blank"');
+    expect(demoAnchor).toContain('rel="noopener noreferrer"');
+    expect(html).toContain("var(--machine-line");
+    expect(html).toContain("var(--machine-muted");
+    expect(html).toContain("var(--machine-violet");
     expect(html).not.toContain('href="/contact"');
     expect(html).not.toContain("Hébergé en France");
     expect(html).not.toContain("conforme au RGPD");
-    expect(anchors.length).toBeGreaterThan(0);
     for (const anchor of anchors) {
       expect(anchor).toContain("min-h-11");
     }

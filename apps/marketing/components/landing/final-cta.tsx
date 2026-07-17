@@ -7,9 +7,9 @@ export function FinalCta() {
   return (
     <aside
       data-final-cta
-      className="mt-10 grid overflow-hidden rounded-[0.8rem_0.8rem_2.25rem_0.8rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] md:mt-16 lg:grid-cols-[1.08fr_0.92fr]"
+      className="mt-12 grid overflow-hidden rounded-[var(--machine-surface-radius)] border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] md:mt-16 lg:grid-cols-[1.08fr_0.92fr]"
     >
-      <div className="relative min-h-52 bg-[color:var(--carnet-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
+      <div className="relative min-h-52 bg-[color:var(--machine-muted-surface)] sm:min-h-72 lg:min-h-[30rem]">
         <Image
           src="/assets/images/landing/practitioner-owner-animal.png"
           alt="Une praticienne échange avec la propriétaire d’un animal après une séance"
@@ -19,26 +19,31 @@ export function FinalCta() {
         />
       </div>
       <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
-          Votre prochain compte rendu
-        </p>
-        <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-          La séance est terminée.{" "}
-          <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-            Le suivi peut commencer.
-          </span>
+        <h2 className="max-w-[15ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-bold leading-none tracking-[-0.03em] text-[color:var(--machine-ink)]">
+          Prêt à transformer votre prochain compte rendu ?
         </h2>
-        <p className="mt-5 max-w-[42ch] text-base leading-7 text-[color:var(--carnet-muted)]">
+        <p className="mt-5 max-w-[42ch] text-base leading-7 text-[color:var(--machine-muted)]">
           Créez votre espace et préparez un premier document.
         </p>
-        <Link
-          href={webAppPath("/signup")}
-          prefetch={false}
-          data-conversion="final-signup"
-          className="carnet-action mt-8 inline-flex min-h-12 w-fit items-center justify-center rounded-full bg-[color:var(--carnet-violet)] px-6 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
-        >
-          Essayer gratuitement
-        </Link>
+        <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row">
+          <Link
+            href={webAppPath("/signup")}
+            prefetch={false}
+            data-conversion="final-signup"
+            className="machine-action inline-flex min-h-12 w-fit items-center justify-center whitespace-nowrap rounded-full bg-[color:var(--machine-violet)] px-6 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+          >
+            Essayer gratuitement
+          </Link>
+          <Link
+            href="https://cal.com/mathieu-chambaud-biume"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-conversion="final-demo"
+            className="machine-action inline-flex min-h-12 w-fit items-center justify-center whitespace-nowrap rounded-full border border-[color:var(--machine-line)] px-6 text-sm font-semibold text-[color:var(--machine-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+          >
+            Demander une démo
+          </Link>
+        </div>
       </div>
     </aside>
   );

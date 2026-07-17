@@ -7,9 +7,10 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export const headline = "Chaque séance mérite une suite.";
+export const headline = "De vos notes au propriétaire.";
 
-export const brandSubtitle = "";
+export const brandSubtitle =
+  "Un compte rendu clair, un suivi qui continue après la séance.";
 
 export const headlineStyle = {
   fontSize: 70,
@@ -49,7 +50,6 @@ const colors = {
   border: "#e5e5e5",
   primary: "#8e82e8",
   blue: "#62a8c8",
-  secondary: "#28c978",
   white: "#ffffff",
 };
 
@@ -74,7 +74,7 @@ export default function OpenGraphImage() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(126deg, rgba(142,130,232,0.18), rgba(255,255,255,0) 42%, rgba(40,201,120,0.16) 76%, rgba(98,168,200,0.16))",
+              "linear-gradient(126deg, rgba(142,130,232,0.18), rgba(255,255,255,0) 48%, rgba(98,168,200,0.16))",
           }}
         />
         <div
@@ -163,7 +163,7 @@ export default function OpenGraphImage() {
                 fontWeight: 480,
               }}
             >
-              Séances structurées, résumés propriétaires, suivi post-séance.
+              {brandSubtitle}
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export default function OpenGraphImage() {
                   width: 12,
                   height: 12,
                   borderRadius: 999,
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.blue})`,
                 }}
               />
               biume.com

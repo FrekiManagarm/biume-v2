@@ -35,27 +35,21 @@ export function LandingFaq() {
       className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16"
     >
       <div className="max-w-xl">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--carnet-violet)]">
-          Avant de commencer
-        </p>
-        <h2 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.052em] text-[color:var(--carnet-ink)] md:text-6xl">
-          Les questions qui{" "}
-          <span className="font-[family-name:var(--font-newsreader)] font-normal italic">
-            comptent vraiment.
-          </span>
+        <h2 className="max-w-[15ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-bold leading-none tracking-[-0.03em] text-[color:var(--machine-ink)]">
+          Les questions qui comptent avant de commencer.
         </h2>
-        <p className="mt-5 text-sm leading-6 text-[color:var(--carnet-muted)] md:text-base md:leading-7">
+        <p className="mt-5 text-sm leading-6 text-[color:var(--machine-muted)] md:text-base md:leading-7">
           Pour la confidentialité, consultez notre{" "}
           <Link
             href="/privacy"
-            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--machine-ink)] underline decoration-[color:var(--machine-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
           >
             politique de confidentialité
           </Link>
           . Les conditions contractuelles sont détaillées dans nos{" "}
           <Link
             href="/cgu"
-            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--carnet-ink)] underline decoration-[color:var(--carnet-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--machine-ink)] underline decoration-[color:var(--machine-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
           >
             CGU
           </Link>
@@ -63,24 +57,24 @@ export function LandingFaq() {
         </p>
       </div>
 
-      <div className="border-t border-[color:var(--carnet-line)]">
+      <div className="border-t border-[color:var(--machine-line)]">
         {faqItems.map((item) => (
           <details
             key={item.question}
             data-faq-item={item.question}
-            className="group border-b border-[color:var(--carnet-line)] py-4"
+            className="group border-b border-[color:var(--machine-line)] py-4"
           >
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-5 rounded-sm py-2 text-base font-semibold leading-7 text-[color:var(--carnet-ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--carnet-violet)]">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-5 rounded-sm py-2 text-base font-semibold leading-7 text-[color:var(--machine-ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--machine-violet)]">
               <span>{item.question}</span>
               <span
                 data-faq-indicator
                 aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--carnet-line)] text-lg font-medium"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--machine-line)] text-lg font-medium"
               >
                 +
               </span>
             </summary>
-            <p className="max-w-[68ch] pb-3 pt-2 text-sm leading-6 text-[color:var(--carnet-muted)] md:text-base md:leading-7">
+            <p className="max-w-[68ch] pb-3 pt-2 text-sm leading-6 text-[color:var(--machine-muted)] md:text-base md:leading-7">
               {item.answer}
             </p>
           </details>

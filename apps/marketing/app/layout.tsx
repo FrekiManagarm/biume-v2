@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { rootMetadata } from "../lib/metadata";
 import "./globals.css";
 
@@ -10,11 +11,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="fr"
-      className="antialiased"
-      suppressHydrationWarning
-    >
+    <html lang="fr" className="antialiased" suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );

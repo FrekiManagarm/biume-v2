@@ -20,9 +20,21 @@ describe("generated Open Graph image", () => {
   test("keeps the preview minimal and anchored to the Biume brand", () => {
     expect(brandLogoSrc.startsWith("data:image/svg+xml;utf8,")).toBe(true);
     expect(brandLogoSrc).toContain("biume-gradient");
-    expect(brandSubtitle).toBe("");
-    expect(headline).toBe("Chaque séance mérite une suite.");
+    expect(headline).toBe("De vos notes au propriétaire.");
+    expect(brandSubtitle).toBe(
+      "Un compte rendu clair, un suivi qui continue après la séance.",
+    );
     expect(headlineStyle.fontSize).toBeLessThanOrEqual(72);
+  });
+
+  test("keeps green in the logo but out of decorative artwork", async () => {
+    const source = await Bun.file(
+      new URL("../app/opengraph-image.tsx", import.meta.url),
+    ).text();
+
+    expect(source).toContain('stop-color="#28c978"');
+    expect(source).not.toContain("rgba(40,201,120,0.16)");
+    expect(source).not.toContain("${colors.secondary}");
   });
 
   test("renders a PNG response", async () => {

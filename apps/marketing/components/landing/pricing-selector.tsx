@@ -32,7 +32,7 @@ export function PricingSelector({
         data-billing-selector
         role="group"
         aria-label="Choisir la facturation"
-        className="grid gap-1 rounded-xl bg-[color:var(--carnet-muted-surface)] p-1.5 sm:grid-cols-2"
+        className="grid gap-1 rounded-[var(--machine-surface-radius)] bg-[color:var(--machine-muted-surface)] p-1.5 sm:grid-cols-2"
       >
         {(Object.keys(options) as BillingCycle[]).map((optionCycle) => {
           const option = options[optionCycle];
@@ -44,14 +44,14 @@ export function PricingSelector({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setCycle(optionCycle)}
-              className={`relative min-h-12 rounded-[0.6rem] px-4 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)] ${
-                isSelected ? "text-white" : "text-[color:var(--carnet-ink)]"
+              className={`relative min-h-12 rounded-[var(--machine-control-radius)] px-4 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)] ${
+                isSelected ? "text-white" : "text-[color:var(--machine-ink)]"
               }`}
             >
               {isSelected ? (
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-[0.6rem] bg-[color:var(--carnet-ink)]"
+                  className="absolute inset-0 rounded-[var(--machine-control-radius)] bg-[color:var(--machine-anthracite)]"
                 />
               ) : null}
               <span className="relative block text-sm font-semibold">
@@ -61,7 +61,7 @@ export function PricingSelector({
                 className={`relative mt-1 block font-mono text-xs ${
                   isSelected
                     ? "text-white/70"
-                    : "text-[color:var(--carnet-muted)]"
+                    : "text-[color:var(--machine-muted)]"
                 }`}
               >
                 {option.selectorPrice}
@@ -79,14 +79,14 @@ export function PricingSelector({
       >
         <div key={cycle}>
           <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-            <span className="font-mono text-5xl font-semibold leading-none tracking-[-0.055em] text-[color:var(--carnet-ink)] md:text-7xl">
+            <span className="font-mono text-5xl font-semibold leading-none tracking-[-0.04em] text-[color:var(--machine-ink)] md:text-7xl">
               {selected.price}
             </span>
-            <span className="max-w-52 pb-1 text-sm leading-5 text-[color:var(--carnet-muted)]">
+            <span className="max-w-52 pb-1 text-sm leading-5 text-[color:var(--machine-muted)]">
               {selected.suffix}
             </span>
           </div>
-          <p className="mt-3 text-sm text-[color:var(--carnet-muted)]">
+          <p className="mt-3 text-sm text-[color:var(--machine-muted)]">
             {selected.detail}
           </p>
         </div>
