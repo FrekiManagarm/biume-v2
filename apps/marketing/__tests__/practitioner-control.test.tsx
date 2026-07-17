@@ -1,8 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { PractitionerControl } from "../components/landing/practitioner-control";
+import { cleanup, fireEvent, render, within } from "./dom-test-utils";
 import { textOnly } from "./landing-test-utils";
+
+afterEach(cleanup);
 
 describe("practitioner control", () => {
   test("shows source, editable owner version and explicit validation", () => {
@@ -41,5 +44,54 @@ describe("practitioner control", () => {
     expect(bodyCopyClass).toBeDefined();
     expect(bodyCopyClass).toContain("text-white");
     expect(bodyCopyClass).not.toMatch(/text-white\/\d+/);
+  });
+
+  test("reformulates, validates and resets a real passage control", () => {
+    const { container } = render(<PractitionerControl />);
+    const passage = container.querySelector<HTMLElement>(
+      '[data-control-passage="mobility"]',
+    );
+
+    expect(passage).not.toBeNull();
+    if (!passage) {
+      return;
+    }
+
+    const control = within(passage);
+    const reformulate = control.getByRole("button", { name: "Reformuler" });
+    const validate = control.getByRole("button", {
+      name: "Valider ce passage",
+    }) as HTMLButtonElement;
+
+    expect(passage.dataset.controlStatus).toBe("ready");
+    expect(
+      control.getByText(
+        "La mobilité du thorax s’est améliorée pendant le travail manuel.",
+      ),
+    ).not.toBeNull();
+
+    fireEvent.click(reformulate);
+    expect(
+      control.getByText(
+        "La mobilité du thorax s’est améliorée après le travail manuel.",
+      ),
+    ).not.toBeNull();
+
+    fireEvent.click(validate);
+    expect(passage.dataset.controlStatus).toBe("confirmed");
+    expect(control.getAllByText("Passage validé")).toHaveLength(2);
+    expect(validate.disabled).toBe(true);
+
+    fireEvent.click(reformulate);
+    expect(passage.dataset.controlStatus).toBe("ready");
+    expect(control.getByText("Prêt à valider")).not.toBeNull();
+    expect(
+      control.getByRole("button", { name: "Valider ce passage" }),
+    ).not.toBeNull();
+    expect(
+      control.getByText(
+        "La mobilité du thorax s’est améliorée pendant le travail manuel.",
+      ),
+    ).not.toBeNull();
   });
 });

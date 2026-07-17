@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { JSX } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
@@ -19,6 +18,10 @@ export type PricingPlan = {
   headline: string;
   included: readonly string[];
   prices: Record<BillingCycle, BillingPrice>;
+  cta: {
+    href: string;
+    label: string;
+  };
 };
 
 export const PRICING_PLANS = [
@@ -46,6 +49,10 @@ export const PRICING_PLANS = [
         detail: "Facturation mensuelle, résiliable en fin de période",
       },
     },
+    cta: {
+      href: webAppPath("/signup"),
+      label: "Essayer gratuitement",
+    },
   },
 ] as const satisfies readonly PricingPlan[];
 
@@ -63,18 +70,11 @@ export function PricingManifest({
       <div className="mx-auto max-w-[90rem]">
         <PricingControls plans={plans} />
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-white/30 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 border-t border-white/30 pt-6">
           <p className="text-pretty text-sm leading-6 text-white">
-            Essai gratuit de 15 jours, sans carte bancaire.
+            Essai gratuit de 15 jours, sans carte bancaire. L’abonnement peut
+            être arrêté depuis les paramètres.
           </p>
-          <Link
-            href={webAppPath("/signup")}
-            prefetch={false}
-            data-conversion="pricing-signup"
-            className="atelier-action inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[color:var(--atelier-violet)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-          >
-            Essayer gratuitement
-          </Link>
         </div>
       </div>
     </section>

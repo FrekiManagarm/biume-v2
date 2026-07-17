@@ -41,7 +41,7 @@ export function FollowUpContinuity(): JSX.Element {
             <li
               key={step.title}
               data-follow-up-step={step.title}
-              className="relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 pb-10 last:pb-0 lg:grid-cols-1 lg:gap-5 lg:pb-0 lg:pr-10 lg:last:pr-0"
+              className="atelier-sequence-step relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 pb-10 last:pb-0 lg:grid-cols-1 lg:gap-5 lg:pb-0 lg:pr-10 lg:last:pr-0"
             >
               <div className="relative flex justify-center lg:justify-start">
                 <span

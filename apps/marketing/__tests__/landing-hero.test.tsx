@@ -70,6 +70,13 @@ describe("atelier header and hero", () => {
     expect(html).toContain('href="#produit"');
     expect(text).toContain("Voir le parcours");
     expect(html).not.toMatch(exactZeroOpacity);
+    expect(html.match(/(?<=[" ])atelier-reveal(?=[ "])/g)).toHaveLength(3);
+    expect(html).toContain("atelier-reveal-delay-1");
+    expect(html).toContain("atelier-reveal-delay-2");
+    expect(html).toContain("atelier-reveal-delay-3");
+    expect(html).toMatch(/<h2[^>]*>Préparation propriétaire<\/h2>/);
+    expect(html).toMatch(/<h3[^>]*>Notes professionnelles<\/h3>/);
+    expect(html).toMatch(/<h3[^>]*>Version propriétaire<\/h3>/);
   });
 
   test("keeps the hero and header server-rendered with atelier tokens", async () => {

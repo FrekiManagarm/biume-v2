@@ -101,7 +101,7 @@ export function LandingHeader() {
           <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-[color:var(--atelier-line)] bg-[color:var(--atelier-surface)] px-4 text-sm font-semibold marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]">
             Menu
           </summary>
-          <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-[var(--atelier-surface-radius)] border border-[color:var(--atelier-line)] bg-[color:var(--atelier-surface)] p-3 shadow-[0_4px_8px_rgba(29,29,33,0.14)]">
+          <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-[var(--atelier-surface-radius)] border border-[color:var(--atelier-line)] bg-[color:var(--atelier-surface)] p-3">
             <nav className="flex flex-col" aria-label="Navigation mobile">
               {navigation.map((item) => (
                 <Link

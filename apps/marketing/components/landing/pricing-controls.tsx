@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type JSX } from "react";
 
 import type { BillingCycle, PricingPlan } from "./pricing-manifest";
@@ -129,6 +130,17 @@ export function PricingControls({
           </li>
         ))}
       </ul>
+
+      <div className="mt-8 flex justify-end">
+        <Link
+          href={selectedPlan.cta.href}
+          prefetch={false}
+          data-conversion="pricing-signup"
+          className="atelier-action inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[color:var(--atelier-violet)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+        >
+          {selectedPlan.cta.label}
+        </Link>
+      </div>
     </div>
   );
 }
