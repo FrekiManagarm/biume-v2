@@ -29,7 +29,7 @@ describe("Biume atelier precision homepage", () => {
       'data-landing-section="transformation"',
       'data-landing-section="control"',
       'data-landing-section="follow-up"',
-      'data-landing-section="use-moments"',
+      'data-landing-section="field-stories"',
       'data-landing-section="pricing"',
       'data-landing-section="faq-cta"',
     ] as const;
@@ -55,13 +55,13 @@ describe("Biume atelier precision homepage", () => {
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
     expect(text).toContain("Biume prépare. Vous gardez la main.");
     expect(text).toContain("Rien n’est partagé automatiquement");
-    expect(text).toContain("La séance se termine. Le suivi se prépare.");
-    expect(text).toContain("Trois moments où Biume fait la différence.");
+    expect(text).toContain("Le compte rendu ouvre la suite.");
+    expect(html).toContain("atelier-practice.webp");
+    expect(html).toContain("atelier-owner.webp");
     expect(html).toContain("24,99 €");
-    expect(html).toContain("29,99 € / mois");
+    expect(html).toContain("29,99 €");
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
-    expect(text).toContain("Prêt à transformer votre prochain compte rendu ?");
-    expect(html).toContain("practitioner-owner-animal.png");
+    expect(text).toContain("Préparez votre prochain compte rendu.");
 
     const finalSignup = conversionAnchors(html, "final-signup");
     const finalDemo = conversionAnchors(html, "final-demo");
@@ -102,7 +102,9 @@ describe("Biume atelier precision homepage", () => {
     expect(firstAnchor).toContain('href="#contenu"');
     expect(firstAnchor).toContain("sr-only");
     expect(firstAnchor).toContain("focus:not-sr-only");
-    expect(firstAnchor).toContain("focus-visible:outline-[color:var(--machine-violet)]");
+    expect(firstAnchor).toContain(
+      "focus-visible:outline-[color:var(--atelier-violet)]",
+    );
     expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
     expect(headerIndex).toBeGreaterThan(skipLinkIndex);
     expect(mainTarget).toBeDefined();

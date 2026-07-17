@@ -22,13 +22,13 @@ export function FollowUpContinuity(): JSX.Element {
   return (
     <section
       id="methode"
-      data-landing-section="follow-up-continuity"
+      data-landing-section="follow-up"
       className="scroll-mt-20 bg-[color:var(--atelier-anthracite)] px-4 py-16 text-white sm:px-6 md:py-24 lg:px-8"
     >
       <div className="mx-auto max-w-[90rem]">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-end lg:gap-16">
           <h2 className="max-w-[13ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-semibold leading-none tracking-[-0.03em]">
-            Après la séance, le suivi garde son fil.
+            Le compte rendu ouvre la suite.
           </h2>
           <p className="max-w-[58ch] text-pretty text-base leading-7 text-white/75 md:text-lg lg:justify-self-end">
             Vous finalisez le compte rendu, préparez le prochain contact et

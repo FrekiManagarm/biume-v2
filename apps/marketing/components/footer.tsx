@@ -37,13 +37,13 @@ const legalLinks = [
 
 const LandingFooter = () => {
   return (
-    <footer className="border-t border-[color:var(--machine-line,var(--border))] px-4 py-10 md:px-6 md:py-14">
+    <footer className="border-t border-[color:var(--atelier-line)] bg-[color:var(--atelier-anthracite)] px-4 py-10 text-white md:px-6 md:py-14">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_auto]">
           <div>
             <Link
               href="/"
-              className="flex min-h-11 items-center gap-2 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet,var(--primary))]"
+              className="flex min-h-11 items-center gap-2 text-lg font-semibold focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]"
             >
               <Image
                 src="/brand/biume-logo.svg"
@@ -54,7 +54,7 @@ const LandingFooter = () => {
               />
               Biume
             </Link>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--machine-muted,var(--muted-foreground))]">
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--atelier-muted-surface)]">
               Le compte rendu propriétaire et le suivi post-séance pour les
               ostéopathes animaliers.
             </p>
@@ -67,7 +67,7 @@ const LandingFooter = () => {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex min-h-11 items-center text-sm text-[color:var(--machine-muted,var(--muted-foreground))] transition-colors hover:text-[color:var(--machine-ink,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet,var(--primary))]"
+                    className="flex min-h-11 items-center text-sm text-[color:var(--atelier-muted-surface)] transition-colors hover:text-white focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]"
                     {...(link.href.startsWith("http")
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
@@ -86,7 +86,7 @@ const LandingFooter = () => {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex min-h-11 items-center text-sm text-[color:var(--machine-muted,var(--muted-foreground))] transition-colors hover:text-[color:var(--machine-ink,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet,var(--primary))]"
+                    className="flex min-h-11 items-center text-sm text-[color:var(--atelier-muted-surface)] transition-colors hover:text-white focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]"
                   >
                     {link.label}
                   </Link>
@@ -96,7 +96,7 @@ const LandingFooter = () => {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-[color:var(--machine-line,var(--border))] pt-6 text-xs text-[color:var(--machine-muted,var(--muted-foreground))]">
+        <div className="mt-10 border-t border-[color:var(--atelier-line)] pt-6 text-xs text-[color:var(--atelier-muted-surface)]">
           <p>© {new Date().getFullYear()} Biume. Tous droits réservés.</p>
         </div>
       </div>
