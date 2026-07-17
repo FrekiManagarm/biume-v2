@@ -55,7 +55,7 @@ export function LandingHero() {
         </div>
         <div
           data-hero-product-preview="true"
-          className="relative z-30 mt-6 w-full rounded-[var(--atelier-surface-radius)] bg-[color:var(--atelier-surface)] shadow-[0_6px_8px_rgba(107,90,200,0.16)] sm:w-[min(34rem,100%)] lg:absolute lg:bottom-10 lg:left-[50%] lg:mt-0 lg:w-[50%] xl:left-[40%] xl:w-[min(34rem,88%)]"
+          className="relative z-30 mt-6 w-full rounded-[var(--atelier-surface-radius)] bg-[color:var(--atelier-surface)] shadow-[0_6px_8px_rgba(107,90,200,0.16)] sm:w-[min(34rem,100%)] lg:w-[48%] xl:absolute xl:bottom-10 xl:left-[40%] xl:mt-0 xl:w-[min(34rem,88%)]"
         >
           <div className="flex items-center justify-between border-b border-[color:var(--atelier-line)] px-5 py-4">
             <p className="text-sm font-semibold">Préparation propriétaire</p>

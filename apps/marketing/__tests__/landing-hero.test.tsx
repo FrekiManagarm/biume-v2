@@ -122,9 +122,9 @@ describe("atelier header and hero", () => {
     expect(heroPhotoClass).toContain("lg:absolute");
     expect(productPreviewClass).toBeDefined();
     expect(productPreviewClass).not.toMatch(/(?:^|\s)absolute(?:\s|$)/);
-    expect(productPreviewClass).toContain("lg:absolute");
-    expect(productPreviewClass).toContain("lg:left-[50%]");
-    expect(productPreviewClass).toContain("lg:w-[50%]");
+    expect(productPreviewClass).not.toContain("lg:absolute");
+    expect(productPreviewClass).toContain("lg:w-[48%]");
+    expect(productPreviewClass).toContain("xl:absolute");
     expect(productPreviewClass).toContain("xl:left-[40%]");
     expect(productPreviewClass).toContain("xl:w-[min(34rem,88%)]");
     expect(heroSource).toContain("object-[position:82%_center]");
