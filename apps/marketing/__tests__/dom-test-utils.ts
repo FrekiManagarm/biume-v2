@@ -32,6 +32,6 @@ Object.defineProperties(globalThis, {
   },
 });
 
-export const { cleanup, fireEvent, render, within } = await import(
+export const { act, cleanup, fireEvent, render, within } = await import(
   "@testing-library/react"
 );

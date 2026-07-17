@@ -1,5 +1,7 @@
 import type { JSX } from "react";
 
+import { FollowUpSequence } from "./follow-up-sequence";
+
 const steps = [
   {
     title: "Compte rendu finalisé",
@@ -36,7 +38,7 @@ export function FollowUpContinuity(): JSX.Element {
           </p>
         </div>
 
-        <ol className="mt-12 grid gap-0 lg:grid-cols-3">
+        <FollowUpSequence className="mt-12 grid gap-0 lg:grid-cols-3">
           {steps.map((step, index) => (
             <li
               key={step.title}
@@ -76,7 +78,7 @@ export function FollowUpContinuity(): JSX.Element {
               </div>
             </li>
           ))}
-        </ol>
+        </FollowUpSequence>
       </div>
     </section>
   );

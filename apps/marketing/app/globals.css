@@ -237,7 +237,7 @@ details[open] [data-faq-indicator] {
   animation-delay: 300ms;
 }
 
-.atelier-sequence-step {
+[data-sequence-active="true"] .atelier-sequence-step {
   animation: atelier-sequence-step 440ms var(--atelier-ease) both;
 }
 
@@ -304,7 +304,7 @@ details[open] [data-faq-indicator] {
     animation: none;
   }
 
-  .atelier-sequence-step {
+  [data-sequence-active="true"] .atelier-sequence-step {
     animation: none;
   }
 
