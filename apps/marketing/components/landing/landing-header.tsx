@@ -12,14 +12,14 @@ const navigation = [
 ] as const;
 
 const navigationLinkClassName =
-  "inline-flex min-h-11 items-center px-3 text-sm font-medium text-[color:var(--carnet-muted)] transition-colors hover:text-[color:var(--carnet-ink)] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]";
+  "inline-flex min-h-11 items-center px-3 text-sm font-medium text-[color:var(--machine-muted)] transition-colors hover:text-[color:var(--machine-ink)] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]";
 
 function Brand() {
   return (
     <Link
       href="/"
       aria-label="Biume accueil"
-      className="flex min-h-11 shrink-0 items-center gap-2.5 text-sm font-semibold tracking-[-0.02em] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]"
+      className="flex min-h-11 shrink-0 items-center gap-2.5 text-sm font-semibold tracking-[-0.02em] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
     >
       <Image
         src="/brand/biume-logo.svg"
@@ -34,13 +34,26 @@ function Brand() {
   );
 }
 
+function DemoLink() {
+  return (
+    <Link
+      href="https://cal.com/mathieu-chambaud-biume"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="machine-action inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] px-4 text-sm font-semibold text-[color:var(--machine-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+    >
+      Demander une démo
+    </Link>
+  );
+}
+
 function SignupLink({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       href={webAppPath("/signup")}
       prefetch={false}
       data-conversion="header-signup"
-      className={`carnet-action inline-flex min-h-11 items-center justify-center rounded-full bg-[color:var(--carnet-violet)] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)] ${
+      className={`machine-action inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[color:var(--machine-violet)] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)] ${
         compact ? "px-4 text-sm lg:hidden" : "px-5 text-sm"
       }`}
     >
@@ -77,16 +90,17 @@ export function LandingHeader() {
         >
           Connexion
         </Link>
+        <DemoLink />
         <SignupLink />
       </div>
 
       <div className="ml-auto flex items-center gap-2 lg:hidden">
         <SignupLink compact />
         <details className="group relative">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] px-4 text-sm font-semibold marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--carnet-violet)]">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] px-4 text-sm font-semibold marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]">
             Menu
           </summary>
-          <div className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(20rem,calc(100vw-2rem))] rounded-[1.25rem] border border-[color:var(--carnet-line)] bg-[color:var(--carnet-surface)] p-3 shadow-[0_28px_70px_-46px_rgba(29,29,33,0.38)]">
+          <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-[var(--machine-surface-radius)] border border-[color:var(--machine-line)] bg-[color:var(--machine-surface)] p-3 shadow-[0_28px_70px_-46px_rgba(29,29,33,0.38)]">
             <nav className="flex flex-col" aria-label="Navigation mobile">
               {navigation.map((item) => (
                 <Link
