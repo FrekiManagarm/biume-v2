@@ -39,3 +39,9 @@ Change only the hero headline markup, its restrained decorative rule, and the mi
 - Update the landing hero test to assert the new complete headline.
 - Run the focused marketing hero test and the marketing type check.
 - Inspect the hero at representative mobile and desktop widths to confirm line breaks, contrast, visual balance, and that the gradient rule remains a subtle accent rather than competing with the headline.
+
+## Follow-up refinement: media proximity
+
+Reduce the vertical gap between the hero CTA group and the product mechanism image from `48px` (`mt-12`) to `32px` (`mt-8`) on every viewport. This moves the image upward by one documented spacing step while preserving enough separation for the CTA group to remain distinct.
+
+Keep this refinement limited to the media container's top margin. Do not change the CTA spacing, media dimensions, image crop, reassurance row, section padding, or responsive structure. Verify at approximately `390x844` and `1440x1000` that the image enters the composition sooner without crowding the actions or creating horizontal overflow.
