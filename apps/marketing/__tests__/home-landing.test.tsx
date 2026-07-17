@@ -50,9 +50,7 @@ describe("Biume atelier precision homepage", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain(
-      "Le propriétaire comprend. Vous décidez.",
-    );
+    expect(text).toContain("Votre regard métier, jusqu’au propriétaire.");
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
     expect(text).toContain("Biume prépare. Vous décidez.");
@@ -86,7 +84,7 @@ describe("Biume atelier precision homepage", () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(navigationTargets).toContain("produit");
-    expect(navigationTargets).toContain("comment-ca-marche");
+    expect(navigationTargets).toContain("methode");
     expect(navigationTargets).toContain("tarifs");
     for (const target of new Set(navigationTargets)) {
       expect(ids.filter((id) => id === target)).toHaveLength(1);

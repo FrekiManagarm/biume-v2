@@ -25,7 +25,7 @@ export function FollowUpFlow() {
 
   return (
     <section
-      id="comment-ca-marche"
+      id="methode"
       data-landing-section="follow-up"
       className="scroll-mt-20 bg-[color:var(--machine-anthracite)] px-4 py-16 text-white sm:px-6 md:py-24 lg:px-8"
     >

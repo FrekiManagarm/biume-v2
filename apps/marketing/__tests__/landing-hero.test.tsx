@@ -10,7 +10,7 @@ import {
   textOnly,
 } from "./landing-test-utils";
 
-describe("soft machine header and hero", () => {
+describe("atelier header and hero", () => {
   test("header keeps factual navigation, both signup paths, and a desktop demo path", () => {
     const html = renderWithLandingImageConfig(<LandingHeader />);
     const signupAnchors = conversionAnchors(html, "header-signup");
@@ -24,8 +24,8 @@ describe("soft machine header and hero", () => {
     );
 
     for (const label of [
-      "Le produit",
-      "Comment ça marche",
+      "Produit",
+      "Méthode",
       "Tarifs",
       "Ressources",
       "Connexion",
@@ -35,6 +35,10 @@ describe("soft machine header and hero", () => {
 
     expect(html).toContain("Navigation mobile");
     expect(html).toContain("Demander une démo");
+    for (const href of ["#produit", "#methode", "#tarifs", "/blog"]) {
+      expect(html).toContain(`href="${href}"`);
+    }
+    expect(html).toContain(`href="${webAppPath("/signin")}"`);
     expect(html).toContain('href="https://cal.com/mathieu-chambaud-biume"');
     expect(desktopDemoIndex).toBeGreaterThanOrEqual(0);
     expect(desktopSignupIndex).toBeGreaterThan(desktopDemoIndex);
@@ -47,47 +51,31 @@ describe("soft machine header and hero", () => {
     }
   });
 
-  test("hero renders the demonstrative promise and conversion paths in server markup", () => {
+  test("renders the approved promise, new documentary image and product proof", () => {
     const html = renderWithLandingImageConfig(<LandingHero />);
     const text = textOnly(html);
-    const headlineAccentTags =
-      html.match(
-        /<[^>]+\bdata-hero-headline-accent="true"[^>]*>/g,
-      ) ?? [];
 
-    expect(text).toContain("Le propriétaire comprend. Vous décidez.");
-    expect(text).not.toContain(
-      "De vos notes au propriétaire, sans perdre votre regard métier.",
-    );
-    expect(headlineAccentTags).toHaveLength(1);
-    expect(headlineAccentTags[0]).toContain('aria-hidden="true"');
+    expect(text).toContain("Votre regard métier, jusqu’au propriétaire.");
     expect(text).toContain(
-      "Biume organise vos observations en un compte rendu clair, puis vous aide à garder le fil après la séance. Vous relisez et décidez de chaque partage.",
+      "Biume transforme vos notes en un compte rendu clair, que vous relisez, adaptez et partagez uniquement quand vous le décidez.",
     );
-    expect(text).toContain("15 jours d’essai");
+    expect(text).toContain("15 jours gratuits");
     expect(text).toContain("Sans carte bancaire");
-    expect(text).toContain("Rien ne part sans vous");
-    expect(html).toContain("soft-machine-hero.png");
-    expect(html).toContain(
-      'alt="Un mécanisme abstrait transforme des notes en document structuré puis en suivi validé"',
-    );
+    expect(html).toContain("atelier-hero.webp");
+    expect(html).toContain('data-hero-product-preview="true"');
+    expect(text).toContain("Notes professionnelles");
+    expect(text).toContain("Version propriétaire");
+    expect(text).toContain("À relire");
     expect(html).toContain('data-conversion="hero-signup"');
-    expect(html).toContain('data-conversion="hero-demo"');
-    expect(html).toContain(`href="${webAppPath("/signup")}"`);
-    expect(html).toContain('href="https://cal.com/mathieu-chambaud-biume"');
-    expect(html).toContain("data-hero-mechanism");
+    expect(html).toContain('href="#produit"');
+    expect(text).toContain("Voir le parcours");
     expect(html).not.toMatch(exactZeroOpacity);
-    expect(html).not.toContain("visibility:hidden");
   });
 
-  test("keeps the hero server-rendered with one transform-only reduced-motion motion island", async () => {
-    const [heroSource, mechanismSource, headerSource, headerMotionSource] =
-      await Promise.all([
+  test("keeps the hero and header server-rendered with atelier tokens", async () => {
+    const [heroSource, headerSource, headerMotionSource] = await Promise.all([
       Bun.file(
         new URL("../components/landing/landing-hero.tsx", import.meta.url),
-      ).text(),
-      Bun.file(
-        new URL("../components/landing/hero-mechanism.tsx", import.meta.url),
       ).text(),
       Bun.file(
         new URL("../components/landing/landing-header.tsx", import.meta.url),
@@ -99,19 +87,18 @@ describe("soft machine header and hero", () => {
 
     expect(heroSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(heroSource).not.toMatch(/from\s+["']motion\/react["']/);
-    expect(heroSource).not.toContain("adaptedProposal");
-    expect(heroSource).toContain("var(--machine-blue-ink)");
-    expect(heroSource).toContain("bg-linear-to-r");
-    expect(heroSource).toContain("lg:max-w-[24ch]");
-    expect(heroSource).toContain("mx-auto mt-8 aspect-[16/10]");
-    expect(heroSource).not.toContain("mx-auto mt-12 aspect-[16/10]");
+    expect(heroSource).toContain("REPORT_TRANSFORMATION_DEMO");
+    expect(heroSource).toContain("var(--atelier-violet)");
+    expect(heroSource).not.toContain("var(--machine-");
     expect(heroSource).not.toContain("bg-clip-text");
     expect(heroSource).not.toContain("text-transparent");
     expect(headerSource).not.toMatch(/^\s*["']use client["'];/m);
     expect(headerSource).not.toMatch(/from\s+["']motion\/react["']/);
-    expect(headerMotionSource).toContain("var(--machine-line)");
-    expect(headerMotionSource).toContain("var(--machine-canvas)");
-    expect(headerMotionSource).not.toContain("var(--carnet-");
+    expect(headerSource).not.toContain("var(--machine-");
+    expect(headerSource).toContain("atelier-action");
+    expect(headerMotionSource).toContain("var(--atelier-line)");
+    expect(headerMotionSource).toContain("var(--atelier-canvas)");
+    expect(headerMotionSource).not.toContain("var(--machine-");
     const desktopActionsSource = headerSource.match(
       /<div className="ml-auto hidden shrink-0 items-center gap-1 lg:flex">([\s\S]*?)<\/div>/,
     )?.[1];
@@ -122,19 +109,5 @@ describe("soft machine header and hero", () => {
     expect(demoLinkIndex).toBeGreaterThanOrEqual(0);
     expect(signupLinkIndex).toBeGreaterThanOrEqual(0);
     expect(demoLinkIndex).toBeLessThan(signupLinkIndex);
-    expect(mechanismSource).toMatch(/^"use client";/);
-    expect(mechanismSource).toMatch(/from\s+["']motion\/react["']/);
-    expect(mechanismSource).toContain("useReducedMotion");
-    expect(mechanismSource).toContain("data-hero-mechanism");
-    expect(mechanismSource).toContain(
-      "initial={reduceMotion ? false : { scale: 1.015 }}",
-    );
-    expect(mechanismSource).toContain("animate={{ scale: 1 }}");
-    expect(mechanismSource).toMatch(/duration:\s*reduceMotion \? 0 : 0\.72/);
-    expect(mechanismSource).toMatch(/ease:\s*\[0\.16, 1, 0\.3, 1\]/);
-    expect(mechanismSource).not.toMatch(/opacity\s*:\s*0/);
-    expect(mechanismSource).not.toMatch(
-      /\b(?:opacity|x|y|rotate|width|height)\s*:/,
-    );
   });
 });
