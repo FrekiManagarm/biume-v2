@@ -53,7 +53,8 @@ describe("Biume atelier precision homepage", () => {
     expect(text).toContain("Votre regard métier, jusqu’au propriétaire.");
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
-    expect(text).toContain("Biume prépare. Vous décidez.");
+    expect(text).toContain("Biume prépare. Vous gardez la main.");
+    expect(text).toContain("Rien n’est partagé automatiquement");
     expect(text).toContain("La séance se termine. Le suivi se prépare.");
     expect(text).toContain("Trois moments où Biume fait la différence.");
     expect(html).toContain("24,99 €");
@@ -120,7 +121,7 @@ describe("Biume atelier precision homepage", () => {
     for (const forbidden of [
       "hébergé en france",
       "conforme au rgpd",
-      "automatique",
+      "envoi automatique au propriétaire",
       "naya va mieux depuis la séance",
       "réponse propriétaire centralisée",
       "questionnaire",

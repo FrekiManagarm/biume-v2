@@ -1,20 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { PractitionerControl } from "../components/landing/practitioner-control";
+import { FollowUpContinuity } from "../components/landing/follow-up-continuity";
 import { FollowUpFlow } from "../components/landing/follow-up-flow";
 import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
-describe("practitioner control and follow-up flow", () => {
-  test("renders practitioner decisions and the factual reminder flow before hydration", () => {
-    const control = textOnly(renderToStaticMarkup(<PractitionerControl />));
-
-    expect(control).toContain("Biume prépare. Vous décidez.");
-    expect(control).toContain("Modifier");
-    expect(control).toContain("Reformuler");
-    expect(control).toContain("Supprimer");
-    expect(control).toContain("Partager après validation");
-
+describe("follow-up flow", () => {
+  test("renders the factual reminder flow before hydration", () => {
     const flowHtml = renderToStaticMarkup(<FollowUpFlow />);
     const flowText = textOnly(flowHtml);
 
@@ -46,5 +38,27 @@ describe("practitioner control and follow-up flow", () => {
     expect(flowText).not.toContain("Retour à J+7");
     expect(flowText).not.toContain("Timeline enrichie");
     expect(flowHtml).not.toMatch(exactZeroOpacity);
+  });
+
+  test("orders follow-up continuity and reserves green for confirmation", () => {
+    const continuityHtml = renderToStaticMarkup(<FollowUpContinuity />);
+    const steps = Array.from(
+      continuityHtml.matchAll(
+        /<li\b[^>]*data-follow-up-step="([^"]+)"[^>]*>([\s\S]*?)<\/li>/g,
+      ),
+    );
+
+    expect(steps.map((step) => step[1])).toEqual([
+      "Compte rendu finalisé",
+      "Suivi préparé",
+      "Rappel confirmé",
+    ]);
+    expect(steps).toHaveLength(3);
+    expect(steps[0]?.[2]).not.toContain("atelier-green-soft");
+    expect(steps[0]?.[2]).not.toContain("atelier-green-ink");
+    expect(steps[1]?.[2]).not.toContain("atelier-green-soft");
+    expect(steps[1]?.[2]).not.toContain("atelier-green-ink");
+    expect(steps[2]?.[2]).toContain("atelier-green-soft");
+    expect(steps[2]?.[2]).toContain("atelier-green-ink");
   });
 });
