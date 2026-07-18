@@ -21,7 +21,7 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
-describe("Biume soft machine homepage", () => {
+describe("Biume atelier precision homepage", () => {
   test("assembles the seven approved sections once and in order", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
@@ -29,12 +29,12 @@ describe("Biume soft machine homepage", () => {
       'data-landing-section="transformation"',
       'data-landing-section="control"',
       'data-landing-section="follow-up"',
-      'data-landing-section="use-moments"',
+      'data-landing-section="field-stories"',
       'data-landing-section="pricing"',
       'data-landing-section="faq-cta"',
     ] as const;
 
-    expect(html).toContain("soft-machine-theme");
+    expect(html).toContain("atelier-theme");
     expect(html.match(/data-landing-section=/g)).toHaveLength(markers.length);
     for (const marker of markers) {
       expect(html.match(new RegExp(marker, "g"))).toHaveLength(1);
@@ -50,19 +50,18 @@ describe("Biume soft machine homepage", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain(
-      "Le propriétaire comprend. Vous décidez.",
-    );
+    expect(text).toContain("Votre regard métier, jusqu’au propriétaire.");
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
-    expect(text).toContain("Biume prépare. Vous décidez.");
-    expect(text).toContain("La séance se termine. Le suivi se prépare.");
-    expect(text).toContain("Trois moments où Biume fait la différence.");
+    expect(text).toContain("Biume prépare. Vous gardez la main.");
+    expect(text).toContain("Rien n’est partagé automatiquement");
+    expect(text).toContain("Le compte rendu ouvre la suite.");
+    expect(html).toContain("atelier-practice.webp");
+    expect(html).toContain("atelier-owner.webp");
     expect(html).toContain("24,99 €");
-    expect(html).toContain("29,99 € / mois");
+    expect(html).toContain("29,99 €");
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
-    expect(text).toContain("Prêt à transformer votre prochain compte rendu ?");
-    expect(html).toContain("practitioner-owner-animal.png");
+    expect(text).toContain("Préparez votre prochain compte rendu.");
 
     const finalSignup = conversionAnchors(html, "final-signup");
     const finalDemo = conversionAnchors(html, "final-demo");
@@ -86,7 +85,7 @@ describe("Biume soft machine homepage", () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(navigationTargets).toContain("produit");
-    expect(navigationTargets).toContain("comment-ca-marche");
+    expect(navigationTargets).toContain("methode");
     expect(navigationTargets).toContain("tarifs");
     for (const target of new Set(navigationTargets)) {
       expect(ids.filter((id) => id === target)).toHaveLength(1);
@@ -103,7 +102,9 @@ describe("Biume soft machine homepage", () => {
     expect(firstAnchor).toContain('href="#contenu"');
     expect(firstAnchor).toContain("sr-only");
     expect(firstAnchor).toContain("focus:not-sr-only");
-    expect(firstAnchor).toContain("focus-visible:outline-[color:var(--machine-violet)]");
+    expect(firstAnchor).toContain(
+      "focus-visible:outline-[color:var(--atelier-violet)]",
+    );
     expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
     expect(headerIndex).toBeGreaterThan(skipLinkIndex);
     expect(mainTarget).toBeDefined();
@@ -113,16 +114,24 @@ describe("Biume soft machine homepage", () => {
   test("keeps the homepage free of superseded UI and unsupported claims", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const normalized = textOnly(html).toLowerCase();
+    const approvedAutomaticStatement = "rien n’est partagé automatiquement";
+    const normalizedWithoutApprovedAutomatic = normalized.replace(
+      approvedAutomaticStatement,
+      "",
+    );
 
     expect(html).not.toContain("carnet-theme");
     expect(html).not.toContain(["Product", "Proof"].join(""));
     expect(html).not.toContain("data-product-output=");
     expect(normalized).not.toMatch(/\b\d(?:[,.]\d)?\s*\/\s*5\b/);
     expect(normalized).not.toMatch(/\b\d+(?:[,.]\d+)?\s*%\b/);
+    expect(
+      normalized.match(new RegExp(approvedAutomaticStatement, "g")),
+    ).toHaveLength(1);
+    expect(normalizedWithoutApprovedAutomatic).not.toContain("automatique");
     for (const forbidden of [
       "hébergé en france",
       "conforme au rgpd",
-      "automatique",
       "naya va mieux depuis la séance",
       "réponse propriétaire centralisée",
       "questionnaire",

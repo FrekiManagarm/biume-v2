@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "bun:test";
 
 import LandingFooter from "../components/footer";
-import { FinalCta } from "../components/landing/final-cta";
+import { LandingClose } from "../components/landing/landing-close";
 import { LandingFaq } from "../components/landing/landing-faq";
 import { webAppPath } from "../lib/web-app-url";
 import {
@@ -16,9 +16,8 @@ describe("landing objection handling and close", () => {
     const html = renderToStaticMarkup(<LandingFaq />);
     const text = textOnly(html);
 
-    expect(text).toContain("Les questions qui comptent avant de commencer.");
-    expect(html).not.toContain("Avant de commencer");
-    expect(html).not.toContain("font-newsreader");
+    expect(text).toContain("Avant de commencer.");
+    expect(html).not.toContain("machine-");
     expect(html.match(/<details/g)).toHaveLength(5);
     expect(html.match(/data-faq-item=/g)).toHaveLength(5);
     for (const question of [
@@ -57,15 +56,18 @@ describe("landing objection handling and close", () => {
     }
   });
 
-  test("closes with the documentary image and both approved conversions", () => {
-    const html = renderWithLandingImageConfig(<FinalCta />);
+  test("closes with the approved heading and both approved conversions", () => {
+    const html = renderWithLandingImageConfig(<LandingClose />);
     const text = textOnly(html);
     const signupAnchors = conversionAnchors(html, "final-signup");
     const demoAnchors = conversionAnchors(html, "final-demo");
 
-    expect(text).toContain("Prêt à transformer votre prochain compte rendu ?");
-    expect(html).toContain("practitioner-owner-animal.png");
-    expect(html).toContain("rounded-[var(--machine-surface-radius)]");
+    expect(text).toContain("Préparez votre prochain compte rendu.");
+    expect(text).toContain(
+      "15 jours pour découvrir tout le parcours, sans carte bancaire.",
+    );
+    expect(html).toContain("bg-[color:var(--atelier-blue)]");
+    expect(html).toContain("min-h-full");
     expect(signupAnchors).toHaveLength(1);
     expect(demoAnchors).toHaveLength(1);
     expect(signupAnchors[0]).toContain(`href="${webAppPath("/signup")}"`);
@@ -78,7 +80,7 @@ describe("landing objection handling and close", () => {
     expect(demoAnchors[0]).toContain("whitespace-nowrap");
   });
 
-  test("keeps every footer destination and external attribute on machine tokens", () => {
+  test("keeps every footer destination and external attribute on atelier tokens", () => {
     const html = renderWithLandingImageConfig(<LandingFooter />);
     const anchors = html.match(/<a\b[^>]*>/g) ?? [];
     const hrefs = anchors.map(
@@ -107,9 +109,11 @@ describe("landing objection handling and close", () => {
     const demoAnchor = anchors.find((anchor) => anchor.includes("cal.com"));
     expect(demoAnchor).toContain('target="_blank"');
     expect(demoAnchor).toContain('rel="noopener noreferrer"');
-    expect(html).toContain("var(--machine-line");
-    expect(html).toContain("var(--machine-muted");
-    expect(html).toContain("var(--machine-violet");
+    expect(html).toContain("var(--atelier-anthracite)");
+    expect(html).toContain("var(--atelier-line)");
+    expect(html).toContain("var(--atelier-muted");
+    expect(html).toContain("var(--atelier-violet)");
+    expect(html).not.toContain("machine-");
     expect(html).not.toContain('href="/contact"');
     expect(html).not.toContain("Hébergé en France");
     expect(html).not.toContain("conforme au RGPD");

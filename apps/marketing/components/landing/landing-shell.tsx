@@ -10,7 +10,7 @@ const hanken = Hanken_Grotesk({
 export function LandingShell({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`${hanken.variable} soft-machine-theme min-h-dvh overflow-x-clip bg-[color:var(--machine-canvas)] font-[family-name:var(--font-hanken)] text-[color:var(--machine-ink)] selection:bg-[color:var(--machine-violet-soft)]`}
+      className={`${hanken.variable} atelier-theme min-h-dvh overflow-x-clip bg-[color:var(--atelier-canvas)] font-[family-name:var(--font-hanken)] text-[color:var(--atelier-ink)] selection:bg-[color:var(--atelier-violet-soft)]`}
     >
       {children}
     </div>
