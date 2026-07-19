@@ -59,7 +59,7 @@ const snapshot = {
   clinical: ["Raideur au démarrage"],
   anatomical: ["Tension cervicale"],
   recommendations: ["Laissez Nox se reposer pendant 24 heures."],
-  notes: "Surveiller la récupération",
+  notes: "",
   createdAt: "2026-07-18T12:00:00.000Z",
 };
 
@@ -181,6 +181,37 @@ describe("createImmutableReportSharedVersion", () => {
     });
     expect(ports.findVersionAfterConflict).not.toHaveBeenCalled();
     expect(result).toBe(sharedVersion);
+  });
+
+  it("omits every not-applicable section from the owner snapshot without mutating practitioner notes", async () => {
+    const professionalReport = structuredClone(report);
+    professionalReport.sectionStates = [
+      { section: "clinical", state: "not_applicable" },
+      { section: "anatomical", state: "not_applicable" },
+      { section: "recommendations", state: "not_applicable" },
+      { section: "notes", state: "not_applicable" },
+    ];
+    const ports = createPorts({
+      loadTenantOwnedReport: vi.fn(async () => professionalReport),
+    });
+
+    await createImmutableReportSharedVersion(request, ports);
+
+    expect(ports.insertImmutableVersion).toHaveBeenCalledWith({
+      ...versionKey,
+      snapshot: {
+        ...snapshot,
+        consultationReason: "",
+        clinical: [],
+        anatomical: [],
+        recommendations: [],
+        notes: "",
+      },
+    });
+    expect(professionalReport.consultationReason).toBe("Mobilité réduite");
+    expect(professionalReport.notes).toBe("Surveiller la récupération");
+    expect(professionalReport.anatomicalIssues).toHaveLength(2);
+    expect(professionalReport.recommendations).toHaveLength(1);
   });
 
   it("uses a scoped fallback lookup after a simulated concurrent conflict", async () => {

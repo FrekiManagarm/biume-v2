@@ -97,58 +97,70 @@ export async function createImmutableReportSharedVersion(
     notes: string | null;
     anatomicalPart: { name: string } | null;
   }) => item.notes?.trim() || item.anatomicalPart?.name.trim() || "";
+  const isOwnerSectionIncluded = (section: ReportSectionId) =>
+    sectionStates[section] !== "not_applicable";
   const snapshot = buildOwnerReportSnapshot({
     reportId: report.id,
     reportRevision: report.revision,
     title: report.title,
     animal: { id: report.patient.id, name: report.patient.name },
     owner: { id: report.patient.owner.id, name: report.patient.owner.name },
-    consultationReason: resolveOwnerFacingText(
-      report.ownerContents,
-      "consultationReason",
-      "consultationReason",
-      report.consultationReason,
-    ),
-    clinical: report.anatomicalIssues
-      .filter((item) => item.type === "observation")
-      .map((item) =>
-        resolveOwnerFacingText(
+    consultationReason: isOwnerSectionIncluded("clinical")
+      ? resolveOwnerFacingText(
           report.ownerContents,
-          "observation",
-          item.id,
-          itemText(item),
-        ),
-      )
-      .filter(Boolean),
-    anatomical: report.anatomicalIssues
-      .filter((item) =>
-        ["dysfunction", "anatomicalSuspicion"].includes(item.type),
-      )
-      .map((item) =>
-        resolveOwnerFacingText(
+          "consultationReason",
+          "consultationReason",
+          report.consultationReason,
+        )
+      : "",
+    clinical: isOwnerSectionIncluded("clinical")
+      ? report.anatomicalIssues
+          .filter((item) => item.type === "observation")
+          .map((item) =>
+            resolveOwnerFacingText(
+              report.ownerContents,
+              "observation",
+              item.id,
+              itemText(item),
+            ),
+          )
+          .filter(Boolean)
+      : [],
+    anatomical: isOwnerSectionIncluded("anatomical")
+      ? report.anatomicalIssues
+          .filter((item) =>
+            ["dysfunction", "anatomicalSuspicion"].includes(item.type),
+          )
+          .map((item) =>
+            resolveOwnerFacingText(
+              report.ownerContents,
+              "anatomicalIssue",
+              item.id,
+              itemText(item),
+            ),
+          )
+          .filter(Boolean)
+      : [],
+    recommendations: isOwnerSectionIncluded("recommendations")
+      ? report.recommendations
+          .map((item) =>
+            resolveOwnerFacingText(
+              report.ownerContents,
+              "recommendation",
+              item.id,
+              item.recommendation,
+            ),
+          )
+          .filter(Boolean)
+      : [],
+    notes: isOwnerSectionIncluded("notes")
+      ? resolveOwnerFacingText(
           report.ownerContents,
-          "anatomicalIssue",
-          item.id,
-          itemText(item),
-        ),
-      )
-      .filter(Boolean),
-    recommendations: report.recommendations
-      .map((item) =>
-        resolveOwnerFacingText(
-          report.ownerContents,
-          "recommendation",
-          item.id,
-          item.recommendation,
-        ),
-      )
-      .filter(Boolean),
-    notes: resolveOwnerFacingText(
-      report.ownerContents,
-      "notes",
-      "notes",
-      report.notes ?? "",
-    ),
+          "notes",
+          "notes",
+          report.notes ?? "",
+        )
+      : "",
     createdAt: request.createdAt,
   });
 
