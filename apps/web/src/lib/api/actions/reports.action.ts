@@ -1,5 +1,6 @@
 export type { GetAllReportsParams } from "#/functions/reports.function";
 import {
+  createQuickReport as createQuickReportFn,
   createReport as createReportFn,
   deleteReport as deleteReportFn,
   getAllReports as getAllReportsFn,
@@ -10,6 +11,7 @@ import {
   seedAnatomicalParts as seedAnatomicalPartsFn,
   updateReport as updateReportFn,
 } from "#/functions/reports.function";
+import type { quickReportSchema } from "@biume/contracts/report";
 import type {
   anatomicalIssueSchema,
   createReportSchema,
@@ -29,6 +31,10 @@ export function getAllReports(
 
 export function createReport(report: z.input<typeof createReportSchema>) {
   return createReportFn({ data: report });
+}
+
+export function createQuickReport(report: z.infer<typeof quickReportSchema>) {
+  return createQuickReportFn({ data: report });
 }
 
 export function getReportById({ reportId }: { reportId: string }) {

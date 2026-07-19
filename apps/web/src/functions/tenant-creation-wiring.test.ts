@@ -37,6 +37,24 @@ describe("tenant-isolated creation wiring", () => {
     );
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
   });
+
+  test("createQuickReport atomically inserts tenant-scoped owner, animal, report, and decisions", () => {
+    const source = readFileSync(
+      new URL("./reports.function.ts", import.meta.url),
+      "utf8",
+    );
+    const createSource = source.slice(
+      source.indexOf("export const createQuickReport"),
+      source.indexOf("export const getReportById"),
+    );
+
+    expect(createSource).toContain("organization.id");
+    expect(createSource).toContain("db.batch");
+    expect(createSource).toContain("clients");
+    expect(createSource).toContain("pets");
+    expect(createSource).toContain("advancedReport");
+    expect(createSource).toContain("reportSectionState");
+  });
 });
 
 describe("tenant-isolated update wiring", () => {

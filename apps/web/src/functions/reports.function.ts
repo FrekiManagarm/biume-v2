@@ -3,6 +3,7 @@
 import { db } from "@biume/db";
 import {
   createInitialReportSectionStates,
+  quickReportSchema,
   type ReportSectionStates,
 } from "@biume/contracts/report";
 import { getCurrentOrganization } from "#/functions/auth.function";
@@ -21,6 +22,7 @@ import {
   type AdvancedReport,
   advancedReport,
   appointments,
+  clients,
   pets,
   reportOwnerContent,
   reportSectionState,
@@ -41,6 +43,7 @@ import {
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
 import {
+  buildQuickReportRows,
   buildReportSectionStateRows,
   normalizeReportSectionStates,
 } from "./report-domain";
@@ -243,6 +246,37 @@ export const createReport = createServerFn({ method: "POST" })
       console.error("Error creating report", error);
       throw new Error("Error creating report");
     }
+  });
+
+export const createQuickReport = createServerFn({ method: "POST" })
+  .validator(quickReportSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const rows = buildQuickReportRows({
+      organizationId: organization.id,
+      input: data,
+      ids: {
+        ownerId: crypto.randomUUID(),
+        animalId: crypto.randomUUID(),
+        reportId: crypto.randomUUID(),
+      },
+      now: new Date(),
+    });
+
+    await db.batch([
+      db.insert(clients).values(rows.owner),
+      db.insert(pets).values(rows.animal),
+      db.insert(advancedReport).values(rows.report),
+      db.insert(reportSectionState).values(rows.sectionStates),
+    ] as const);
+
+    return {
+      success: true as const,
+      status: "draft" as const,
+      reportId: rows.report.id,
+    };
   });
 
 export const getReportById = createServerFn({ method: "GET" })
