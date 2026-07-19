@@ -15,6 +15,7 @@ import { AddObservationDialog } from "./components/AddObservationsDialog";
 import { AddAnatomicalIssueDialog } from "./components/AddAnatomicalIssueDialog";
 import { ExitConfirmationDialog } from "./components/ExitConfirmationDialog";
 import { ReportSidebarNavigation } from "./components/ReportSidebarNavigation";
+import { SectionDecisionControl } from "./components/SectionDecisionControl";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
 import { ReportWorkspaceHeader } from "./components/ReportWorkspaceHeader";
@@ -27,6 +28,7 @@ import {
   buildReportUpdatePayload,
   ensureSuccessfulReportUpdate,
   deriveProfessionalSectionStatus,
+  getEffectiveSectionState,
   getAnatomicalProfessionalItemText,
   getReportDraftRevision,
   getReportDesktopGridClassName,
@@ -35,6 +37,7 @@ import {
   openOwnerPreparation,
   replaceOwnerContentRecord,
   runExclusiveReportSave,
+  getSectionStatesAfterEdit,
   type ReportUpdateStatus,
 } from "./reports-editor.helpers";
 import {
@@ -86,13 +89,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  canFinalizeReport,
+  createInitialReportSectionStates,
+  type ReportSectionStates,
+} from "@biume/contracts/report";
 
 type ReportData = InferSelectModel<typeof advancedReport> & {
-  patient?: Pet;
+  patient?: Pet | null;
   anatomicalIssues?: AnatomicalIssueSchema[];
   recommendations?: AdvancedReportRecommendations[];
   ownerContents?: OwnerContentRecord[];
   appointment?: Appointment | null;
+  sectionStates?: ReportSectionStates;
 };
 
 interface AdvancedReportEditorProps {
@@ -202,6 +211,9 @@ export function AdvancedReportEditor({
   const [anatomicalIssues, setAnatomicalIssues] = useState<AnatomicalIssue[]>(
     initialAnatomicalIssues,
   );
+  const [sectionStates, setSectionStates] = useState<ReportSectionStates>(
+    initialData.sectionStates ?? createInitialReportSectionStates(),
+  );
   const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
   const [isAddAnatomicalIssueOpen, setIsAddAnatomicalIssueOpen] =
     useState(false);
@@ -281,6 +293,8 @@ export function AdvancedReportEditor({
     consultationReason: initialData.consultationReason || "",
     recommendations: initialRecommendations,
     anatomicalIssues: initialAnatomicalIssues,
+    sectionStates:
+      initialData.sectionStates ?? createInitialReportSectionStates(),
   });
   const currentDraftState = {
     title,
@@ -289,6 +303,7 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
   };
   const currentDraftRevision = getReportDraftRevision(currentDraftState);
   const currentDraftRevisionRef = useRef(currentDraftRevision);
@@ -316,6 +331,7 @@ export function AdvancedReportEditor({
       consultationReason,
       recommendations,
       anatomicalIssues,
+      sectionStates,
     };
 
     const hasChanges =
@@ -327,7 +343,9 @@ export function AdvancedReportEditor({
       JSON.stringify(currentState.recommendations) !==
         JSON.stringify(lastSavedState.recommendations) ||
       JSON.stringify(currentState.anatomicalIssues) !==
-        JSON.stringify(lastSavedState.anatomicalIssues);
+        JSON.stringify(lastSavedState.anatomicalIssues) ||
+      JSON.stringify(currentState.sectionStates) !==
+        JSON.stringify(lastSavedState.sectionStates);
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -337,6 +355,7 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
     lastSavedState,
   ]);
 
@@ -350,8 +369,35 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
     checkForUnsavedChanges,
   ]);
+
+  const markSectionEdited = (section: ReportSectionId) => {
+    setSectionStates((current) => getSectionStatesAfterEdit(current, section));
+  };
+
+  const updateAnatomicalIssues = (next: AnatomicalIssue[]) => {
+    setAnatomicalIssues(next);
+    markSectionEdited("anatomical");
+  };
+
+  const updateRecommendations = (next: { id: string; content: string }[]) => {
+    setRecommendations(next);
+    markSectionEdited("recommendations");
+  };
+
+  const updateNotes = (next: string) => {
+    setNotes(next);
+    markSectionEdited("notes");
+  };
+
+  const resolveSection = (
+    section: ReportSectionId,
+    state: "confirmed" | "not_applicable",
+  ) => {
+    setSectionStates((current) => ({ ...current, [section]: state }));
+  };
 
   // Configuration des raccourcis clavier globaux
   useHotkeys(
@@ -409,7 +455,7 @@ export function AdvancedReportEditor({
     () => {
       if (activeTab === "anatomical" && anatomicalIssues.length > 0) {
         const lastIssue = anatomicalIssues[anatomicalIssues.length - 1];
-        setAnatomicalIssues(
+        updateAnatomicalIssues(
           anatomicalIssues.filter((d) => d.id !== lastIssue.id),
         );
       }
@@ -427,7 +473,7 @@ export function AdvancedReportEditor({
     "shift+c",
     () => {
       if (activeTab === "anatomical" && anatomicalIssues.length > 0) {
-        setAnatomicalIssues([]);
+        updateAnatomicalIssues([]);
       }
     },
     {
@@ -514,6 +560,7 @@ export function AdvancedReportEditor({
       };
       setObservations([...observations, observation]);
     }
+    markSectionEdited("clinical");
     setNewObservation({
       region: "",
       severity: 1,
@@ -529,6 +576,7 @@ export function AdvancedReportEditor({
 
   const handleRemoveObservation = (id: string) => {
     setObservations(observations.filter((obs) => obs.id !== id));
+    markSectionEdited("clinical");
   };
 
   const handleOpenAddObservation = () => {
@@ -585,6 +633,7 @@ export function AdvancedReportEditor({
       consultationReason,
       recommendations,
       anatomicalIssues,
+      sectionStates,
     };
     const submittedRevision = getReportDraftRevision(submittedState);
     const reportDataToSend = buildReportUpdatePayload({
@@ -596,6 +645,7 @@ export function AdvancedReportEditor({
       observations,
       anatomicalIssues,
       recommendations,
+      sectionStates,
       status,
     });
 
@@ -652,6 +702,12 @@ export function AdvancedReportEditor({
   ).length;
 
   function handleFinalizeRequest() {
+    if (!canFinalizeReport(sectionStates)) {
+      toast.error(
+        "Confirmez ou marquez non applicable chaque section du rapport.",
+      );
+      return;
+    }
     if (missingOwnerCount === 0 && staleOwnerCount === 0) {
       handleOpenReminderDialog();
       return;
@@ -671,8 +727,8 @@ export function AdvancedReportEditor({
     if (!issueWithAnatomicalPart.region) return;
 
     if (editingAnatomicalIssueId) {
-      setAnatomicalIssues((prev) =>
-        prev.map((issue) =>
+      updateAnatomicalIssues(
+        anatomicalIssues.map((issue) =>
           issue.id === editingAnatomicalIssueId
             ? {
                 ...issue,
@@ -687,7 +743,7 @@ export function AdvancedReportEditor({
         id: crypto.randomUUID(),
         ...issueWithAnatomicalPart,
       };
-      setAnatomicalIssues([...anatomicalIssues, newIssue]);
+      updateAnatomicalIssues([...anatomicalIssues, newIssue]);
     }
 
     // Reset du formulaire
@@ -728,36 +784,52 @@ export function AdvancedReportEditor({
       id: "clinical" as const,
       label: "Observations",
       count: observations.length,
-      professionalStatus: deriveProfessionalSectionStatus("clinical", {
-        consultationReason,
-        itemTexts: observations.map((item) => item.notes || item.region),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.clinical,
+        hasContent:
+          deriveProfessionalSectionStatus("clinical", {
+            consultationReason,
+            itemTexts: observations.map((item) => item.notes || item.region),
+          }) !== "empty",
       }),
     },
     {
       id: "anatomical" as const,
       label: "Anatomie",
       count: anatomicalIssues.length,
-      professionalStatus: deriveProfessionalSectionStatus("anatomical", {
-        consultationReason: "",
-        itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.anatomical,
+        hasContent:
+          deriveProfessionalSectionStatus("anatomical", {
+            consultationReason: "",
+            itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
+          }) !== "empty",
       }),
     },
     {
       id: "recommendations" as const,
       label: "Recommandations",
       count: recommendations.length,
-      professionalStatus: deriveProfessionalSectionStatus("recommendations", {
-        consultationReason: "",
-        itemTexts: recommendations.map((item) => item.content),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.recommendations,
+        hasContent:
+          deriveProfessionalSectionStatus("recommendations", {
+            consultationReason: "",
+            itemTexts: recommendations.map((item) => item.content),
+          }) !== "empty",
       }),
     },
     {
       id: "notes" as const,
       label: "Notes additionnelles",
       count: notes.trim() ? 1 : 0,
-      professionalStatus: deriveProfessionalSectionStatus("notes", {
-        consultationReason: "",
-        itemTexts: notes.trim() ? [notes] : [],
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.notes,
+        hasContent:
+          deriveProfessionalSectionStatus("notes", {
+            consultationReason: "",
+            itemTexts: notes.trim() ? [notes] : [],
+          }) !== "empty",
       }),
     },
   ];
@@ -852,7 +924,7 @@ export function AdvancedReportEditor({
                   </Card>
                 </div>
               ) : (
-                <div className="h-full min-h-0">
+                <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto]">
                   <div className="h-full min-h-0 overflow-hidden">
                     {activeTab === "clinical" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
@@ -868,14 +940,17 @@ export function AdvancedReportEditor({
                     {activeTab === "anatomical" && (
                       <AnatomicalEvaluationTab
                         dysfunctions={anatomicalIssues}
-                        setDysfunctions={setAnatomicalIssues}
+                        setDysfunctions={updateAnatomicalIssues}
                         onAddDysfunction={(issue) => {
                           const newIssue: AnatomicalIssue = {
                             id: crypto.randomUUID(),
                             ...issue,
                             laterality: issue.laterality || "left",
                           };
-                          setAnatomicalIssues([...anatomicalIssues, newIssue]);
+                          updateAnatomicalIssues([
+                            ...anatomicalIssues,
+                            newIssue,
+                          ]);
                         }}
                         isAddModalOpen={isAddAnatomicalIssueOpen}
                         setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
@@ -905,16 +980,22 @@ export function AdvancedReportEditor({
                       <div className="h-full min-h-0 p-5 xl:p-6">
                         <RecommendationsTab
                           recommendations={recommendations}
-                          setRecommendations={setRecommendations}
+                          setRecommendations={updateRecommendations}
                         />
                       </div>
                     )}
 
                     {activeTab === "notes" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
-                        <NotesTab notes={notes} setNotes={setNotes} />
+                        <NotesTab notes={notes} setNotes={updateNotes} />
                       </div>
                     )}
+                  </div>
+                  <div className="border-t border-border bg-background px-5 py-3 xl:px-6">
+                    <SectionDecisionControl
+                      state={sectionStates[activeTab]}
+                      onChange={(state) => resolveSection(activeTab, state)}
+                    />
                   </div>
                 </div>
               )}
@@ -1017,14 +1098,14 @@ export function AdvancedReportEditor({
           >
             <AnatomicalEvaluationTab
               dysfunctions={anatomicalIssues}
-              setDysfunctions={setAnatomicalIssues}
+              setDysfunctions={updateAnatomicalIssues}
               onAddDysfunction={(issue) => {
                 const newIssue: AnatomicalIssue = {
                   id: crypto.randomUUID(),
                   ...issue,
                   laterality: issue.laterality || "left",
                 };
-                setAnatomicalIssues([...anatomicalIssues, newIssue]);
+                updateAnatomicalIssues([...anatomicalIssues, newIssue]);
               }}
               isAddModalOpen={isAddAnatomicalIssueOpen}
               setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
@@ -1044,7 +1125,7 @@ export function AdvancedReportEditor({
           >
             <RecommendationsTab
               recommendations={recommendations}
-              setRecommendations={setRecommendations}
+              setRecommendations={updateRecommendations}
             />
           </div>
 
@@ -1054,7 +1135,14 @@ export function AdvancedReportEditor({
               activeTab === "notes" ? "block" : "hidden",
             )}
           >
-            <NotesTab notes={notes} setNotes={setNotes} />
+            <NotesTab notes={notes} setNotes={updateNotes} />
+          </div>
+
+          <div className="border-t border-border bg-background px-4 py-3">
+            <SectionDecisionControl
+              state={sectionStates[activeTab]}
+              onChange={(state) => resolveSection(activeTab, state)}
+            />
           </div>
         </div>
       </div>
@@ -1327,6 +1415,12 @@ export function AdvancedReportEditor({
         onOpenChange={setIsReminderDialogOpen}
         reportId={reportId}
         onFinalize={async () => {
+          if (!canFinalizeReport(sectionStates)) {
+            toast.error(
+              "Confirmez ou marquez non applicable chaque section du rapport.",
+            );
+            return;
+          }
           await ensureSuccessfulReportUpdate(() =>
             handleUpdateReport("finalized"),
           );

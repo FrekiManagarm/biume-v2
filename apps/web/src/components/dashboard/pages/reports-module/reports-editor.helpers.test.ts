@@ -12,28 +12,34 @@ import {
   runExclusiveReportSave,
   deriveProfessionalSectionStatus,
   getAnatomicalProfessionalItemText,
+  getEffectiveSectionState,
+  getSectionStatesAfterEdit,
 } from "./reports-editor.helpers";
 
 describe("deriveProfessionalSectionStatus", () => {
   test.each([
     ["clinical", { consultationReason: "", itemTexts: [] }, "empty"],
-    ["clinical", { consultationReason: "Suivi", itemTexts: [] }, "in-progress"],
+    [
+      "clinical",
+      { consultationReason: "Suivi", itemTexts: [] },
+      "needs_confirmation",
+    ],
     [
       "clinical",
       { consultationReason: "Suivi", itemTexts: ["Observation"] },
-      "complete",
+      "needs_confirmation",
     ],
-    ["anatomical", { consultationReason: "", itemTexts: [""] }, "in-progress"],
+    ["anatomical", { consultationReason: "", itemTexts: [""] }, "empty"],
     [
       "anatomical",
       { consultationReason: "", itemTexts: ["Tension"] },
-      "complete",
+      "needs_confirmation",
     ],
     ["recommendations", { consultationReason: "", itemTexts: [] }, "empty"],
     [
       "notes",
       { consultationReason: "", itemTexts: ["Surveiller"] },
-      "complete",
+      "needs_confirmation",
     ],
   ] as const)("derives %s as %s", (section, content, expected) => {
     expect(deriveProfessionalSectionStatus(section, content)).toBe(expected);
@@ -50,7 +56,38 @@ describe("deriveProfessionalSectionStatus", () => {
         consultationReason: "",
         itemTexts: [itemText],
       }),
-    ).toBe("complete");
+    ).toBe("needs_confirmation");
+  });
+});
+
+test("does not replace an explicit section decision when deriving content status", () => {
+  expect(
+    getEffectiveSectionState({
+      persisted: "not_applicable",
+      hasContent: true,
+    }),
+  ).toBe("not_applicable");
+  expect(
+    getEffectiveSectionState({ persisted: "empty", hasContent: true }),
+  ).toBe("needs_confirmation");
+});
+
+test("marks only the edited section as needing confirmation", () => {
+  expect(
+    getSectionStatesAfterEdit(
+      {
+        clinical: "confirmed",
+        anatomical: "not_applicable",
+        recommendations: "confirmed",
+        notes: "confirmed",
+      },
+      "anatomical",
+    ),
+  ).toEqual({
+    clinical: "confirmed",
+    anatomical: "needs_confirmation",
+    recommendations: "confirmed",
+    notes: "confirmed",
   });
 });
 
@@ -65,6 +102,12 @@ describe("buildReportUpdatePayload", () => {
       observations: [],
       anatomicalIssues: [],
       recommendations: [],
+      sectionStates: {
+        clinical: "confirmed",
+        anatomical: "not_applicable",
+        recommendations: "confirmed",
+        notes: "confirmed",
+      },
       status: "draft",
     });
 
@@ -74,6 +117,12 @@ describe("buildReportUpdatePayload", () => {
       petId: undefined,
       consultationReason: "",
       notes: "",
+      sectionStates: {
+        clinical: "confirmed",
+        anatomical: "not_applicable",
+        recommendations: "confirmed",
+        notes: "confirmed",
+      },
       status: "draft",
     });
   });
@@ -202,6 +251,12 @@ describe("getReportDraftRevision", () => {
       consultationReason: "Suivi",
       recommendations: [],
       anatomicalIssues: [],
+      sectionStates: {
+        clinical: "empty" as const,
+        anatomical: "empty" as const,
+        recommendations: "empty" as const,
+        notes: "empty" as const,
+      },
     };
 
     expect(getReportDraftRevision(draft)).not.toBe(

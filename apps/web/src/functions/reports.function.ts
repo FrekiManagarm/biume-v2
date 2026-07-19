@@ -1,8 +1,12 @@
 "use server";
 
 import { db } from "@biume/db";
+import {
+  createInitialReportSectionStates,
+  type ReportSectionStates,
+} from "@biume/contracts/report";
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import z from "zod";
 import {
   anatomicalIssueSchema,
@@ -19,6 +23,7 @@ import {
   appointments,
   pets,
   reportOwnerContent,
+  reportSectionState,
 } from "@biume/db/schema/index";
 import {
   createReportWithTenantIsolation,
@@ -34,6 +39,10 @@ import {
 // import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
+import {
+  buildReportSectionStateRows,
+  normalizeReportSectionStates,
+} from "./report-domain";
 
 export type ReportType = "simple" | "advanced";
 
@@ -171,8 +180,7 @@ export const getAllReports = createServerFn({ method: "GET" })
 export const createReport = createServerFn({ method: "POST" })
   .validator(createReportSchema)
   .handler(async ({ data }) => {
-    const { title, petId, appointmentId, consultationReason, notes, status } =
-      data;
+    const { title, petId, appointmentId, consultationReason, notes } = data;
     const patientId = petId ?? "";
 
     try {
@@ -200,22 +208,30 @@ export const createReport = createServerFn({ method: "POST" })
               })
           : undefined,
         insertReport: async () => {
-          const [newReport] = await db
-            .insert(advancedReport)
-            .values({
+          const reportId = crypto.randomUUID();
+          await db.batch([
+            db.insert(advancedReport).values({
+              id: reportId,
               title: title || "Nouveau rapport",
               consultationReason,
               patientId,
               appointmentId: appointmentId || null,
               notes,
-              status: status || "draft",
+              status: "draft",
               createdBy: organization.id,
               createdAt: new Date(),
-            })
-            .returning({ id: advancedReport.id })
-            .execute();
+            }),
+            db
+              .insert(reportSectionState)
+              .values(
+                buildReportSectionStateRows(
+                  reportId,
+                  createInitialReportSectionStates(),
+                ),
+              ),
+          ] as const);
 
-          return { success: true, status: status, reportId: newReport.id };
+          return { success: true as const, status: "draft" as const, reportId };
         },
       });
     } catch (error) {
@@ -263,12 +279,19 @@ export const getReportById = createServerFn({ method: "GET" })
           },
           recommendations: true,
           ownerContents: true,
+          sectionStates: true,
         },
       });
 
       if (!report) throw new Error("Report not found");
 
-      return { success: true, data: report as AdvancedReport };
+      return {
+        success: true,
+        data: {
+          ...report,
+          sectionStates: normalizeReportSectionStates(report.sectionStates),
+        } as AdvancedReport & { sectionStates: ReportSectionStates },
+      };
     } catch (error) {
       console.error("Error getting report by id", error);
       return { success: false, data: null };
@@ -286,6 +309,7 @@ export const updateReport = createServerFn({ method: "POST" })
       consultationReason,
       notes,
       status,
+      sectionStates,
       observations = [],
       anatomicalIssues = [],
       recommendations = [],
@@ -420,6 +444,7 @@ export const updateReport = createServerFn({ method: "POST" })
                 notes,
                 updatedAt: new Date(),
                 status: status || "draft",
+                revision: sql`${advancedReport.revision} + 1`,
               })
               .where(
                 and(
@@ -427,6 +452,21 @@ export const updateReport = createServerFn({ method: "POST" })
                   eq(advancedReport.createdBy, organization.id),
                 ),
               ),
+            db
+              .insert(reportSectionState)
+              .values(
+                buildReportSectionStateRows(ownedReport.id, sectionStates),
+              )
+              .onConflictDoUpdate({
+                target: [
+                  reportSectionState.reportId,
+                  reportSectionState.section,
+                ],
+                set: {
+                  state: sql`excluded.state`,
+                  updatedAt: new Date(),
+                },
+              }),
             ...removedSources.map((source) =>
               db
                 .delete(reportOwnerContent)
