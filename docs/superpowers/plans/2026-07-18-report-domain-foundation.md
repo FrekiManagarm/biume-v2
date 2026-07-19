@@ -60,6 +60,9 @@
 - `packages/db/scripts/baseline-existing.ts` — allow the known baseline followed by any journaled generated migrations.
 - `packages/db/scripts/baseline-existing.test.ts` — cover the journal validation rule.
 - `packages/db/MIGRATIONS.md` — document the generalized baseline workflow.
+- `apps/web/src/components/dashboard/lists/entity-list.helpers.ts` — normalize nullable quick-created profile fields without fabricating values.
+- `apps/web/src/components/dashboard/lists/entity-list.helpers.test.ts` — cover editing an incomplete animal profile.
+- `apps/web/src/routes/dashboard/patients.tsx` — accept nullable persisted profile fields at the list/form boundary.
 - `apps/web/package.json` — depend on `@biume/contracts`.
 - `apps/web/src/lib/utils/schemas.ts` — re-export canonical report schemas instead of duplicating them.
 - `apps/web/src/components/dashboard/pages/reports-module/owner-content.ts` — re-export the canonical section identifier while retaining owner-content-only types.
@@ -574,6 +577,9 @@ git commit -m "feat(reports): add canonical report contracts"
 - Modify: `packages/db/src/schema/index.ts`
 - Modify: `packages/db/scripts/baseline-existing.ts`
 - Modify: `packages/db/MIGRATIONS.md`
+- Modify: `apps/web/src/components/dashboard/lists/entity-list.helpers.ts`
+- Modify: `apps/web/src/components/dashboard/lists/entity-list.helpers.test.ts`
+- Modify: `apps/web/src/routes/dashboard/patients.tsx`
 - Generate: `packages/db/src/migrations/0002_report_domain_foundation.sql`
 - Generate: `packages/db/src/migrations/meta/0002_snapshot.json`
 - Modify: `packages/db/src/migrations/meta/_journal.json`
@@ -1014,6 +1020,8 @@ git diff --check
 ```
 
 Expected: contract typecheck passes, all DB tests pass, and `git diff --check` prints nothing.
+
+Adapt the existing patient editor to the newly nullable persisted fields. `PatientFormSource` must accept nullable `breed`, `gender`, `birthDate`, `weight`, and `height`. `getPatientFormValues` must map a missing breed, gender, or birth date to an empty form value, and missing weight/height to the existing UI sentinel `0`; it must not silently turn an unknown gender into `Male`. Make the form's gender schema accept a string input but refine/transform it to `"Male" | "Female"` on successful submission, and type the form state with `z.input<typeof patientFormSchema>`. Add a helper test with all five profile fields null and assert the blank/zero form representation. Run the helper tests and direct web typecheck; no nullable patient-profile error may remain.
 
 - [ ] **Step 9: Commit the persistence foundation**
 
