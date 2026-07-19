@@ -13,7 +13,7 @@ export const reportSection = pgEnum("report_section", [
   "notes",
 ]);
 
-export const reportSectionDecision = pgEnum("report_section_state", [
+export const reportSectionDecision = pgEnum("report_section_decision", [
   "empty",
   "proposed",
   "needs_confirmation",

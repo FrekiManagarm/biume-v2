@@ -1,5 +1,5 @@
 {
-  "id": "ed26ee8b-232b-47a9-b7a2-7ea44cd08ce7",
+  "id": "b8225d65-7476-4d07-8870-f3f847790604",
   "prevId": "8ac8a959-7465-48e1-b04e-38b03988b4d6",
   "version": "7",
   "dialect": "postgresql",
@@ -526,7 +526,7 @@
         },
         "state": {
           "name": "state",
-          "type": "report_section_state",
+          "type": "report_section_decision",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -2317,8 +2317,8 @@
         "notes"
       ]
     },
-    "public.report_section_state": {
-      "name": "report_section_state",
+    "public.report_section_decision": {
+      "name": "report_section_decision",
       "schema": "public",
       "values": [
         "empty",

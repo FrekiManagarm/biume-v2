@@ -1,9 +1,9 @@
 CREATE TYPE "public"."report_section" AS ENUM('clinical', 'anatomical', 'recommendations', 'notes');--> statement-breakpoint
-CREATE TYPE "public"."report_section_state" AS ENUM('empty', 'proposed', 'needs_confirmation', 'confirmed', 'not_applicable');--> statement-breakpoint
+CREATE TYPE "public"."report_section_decision" AS ENUM('empty', 'proposed', 'needs_confirmation', 'confirmed', 'not_applicable');--> statement-breakpoint
 CREATE TABLE "report_section_state" (
 	"report_id" text NOT NULL,
 	"section" "report_section" NOT NULL,
-	"state" "report_section_state" NOT NULL,
+	"state" "report_section_decision" NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "report_section_state_report_id_section_pk" PRIMARY KEY("report_id","section")
 );
@@ -32,7 +32,7 @@ INSERT INTO "report_section_state" ("report_id", "section", "state")
 SELECT
   report."id",
   section.value::"report_section",
-  'empty'::"report_section_state"
+  'empty'::"report_section_decision"
 FROM "advancedReport" AS report
 CROSS JOIN (
   VALUES ('clinical'), ('anatomical'), ('recommendations'), ('notes')
