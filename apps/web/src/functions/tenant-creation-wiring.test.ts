@@ -113,3 +113,21 @@ describe("tenant-isolated update wiring", () => {
     expect(updateSource).toContain("eq(appointments.patientId, patientId)");
   });
 });
+
+test("shared versions are scoped, revision-bound, and never updated", () => {
+  const source = readFileSync(
+    new URL("./reports.function.ts", import.meta.url),
+    "utf8",
+  );
+  const sharedSource = source.slice(
+    source.indexOf("export const createReportSharedVersion"),
+    source.indexOf("export const getAnatomicalParts"),
+  );
+
+  expect(sharedSource).toContain(
+    "eq(advancedReport.createdBy, organization.id)",
+  );
+  expect(sharedSource).toContain("reportSharedVersion.reportRevision");
+  expect(sharedSource).toContain("onConflictDoNothing");
+  expect(sharedSource).not.toContain(".update(reportSharedVersion)");
+});

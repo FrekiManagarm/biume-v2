@@ -1,5 +1,6 @@
 export type { GetAllReportsParams } from "#/functions/reports.function";
 import {
+  createReportSharedVersion as createReportSharedVersionFn,
   createQuickReport as createQuickReportFn,
   createReport as createReportFn,
   deleteReport as deleteReportFn,
@@ -35,6 +36,10 @@ export function createReport(report: z.input<typeof createReportSchema>) {
 
 export function createQuickReport(report: z.input<typeof quickReportSchema>) {
   return createQuickReportFn({ data: report });
+}
+
+export function createReportSharedVersion(reportId: string) {
+  return createReportSharedVersionFn({ data: { reportId } });
 }
 
 export function getReportById({ reportId }: { reportId: string }) {

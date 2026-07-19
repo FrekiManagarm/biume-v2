@@ -26,6 +26,7 @@ import {
   pets,
   reportOwnerContent,
   reportSectionState,
+  reportSharedVersion,
 } from "@biume/db/schema/index";
 import {
   createReportWithTenantIsolation,
@@ -44,9 +45,13 @@ import {
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
 import {
+  assertReportCanBeShared,
+  buildOwnerReportSnapshot,
   buildQuickReportRows,
   buildReportSectionStateRows,
   normalizeReportSectionStates,
+  persistImmutableSharedVersion,
+  resolveOwnerFacingText,
 } from "./report-domain";
 
 export type ReportType = "simple" | "advanced";
@@ -575,6 +580,129 @@ export const updateReport = createServerFn({ method: "POST" })
             : "Erreur lors de la mise à jour du rapport",
       };
     }
+  });
+
+export const createReportSharedVersion = createServerFn({ method: "POST" })
+  .validator(z.object({ reportId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const report = await db.query.advancedReport.findFirst({
+      where: and(
+        eq(advancedReport.id, data.reportId),
+        eq(advancedReport.createdBy, organization.id),
+      ),
+      with: {
+        patient: { with: { owner: true } },
+        anatomicalIssues: { with: { anatomicalPart: true } },
+        recommendations: true,
+        ownerContents: true,
+        sectionStates: true,
+      },
+    });
+    if (!report?.patient?.owner) {
+      throw new Error("Rapport, animal ou propriétaire introuvable");
+    }
+
+    const sectionStates = normalizeReportSectionStates(report.sectionStates);
+    assertReportCanBeShared(report.status, sectionStates);
+
+    const observations = report.anatomicalIssues.filter(
+      (item) => item.type === "observation",
+    );
+    const issues = report.anatomicalIssues.filter((item) =>
+      ["dysfunction", "anatomicalSuspicion"].includes(item.type),
+    );
+    const itemText = (item: {
+      id: string;
+      notes: string | null;
+      anatomicalPart?: { name: string } | null;
+    }) => item.notes?.trim() || item.anatomicalPart?.name.trim() || "";
+
+    const snapshot = buildOwnerReportSnapshot({
+      reportId: report.id,
+      reportRevision: report.revision,
+      title: report.title,
+      animal: { id: report.patient.id, name: report.patient.name },
+      owner: { id: report.patient.owner.id, name: report.patient.owner.name },
+      consultationReason: resolveOwnerFacingText(
+        report.ownerContents,
+        "consultationReason",
+        "consultationReason",
+        report.consultationReason,
+      ),
+      clinical: observations
+        .map((item) =>
+          resolveOwnerFacingText(
+            report.ownerContents,
+            "observation",
+            item.id,
+            itemText(item),
+          ),
+        )
+        .filter(Boolean),
+      anatomical: issues
+        .map((item) =>
+          resolveOwnerFacingText(
+            report.ownerContents,
+            "anatomicalIssue",
+            item.id,
+            itemText(item),
+          ),
+        )
+        .filter(Boolean),
+      recommendations: report.recommendations
+        .map((item) =>
+          resolveOwnerFacingText(
+            report.ownerContents,
+            "recommendation",
+            item.id,
+            item.recommendation,
+          ),
+        )
+        .filter(Boolean),
+      notes: resolveOwnerFacingText(
+        report.ownerContents,
+        "notes",
+        "notes",
+        report.notes ?? "",
+      ),
+      createdAt: new Date(),
+    });
+
+    const findExisting = () =>
+      db.query.reportSharedVersion.findFirst({
+        where: and(
+          eq(reportSharedVersion.reportId, report.id),
+          eq(reportSharedVersion.organizationId, organization.id),
+          eq(reportSharedVersion.reportRevision, report.revision),
+        ),
+      });
+
+    const persisted = await persistImmutableSharedVersion({
+      findExisting,
+      insert: async () => {
+        const [created] = await db
+          .insert(reportSharedVersion)
+          .values({
+            reportId: report.id,
+            organizationId: organization.id,
+            reportRevision: report.revision,
+            snapshot,
+          })
+          .onConflictDoNothing({
+            target: [
+              reportSharedVersion.reportId,
+              reportSharedVersion.reportRevision,
+            ],
+          })
+          .returning();
+        return created;
+      },
+    });
+
+    return { success: true as const, data: persisted };
   });
 
 export const getAnatomicalParts = createServerFn({ method: "GET" })
