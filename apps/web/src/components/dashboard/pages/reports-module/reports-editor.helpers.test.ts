@@ -2,7 +2,6 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   buildReportUpdatePayload,
-  ensureSuccessfulReportUpdate,
   getReportDraftRevision,
   getReportDesktopGridClassName,
   invalidateReportDetailQuery,
@@ -203,20 +202,6 @@ describe("openOwnerPreparation", () => {
 
     await expect(opening).resolves.toBe(false);
     expect(openPanel).not.toHaveBeenCalled();
-  });
-});
-
-describe("ensureSuccessfulReportUpdate", () => {
-  test("rejects a false update result so finalization cannot continue", async () => {
-    await expect(
-      ensureSuccessfulReportUpdate(() => Promise.resolve(false)),
-    ).rejects.toThrow("Échec de la mise à jour du rapport");
-  });
-
-  test("resolves after a successful update", async () => {
-    await expect(
-      ensureSuccessfulReportUpdate(() => Promise.resolve(true)),
-    ).resolves.toBeUndefined();
   });
 });
 

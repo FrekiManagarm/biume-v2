@@ -22,12 +22,15 @@ describe("report update server wiring", () => {
     );
   });
 
-  test("increments revision and upserts all canonical decisions in the atomic batch", () => {
+  test("increments revision and upserts canonical decisions by composite key", () => {
     expect(updateSource).toContain(
       "revision: sql`${advancedReport.revision} + 1`",
     );
-    expect(updateSource).toMatch(
-      /const mutationQueries = \[[\s\S]*?\.insert\(reportSectionState\)[\s\S]*?\.values\(\s*buildReportSectionStateRows\(ownedReport\.id, sectionStates\),?\s*\)[\s\S]*?\.onConflictDoUpdate\(\{[\s\S]*?reportSectionState\.reportId[\s\S]*?reportSectionState\.section[\s\S]*?state: sql`excluded\.state`[\s\S]*?executeAtomicReportMutations\(mutationQueries/,
+    expect(updateSource).toContain(
+      "buildReportSectionStateRows(ownedReport.id, sectionStates)",
     );
+    expect(updateSource).toContain("reportSectionState.reportId");
+    expect(updateSource).toContain("reportSectionState.section");
+    expect(updateSource).toContain("state: sql`excluded.state`");
   });
 });

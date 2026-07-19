@@ -124,14 +124,6 @@ export function getReportDraftRevision(draft: ReportDraftState) {
   return JSON.stringify(draft);
 }
 
-export async function ensureSuccessfulReportUpdate(
-  update: () => Promise<boolean>,
-) {
-  if (!(await update())) {
-    throw new Error("Échec de la mise à jour du rapport");
-  }
-}
-
 export function runExclusiveReportSave(
   guard: { current: Promise<boolean> | null },
   save: () => Promise<boolean>,

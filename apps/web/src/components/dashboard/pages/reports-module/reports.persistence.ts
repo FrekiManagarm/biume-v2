@@ -87,3 +87,31 @@ export function executeAtomicReportMutations<
 ) {
   return executeBatch(mutations);
 }
+
+export function buildReportUpdateMutationQueries<
+  ReportUpdate,
+  SectionStateUpsert,
+  const OwnerSourceDeletions extends readonly unknown[],
+  const ChildDeletions extends readonly unknown[],
+  const ChildInserts extends readonly unknown[],
+>({
+  reportUpdate,
+  sectionStateUpsert,
+  ownerSourceDeletions,
+  childDeletions,
+  childInserts,
+}: {
+  reportUpdate: ReportUpdate;
+  sectionStateUpsert: SectionStateUpsert;
+  ownerSourceDeletions: OwnerSourceDeletions;
+  childDeletions: ChildDeletions;
+  childInserts: ChildInserts;
+}) {
+  return [
+    reportUpdate,
+    sectionStateUpsert,
+    ...ownerSourceDeletions,
+    ...childDeletions,
+    ...childInserts,
+  ] as const;
+}

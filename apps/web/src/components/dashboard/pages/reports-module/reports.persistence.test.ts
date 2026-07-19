@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   buildReportChildRows,
+  buildReportUpdateMutationQueries,
   executeAtomicReportMutations,
   getRemovedOwnerSources,
 } from "./reports.persistence";
@@ -62,13 +63,69 @@ describe("report child persistence", () => {
       { sourceKind: "recommendation", sourceId: "rec_delete" },
     ]);
   });
+});
 
-  test("submits all report mutations to one atomic batch and propagates failure", async () => {
-    const mutations = [
-      { name: "update-report" },
-      { name: "delete-owner-source" },
-      { name: "replace-children" },
+describe("report update mutation composition", () => {
+  const reportUpdate = { name: "update-report" } as const;
+  const sectionStateUpsert = { name: "upsert-section-states" } as const;
+  const ownerSourceDeletions = [
+    { name: "delete-owner-source-1" },
+    { name: "delete-owner-source-2" },
+  ] as const;
+  const childDeletions = [
+    { name: "delete-anatomical-children" },
+    { name: "delete-recommendation-children" },
+  ] as const;
+
+  test("keeps update and section upsert first while retaining every deletion", () => {
+    expect(
+      buildReportUpdateMutationQueries({
+        reportUpdate,
+        sectionStateUpsert,
+        ownerSourceDeletions,
+        childDeletions,
+        childInserts: [],
+      }),
+    ).toEqual([
+      reportUpdate,
+      sectionStateUpsert,
+      ...ownerSourceDeletions,
+      ...childDeletions,
+    ]);
+  });
+
+  test("includes each optional child insert exactly when supplied", () => {
+    const childInserts = [
+      { name: "insert-anatomical-issues" },
+      { name: "insert-observations" },
+      { name: "insert-recommendations" },
     ] as const;
+
+    expect(
+      buildReportUpdateMutationQueries({
+        reportUpdate,
+        sectionStateUpsert,
+        ownerSourceDeletions,
+        childDeletions,
+        childInserts,
+      }),
+    ).toEqual([
+      reportUpdate,
+      sectionStateUpsert,
+      ...ownerSourceDeletions,
+      ...childDeletions,
+      ...childInserts,
+    ]);
+  });
+
+  test("delivers the exact tuple once and propagates executor failure", async () => {
+    const mutations = buildReportUpdateMutationQueries({
+      reportUpdate,
+      sectionStateUpsert,
+      ownerSourceDeletions,
+      childDeletions,
+      childInserts: [{ name: "insert-observations" }] as const,
+    });
     const receivedBatches: Array<typeof mutations> = [];
 
     await expect(

@@ -33,6 +33,7 @@ import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-mod
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
 import {
   buildReportChildRows,
+  buildReportUpdateMutationQueries,
   executeAtomicReportMutations,
   getRemovedOwnerSources,
 } from "#/components/dashboard/pages/reports-module/reports.persistence";
@@ -437,8 +438,8 @@ export const updateReport = createServerFn({ method: "POST" })
             recommendation: recommendations.map((item) => item.id),
           });
 
-          const mutationQueries = [
-            db
+          const mutationQueries = buildReportUpdateMutationQueries({
+            reportUpdate: db
               .update(advancedReport)
               .set({
                 title,
@@ -456,7 +457,7 @@ export const updateReport = createServerFn({ method: "POST" })
                   eq(advancedReport.createdBy, organization.id),
                 ),
               ),
-            db
+            sectionStateUpsert: db
               .insert(reportSectionState)
               .values(
                 buildReportSectionStateRows(ownedReport.id, sectionStates),
@@ -471,7 +472,7 @@ export const updateReport = createServerFn({ method: "POST" })
                   updatedAt: new Date(),
                 },
               }),
-            ...removedSources.map((source) =>
+            ownerSourceDeletions: removedSources.map((source) =>
               db
                 .delete(reportOwnerContent)
                 .where(
@@ -482,31 +483,39 @@ export const updateReport = createServerFn({ method: "POST" })
                   ),
                 ),
             ),
-            db
-              .delete(anatomicalIssue)
-              .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
-            db
-              .delete(advancedReportRecommendations)
-              .where(
-                eq(
-                  advancedReportRecommendations.advancedReportId,
-                  ownedReport.id,
+            childDeletions: [
+              db
+                .delete(anatomicalIssue)
+                .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
+              db
+                .delete(advancedReportRecommendations)
+                .where(
+                  eq(
+                    advancedReportRecommendations.advancedReportId,
+                    ownedReport.id,
+                  ),
                 ),
-              ),
-            ...(childRows.anatomicalIssues.length > 0
-              ? [db.insert(anatomicalIssue).values(childRows.anatomicalIssues)]
-              : []),
-            ...(childRows.observations.length > 0
-              ? [db.insert(anatomicalIssue).values(childRows.observations)]
-              : []),
-            ...(childRows.recommendations.length > 0
-              ? [
-                  db
-                    .insert(advancedReportRecommendations)
-                    .values(childRows.recommendations),
-                ]
-              : []),
-          ] as const;
+            ] as const,
+            childInserts: [
+              ...(childRows.anatomicalIssues.length > 0
+                ? [
+                    db
+                      .insert(anatomicalIssue)
+                      .values(childRows.anatomicalIssues),
+                  ]
+                : []),
+              ...(childRows.observations.length > 0
+                ? [db.insert(anatomicalIssue).values(childRows.observations)]
+                : []),
+              ...(childRows.recommendations.length > 0
+                ? [
+                    db
+                      .insert(advancedReportRecommendations)
+                      .values(childRows.recommendations),
+                  ]
+                : []),
+            ] as const,
+          });
 
           await executeAtomicReportMutations(mutationQueries, (queries) =>
             db.batch(queries),
