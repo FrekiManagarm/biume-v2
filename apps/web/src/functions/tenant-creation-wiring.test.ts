@@ -3,6 +3,17 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 describe("tenant-isolated creation wiring", () => {
+  test("quick report action accepts schema input before defaults are applied", () => {
+    const source = readFileSync(
+      new URL("../lib/api/actions/reports.action.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).toContain(
+      "createQuickReport(report: z.input<typeof quickReportSchema>)",
+    );
+  });
+
   test("createAppointment scopes its patient lookup before delegating the insert", () => {
     const source = readFileSync(
       new URL("./appointments.function.ts", import.meta.url),
@@ -36,6 +47,27 @@ describe("tenant-isolated creation wiring", () => {
       "eq(appointments.organizationId, organization.id)",
     );
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
+  });
+
+  test("createQuickReport delegates tenant-scoped idempotency around the atomic executor", () => {
+    const source = readFileSync(
+      new URL("./reports.function.ts", import.meta.url),
+      "utf8",
+    );
+    const createSource = source.slice(
+      source.indexOf("export const createQuickReport"),
+      source.indexOf("export const getReportById"),
+    );
+
+    expect(createSource).toContain(".validator(quickReportSchema)");
+    expect(createSource).toContain("organizationId: organization.id");
+    expect(createSource).toContain("createIdempotentQuickReport");
+    expect(createSource).toContain("clientRequestId");
+    expect(createSource).toContain("quickRequestFingerprint");
+    expect(createSource.match(/crypto\.randomUUID\(\)/g)).toHaveLength(3);
+    expect(createSource).toContain("buildQuickReportMutationQueries");
+    expect(createSource).toContain("executeAtomicReportMutations");
+    expect(createSource).toContain("findAfterConflict");
   });
 });
 
@@ -84,4 +116,29 @@ describe("tenant-isolated update wiring", () => {
     );
     expect(updateSource).toContain("eq(appointments.patientId, patientId)");
   });
+});
+
+test("shared versions are scoped, revision-bound, and never updated", () => {
+  const source = readFileSync(
+    new URL("./reports.function.ts", import.meta.url),
+    "utf8",
+  );
+  const adapterSource = source.slice(
+    source.indexOf("const reportSharedVersionPorts"),
+    source.indexOf("export const getAnatomicalParts"),
+  );
+  const handlerSource = source.slice(
+    source.indexOf("export const createReportSharedVersion"),
+    source.indexOf("export const getAnatomicalParts"),
+  );
+
+  expect(adapterSource).toContain(
+    "eq(advancedReport.createdBy, organizationId)",
+  );
+  expect(adapterSource).toContain("reportSharedVersion.reportRevision");
+  expect(adapterSource).toContain("onConflictDoNothing");
+  expect(adapterSource).not.toContain(".update(reportSharedVersion)");
+  expect(handlerSource).toContain("createImmutableReportSharedVersion");
+  expect(handlerSource).toContain("organizationId: organization.id");
+  expect(handlerSource).toContain("reportId: data.reportId");
 });

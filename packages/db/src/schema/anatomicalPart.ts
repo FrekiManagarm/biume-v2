@@ -32,7 +32,8 @@ export const anatomicalPartsRelations = relations(anatomicalPart, ({ many }) => 
   anatomicalPartTypes: many(anatomicalPartType),
 }))
 
-export type AnatomicalPart = InferSelectModel<typeof anatomicalPart> & {
+export type AnatomicalPart = InferSelectModel<typeof anatomicalPart>
+export type AnatomicalPartWithRelations = AnatomicalPart & {
   anatomicalIssues: AnatomicalIssue[]
   anatomicalPartTypes: AnatomicalPartType[]
 }

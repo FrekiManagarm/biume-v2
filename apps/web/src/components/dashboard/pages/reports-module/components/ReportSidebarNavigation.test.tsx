@@ -20,19 +20,19 @@ describe("ReportSidebarNavigation", () => {
         id: "clinical" as const,
         label: "Observations",
         count: 2,
-        professionalStatus: "complete" as const,
+        professionalStatus: "confirmed" as const,
       },
       {
         id: "anatomical" as const,
         label: "Anatomie",
         count: 1,
-        professionalStatus: "in-progress" as const,
+        professionalStatus: "needs_confirmation" as const,
       },
       {
         id: "recommendations" as const,
         label: "Recommandations",
         count: 1,
-        professionalStatus: "complete" as const,
+        professionalStatus: "confirmed" as const,
       },
       {
         id: "notes" as const,
@@ -67,9 +67,25 @@ describe("ReportSidebarNavigation", () => {
     expect(screen.getByText("À actualiser")).not.toBeNull();
     expect(screen.getByText("À préparer")).not.toBeNull();
     expect(screen.getByLabelText("Observations : 2 éléments")).not.toBeNull();
-    expect(screen.getByText("En cours")).not.toBeNull();
-    expect(screen.getByText("Vide")).not.toBeNull();
-    expect(screen.getAllByText("Complet")[0]?.className).toContain("emerald");
+    expect(screen.getByText("À confirmer")).not.toBeNull();
+    expect(screen.getByText("À renseigner")).not.toBeNull();
+    expect(screen.getAllByText("Confirmé")[0]?.className).toContain("emerald");
+  });
+
+  test("renders confirmed and non applicable professional decisions", () => {
+    render(
+      <ReportSidebarNavigation
+        {...defaultProps}
+        tabs={defaultProps.tabs.map((tab) =>
+          tab.id === "anatomical"
+            ? { ...tab, professionalStatus: "not_applicable" as const }
+            : tab,
+        )}
+      />,
+    );
+
+    expect(screen.getAllByText("Confirmé")).toHaveLength(2);
+    expect(screen.getByText("Non applicable")).not.toBeNull();
   });
 
   test("does not claim owner readiness when a section has no applicable source", () => {

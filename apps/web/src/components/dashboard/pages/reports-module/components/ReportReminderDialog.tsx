@@ -20,7 +20,7 @@ interface ReportReminderDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   reportId: string;
-  onFinalize: () => Promise<void>;
+  onFinalize: () => Promise<boolean>;
   isFinalizing?: boolean;
 }
 
@@ -55,7 +55,8 @@ export function ReportReminderDialog({
 
   const handleFinalizeWithoutReminder = async () => {
     try {
-      await onFinalize();
+      const finalized = await onFinalize();
+      if (!finalized) return;
       toast.success("Rapport finalisé avec succès");
       handleClose();
     } catch (error) {

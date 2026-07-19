@@ -1,24 +1,31 @@
 "use server";
 
 import { db } from "@biume/db";
+import {
+  createInitialReportSectionStates,
+  quickReportSchema,
+  type ReportSectionStates,
+} from "@biume/contracts/report";
 import { getCurrentOrganization } from "#/functions/auth.function";
 import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import z from "zod";
 import {
   anatomicalIssueSchema,
   createReportSchema,
-  reportSchema,
+  updateReportSchema,
 } from "#/lib/utils/schemas";
 import {
   type AnatomicalPart,
   anatomicalPart,
   advancedReportRecommendations,
   anatomicalIssue,
-  type AdvancedReport,
   advancedReport,
   appointments,
+  clients,
   pets,
   reportOwnerContent,
+  reportSectionState,
+  reportSharedVersion,
 } from "@biume/db/schema/index";
 import {
   createReportWithTenantIsolation,
@@ -27,6 +34,7 @@ import {
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
 import {
+  buildQuickReportMutationQueries,
   buildReportChildRows,
   executeAtomicReportMutations,
   getRemovedOwnerSources,
@@ -34,6 +42,18 @@ import {
 // import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
+import {
+  buildQuickReportRows,
+  buildReportSectionStateRows,
+  normalizeReportSectionStates,
+} from "./report-domain";
+import {
+  createImmutableReportSharedVersion,
+  type ReportSharedVersionPorts,
+} from "./report-shared-version.service";
+import { buildAtomicReportUpdateStatement } from "./report-update.persistence";
+import { updateReportWithExpectedRevision } from "./report-update.service";
+import { createIdempotentQuickReport } from "./quick-report.service";
 
 export type ReportType = "simple" | "advanced";
 
@@ -46,6 +66,92 @@ export type ReportItem = {
   patientId: string;
   createdAt: Date;
   updatedAt: Date | null;
+};
+
+async function loadAllReportRows({
+  organizationId,
+  search,
+  status,
+}: {
+  organizationId: string;
+  search: string;
+  status: string;
+}) {
+  const conditions = [eq(advancedReport.createdBy, organizationId)];
+
+  if (status === "brouillons") {
+    conditions.push(eq(advancedReport.status, "draft"));
+  } else if (status === "finalises") {
+    conditions.push(eq(advancedReport.status, "finalized"));
+  }
+
+  if (search.trim().length > 0) {
+    const term = `%${search.trim().toLowerCase()}%`;
+    const searchCondition = or(
+      ilike(advancedReport.title, term),
+      ilike(advancedReport.consultationReason, term),
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
+  return db.query.advancedReport.findMany({
+    where: and(...conditions),
+    with: {
+      organization: true,
+      patient: {
+        with: {
+          owner: { columns: { name: true, email: true } },
+          animal: { columns: { name: true } },
+        },
+      },
+      anatomicalIssues: { with: { anatomicalPart: true } },
+      recommendations: true,
+    },
+    orderBy: [desc(advancedReport.createdAt)],
+  });
+}
+
+export type AdvancedReportListItem = Awaited<
+  ReturnType<typeof loadAllReportRows>
+>[number];
+
+async function loadReportDetailRow(
+  organizationId: string,
+  reportId: string,
+) {
+  return db.query.advancedReport.findFirst({
+    where: and(
+      eq(advancedReport.id, reportId),
+      eq(advancedReport.createdBy, organizationId),
+    ),
+    with: {
+      organization: true,
+      appointment: { with: { patient: true, organization: true } },
+      patient: {
+        with: {
+          owner: true,
+          animal: true,
+          advancedReport: true,
+          organization: true,
+        },
+      },
+      anatomicalIssues: { with: { anatomicalPart: true } },
+      recommendations: true,
+      ownerContents: true,
+      sectionStates: true,
+    },
+  });
+}
+
+type LoadedReportDetail = NonNullable<
+  Awaited<ReturnType<typeof loadReportDetailRow>>
+>;
+
+export type NormalizedAdvancedReport = Omit<
+  LoadedReportDetail,
+  "sectionStates"
+> & {
+  sectionStates: ReportSectionStates;
 };
 
 export const getLatestReports = createServerFn({ method: "GET" })
@@ -113,55 +219,11 @@ export const getAllReports = createServerFn({ method: "GET" })
 
       const { search = "", status = "tous" } = data;
 
-      const conditions = [eq(advancedReport.createdBy, organization.id)];
-
-      if (status === "brouillons") {
-        conditions.push(eq(advancedReport.status, "draft"));
-      } else if (status === "finalises") {
-        conditions.push(eq(advancedReport.status, "finalized"));
-      }
-
-      if (search.trim().length > 0) {
-        const term = `%${search.trim().toLowerCase()}%`;
-        const searchCondition = or(
-          ilike(advancedReport.title, term),
-          ilike(advancedReport.consultationReason, term),
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
-      }
-
-      const reports = await db.query.advancedReport.findMany({
-        where: and(...conditions),
-        with: {
-          organization: true,
-          patient: {
-            with: {
-              owner: {
-                columns: {
-                  name: true,
-                  email: true,
-                },
-              },
-              animal: {
-                columns: {
-                  name: true,
-                },
-              },
-            },
-          },
-          anatomicalIssues: {
-            with: {
-              anatomicalPart: true,
-            },
-          },
-          recommendations: true,
-        },
-        orderBy: [desc(advancedReport.createdAt)],
+      return loadAllReportRows({
+        organizationId: organization.id,
+        search,
+        status,
       });
-
-      return reports as AdvancedReport[];
     } catch (error) {
       console.error("Error getting all reports", error);
       throw new Error("Error getting all reports");
@@ -171,8 +233,7 @@ export const getAllReports = createServerFn({ method: "GET" })
 export const createReport = createServerFn({ method: "POST" })
   .validator(createReportSchema)
   .handler(async ({ data }) => {
-    const { title, petId, appointmentId, consultationReason, notes, status } =
-      data;
+    const { title, petId, appointmentId, consultationReason, notes } = data;
     const patientId = petId ?? "";
 
     try {
@@ -200,28 +261,110 @@ export const createReport = createServerFn({ method: "POST" })
               })
           : undefined,
         insertReport: async () => {
-          const [newReport] = await db
-            .insert(advancedReport)
-            .values({
+          const reportId = crypto.randomUUID();
+          await db.batch([
+            db.insert(advancedReport).values({
+              id: reportId,
               title: title || "Nouveau rapport",
               consultationReason,
               patientId,
               appointmentId: appointmentId || null,
               notes,
-              status: status || "draft",
+              status: "draft",
               createdBy: organization.id,
               createdAt: new Date(),
-            })
-            .returning({ id: advancedReport.id })
-            .execute();
+            }),
+            db
+              .insert(reportSectionState)
+              .values(
+                buildReportSectionStateRows(
+                  reportId,
+                  createInitialReportSectionStates(),
+                ),
+              ),
+          ] as const);
 
-          return { success: true, status: status, reportId: newReport.id };
+          return { success: true as const, status: "draft" as const, reportId };
         },
       });
     } catch (error) {
       console.error("Error creating report", error);
       throw new Error("Error creating report");
     }
+  });
+
+export const createQuickReport = createServerFn({ method: "POST" })
+  .validator(quickReportSchema)
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const findByKey = async ({
+      organizationId,
+      clientRequestId,
+    }: {
+      organizationId: string;
+      clientRequestId: string;
+    }) => {
+      const existing = await db.query.advancedReport.findFirst({
+        where: and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.clientRequestId, clientRequestId),
+        ),
+        columns: {
+          id: true,
+          quickRequestFingerprint: true,
+        },
+      });
+      if (!existing?.quickRequestFingerprint) return undefined;
+      return {
+        reportId: existing.id,
+        requestFingerprint: existing.quickRequestFingerprint,
+      };
+    };
+
+    const result = await createIdempotentQuickReport(
+      { organizationId: organization.id, input: data },
+      {
+        findByKey,
+        createAtomic: async ({
+          organizationId,
+          input,
+          requestFingerprint,
+        }) => {
+          const rows = buildQuickReportRows({
+            organizationId,
+            input,
+            ids: {
+              ownerId: crypto.randomUUID(),
+              animalId: crypto.randomUUID(),
+              reportId: crypto.randomUUID(),
+            },
+            requestFingerprint,
+            now: new Date(),
+          });
+
+          const mutations = buildQuickReportMutationQueries({
+            ownerInsert: db.insert(clients).values(rows.owner),
+            animalInsert: db.insert(pets).values(rows.animal),
+            reportInsert: db.insert(advancedReport).values(rows.report),
+            sectionStateInsert: db
+              .insert(reportSectionState)
+              .values(rows.sectionStates),
+          });
+          await executeAtomicReportMutations(mutations, (queries) =>
+            db.batch(queries),
+          );
+          return { reportId: rows.report.id };
+        },
+        findAfterConflict: findByKey,
+      },
+    );
+
+    return {
+      success: true as const,
+      ...result,
+    };
   });
 
 export const getReportById = createServerFn({ method: "GET" })
@@ -235,40 +378,19 @@ export const getReportById = createServerFn({ method: "GET" })
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
-      const report = await db.query.advancedReport.findFirst({
-        where: and(
-          eq(advancedReport.id, data.reportId),
-          eq(advancedReport.createdBy, organization.id),
-        ),
-        with: {
-          organization: true,
-          appointment: {
-            with: {
-              patient: true,
-              organization: true,
-            },
-          },
-          patient: {
-            with: {
-              owner: true,
-              animal: true,
-              advancedReport: true,
-              organization: true,
-            },
-          },
-          anatomicalIssues: {
-            with: {
-              anatomicalPart: true,
-            },
-          },
-          recommendations: true,
-          ownerContents: true,
-        },
-      });
+      const report = await loadReportDetailRow(organization.id, data.reportId);
 
       if (!report) throw new Error("Report not found");
 
-      return { success: true, data: report as AdvancedReport };
+      const normalizedReport: NormalizedAdvancedReport = {
+        ...report,
+        sectionStates: normalizeReportSectionStates(report.sectionStates),
+      };
+
+      return {
+        success: true,
+        data: normalizedReport,
+      };
     } catch (error) {
       console.error("Error getting report by id", error);
       return { success: false, data: null };
@@ -276,16 +398,18 @@ export const getReportById = createServerFn({ method: "GET" })
   });
 
 export const updateReport = createServerFn({ method: "POST" })
-  .validator(reportSchema.safeExtend({ reportId: z.string() }))
+  .validator(updateReportSchema)
   .handler(async ({ data }) => {
     const {
       reportId,
+      expectedRevision,
       title,
       petId,
       appointmentId,
       consultationReason,
       notes,
       status,
+      sectionStates,
       observations = [],
       anatomicalIssues = [],
       recommendations = [],
@@ -409,66 +533,52 @@ export const updateReport = createServerFn({ method: "POST" })
             recommendation: recommendations.map((item) => item.id),
           });
 
-          const mutationQueries = [
-            db
-              .update(advancedReport)
-              .set({
-                title,
-                consultationReason,
-                patientId,
-                appointmentId: resolvedAppointmentId,
-                notes,
-                updatedAt: new Date(),
-                status: status || "draft",
-              })
-              .where(
-                and(
-                  eq(advancedReport.id, ownedReport.id),
-                  eq(advancedReport.createdBy, organization.id),
-                ),
-              ),
-            ...removedSources.map((source) =>
-              db
-                .delete(reportOwnerContent)
-                .where(
-                  and(
-                    eq(reportOwnerContent.reportId, ownedReport.id),
-                    eq(reportOwnerContent.sourceKind, source.sourceKind),
-                    eq(reportOwnerContent.sourceId, source.sourceId),
-                  ),
-                ),
-            ),
-            db
-              .delete(anatomicalIssue)
-              .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
-            db
-              .delete(advancedReportRecommendations)
-              .where(
-                eq(
-                  advancedReportRecommendations.advancedReportId,
-                  ownedReport.id,
-                ),
-              ),
-            ...(childRows.anatomicalIssues.length > 0
-              ? [db.insert(anatomicalIssue).values(childRows.anatomicalIssues)]
-              : []),
-            ...(childRows.observations.length > 0
-              ? [db.insert(anatomicalIssue).values(childRows.observations)]
-              : []),
-            ...(childRows.recommendations.length > 0
-              ? [
-                  db
-                    .insert(advancedReportRecommendations)
-                    .values(childRows.recommendations),
-                ]
-              : []),
-          ] as const;
-
-          await executeAtomicReportMutations(mutationQueries, (queries) =>
-            db.batch(queries),
+          const updatedAt = new Date();
+          const persisted = await updateReportWithExpectedRevision(
+            {
+              expectedRevision,
+              replacement: {
+                childRows,
+                removedSources,
+                sectionStates,
+              },
+            },
+            {
+              persistAtomic: async () => {
+                const result = await db.execute<{ id: string; revision: number }>(
+                  buildAtomicReportUpdateStatement({
+                    organizationId: organization.id,
+                    reportId: ownedReport.id,
+                    expectedRevision,
+                    title,
+                    consultationReason,
+                    patientId,
+                    appointmentId: resolvedAppointmentId,
+                    notes,
+                    status: status || "draft",
+                    updatedAt,
+                    sectionStates: buildReportSectionStateRows(
+                      ownedReport.id,
+                      sectionStates,
+                    ),
+                    removedOwnerSources: removedSources,
+                    anatomicalRows: [
+                      ...childRows.anatomicalIssues,
+                      ...childRows.observations,
+                    ],
+                    recommendationRows: childRows.recommendations,
+                  }),
+                );
+                return result.rows[0];
+              },
+            },
           );
 
-          return { success: true as const, status: status };
+          return {
+            success: true as const,
+            status,
+            revision: persisted.revision,
+          };
         },
       });
     } catch (error) {
@@ -482,6 +592,78 @@ export const updateReport = createServerFn({ method: "POST" })
             : "Erreur lors de la mise à jour du rapport",
       };
     }
+  });
+
+const findReportSharedVersion = ({
+  organizationId,
+  reportId,
+  reportRevision,
+}: {
+  organizationId: string;
+  reportId: string;
+  reportRevision: number;
+}) =>
+  db.query.reportSharedVersion.findFirst({
+    where: and(
+      eq(reportSharedVersion.reportId, reportId),
+      eq(reportSharedVersion.organizationId, organizationId),
+      eq(reportSharedVersion.reportRevision, reportRevision),
+    ),
+  });
+
+const reportSharedVersionPorts: ReportSharedVersionPorts = {
+  loadTenantOwnedReport: ({ organizationId, reportId }) =>
+    db.query.advancedReport.findFirst({
+      where: and(
+        eq(advancedReport.id, reportId),
+        eq(advancedReport.createdBy, organizationId),
+      ),
+      with: {
+        patient: { with: { owner: true } },
+        anatomicalIssues: { with: { anatomicalPart: true } },
+        recommendations: true,
+        ownerContents: true,
+        sectionStates: true,
+      },
+    }),
+  findExistingVersion: findReportSharedVersion,
+  insertImmutableVersion: async ({
+    organizationId,
+    reportId,
+    reportRevision,
+    snapshot,
+  }) => {
+    const [created] = await db
+      .insert(reportSharedVersion)
+      .values({ organizationId, reportId, reportRevision, snapshot })
+      .onConflictDoNothing({
+        target: [
+          reportSharedVersion.reportId,
+          reportSharedVersion.reportRevision,
+        ],
+      })
+      .returning();
+    return created;
+  },
+  findVersionAfterConflict: findReportSharedVersion,
+};
+
+export const createReportSharedVersion = createServerFn({ method: "POST" })
+  .validator(z.object({ reportId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
+
+    const persisted = await createImmutableReportSharedVersion(
+      {
+        organizationId: organization.id,
+        reportId: data.reportId,
+        createdAt: new Date(),
+      },
+      reportSharedVersionPorts,
+    );
+
+    return { success: true as const, data: persisted };
   });
 
 export const getAnatomicalParts = createServerFn({ method: "GET" })

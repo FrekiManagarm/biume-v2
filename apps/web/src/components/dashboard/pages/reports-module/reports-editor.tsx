@@ -4,8 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { updateReport } from "@/lib/api/actions/reports.action";
 import { upsertReportOwnerContent } from "@/lib/api/actions/report-owner-content.action";
-import type { InferSelectModel } from "drizzle-orm";
-import type { advancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import { AnimalCredenza } from "@/components/animal-folder";
 import { ObservationsTab } from "./components/tabs/ObservationsTab";
 import { NotesTab } from "./components/tabs/NotesTab";
@@ -15,9 +13,11 @@ import { AddObservationDialog } from "./components/AddObservationsDialog";
 import { AddAnatomicalIssueDialog } from "./components/AddAnatomicalIssueDialog";
 import { ExitConfirmationDialog } from "./components/ExitConfirmationDialog";
 import { ReportSidebarNavigation } from "./components/ReportSidebarNavigation";
+import { SectionDecisionControl } from "./components/SectionDecisionControl";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
 import { ReportWorkspaceHeader } from "./components/ReportWorkspaceHeader";
+import { ReportPatientIdentity } from "./components/ReportPatientIdentity";
 import { OwnerPreparationWarningDialog } from "./components/OwnerPreparationWarningDialog";
 import {
   ReportPanelController,
@@ -25,8 +25,8 @@ import {
 } from "./components/ReportPanelController";
 import {
   buildReportUpdatePayload,
-  ensureSuccessfulReportUpdate,
   deriveProfessionalSectionStatus,
+  getEffectiveSectionState,
   getAnatomicalProfessionalItemText,
   getReportDraftRevision,
   getReportDesktopGridClassName,
@@ -35,6 +35,7 @@ import {
   openOwnerPreparation,
   replaceOwnerContentRecord,
   runExclusiveReportSave,
+  getSectionStatesAfterEdit,
   type ReportUpdateStatus,
 } from "./reports-editor.helpers";
 import {
@@ -73,12 +74,6 @@ import {
   CredenzaBody,
   CredenzaFooter,
 } from "@/components/ui/credenza";
-import type {
-  AdvancedReportRecommendations,
-  Pet,
-  AnatomicalIssue as AnatomicalIssueSchema,
-  Appointment,
-} from "@/lib/schemas";
 import {
   Select,
   SelectContent,
@@ -86,14 +81,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  canFinalizeReport,
+  createInitialReportSectionStates,
+  type ReportSectionStates,
+} from "@biume/contracts/report";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
+import {
+  canOpenAnatomicalEntryShortcut,
+  resolveAnatomicalAnimalType,
+} from "./anatomical-species";
 
-type ReportData = InferSelectModel<typeof advancedReport> & {
-  patient?: Pet;
-  anatomicalIssues?: AnatomicalIssueSchema[];
-  recommendations?: AdvancedReportRecommendations[];
-  ownerContents?: OwnerContentRecord[];
-  appointment?: Appointment | null;
-};
+type ReportData = NormalizedAdvancedReport;
+type LoadedAnatomicalIssue = ReportData["anatomicalIssues"][number];
 
 interface AdvancedReportEditorProps {
   reportId: string;
@@ -125,8 +125,8 @@ export function AdvancedReportEditor({
   // Préparer les observations initiales
   const initialObservations: Observation[] =
     initialData.anatomicalIssues
-      ?.filter((issue: AnatomicalIssueSchema) => issue.type === "observation")
-      .map((issue: AnatomicalIssueSchema) => ({
+      ?.filter((issue: LoadedAnatomicalIssue) => issue.type === "observation")
+      .map((issue: LoadedAnatomicalIssue) => ({
         id: issue.id,
         region: issue.anatomicalPart?.name || issue.notes || "",
         severity: issue.severity,
@@ -142,8 +142,8 @@ export function AdvancedReportEditor({
   // Préparer les problèmes anatomiques initiaux
   const initialAnatomicalIssues: AnatomicalIssue[] =
     initialData.anatomicalIssues
-      ?.filter((issue: AnatomicalIssueSchema) => issue.type !== "observation")
-      .map((issue: AnatomicalIssueSchema) => ({
+      ?.filter((issue: LoadedAnatomicalIssue) => issue.type !== "observation")
+      .map((issue: LoadedAnatomicalIssue) => ({
         id: issue.id,
         type: issue.type as "dysfunction" | "anatomicalSuspicion",
         region: issue.anatomicalPart?.name || issue.notes || "",
@@ -201,6 +201,12 @@ export function AdvancedReportEditor({
   >(initialRecommendations);
   const [anatomicalIssues, setAnatomicalIssues] = useState<AnatomicalIssue[]>(
     initialAnatomicalIssues,
+  );
+  const [sectionStates, setSectionStates] = useState<ReportSectionStates>(
+    initialData.sectionStates ?? createInitialReportSectionStates(),
+  );
+  const [persistedRevision, setPersistedRevision] = useState(
+    initialData.revision,
   );
   const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
   const [isAddAnatomicalIssueOpen, setIsAddAnatomicalIssueOpen] =
@@ -281,6 +287,8 @@ export function AdvancedReportEditor({
     consultationReason: initialData.consultationReason || "",
     recommendations: initialRecommendations,
     anatomicalIssues: initialAnatomicalIssues,
+    sectionStates:
+      initialData.sectionStates ?? createInitialReportSectionStates(),
   });
   const currentDraftState = {
     title,
@@ -289,6 +297,7 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
   };
   const currentDraftRevision = getReportDraftRevision(currentDraftState);
   const currentDraftRevisionRef = useRef(currentDraftRevision);
@@ -316,6 +325,7 @@ export function AdvancedReportEditor({
       consultationReason,
       recommendations,
       anatomicalIssues,
+      sectionStates,
     };
 
     const hasChanges =
@@ -327,7 +337,9 @@ export function AdvancedReportEditor({
       JSON.stringify(currentState.recommendations) !==
         JSON.stringify(lastSavedState.recommendations) ||
       JSON.stringify(currentState.anatomicalIssues) !==
-        JSON.stringify(lastSavedState.anatomicalIssues);
+        JSON.stringify(lastSavedState.anatomicalIssues) ||
+      JSON.stringify(currentState.sectionStates) !==
+        JSON.stringify(lastSavedState.sectionStates);
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -337,6 +349,7 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
     lastSavedState,
   ]);
 
@@ -350,13 +363,54 @@ export function AdvancedReportEditor({
     consultationReason,
     recommendations,
     anatomicalIssues,
+    sectionStates,
     checkForUnsavedChanges,
   ]);
+
+  const markSectionEdited = (section: ReportSectionId) => {
+    setSectionStates((current) => getSectionStatesAfterEdit(current, section));
+  };
+
+  const updateAnatomicalIssues = (next: AnatomicalIssue[]) => {
+    setAnatomicalIssues(next);
+    markSectionEdited("anatomical");
+  };
+
+  const updateRecommendations = (next: { id: string; content: string }[]) => {
+    setRecommendations(next);
+    markSectionEdited("recommendations");
+  };
+
+  const updateNotes = (next: string) => {
+    setNotes(next);
+    markSectionEdited("notes");
+  };
+
+  const resolveSection = (
+    section: ReportSectionId,
+    state: "confirmed" | "not_applicable",
+  ) => {
+    setSectionStates((current) => ({ ...current, [section]: state }));
+  };
+
+  // Récupération des détails de l'animal sélectionné
+  const { data: petData } = useQuery({
+    queryKey: ["pet", selectedPetId],
+    queryFn: () => getPatientById(selectedPetId),
+    enabled: !!selectedPetId,
+  });
+  const selectedPet = petData ?? initialData.patient;
+  const entryAnimalData = isTestMode
+    ? { code: selectedAnimalType }
+    : selectedPet?.animal;
+  const hasSupportedEntrySpecies =
+    resolveAnatomicalAnimalType(entryAnimalData) !== null;
 
   // Configuration des raccourcis clavier globaux
   useHotkeys(
     "shift+n",
     () => {
+      if (!canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData)) return;
       if (activeTab === "anatomical") {
         setIsAddAnatomicalIssueOpen(true);
       } else if (activeTab === "clinical") {
@@ -365,7 +419,7 @@ export function AdvancedReportEditor({
     },
     {
       description: "Ouvrir la modale d'ajout d'élément (Shift+N)",
-      enabled: activeTab === "anatomical" || activeTab === "clinical",
+      enabled: canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData),
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -409,7 +463,7 @@ export function AdvancedReportEditor({
     () => {
       if (activeTab === "anatomical" && anatomicalIssues.length > 0) {
         const lastIssue = anatomicalIssues[anatomicalIssues.length - 1];
-        setAnatomicalIssues(
+        updateAnatomicalIssues(
           anatomicalIssues.filter((d) => d.id !== lastIssue.id),
         );
       }
@@ -427,7 +481,7 @@ export function AdvancedReportEditor({
     "shift+c",
     () => {
       if (activeTab === "anatomical" && anatomicalIssues.length > 0) {
-        setAnatomicalIssues([]);
+        updateAnatomicalIssues([]);
       }
     },
     {
@@ -468,13 +522,6 @@ export function AdvancedReportEditor({
     },
   );
 
-  // Récupération des détails de l'animal sélectionné
-  const { data: petData } = useQuery({
-    queryKey: ["pet", selectedPetId],
-    queryFn: () => getPatientById(selectedPetId),
-    enabled: !!selectedPetId,
-  });
-
   // État temporaire pour la nouvelle observation
   const [newObservation, setNewObservation] = useState<NewObservation>({
     region: "",
@@ -514,6 +561,7 @@ export function AdvancedReportEditor({
       };
       setObservations([...observations, observation]);
     }
+    markSectionEdited("clinical");
     setNewObservation({
       region: "",
       severity: 1,
@@ -529,14 +577,17 @@ export function AdvancedReportEditor({
 
   const handleRemoveObservation = (id: string) => {
     setObservations(observations.filter((obs) => obs.id !== id));
+    markSectionEdited("clinical");
   };
 
   const handleOpenAddObservation = () => {
+    if (!hasSupportedEntrySpecies) return;
     setEditingObservationId(null);
     setIsAddSheetOpen(true);
   };
 
   const handleEditObservation = (id: string) => {
+    if (!hasSupportedEntrySpecies) return;
     const obs = observations.find((o) => o.id === id);
     if (!obs) return;
     setEditingObservationId(id);
@@ -568,6 +619,7 @@ export function AdvancedReportEditor({
     mutationFn: upsertReportOwnerContent,
     onSuccess: async (result) => {
       if (!result.success || !result.data) return;
+      setPersistedRevision((revision) => revision + 1);
       setOwnerContents((current) =>
         replaceOwnerContentRecord(current, result.data),
       );
@@ -585,10 +637,12 @@ export function AdvancedReportEditor({
       consultationReason,
       recommendations,
       anatomicalIssues,
+      sectionStates,
     };
     const submittedRevision = getReportDraftRevision(submittedState);
     const reportDataToSend = buildReportUpdatePayload({
       reportId,
+      expectedRevision: persistedRevision,
       title,
       selectedPetId,
       consultationReason,
@@ -596,6 +650,7 @@ export function AdvancedReportEditor({
       observations,
       anatomicalIssues,
       recommendations,
+      sectionStates,
       status,
     });
 
@@ -610,6 +665,7 @@ export function AdvancedReportEditor({
         }
 
         toast.success("Rapport mis à jour avec succès");
+        setPersistedRevision(result.revision);
         await invalidateReportUpdateQueries(queryClient, reportId);
         setLastSavedState(submittedState);
         setHasUnsavedChanges(
@@ -652,6 +708,12 @@ export function AdvancedReportEditor({
   ).length;
 
   function handleFinalizeRequest() {
+    if (!canFinalizeReport(sectionStates)) {
+      toast.error(
+        "Confirmez ou marquez non applicable chaque section du rapport.",
+      );
+      return;
+    }
     if (missingOwnerCount === 0 && staleOwnerCount === 0) {
       handleOpenReminderDialog();
       return;
@@ -671,8 +733,8 @@ export function AdvancedReportEditor({
     if (!issueWithAnatomicalPart.region) return;
 
     if (editingAnatomicalIssueId) {
-      setAnatomicalIssues((prev) =>
-        prev.map((issue) =>
+      updateAnatomicalIssues(
+        anatomicalIssues.map((issue) =>
           issue.id === editingAnatomicalIssueId
             ? {
                 ...issue,
@@ -687,7 +749,7 @@ export function AdvancedReportEditor({
         id: crypto.randomUUID(),
         ...issueWithAnatomicalPart,
       };
-      setAnatomicalIssues([...anatomicalIssues, newIssue]);
+      updateAnatomicalIssues([...anatomicalIssues, newIssue]);
     }
 
     // Reset du formulaire
@@ -702,8 +764,6 @@ export function AdvancedReportEditor({
     setEditingAnatomicalIssueId(null);
     setIsAddAnatomicalIssueOpen(false);
   };
-
-  const selectedPet = petData;
 
   const isCat =
     (selectedPet?.animal?.code &&
@@ -728,36 +788,52 @@ export function AdvancedReportEditor({
       id: "clinical" as const,
       label: "Observations",
       count: observations.length,
-      professionalStatus: deriveProfessionalSectionStatus("clinical", {
-        consultationReason,
-        itemTexts: observations.map((item) => item.notes || item.region),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.clinical,
+        hasContent:
+          deriveProfessionalSectionStatus("clinical", {
+            consultationReason,
+            itemTexts: observations.map((item) => item.notes || item.region),
+          }) !== "empty",
       }),
     },
     {
       id: "anatomical" as const,
       label: "Anatomie",
       count: anatomicalIssues.length,
-      professionalStatus: deriveProfessionalSectionStatus("anatomical", {
-        consultationReason: "",
-        itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.anatomical,
+        hasContent:
+          deriveProfessionalSectionStatus("anatomical", {
+            consultationReason: "",
+            itemTexts: anatomicalIssues.map(getAnatomicalProfessionalItemText),
+          }) !== "empty",
       }),
     },
     {
       id: "recommendations" as const,
       label: "Recommandations",
       count: recommendations.length,
-      professionalStatus: deriveProfessionalSectionStatus("recommendations", {
-        consultationReason: "",
-        itemTexts: recommendations.map((item) => item.content),
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.recommendations,
+        hasContent:
+          deriveProfessionalSectionStatus("recommendations", {
+            consultationReason: "",
+            itemTexts: recommendations.map((item) => item.content),
+          }) !== "empty",
       }),
     },
     {
       id: "notes" as const,
       label: "Notes additionnelles",
       count: notes.trim() ? 1 : 0,
-      professionalStatus: deriveProfessionalSectionStatus("notes", {
-        consultationReason: "",
-        itemTexts: notes.trim() ? [notes] : [],
+      professionalStatus: getEffectiveSectionState({
+        persisted: sectionStates.notes,
+        hasContent:
+          deriveProfessionalSectionStatus("notes", {
+            consultationReason: "",
+            itemTexts: notes.trim() ? [notes] : [],
+          }) !== "empty",
       }),
     },
   ];
@@ -777,9 +853,7 @@ export function AdvancedReportEditor({
       return [tab.id, status];
     }),
   ) as Record<ReportSectionId, OwnerContentStatus | "not-applicable">;
-  const selectedPetSummary = selectedPet
-    ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
-    : "Aucun patient sélectionné";
+  const selectedPetSummary = <ReportPatientIdentity patient={selectedPet} />;
 
   return (
     <div className="min-h-dvh w-full bg-slate-50 text-slate-950">
@@ -852,7 +926,7 @@ export function AdvancedReportEditor({
                   </Card>
                 </div>
               ) : (
-                <div className="h-full min-h-0">
+                <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto]">
                   <div className="h-full min-h-0 overflow-hidden">
                     {activeTab === "clinical" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
@@ -861,6 +935,7 @@ export function AdvancedReportEditor({
                           onRemoveObservation={handleRemoveObservation}
                           onOpenAddSheet={handleOpenAddObservation}
                           onEditObservation={handleEditObservation}
+                          isEntryDisabled={!hasSupportedEntrySpecies}
                         />
                       </div>
                     )}
@@ -868,25 +943,28 @@ export function AdvancedReportEditor({
                     {activeTab === "anatomical" && (
                       <AnatomicalEvaluationTab
                         dysfunctions={anatomicalIssues}
-                        setDysfunctions={setAnatomicalIssues}
+                        setDysfunctions={updateAnatomicalIssues}
                         onAddDysfunction={(issue) => {
                           const newIssue: AnatomicalIssue = {
                             id: crypto.randomUUID(),
                             ...issue,
                             laterality: issue.laterality || "left",
                           };
-                          setAnatomicalIssues([...anatomicalIssues, newIssue]);
+                          updateAnatomicalIssues([
+                            ...anatomicalIssues,
+                            newIssue,
+                          ]);
                         }}
                         isAddModalOpen={isAddAnatomicalIssueOpen}
                         setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
-                        animalData={petData?.animal}
+                        animalData={entryAnimalData}
                         isTestMode={isTestMode}
                         selectedAnimalType={selectedAnimalType}
                         anatomicalView={anatomicalView}
                         setAnatomicalView={setAnatomicalView}
                         onEditDysfunction={(id) => {
                           const it = anatomicalIssues.find((d) => d.id === id);
-                          if (!it) return;
+                          if (!it || !hasSupportedEntrySpecies) return;
                           setEditingAnatomicalIssueId(id);
                           setNewAnatomicalIssue({
                             type: it.type,
@@ -905,16 +983,22 @@ export function AdvancedReportEditor({
                       <div className="h-full min-h-0 p-5 xl:p-6">
                         <RecommendationsTab
                           recommendations={recommendations}
-                          setRecommendations={setRecommendations}
+                          setRecommendations={updateRecommendations}
                         />
                       </div>
                     )}
 
                     {activeTab === "notes" && (
                       <div className="h-full min-h-0 p-5 xl:p-6">
-                        <NotesTab notes={notes} setNotes={setNotes} />
+                        <NotesTab notes={notes} setNotes={updateNotes} />
                       </div>
                     )}
+                  </div>
+                  <div className="border-t border-border bg-background px-5 py-3 xl:px-6">
+                    <SectionDecisionControl
+                      state={sectionStates[activeTab]}
+                      onChange={(state) => resolveSection(activeTab, state)}
+                    />
                   </div>
                 </div>
               )}
@@ -973,6 +1057,7 @@ export function AdvancedReportEditor({
                 <Button
                   size="sm"
                   onClick={handleOpenAddObservation}
+                  disabled={!hasSupportedEntrySpecies}
                   className="h-9 rounded-xl bg-primary text-primary-foreground active:scale-[0.98]"
                   aria-label="Nouvelle observation"
                 >
@@ -1006,6 +1091,7 @@ export function AdvancedReportEditor({
               onRemoveObservation={handleRemoveObservation}
               onOpenAddSheet={handleOpenAddObservation}
               onEditObservation={handleEditObservation}
+              isEntryDisabled={!hasSupportedEntrySpecies}
             />
           </div>
 
@@ -1017,18 +1103,18 @@ export function AdvancedReportEditor({
           >
             <AnatomicalEvaluationTab
               dysfunctions={anatomicalIssues}
-              setDysfunctions={setAnatomicalIssues}
+              setDysfunctions={updateAnatomicalIssues}
               onAddDysfunction={(issue) => {
                 const newIssue: AnatomicalIssue = {
                   id: crypto.randomUUID(),
                   ...issue,
                   laterality: issue.laterality || "left",
                 };
-                setAnatomicalIssues([...anatomicalIssues, newIssue]);
+                updateAnatomicalIssues([...anatomicalIssues, newIssue]);
               }}
               isAddModalOpen={isAddAnatomicalIssueOpen}
               setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
-              animalData={petData?.animal}
+              animalData={entryAnimalData}
               isTestMode={isTestMode}
               selectedAnimalType={selectedAnimalType}
               anatomicalView={anatomicalView}
@@ -1044,7 +1130,7 @@ export function AdvancedReportEditor({
           >
             <RecommendationsTab
               recommendations={recommendations}
-              setRecommendations={setRecommendations}
+              setRecommendations={updateRecommendations}
             />
           </div>
 
@@ -1054,7 +1140,14 @@ export function AdvancedReportEditor({
               activeTab === "notes" ? "block" : "hidden",
             )}
           >
-            <NotesTab notes={notes} setNotes={setNotes} />
+            <NotesTab notes={notes} setNotes={updateNotes} />
+          </div>
+
+          <div className="border-t border-border bg-background px-4 py-3">
+            <SectionDecisionControl
+              state={sectionStates[activeTab]}
+              onChange={(state) => resolveSection(activeTab, state)}
+            />
           </div>
         </div>
       </div>
@@ -1071,7 +1164,7 @@ export function AdvancedReportEditor({
         newObservation={newObservation}
         setNewObservation={setNewObservation}
         onAdd={handleAddObservation}
-        animalData={selectedPet}
+        animalData={entryAnimalData}
         selectedZone={newObservation.interventionZone}
         submitLabel={editingObservationId ? "Mettre à jour" : "Ajouter"}
         petId={selectedPetId}
@@ -1084,7 +1177,7 @@ export function AdvancedReportEditor({
         newIssue={newAnatomicalIssue}
         setNewIssue={setNewAnatomicalIssue}
         onAdd={handleAddAnatomicalIssue}
-        animalData={selectedPet?.animal}
+        animalData={entryAnimalData}
         selectedZone={newAnatomicalIssue.interventionZone}
         isTestMode={isTestMode}
         selectedAnimalType={selectedAnimalType}
@@ -1327,9 +1420,13 @@ export function AdvancedReportEditor({
         onOpenChange={setIsReminderDialogOpen}
         reportId={reportId}
         onFinalize={async () => {
-          await ensureSuccessfulReportUpdate(() =>
-            handleUpdateReport("finalized"),
-          );
+          if (!canFinalizeReport(sectionStates)) {
+            toast.error(
+              "Confirmez ou marquez non applicable chaque section du rapport.",
+            );
+            return false;
+          }
+          return handleUpdateReport("finalized");
         }}
         isFinalizing={updateReportMutation.isPending}
       />

@@ -1,4 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
+import type {
+  ReportSectionState,
+  ReportSectionStates,
+} from "@biume/contracts/report";
 
 import { cn } from "@/lib/style";
 import type { OwnerContentRecord } from "./owner-content";
@@ -11,7 +15,6 @@ type ReportRecommendationDraft = {
 };
 
 export type ReportUpdateStatus = "draft" | "finalized";
-export type ProfessionalSectionStatus = "empty" | "in-progress" | "complete";
 
 export function getAnatomicalProfessionalItemText(issue: {
   notes?: string | null;
@@ -28,25 +31,37 @@ export function getAnatomicalProfessionalItemText(issue: {
 export function deriveProfessionalSectionStatus(
   section: ReportSectionId,
   content: { consultationReason: string; itemTexts: readonly string[] },
-): ProfessionalSectionStatus {
+): ReportSectionState {
   const meaningfulItems = content.itemTexts.filter((text) => text.trim());
   if (section === "clinical") {
     const hasReason = Boolean(content.consultationReason.trim());
     if (!hasReason && meaningfulItems.length === 0) return "empty";
-    return hasReason &&
-      meaningfulItems.length === content.itemTexts.length &&
-      meaningfulItems.length > 0
-      ? "complete"
-      : "in-progress";
+    return "needs_confirmation";
   }
-  if (content.itemTexts.length === 0) return "empty";
-  return meaningfulItems.length === content.itemTexts.length
-    ? "complete"
-    : "in-progress";
+  return meaningfulItems.length === 0 ? "empty" : "needs_confirmation";
+}
+
+export function getEffectiveSectionState({
+  persisted,
+  hasContent,
+}: {
+  persisted: ReportSectionState;
+  hasContent: boolean;
+}): ReportSectionState {
+  if (persisted !== "empty") return persisted;
+  return hasContent ? "needs_confirmation" : "empty";
+}
+
+export function getSectionStatesAfterEdit(
+  states: ReportSectionStates,
+  section: ReportSectionId,
+): ReportSectionStates {
+  return { ...states, [section]: "needs_confirmation" };
 }
 
 type BuildReportUpdatePayloadInput = {
   reportId: string;
+  expectedRevision: number;
   title: string;
   selectedPetId: string;
   consultationReason: string;
@@ -54,6 +69,7 @@ type BuildReportUpdatePayloadInput = {
   observations: Observation[];
   anatomicalIssues: AnatomicalIssue[];
   recommendations: ReportRecommendationDraft[];
+  sectionStates: ReportSectionStates;
   status: ReportUpdateStatus;
 };
 
@@ -65,10 +81,12 @@ export type ReportDraftState = Pick<
   | "observations"
   | "anatomicalIssues"
   | "recommendations"
+  | "sectionStates"
 >;
 
 export function buildReportUpdatePayload({
   reportId,
+  expectedRevision,
   title,
   selectedPetId,
   consultationReason,
@@ -76,10 +94,12 @@ export function buildReportUpdatePayload({
   observations,
   anatomicalIssues,
   recommendations,
+  sectionStates,
   status,
 }: BuildReportUpdatePayloadInput) {
   return {
     reportId,
+    expectedRevision,
     title: title.trim() || "Nouveau rapport",
     petId: selectedPetId || undefined,
     consultationReason,
@@ -87,6 +107,7 @@ export function buildReportUpdatePayload({
     observations,
     anatomicalIssues,
     recommendations,
+    sectionStates,
     status,
   };
 }
@@ -104,14 +125,6 @@ export function getReportDesktopGridClassName(isSidebarCollapsed: boolean) {
 
 export function getReportDraftRevision(draft: ReportDraftState) {
   return JSON.stringify(draft);
-}
-
-export async function ensureSuccessfulReportUpdate(
-  update: () => Promise<boolean>,
-) {
-  if (!(await update())) {
-    throw new Error("Échec de la mise à jour du rapport");
-  }
 }
 
 export function runExclusiveReportSave(

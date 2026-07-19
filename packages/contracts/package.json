@@ -1,0 +1,24 @@
+{
+  "name": "@biume/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./report": "./src/report.ts",
+    "./product-events": "./src/product-events.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biume/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "^2.1.9"
+  }
+}
