@@ -1,5 +1,6 @@
 import React from "react";
 import type { AnatomicalIssue } from "../types";
+import type { AnatomicalAnimalType } from "../anatomical-species";
 
 interface AnatomicalImageWithOverlayProps {
   anatomicalView: "gauche" | "droite";
@@ -14,6 +15,7 @@ interface AnatomicalImageWithOverlayProps {
   } | null;
   isTestMode?: boolean;
   selectedAnimalType?: string;
+  anatomicalAnimalType: AnatomicalAnimalType | null;
 }
 
 export function AnatomicalImageWithOverlay({
@@ -23,13 +25,14 @@ export function AnatomicalImageWithOverlay({
   animalData,
   isTestMode = false,
   selectedAnimalType = "dog",
+  anatomicalAnimalType,
 }: AnatomicalImageWithOverlayProps) {
   // Fonction pour déterminer l'image à utiliser en fonction du type d'animal
   const getAnimalImage = (side: "left" | "right") => {
     // En mode test, utiliser le type d'animal sélectionné, sinon utiliser les données de l'animal
     const animalType = isTestMode
       ? selectedAnimalType
-      : animalData?.code?.toLowerCase() || "dog";
+      : anatomicalAnimalType?.toLowerCase();
 
     switch (animalType) {
       case "cat":
@@ -45,16 +48,18 @@ export function AnatomicalImageWithOverlay({
       case "cow":
       case "nac":
       case "dog":
-      default:
-        // Fallback vers chien pour tous les autres types
         return side === "left"
           ? "/assets/images/dog-left-side.jpg"
           : "/assets/images/dog-right-side.jpg";
+      default:
+        return null;
     }
   };
 
   const leftImageSrc = getAnimalImage("left");
   const rightImageSrc = getAnimalImage("right");
+
+  if (!leftImageSrc || !rightImageSrc) return null;
 
   return (
     <div className="max-w-5xl mx-auto relative">

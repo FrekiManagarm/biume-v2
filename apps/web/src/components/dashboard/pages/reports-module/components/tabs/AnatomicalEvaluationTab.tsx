@@ -33,6 +33,7 @@ import { AnatomicalImageWithOverlay } from "../AnatomicalImageWithOverlay";
 import { useQuery } from "@tanstack/react-query";
 import { getAnatomicalParts } from "@/lib/api/actions/reports.action";
 import type { AnatomicalIssue } from "../../types";
+import { resolveAnatomicalAnimalType } from "../../anatomical-species";
 
 interface AnatomicalEvaluationTabProps {
   dysfunctions: AnatomicalIssue[];
@@ -71,31 +72,9 @@ export function AnatomicalEvaluationTab({
   const setAnatomicalView =
     externalSetAnatomicalView ?? setInternalAnatomicalView;
 
-  // Déterminer le type d'animal pour la requête (seulement en mode normal)
-  const getAnimalType = () => {
-    if (isTestMode) return null;
-
-    const animalName = animalData?.name?.toLowerCase() || "";
-    const animalCode = animalData?.code?.toLowerCase() || "";
-
-    if (
-      animalName.includes("chat") ||
-      animalName.includes("cat") ||
-      animalCode.includes("cat")
-    ) {
-      return "CAT";
-    } else if (
-      animalName.includes("cheval") ||
-      animalName.includes("horse") ||
-      animalCode.includes("horse")
-    ) {
-      return "HORSE";
-    } else {
-      return "DOG";
-    }
-  };
-
-  const animalType = getAnimalType();
+  const animalType = isTestMode
+    ? null
+    : resolveAnatomicalAnimalType(animalData);
 
   // Récupérer toutes les données anatomiques depuis la base de données (seulement en mode normal)
   useQuery({
@@ -113,6 +92,24 @@ export function AnatomicalEvaluationTab({
     },
     enabled: !!animalType && !isTestMode,
   });
+
+  if (!isTestMode && !animalType) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-6">
+        <div
+          className="max-w-lg rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950"
+          role="status"
+        >
+          <p className="font-semibold">Espèce requise</p>
+          <p className="mt-2 text-sm leading-relaxed">
+            Complétez l’espèce dans la fiche de l’animal avant d’utiliser
+            l’évaluation anatomique. Aucune anatomie n’est déduite
+            automatiquement.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleRemoveDysfunction = (id: string) => {
     setDysfunctions(dysfunctions.filter((d) => d.id !== id));
@@ -335,6 +332,7 @@ export function AnatomicalEvaluationTab({
               animalData={animalData}
               isTestMode={isTestMode}
               selectedAnimalType={selectedAnimalType}
+              anatomicalAnimalType={animalType}
             />
           </div>
         </div>
