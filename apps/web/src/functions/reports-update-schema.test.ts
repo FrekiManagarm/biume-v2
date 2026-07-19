@@ -8,6 +8,7 @@ import { updateReportSchema } from "#/lib/utils/schemas";
 
 const updateWithoutDecisions = {
   reportId: "report-1",
+  expectedRevision: 3,
   title: "Compte rendu",
   petId: "pet-1",
   consultationReason: "Suivi",
@@ -40,5 +41,21 @@ describe("update report schema", () => {
         },
       }).success,
     ).toBe(true);
+  });
+
+  test("requires a positive expected revision", () => {
+    const input = {
+      ...updateWithoutDecisions,
+      sectionStates: createInitialReportSectionStates(),
+    };
+
+    expect(
+      updateReportSchema.safeParse({ ...input, expectedRevision: undefined })
+        .success,
+    ).toBe(false);
+    expect(
+      updateReportSchema.safeParse({ ...input, expectedRevision: 0 }).success,
+    ).toBe(false);
+    expect(updateReportSchema.safeParse(input).success).toBe(true);
   });
 });

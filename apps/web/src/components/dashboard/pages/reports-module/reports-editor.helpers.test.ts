@@ -94,6 +94,7 @@ describe("buildReportUpdatePayload", () => {
   test("preserves empty draft text fields so saved reports can clear existing values", () => {
     const payload = buildReportUpdatePayload({
       reportId: "report_01",
+      expectedRevision: 7,
       title: "  ",
       selectedPetId: "",
       consultationReason: "",
@@ -112,6 +113,7 @@ describe("buildReportUpdatePayload", () => {
 
     expect(payload).toMatchObject({
       reportId: "report_01",
+      expectedRevision: 7,
       title: "Nouveau rapport",
       petId: undefined,
       consultationReason: "",

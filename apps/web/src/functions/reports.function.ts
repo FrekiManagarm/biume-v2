@@ -7,7 +7,7 @@ import {
   type ReportSectionStates,
 } from "@biume/contracts/report";
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import z from "zod";
 import {
   anatomicalIssueSchema,
@@ -37,7 +37,6 @@ import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports
 import {
   buildQuickReportMutationQueries,
   buildReportChildRows,
-  buildReportUpdateMutationQueries,
   executeAtomicReportMutations,
   getRemovedOwnerSources,
 } from "#/components/dashboard/pages/reports-module/reports.persistence";
@@ -53,6 +52,8 @@ import {
   createImmutableReportSharedVersion,
   type ReportSharedVersionPorts,
 } from "./report-shared-version.service";
+import { buildAtomicReportUpdateStatement } from "./report-update.persistence";
+import { updateReportWithExpectedRevision } from "./report-update.service";
 
 export type ReportType = "simple" | "advanced";
 
@@ -353,6 +354,7 @@ export const updateReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const {
       reportId,
+      expectedRevision,
       title,
       petId,
       appointmentId,
@@ -483,90 +485,52 @@ export const updateReport = createServerFn({ method: "POST" })
             recommendation: recommendations.map((item) => item.id),
           });
 
-          const mutationQueries = buildReportUpdateMutationQueries({
-            reportUpdate: db
-              .update(advancedReport)
-              .set({
-                title,
-                consultationReason,
-                patientId,
-                appointmentId: resolvedAppointmentId,
-                notes,
-                updatedAt: new Date(),
-                status: status || "draft",
-                revision: sql`${advancedReport.revision} + 1`,
-              })
-              .where(
-                and(
-                  eq(advancedReport.id, ownedReport.id),
-                  eq(advancedReport.createdBy, organization.id),
-                ),
-              ),
-            sectionStateUpsert: db
-              .insert(reportSectionState)
-              .values(
-                buildReportSectionStateRows(ownedReport.id, sectionStates),
-              )
-              .onConflictDoUpdate({
-                target: [
-                  reportSectionState.reportId,
-                  reportSectionState.section,
-                ],
-                set: {
-                  state: sql`excluded.state`,
-                  updatedAt: new Date(),
-                },
-              }),
-            ownerSourceDeletions: removedSources.map((source) =>
-              db
-                .delete(reportOwnerContent)
-                .where(
-                  and(
-                    eq(reportOwnerContent.reportId, ownedReport.id),
-                    eq(reportOwnerContent.sourceKind, source.sourceKind),
-                    eq(reportOwnerContent.sourceId, source.sourceId),
-                  ),
-                ),
-            ),
-            childDeletions: [
-              db
-                .delete(anatomicalIssue)
-                .where(eq(anatomicalIssue.advancedReportId, ownedReport.id)),
-              db
-                .delete(advancedReportRecommendations)
-                .where(
-                  eq(
-                    advancedReportRecommendations.advancedReportId,
-                    ownedReport.id,
-                  ),
-                ),
-            ] as const,
-            childInserts: [
-              ...(childRows.anatomicalIssues.length > 0
-                ? [
-                    db
-                      .insert(anatomicalIssue)
-                      .values(childRows.anatomicalIssues),
-                  ]
-                : []),
-              ...(childRows.observations.length > 0
-                ? [db.insert(anatomicalIssue).values(childRows.observations)]
-                : []),
-              ...(childRows.recommendations.length > 0
-                ? [
-                    db
-                      .insert(advancedReportRecommendations)
-                      .values(childRows.recommendations),
-                  ]
-                : []),
-            ] as const,
-          });
-
-          await executeAtomicReportMutations(mutationQueries, (queries) =>
-            db.batch(queries),
+          const updatedAt = new Date();
+          const persisted = await updateReportWithExpectedRevision(
+            {
+              expectedRevision,
+              replacement: {
+                childRows,
+                removedSources,
+                sectionStates,
+              },
+            },
+            {
+              persistAtomic: async () => {
+                const result = await db.execute<{ id: string; revision: number }>(
+                  buildAtomicReportUpdateStatement({
+                    organizationId: organization.id,
+                    reportId: ownedReport.id,
+                    expectedRevision,
+                    title,
+                    consultationReason,
+                    patientId,
+                    appointmentId: resolvedAppointmentId,
+                    notes,
+                    status: status || "draft",
+                    updatedAt,
+                    sectionStates: buildReportSectionStateRows(
+                      ownedReport.id,
+                      sectionStates,
+                    ),
+                    removedOwnerSources: removedSources,
+                    anatomicalRows: [
+                      ...childRows.anatomicalIssues,
+                      ...childRows.observations,
+                    ],
+                    recommendationRows: childRows.recommendations,
+                  }),
+                );
+                return result.rows[0];
+              },
+            },
           );
 
-          return { success: true as const, status: status };
+          return {
+            success: true as const,
+            status,
+            revision: persisted.revision,
+          };
         },
       });
     } catch (error) {

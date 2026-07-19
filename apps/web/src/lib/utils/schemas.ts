@@ -11,6 +11,7 @@ export { createReportSchema, quickReportSchema, reportSchema };
 
 export const updateReportSchema = reportSchema.safeExtend({
   reportId: z.string(),
+  expectedRevision: z.number().int().positive(),
   sectionStates: reportSectionStatesSchema,
 });
 

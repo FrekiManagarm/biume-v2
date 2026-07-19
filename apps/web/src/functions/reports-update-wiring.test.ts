@@ -22,15 +22,11 @@ describe("report update server wiring", () => {
     );
   });
 
-  test("increments revision and upserts canonical decisions by composite key", () => {
-    expect(updateSource).toContain(
-      "revision: sql`${advancedReport.revision} + 1`",
-    );
-    expect(updateSource).toContain(
-      "buildReportSectionStateRows(ownedReport.id, sectionStates)",
-    );
-    expect(updateSource).toContain("reportSectionState.reportId");
-    expect(updateSource).toContain("reportSectionState.section");
-    expect(updateSource).toContain("state: sql`excluded.state`");
+  test("executes the optimistic update and all replacements through one atomic statement", () => {
+    expect(updateSource).toContain("expectedRevision");
+    expect(updateSource).toContain("buildAtomicReportUpdateStatement");
+    expect(updateSource).toContain("updateReportWithExpectedRevision");
+    expect(updateSource).toContain("buildReportSectionStateRows(");
+    expect(updateSource).not.toContain("db.batch(queries)");
   });
 });

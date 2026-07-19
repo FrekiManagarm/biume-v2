@@ -214,6 +214,9 @@ export function AdvancedReportEditor({
   const [sectionStates, setSectionStates] = useState<ReportSectionStates>(
     initialData.sectionStates ?? createInitialReportSectionStates(),
   );
+  const [persistedRevision, setPersistedRevision] = useState(
+    initialData.revision,
+  );
   const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
   const [isAddAnatomicalIssueOpen, setIsAddAnatomicalIssueOpen] =
     useState(false);
@@ -616,6 +619,7 @@ export function AdvancedReportEditor({
     mutationFn: upsertReportOwnerContent,
     onSuccess: async (result) => {
       if (!result.success || !result.data) return;
+      setPersistedRevision((revision) => revision + 1);
       setOwnerContents((current) =>
         replaceOwnerContentRecord(current, result.data),
       );
@@ -638,6 +642,7 @@ export function AdvancedReportEditor({
     const submittedRevision = getReportDraftRevision(submittedState);
     const reportDataToSend = buildReportUpdatePayload({
       reportId,
+      expectedRevision: persistedRevision,
       title,
       selectedPetId,
       consultationReason,
@@ -660,6 +665,7 @@ export function AdvancedReportEditor({
         }
 
         toast.success("Rapport mis à jour avec succès");
+        setPersistedRevision(result.revision);
         await invalidateReportUpdateQueries(queryClient, reportId);
         setLastSavedState(submittedState);
         setHasUnsavedChanges(

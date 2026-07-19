@@ -61,6 +61,7 @@ export function getSectionStatesAfterEdit(
 
 type BuildReportUpdatePayloadInput = {
   reportId: string;
+  expectedRevision: number;
   title: string;
   selectedPetId: string;
   consultationReason: string;
@@ -85,6 +86,7 @@ export type ReportDraftState = Pick<
 
 export function buildReportUpdatePayload({
   reportId,
+  expectedRevision,
   title,
   selectedPetId,
   consultationReason,
@@ -97,6 +99,7 @@ export function buildReportUpdatePayload({
 }: BuildReportUpdatePayloadInput) {
   return {
     reportId,
+    expectedRevision,
     title: title.trim() || "Nouveau rapport",
     petId: selectedPetId || undefined,
     consultationReason,
