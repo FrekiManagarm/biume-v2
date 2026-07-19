@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 import { cn } from "@/lib/style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ import { ReportPDF } from "./components/ReportPDF";
 import { AnimalCredenza } from "@/components/animal-folder";
 
 interface ReportDetailsProps {
-  report: AdvancedReport;
+  report: NormalizedAdvancedReport;
 }
 
 type TabId = "overview" | "clinical" | "recommendations" | "notes";
@@ -507,7 +508,7 @@ function OverviewTab({
     icon: typeof FileText;
     tone: "emerald" | "amber" | "slate";
   }>;
-  report: AdvancedReport;
+  report: NormalizedAdvancedReport;
   status: (typeof statusConfig)[StatusTone];
 }) {
   const StatusIcon = status.icon;
@@ -608,7 +609,7 @@ function ClinicalTab({
   observations,
   anatomicalProblems,
 }: {
-  report: AdvancedReport;
+  report: NormalizedAdvancedReport;
   observations: AdvancedReport["anatomicalIssues"];
   anatomicalProblems: AdvancedReport["anatomicalIssues"];
 }) {

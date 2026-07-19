@@ -13,7 +13,7 @@ import {
 import type {
   anatomicalIssueSchema,
   createReportSchema,
-  reportSchema,
+  updateReportSchema,
 } from "#/lib/utils/schemas";
 import type { z } from "zod";
 
@@ -21,7 +21,9 @@ export function getLatestReports(limit = 10) {
   return getLatestReportsFn({ data: { limit } });
 }
 
-export function getAllReports(params: { search?: string; status?: string } = {}) {
+export function getAllReports(
+  params: { search?: string; status?: string } = {},
+) {
   return getAllReportsFn({ data: params });
 }
 
@@ -33,9 +35,7 @@ export function getReportById({ reportId }: { reportId: string }) {
   return getReportByIdFn({ data: { reportId } });
 }
 
-export function updateReport(
-  report: z.input<typeof reportSchema> & { reportId: string },
-) {
+export function updateReport(report: z.input<typeof updateReportSchema>) {
   return updateReportFn({ data: report });
 }
 

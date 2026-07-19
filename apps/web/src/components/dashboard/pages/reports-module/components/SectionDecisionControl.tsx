@@ -12,12 +12,14 @@ export function SectionDecisionControl({
   return (
     <div
       className="flex flex-wrap items-center gap-2"
+      role="group"
       aria-label="Décision de section"
     >
       <Button
         type="button"
         size="sm"
         variant={state === "confirmed" ? "default" : "outline"}
+        aria-pressed={state === "confirmed"}
         onClick={() => onChange("confirmed")}
       >
         <CheckIcon className="size-4" />
@@ -27,6 +29,7 @@ export function SectionDecisionControl({
         type="button"
         size="sm"
         variant={state === "not_applicable" ? "secondary" : "ghost"}
+        aria-pressed={state === "not_applicable"}
         onClick={() => onChange("not_applicable")}
       >
         <CircleSlash2Icon className="size-4" />

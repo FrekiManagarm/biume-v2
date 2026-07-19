@@ -1,7 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 
-import type { AdvancedReport } from "#/lib/schemas/advancedReport/advancedReport";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
@@ -26,7 +26,13 @@ describe("ReportDetails SSR", () => {
       anatomicalIssues: [],
       recommendations: [],
       ownerContents: [],
-    } as unknown as AdvancedReport;
+      sectionStates: {
+        clinical: "empty",
+        anatomical: "empty",
+        recommendations: "empty",
+        notes: "empty",
+      },
+    } as unknown as NormalizedAdvancedReport;
 
     expect(() =>
       renderToString(<ReportDetails report={report} />),

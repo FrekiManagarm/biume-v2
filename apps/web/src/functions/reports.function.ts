@@ -11,7 +11,7 @@ import z from "zod";
 import {
   anatomicalIssueSchema,
   createReportSchema,
-  reportSchema,
+  updateReportSchema,
 } from "#/lib/utils/schemas";
 import {
   type AnatomicalPart,
@@ -55,6 +55,10 @@ export type ReportItem = {
   patientId: string;
   createdAt: Date;
   updatedAt: Date | null;
+};
+
+export type NormalizedAdvancedReport = Omit<AdvancedReport, "sectionStates"> & {
+  sectionStates: ReportSectionStates;
 };
 
 export const getLatestReports = createServerFn({ method: "GET" })
@@ -290,7 +294,7 @@ export const getReportById = createServerFn({ method: "GET" })
         data: {
           ...report,
           sectionStates: normalizeReportSectionStates(report.sectionStates),
-        } as AdvancedReport & { sectionStates: ReportSectionStates },
+        } as NormalizedAdvancedReport,
       };
     } catch (error) {
       console.error("Error getting report by id", error);
@@ -299,7 +303,7 @@ export const getReportById = createServerFn({ method: "GET" })
   });
 
 export const updateReport = createServerFn({ method: "POST" })
-  .validator(reportSchema.safeExtend({ reportId: z.string() }))
+  .validator(updateReportSchema)
   .handler(async ({ data }) => {
     const {
       reportId,

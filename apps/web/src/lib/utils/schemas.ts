@@ -1,11 +1,18 @@
 import { z } from "zod";
 import { CreatePetSchema } from "@biume/db/schema/index";
-
-export {
+import {
   createReportSchema,
   quickReportSchema,
   reportSchema,
+  reportSectionStatesSchema,
 } from "@biume/contracts/report";
+
+export { createReportSchema, quickReportSchema, reportSchema };
+
+export const updateReportSchema = reportSchema.safeExtend({
+  reportId: z.string(),
+  sectionStates: reportSectionStatesSchema,
+});
 
 export const anatomicalIssueSchema = z.object({
   animalType: z.enum(["DOG", "CAT", "HORSE"]),

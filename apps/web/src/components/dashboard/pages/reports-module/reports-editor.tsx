@@ -26,7 +26,6 @@ import {
 } from "./components/ReportPanelController";
 import {
   buildReportUpdatePayload,
-  ensureSuccessfulReportUpdate,
   deriveProfessionalSectionStatus,
   getEffectiveSectionState,
   getAnatomicalProfessionalItemText,
@@ -1419,11 +1418,9 @@ export function AdvancedReportEditor({
             toast.error(
               "Confirmez ou marquez non applicable chaque section du rapport.",
             );
-            return;
+            return false;
           }
-          await ensureSuccessfulReportUpdate(() =>
-            handleUpdateReport("finalized"),
-          );
+          return handleUpdateReport("finalized");
         }}
         isFinalizing={updateReportMutation.isPending}
       />
