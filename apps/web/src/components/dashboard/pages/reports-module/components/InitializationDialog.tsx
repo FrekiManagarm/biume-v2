@@ -78,6 +78,7 @@ export function InitializationDialog({
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [animalName, setAnimalName] = useState("");
+  const [clientRequestId] = useState(() => crypto.randomUUID());
   const [isPetSelectOpen, setIsPetSelectOpen] = useState(false);
   const [isAppointmentSelectOpen, setIsAppointmentSelectOpen] = useState(false);
 
@@ -139,6 +140,7 @@ export function InitializationDialog({
       const result =
         mode === "quick"
           ? await quickReportMutation.mutateAsync({
+              clientRequestId,
               ownerName,
               ownerEmail,
               animalName,

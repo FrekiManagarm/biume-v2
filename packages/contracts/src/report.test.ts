@@ -84,7 +84,11 @@ describe("report contracts", () => {
 
   it("accepts the minimum quick-create identity", () => {
     expect(
-      quickReportSchema.parse({ ownerName: "Camille", animalName: "Nox" }),
+      quickReportSchema.parse({
+        clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+        ownerName: "Camille",
+        animalName: "Nox",
+      }),
     ).toMatchObject({
       ownerName: "Camille",
       animalName: "Nox",
@@ -93,9 +97,24 @@ describe("report contracts", () => {
     });
   });
 
+  it("requires a client-generated idempotency key", () => {
+    expect(
+      quickReportSchema.safeParse({ ownerName: "Camille", animalName: "Nox" })
+        .success,
+    ).toBe(false);
+    expect(
+      quickReportSchema.safeParse({
+        clientRequestId: "not-a-uuid",
+        ownerName: "Camille",
+        animalName: "Nox",
+      }).success,
+    ).toBe(false);
+  });
+
   it("normalizes a whitespace-only quick-create email to empty", () => {
     expect(
       quickReportSchema.parse({
+        clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
         ownerName: "Camille",
         ownerEmail: "   ",
         animalName: "Nox",
@@ -106,6 +125,7 @@ describe("report contracts", () => {
   it("trims a valid quick-create email before validating it", () => {
     expect(
       quickReportSchema.parse({
+        clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
         ownerName: "Camille",
         ownerEmail: "  camille@example.com  ",
         animalName: "Nox",

@@ -139,6 +139,7 @@ export const createReportSchema = z.object({
 });
 
 export const quickReportSchema = z.object({
+  clientRequestId: z.uuid(),
   ownerName: z.string().trim().min(1, "Le nom du propriétaire est requis"),
   ownerEmail: z
     .string()

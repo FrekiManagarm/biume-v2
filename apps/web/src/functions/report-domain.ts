@@ -83,11 +83,13 @@ export function buildQuickReportRows({
   organizationId,
   input,
   ids,
+  requestFingerprint,
   now,
 }: {
   organizationId: string;
   input: QuickReportInput;
   ids: { ownerId: string; animalId: string; reportId: string };
+  requestFingerprint: string;
   now: Date;
 }) {
   const owner = {
@@ -111,6 +113,8 @@ export function buildQuickReportRows({
     title: input.title,
     consultationReason: input.consultationReason,
     status: "draft" as const,
+    clientRequestId: input.clientRequestId,
+    quickRequestFingerprint: requestFingerprint,
     createdAt: now,
   };
 

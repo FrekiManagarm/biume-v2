@@ -49,7 +49,7 @@ describe("tenant-isolated creation wiring", () => {
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
   });
 
-  test("createQuickReport derives tenant and entity ids before the tested atomic executor", () => {
+  test("createQuickReport delegates tenant-scoped idempotency around the atomic executor", () => {
     const source = readFileSync(
       new URL("./reports.function.ts", import.meta.url),
       "utf8",
@@ -61,9 +61,13 @@ describe("tenant-isolated creation wiring", () => {
 
     expect(createSource).toContain(".validator(quickReportSchema)");
     expect(createSource).toContain("organizationId: organization.id");
+    expect(createSource).toContain("createIdempotentQuickReport");
+    expect(createSource).toContain("clientRequestId");
+    expect(createSource).toContain("quickRequestFingerprint");
     expect(createSource.match(/crypto\.randomUUID\(\)/g)).toHaveLength(3);
     expect(createSource).toContain("buildQuickReportMutationQueries");
     expect(createSource).toContain("executeAtomicReportMutations");
+    expect(createSource).toContain("findAfterConflict");
   });
 });
 

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 import { canSubmitReportDraft } from "./InitializationDialog.helpers";
@@ -17,4 +18,14 @@ describe("canSubmitReportDraft", () => {
       }),
     ).toBe(true);
   });
+});
+
+test("quick creation keeps one client request id across mutation retries", () => {
+  const source = readFileSync(
+    new URL("./InitializationDialog.tsx", import.meta.url),
+    "utf8",
+  );
+
+  expect(source).toContain("useState(() => crypto.randomUUID())");
+  expect(source).toContain("clientRequestId");
 });

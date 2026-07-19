@@ -1,6 +1,13 @@
 import { relations } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
-import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { organization } from "../organization";
 import type { Organization } from "../organization";
 import { anatomicalIssue } from "./anatomicalIssue";
@@ -27,27 +34,38 @@ export const reportStatus = pgEnum("reportStatus", [
   "sent",
 ]);
 
-export const advancedReport = pgTable("advancedReport", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  createdBy: text("createdBy").references(() => organization.id, {
-    onDelete: "cascade",
-  }),
-  title: text("title").notNull(),
-  consultationReason: text("consultationReason").notNull().default(""),
-  patientId: text("patientId").references(() => pets.id, {
-    onDelete: "cascade",
-  }),
-  appointmentId: text("appointmentId").references(() => appointments.id, {
-    onDelete: "cascade",
-  }),
-  notes: text("notes").default(""),
-  status: reportStatus("status").notNull().default("draft"),
-  revision: integer("revision").notNull().default(1),
-  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
-  updatedAt: timestamp("updatedAt", { mode: "date" }),
-});
+export const advancedReport = pgTable(
+  "advancedReport",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    createdBy: text("createdBy").references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    consultationReason: text("consultationReason").notNull().default(""),
+    patientId: text("patientId").references(() => pets.id, {
+      onDelete: "cascade",
+    }),
+    appointmentId: text("appointmentId").references(() => appointments.id, {
+      onDelete: "cascade",
+    }),
+    notes: text("notes").default(""),
+    status: reportStatus("status").notNull().default("draft"),
+    revision: integer("revision").notNull().default(1),
+    clientRequestId: text("client_request_id"),
+    quickRequestFingerprint: text("quick_request_fingerprint"),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+    updatedAt: timestamp("updatedAt", { mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("advanced_report_quick_request_unique").on(
+      table.createdBy,
+      table.clientRequestId,
+    ),
+  ],
+);
 
 export const advancedReportRelations = relations(
   advancedReport,

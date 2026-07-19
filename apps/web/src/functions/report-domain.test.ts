@@ -52,6 +52,7 @@ it("builds owner, animal, report, and four decisions from minimum input", () => 
   const rows = buildQuickReportRows({
     organizationId: "org-1",
     input: {
+      clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
       ownerName: " Camille ",
       ownerEmail: "camille@example.com",
       animalName: " Nox ",
@@ -59,6 +60,7 @@ it("builds owner, animal, report, and four decisions from minimum input", () => 
       consultationReason: "",
     },
     ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    requestFingerprint: "fingerprint-1",
     now: new Date("2026-07-18T10:00:00.000Z"),
   });
 
@@ -79,6 +81,8 @@ it("builds owner, animal, report, and four decisions from minimum input", () => 
     createdBy: "org-1",
     patientId: "pet-1",
     status: "draft",
+    clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+    quickRequestFingerprint: "fingerprint-1",
   });
   expect(rows.sectionStates).toHaveLength(4);
 });
@@ -87,12 +91,14 @@ it("stores an omitted quick-create email as null", () => {
   const rows = buildQuickReportRows({
     organizationId: "org-1",
     input: {
+      clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
       ownerName: "Camille",
       animalName: "Nox",
       title: "Nouveau rapport",
       consultationReason: "",
     },
     ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    requestFingerprint: "fingerprint-1",
     now: new Date("2026-07-18T10:00:00.000Z"),
   });
   expect(rows.owner.email).toBeNull();
@@ -102,11 +108,13 @@ it("stores a normalized whitespace-only quick-create email as null", () => {
   const rows = buildQuickReportRows({
     organizationId: "org-1",
     input: quickReportSchema.parse({
+      clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
       ownerName: "Camille",
       ownerEmail: "   ",
       animalName: "Nox",
     }),
     ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    requestFingerprint: "fingerprint-1",
     now: new Date("2026-07-18T10:00:00.000Z"),
   });
 

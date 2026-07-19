@@ -54,6 +54,7 @@ import {
 } from "./report-shared-version.service";
 import { buildAtomicReportUpdateStatement } from "./report-update.persistence";
 import { updateReportWithExpectedRevision } from "./report-update.service";
+import { createIdempotentQuickReport } from "./quick-report.service";
 
 export type ReportType = "simple" | "advanced";
 
@@ -261,33 +262,71 @@ export const createQuickReport = createServerFn({ method: "POST" })
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
-    const rows = buildQuickReportRows({
-      organizationId: organization.id,
-      input: data,
-      ids: {
-        ownerId: crypto.randomUUID(),
-        animalId: crypto.randomUUID(),
-        reportId: crypto.randomUUID(),
-      },
-      now: new Date(),
-    });
+    const findByKey = async ({
+      organizationId,
+      clientRequestId,
+    }: {
+      organizationId: string;
+      clientRequestId: string;
+    }) => {
+      const existing = await db.query.advancedReport.findFirst({
+        where: and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.clientRequestId, clientRequestId),
+        ),
+        columns: {
+          id: true,
+          quickRequestFingerprint: true,
+        },
+      });
+      if (!existing?.quickRequestFingerprint) return undefined;
+      return {
+        reportId: existing.id,
+        requestFingerprint: existing.quickRequestFingerprint,
+      };
+    };
 
-    const mutations = buildQuickReportMutationQueries({
-      ownerInsert: db.insert(clients).values(rows.owner),
-      animalInsert: db.insert(pets).values(rows.animal),
-      reportInsert: db.insert(advancedReport).values(rows.report),
-      sectionStateInsert: db
-        .insert(reportSectionState)
-        .values(rows.sectionStates),
-    });
-    await executeAtomicReportMutations(mutations, (queries) =>
-      db.batch(queries),
+    const result = await createIdempotentQuickReport(
+      { organizationId: organization.id, input: data },
+      {
+        findByKey,
+        createAtomic: async ({
+          organizationId,
+          input,
+          requestFingerprint,
+        }) => {
+          const rows = buildQuickReportRows({
+            organizationId,
+            input,
+            ids: {
+              ownerId: crypto.randomUUID(),
+              animalId: crypto.randomUUID(),
+              reportId: crypto.randomUUID(),
+            },
+            requestFingerprint,
+            now: new Date(),
+          });
+
+          const mutations = buildQuickReportMutationQueries({
+            ownerInsert: db.insert(clients).values(rows.owner),
+            animalInsert: db.insert(pets).values(rows.animal),
+            reportInsert: db.insert(advancedReport).values(rows.report),
+            sectionStateInsert: db
+              .insert(reportSectionState)
+              .values(rows.sectionStates),
+          });
+          await executeAtomicReportMutations(mutations, (queries) =>
+            db.batch(queries),
+          );
+          return { reportId: rows.report.id };
+        },
+        findAfterConflict: findByKey,
+      },
     );
 
     return {
       success: true as const,
-      status: "draft" as const,
-      reportId: rows.report.id,
+      ...result,
     };
   });
 
