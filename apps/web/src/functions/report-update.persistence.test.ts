@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { buildAtomicReportUpdateStatement } from "./report-update.persistence";
 
 describe("atomic report update statement", () => {
-  it("gates every destructive replacement behind the optimistic update CTE", () => {
+  it("upserts present children and only deletes absent IDs behind the optimistic update", () => {
     const statement = buildAtomicReportUpdateStatement({
       organizationId: "org-1",
       reportId: "report-1",
@@ -19,9 +19,7 @@ describe("atomic report update statement", () => {
       sectionStates: [
         { reportId: "report-1", section: "clinical", state: "confirmed" },
       ],
-      removedOwnerSources: [
-        { sourceKind: "observation", sourceId: "obs-old" },
-      ],
+      removedOwnerSources: [{ sourceKind: "observation", sourceId: "obs-old" }],
       anatomicalRows: [
         {
           id: "obs-1",
@@ -48,8 +46,19 @@ describe("atomic report update statement", () => {
     expect(sql).toContain('"revision" = "revision" + 1');
     expect(sql).toContain('AND "revision" =');
     expect(sql).toContain('AND "createdBy" =');
-    expect(sql).toContain("FROM \"updated_report\"");
-    expect(sql).toContain("EXISTS (SELECT 1 FROM \"updated_report\")");
+    expect(sql).toContain('FROM "updated_report"');
+    expect(sql).toContain('EXISTS (SELECT 1 FROM "updated_report")');
+    expect(sql).toContain('ON CONFLICT ("id") DO UPDATE SET');
+    expect(sql).toContain(
+      '"anatomical_issue"."advanced_report_id" = excluded."advanced_report_id"',
+    );
+    expect(sql).toContain(
+      '"advanced_report_recommendations"."advanced_report_id" = excluded."advanced_report_id"',
+    );
+    expect(sql).toContain("NOT EXISTS (");
+    expect(sql).not.toContain(
+      'DELETE FROM "anatomical_issue"\n      WHERE "advanced_report_id"',
+    );
     expect(sql).toContain('SELECT "id", "revision" FROM "updated_report"');
     expect(params).toContain(4);
   });

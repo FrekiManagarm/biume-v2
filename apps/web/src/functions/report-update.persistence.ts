@@ -111,18 +111,6 @@ export function buildAtomicReportUpdateStatement(
         AND EXISTS (SELECT 1 FROM "updated_report")
       RETURNING "content"."id"
     ),
-    "deleted_anatomical_rows" AS (
-      DELETE FROM "anatomical_issue"
-      WHERE "advanced_report_id" = ${input.reportId}
-        AND EXISTS (SELECT 1 FROM "updated_report")
-      RETURNING "id"
-    ),
-    "deleted_recommendation_rows" AS (
-      DELETE FROM "advanced_report_recommendations"
-      WHERE "advanced_report_id" = ${input.reportId}
-        AND EXISTS (SELECT 1 FROM "updated_report")
-      RETURNING "id"
-    ),
     "upserted_section_states" AS (
       INSERT INTO "report_section_state" (
         "report_id", "section", "state", "updated_at"
@@ -140,7 +128,7 @@ export function buildAtomicReportUpdateStatement(
         "updated_at" = excluded."updated_at"
       RETURNING "report_id"
     ),
-    "inserted_anatomical_rows" AS (
+    "upserted_anatomical_rows" AS (
       INSERT INTO "anatomical_issue" (
         "id", "type", "observation_type", "anatomical_part_id",
         "advanced_report_id", "notes", "laterality", "severity"
@@ -164,9 +152,30 @@ export function buildAtomicReportUpdateStatement(
         "laterality" text,
         "severity" integer
       )
+      ON CONFLICT ("id") DO UPDATE SET
+        "type" = excluded."type",
+        "observation_type" = excluded."observation_type",
+        "anatomical_part_id" = excluded."anatomical_part_id",
+        "notes" = excluded."notes",
+        "laterality" = excluded."laterality",
+        "severity" = excluded."severity",
+        "updated_at" = ${input.updatedAt}
+      WHERE "anatomical_issue"."advanced_report_id" = excluded."advanced_report_id"
       RETURNING "id"
     ),
-    "inserted_recommendation_rows" AS (
+    "deleted_anatomical_rows" AS (
+      DELETE FROM "anatomical_issue" AS "issue"
+      WHERE "issue"."advanced_report_id" = ${input.reportId}
+        AND EXISTS (SELECT 1 FROM "updated_report")
+        AND NOT EXISTS (
+          SELECT 1
+          FROM jsonb_to_recordset(${anatomicalRows}::jsonb)
+            AS "row_input"("id" text)
+          WHERE "row_input"."id" = "issue"."id"
+        )
+      RETURNING "issue"."id"
+    ),
+    "upserted_recommendation_rows" AS (
       INSERT INTO "advanced_report_recommendations" (
         "id", "advanced_report_id", "recommendation"
       )
@@ -177,7 +186,23 @@ export function buildAtomicReportUpdateStatement(
       FROM "updated_report"
       CROSS JOIN jsonb_to_recordset(${recommendationRows}::jsonb)
         AS "row_input"("id" text, "recommendation" text)
+      ON CONFLICT ("id") DO UPDATE SET
+        "recommendation" = excluded."recommendation",
+        "updated_at" = ${input.updatedAt}
+      WHERE "advanced_report_recommendations"."advanced_report_id" = excluded."advanced_report_id"
       RETURNING "id"
+    ),
+    "deleted_recommendation_rows" AS (
+      DELETE FROM "advanced_report_recommendations" AS "recommendation"
+      WHERE "recommendation"."advanced_report_id" = ${input.reportId}
+        AND EXISTS (SELECT 1 FROM "updated_report")
+        AND NOT EXISTS (
+          SELECT 1
+          FROM jsonb_to_recordset(${recommendationRows}::jsonb)
+            AS "row_input"("id" text)
+          WHERE "row_input"."id" = "recommendation"."id"
+        )
+      RETURNING "recommendation"."id"
     )
     SELECT "id", "revision" FROM "updated_report"
   `;
