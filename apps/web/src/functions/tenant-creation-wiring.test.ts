@@ -119,15 +119,22 @@ test("shared versions are scoped, revision-bound, and never updated", () => {
     new URL("./reports.function.ts", import.meta.url),
     "utf8",
   );
-  const sharedSource = source.slice(
+  const adapterSource = source.slice(
+    source.indexOf("const reportSharedVersionPorts"),
+    source.indexOf("export const getAnatomicalParts"),
+  );
+  const handlerSource = source.slice(
     source.indexOf("export const createReportSharedVersion"),
     source.indexOf("export const getAnatomicalParts"),
   );
 
-  expect(sharedSource).toContain(
-    "eq(advancedReport.createdBy, organization.id)",
+  expect(adapterSource).toContain(
+    "eq(advancedReport.createdBy, organizationId)",
   );
-  expect(sharedSource).toContain("reportSharedVersion.reportRevision");
-  expect(sharedSource).toContain("onConflictDoNothing");
-  expect(sharedSource).not.toContain(".update(reportSharedVersion)");
+  expect(adapterSource).toContain("reportSharedVersion.reportRevision");
+  expect(adapterSource).toContain("onConflictDoNothing");
+  expect(adapterSource).not.toContain(".update(reportSharedVersion)");
+  expect(handlerSource).toContain("createImmutableReportSharedVersion");
+  expect(handlerSource).toContain("organizationId: organization.id");
+  expect(handlerSource).toContain("reportId: data.reportId");
 });

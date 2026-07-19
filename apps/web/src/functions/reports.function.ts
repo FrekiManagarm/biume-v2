@@ -45,14 +45,14 @@ import {
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
 import { createServerFn } from "@tanstack/react-start";
 import {
-  assertReportCanBeShared,
-  buildOwnerReportSnapshot,
   buildQuickReportRows,
   buildReportSectionStateRows,
   normalizeReportSectionStates,
-  persistImmutableSharedVersion,
-  resolveOwnerFacingText,
 } from "./report-domain";
+import {
+  createImmutableReportSharedVersion,
+  type ReportSharedVersionPorts,
+} from "./report-shared-version.service";
 
 export type ReportType = "simple" | "advanced";
 
@@ -582,16 +582,29 @@ export const updateReport = createServerFn({ method: "POST" })
     }
   });
 
-export const createReportSharedVersion = createServerFn({ method: "POST" })
-  .validator(z.object({ reportId: z.string().min(1) }))
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+const findReportSharedVersion = ({
+  organizationId,
+  reportId,
+  reportRevision,
+}: {
+  organizationId: string;
+  reportId: string;
+  reportRevision: number;
+}) =>
+  db.query.reportSharedVersion.findFirst({
+    where: and(
+      eq(reportSharedVersion.reportId, reportId),
+      eq(reportSharedVersion.organizationId, organizationId),
+      eq(reportSharedVersion.reportRevision, reportRevision),
+    ),
+  });
 
-    const report = await db.query.advancedReport.findFirst({
+const reportSharedVersionPorts: ReportSharedVersionPorts = {
+  loadTenantOwnedReport: ({ organizationId, reportId }) =>
+    db.query.advancedReport.findFirst({
       where: and(
-        eq(advancedReport.id, data.reportId),
-        eq(advancedReport.createdBy, organization.id),
+        eq(advancedReport.id, reportId),
+        eq(advancedReport.createdBy, organizationId),
       ),
       with: {
         patient: { with: { owner: true } },
@@ -600,107 +613,43 @@ export const createReportSharedVersion = createServerFn({ method: "POST" })
         ownerContents: true,
         sectionStates: true,
       },
-    });
-    if (!report?.patient?.owner) {
-      throw new Error("Rapport, animal ou propriétaire introuvable");
-    }
+    }),
+  findExistingVersion: findReportSharedVersion,
+  insertImmutableVersion: async ({
+    organizationId,
+    reportId,
+    reportRevision,
+    snapshot,
+  }) => {
+    const [created] = await db
+      .insert(reportSharedVersion)
+      .values({ organizationId, reportId, reportRevision, snapshot })
+      .onConflictDoNothing({
+        target: [
+          reportSharedVersion.reportId,
+          reportSharedVersion.reportRevision,
+        ],
+      })
+      .returning();
+    return created;
+  },
+  findVersionAfterConflict: findReportSharedVersion,
+};
 
-    const sectionStates = normalizeReportSectionStates(report.sectionStates);
-    assertReportCanBeShared(report.status, sectionStates);
+export const createReportSharedVersion = createServerFn({ method: "POST" })
+  .validator(z.object({ reportId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const organization = await getCurrentOrganization();
+    if (!organization) throw new Error("Organization not found");
 
-    const observations = report.anatomicalIssues.filter(
-      (item) => item.type === "observation",
-    );
-    const issues = report.anatomicalIssues.filter((item) =>
-      ["dysfunction", "anatomicalSuspicion"].includes(item.type),
-    );
-    const itemText = (item: {
-      id: string;
-      notes: string | null;
-      anatomicalPart?: { name: string } | null;
-    }) => item.notes?.trim() || item.anatomicalPart?.name.trim() || "";
-
-    const snapshot = buildOwnerReportSnapshot({
-      reportId: report.id,
-      reportRevision: report.revision,
-      title: report.title,
-      animal: { id: report.patient.id, name: report.patient.name },
-      owner: { id: report.patient.owner.id, name: report.patient.owner.name },
-      consultationReason: resolveOwnerFacingText(
-        report.ownerContents,
-        "consultationReason",
-        "consultationReason",
-        report.consultationReason,
-      ),
-      clinical: observations
-        .map((item) =>
-          resolveOwnerFacingText(
-            report.ownerContents,
-            "observation",
-            item.id,
-            itemText(item),
-          ),
-        )
-        .filter(Boolean),
-      anatomical: issues
-        .map((item) =>
-          resolveOwnerFacingText(
-            report.ownerContents,
-            "anatomicalIssue",
-            item.id,
-            itemText(item),
-          ),
-        )
-        .filter(Boolean),
-      recommendations: report.recommendations
-        .map((item) =>
-          resolveOwnerFacingText(
-            report.ownerContents,
-            "recommendation",
-            item.id,
-            item.recommendation,
-          ),
-        )
-        .filter(Boolean),
-      notes: resolveOwnerFacingText(
-        report.ownerContents,
-        "notes",
-        "notes",
-        report.notes ?? "",
-      ),
-      createdAt: new Date(),
-    });
-
-    const findExisting = () =>
-      db.query.reportSharedVersion.findFirst({
-        where: and(
-          eq(reportSharedVersion.reportId, report.id),
-          eq(reportSharedVersion.organizationId, organization.id),
-          eq(reportSharedVersion.reportRevision, report.revision),
-        ),
-      });
-
-    const persisted = await persistImmutableSharedVersion({
-      findExisting,
-      insert: async () => {
-        const [created] = await db
-          .insert(reportSharedVersion)
-          .values({
-            reportId: report.id,
-            organizationId: organization.id,
-            reportRevision: report.revision,
-            snapshot,
-          })
-          .onConflictDoNothing({
-            target: [
-              reportSharedVersion.reportId,
-              reportSharedVersion.reportRevision,
-            ],
-          })
-          .returning();
-        return created;
+    const persisted = await createImmutableReportSharedVersion(
+      {
+        organizationId: organization.id,
+        reportId: data.reportId,
+        createdAt: new Date(),
       },
-    });
+      reportSharedVersionPorts,
+    );
 
     return { success: true as const, data: persisted };
   });

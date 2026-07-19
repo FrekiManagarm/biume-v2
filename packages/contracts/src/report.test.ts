@@ -2,12 +2,27 @@ import { describe, expect, it } from "vitest";
 import {
   canFinalizeReport,
   createInitialReportSectionStates,
+  ownerSourceKindSchema,
+  ownerSourceKinds,
   ownerReportSnapshotSchema,
   quickReportSchema,
   reportSchema,
 } from "./report";
 
 describe("report contracts", () => {
+  it("defines the canonical owner-facing source kinds", () => {
+    expect(ownerSourceKinds).toEqual([
+      "consultationReason",
+      "observation",
+      "anatomicalIssue",
+      "recommendation",
+      "notes",
+    ]);
+    expect(
+      ownerSourceKinds.map((kind) => ownerSourceKindSchema.parse(kind)),
+    ).toEqual(ownerSourceKinds);
+  });
+
   it("requires every section to be explicitly resolved before finalization", () => {
     expect(
       canFinalizeReport({

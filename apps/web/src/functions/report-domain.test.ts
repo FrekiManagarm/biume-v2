@@ -6,7 +6,6 @@ import {
   buildQuickReportRows,
   buildReportSectionStateRows,
   normalizeReportSectionStates,
-  persistImmutableSharedVersion,
   resolveOwnerFacingText,
 } from "./report-domain";
 
@@ -196,36 +195,4 @@ it("requires practitioner finalization before creating a shared version", () => 
     }),
   ).toThrow("Le rapport doit être finalisé avant son partage");
   expect(() => assertReportCanBeShared("finalized", resolved)).not.toThrow();
-});
-
-it("returns an existing shared version without inserting another row", async () => {
-  const existing = { id: "shared-1", reportRevision: 2 };
-  let insertCalls = 0;
-
-  const persisted = await persistImmutableSharedVersion({
-    findExisting: async () => existing,
-    insert: async () => {
-      insertCalls += 1;
-      return { id: "shared-2", reportRevision: 2 };
-    },
-  });
-
-  expect(persisted).toBe(existing);
-  expect(insertCalls).toBe(0);
-});
-
-it("recovers the immutable version created by a concurrent retry", async () => {
-  const concurrentWinner = { id: "shared-1", reportRevision: 2 };
-  let findCalls = 0;
-
-  const persisted = await persistImmutableSharedVersion({
-    findExisting: async () => {
-      findCalls += 1;
-      return findCalls === 1 ? undefined : concurrentWinner;
-    },
-    insert: async () => undefined,
-  });
-
-  expect(persisted).toBe(concurrentWinner);
-  expect(findCalls).toBe(2);
 });

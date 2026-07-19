@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const ownerSourceKinds = [
+  "consultationReason",
+  "observation",
+  "anatomicalIssue",
+  "recommendation",
+  "notes",
+] as const;
+export const ownerSourceKindSchema = z.enum(ownerSourceKinds);
+export type OwnerSourceKind = z.infer<typeof ownerSourceKindSchema>;
+
 export const reportSectionIds = [
   "clinical",
   "anatomical",

@@ -5,6 +5,7 @@ import {
   quickReportSchema,
   reportSectionIds,
   type OwnerReportSnapshot,
+  type OwnerSourceKind,
   type ReportSectionId,
   type ReportSectionState,
   type ReportSectionStates,
@@ -16,12 +17,7 @@ type OwnerReportSnapshotInput = Omit<OwnerReportSnapshot, "createdAt"> & {
   createdAt: Date;
 };
 type OwnerTextRecord = {
-  sourceKind:
-    | "consultationReason"
-    | "observation"
-    | "anatomicalIssue"
-    | "recommendation"
-    | "notes";
+  sourceKind: OwnerSourceKind;
   sourceId: string;
   ownerText: string;
 };
@@ -52,31 +48,6 @@ export function resolveOwnerFacingText(
   ).trim();
 }
 
-export async function executeOwnerContentRevisionMutation<
-  OwnerContentUpsert,
-  ReportRevisionUpdate,
-  Saved,
->({
-  ownerContentUpsert,
-  reportRevisionUpdate,
-  executeBatch,
-}: {
-  ownerContentUpsert: OwnerContentUpsert;
-  reportRevisionUpdate: ReportRevisionUpdate;
-  executeBatch: (
-    mutations: readonly [OwnerContentUpsert, ReportRevisionUpdate],
-  ) => Promise<readonly [readonly Saved[], unknown]>;
-}): Promise<Saved> {
-  const [savedRows] = await executeBatch([
-    ownerContentUpsert,
-    reportRevisionUpdate,
-  ]);
-  const saved = savedRows[0];
-  if (!saved)
-    throw new Error("Impossible d’enregistrer la version propriétaire");
-  return saved;
-}
-
 export function assertReportCanBeShared(
   status: "draft" | "finalized" | "sent",
   sectionStates: ReportSectionStates,
@@ -84,22 +55,6 @@ export function assertReportCanBeShared(
   if (status === "draft" || !canFinalizeReport(sectionStates)) {
     throw new Error("Le rapport doit être finalisé avant son partage");
   }
-}
-
-export async function persistImmutableSharedVersion<SharedVersion>({
-  findExisting,
-  insert,
-}: {
-  findExisting: () => Promise<SharedVersion | null | undefined>;
-  insert: () => Promise<SharedVersion | undefined>;
-}): Promise<SharedVersion> {
-  const existing = await findExisting();
-  if (existing) return existing;
-
-  const created = await insert();
-  const persisted = created ?? (await findExisting());
-  if (!persisted) throw new Error("Impossible de créer la version partagée");
-  return persisted;
 }
 
 export function buildReportSectionStateRows(

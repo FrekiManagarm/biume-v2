@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@biume/db";
+import { ownerSourceKindSchema } from "@biume/contracts/report";
 import { advancedReport, reportOwnerContent } from "@biume/db/schema/index";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq, sql } from "drizzle-orm";
@@ -10,17 +11,14 @@ import {
   prepareOwnerContentUpsert,
 } from "#/components/dashboard/pages/reports-module/owner-content.persistence";
 import { getCurrentOrganization } from "#/functions/auth.function";
-import { executeOwnerContentRevisionMutation } from "./report-domain";
+import {
+  saveOwnerContentWithRevision,
+  type OwnerContentRevisionPort,
+} from "./report-owner-content.service";
 
 const ownerContentUpsertSchema = z.object({
   reportId: z.string().min(1),
-  sourceKind: z.enum([
-    "consultationReason",
-    "observation",
-    "anatomicalIssue",
-    "recommendation",
-    "notes",
-  ]),
+  sourceKind: ownerSourceKindSchema,
   sourceId: z.string().min(1),
   ownerText: z.string(),
 });
@@ -38,6 +36,48 @@ async function loadOwnedReport(reportId: string, organizationId: string) {
   });
 }
 
+const ownerContentRevisionPort: OwnerContentRevisionPort = {
+  persist: async ({
+    organizationId,
+    reportId,
+    ownerContent,
+    reportRevision,
+  }) => {
+    const [savedRows] = await db.batch([
+      db
+        .insert(reportOwnerContent)
+        .values({ id: crypto.randomUUID(), ...ownerContent.values })
+        .onConflictDoUpdate({
+          target: [
+            reportOwnerContent.reportId,
+            reportOwnerContent.sourceKind,
+            reportOwnerContent.sourceId,
+          ],
+          set: {
+            ownerText: ownerContent.values.ownerText,
+            sourceFingerprint: ownerContent.values.sourceFingerprint,
+            updatedAt: ownerContent.values.updatedAt,
+          },
+        })
+        .returning(),
+      db
+        .update(advancedReport)
+        .set({
+          revision: sql`${advancedReport.revision} + 1`,
+          updatedAt: reportRevision.updatedAt,
+        })
+        .where(
+          and(
+            eq(advancedReport.id, reportId),
+            eq(advancedReport.createdBy, organizationId),
+          ),
+        ),
+    ] as const);
+
+    return savedRows[0];
+  },
+};
+
 export const upsertReportOwnerContent = createServerFn({ method: "POST" })
   .validator(ownerContentUpsertSchema)
   .handler(async ({ data }) => {
@@ -51,37 +91,14 @@ export const upsertReportOwnerContent = createServerFn({ method: "POST" })
       ...data,
       sources: buildPersistedOwnerSources(report),
     });
-    const saved = await executeOwnerContentRevisionMutation({
-      ownerContentUpsert: db
-        .insert(reportOwnerContent)
-        .values({ id: crypto.randomUUID(), ...values })
-        .onConflictDoUpdate({
-          target: [
-            reportOwnerContent.reportId,
-            reportOwnerContent.sourceKind,
-            reportOwnerContent.sourceId,
-          ],
-          set: {
-            ownerText: values.ownerText,
-            sourceFingerprint: values.sourceFingerprint,
-            updatedAt: values.updatedAt,
-          },
-        })
-        .returning(),
-      reportRevisionUpdate: db
-        .update(advancedReport)
-        .set({
-          revision: sql`${advancedReport.revision} + 1`,
-          updatedAt: values.updatedAt,
-        })
-        .where(
-          and(
-            eq(advancedReport.id, data.reportId),
-            eq(advancedReport.createdBy, organization.id),
-          ),
-        ),
-      executeBatch: (queries) => db.batch(queries),
-    });
+    const saved = await saveOwnerContentWithRevision(
+      {
+        organizationId: organization.id,
+        reportId: data.reportId,
+        ownerContent: values,
+      },
+      ownerContentRevisionPort,
+    );
 
     return { success: true as const, data: saved };
   });

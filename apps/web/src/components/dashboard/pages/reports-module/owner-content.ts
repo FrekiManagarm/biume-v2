@@ -1,13 +1,7 @@
-import type { ReportSectionId } from "@biume/contracts/report";
+import type { OwnerSourceKind, ReportSectionId } from "@biume/contracts/report";
 import type { AnatomicalIssue, Observation } from "./types";
 
-export type { ReportSectionId } from "@biume/contracts/report";
-export type OwnerSourceKind =
-  | "consultationReason"
-  | "observation"
-  | "anatomicalIssue"
-  | "recommendation"
-  | "notes";
+export type { OwnerSourceKind, ReportSectionId } from "@biume/contracts/report";
 export type OwnerContentStatus = "missing" | "stale" | "ready";
 
 export type OwnerContentRecord = {

@@ -1,3 +1,4 @@
+import { ownerSourceKinds } from "@biume/contracts/report";
 import { relations } from "drizzle-orm";
 import {
   pgEnum,
@@ -10,13 +11,7 @@ import { advancedReport } from "./advancedReport";
 
 export const reportOwnerContentSourceKind = pgEnum(
   "report_owner_content_source_kind",
-  [
-    "consultationReason",
-    "observation",
-    "anatomicalIssue",
-    "recommendation",
-    "notes",
-  ],
+  ownerSourceKinds,
 );
 
 export const reportOwnerContent = pgTable(
@@ -32,12 +27,8 @@ export const reportOwnerContent = pgTable(
     sourceId: text("source_id").notNull(),
     ownerText: text("owner_text").notNull(),
     sourceFingerprint: text("source_fingerprint").notNull(),
-    createdAt: timestamp("created_at", { mode: "date" })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("report_owner_content_source_unique").on(
