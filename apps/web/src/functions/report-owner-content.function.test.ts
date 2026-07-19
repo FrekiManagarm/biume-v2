@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
   saveOwnerContentWithRevision,
+  type OwnerContentRevisionInput,
   type OwnerContentRevisionPort,
 } from "./report-owner-content.service";
 
@@ -16,11 +17,10 @@ const savedOwnerContent = {
   updatedAt: new Date("2026-07-18T11:00:00.000Z"),
 };
 
-const writeInput = {
+const writeInput: OwnerContentRevisionInput = {
   organizationId: "org-1",
   reportId: "report-1",
   ownerContent: {
-    reportId: "report-1",
     sourceKind: "recommendation" as const,
     sourceId: "rec-1",
     ownerText: "Laisser Nox se reposer.",
@@ -50,6 +50,7 @@ describe("owner-content mutation", () => {
         updatedAt: writeInput.ownerContent.updatedAt,
       },
     });
+    expect(writeInput.ownerContent).not.toHaveProperty("reportId");
     expect(saved).toBe(savedOwnerContent);
   });
 
@@ -83,6 +84,9 @@ describe("owner-content mutation", () => {
     );
 
     expect(source).toContain("db.batch");
+    expect(source).toContain(
+      ".values({\n          id: crypto.randomUUID(),\n          reportId,",
+    );
     expect(source).toContain("revision: sql`${advancedReport.revision} + 1`");
     expect(source).toContain("eq(advancedReport.createdBy, organizationId)");
     expect(source).toContain("organizationId: organization.id");

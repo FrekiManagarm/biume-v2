@@ -2,7 +2,6 @@ import type { OwnerSourceKind } from "@biume/contracts/report";
 import type { ReportOwnerContent } from "@biume/db/schema/index";
 
 type OwnerContentValues = {
-  reportId: string;
   sourceKind: OwnerSourceKind;
   sourceId: string;
   ownerText: string;
@@ -30,12 +29,14 @@ export type OwnerContentRevisionPort = {
   ) => Promise<ReportOwnerContent | undefined>;
 };
 
+export type OwnerContentRevisionInput = {
+  organizationId: string;
+  reportId: string;
+  ownerContent: OwnerContentValues;
+};
+
 export async function saveOwnerContentWithRevision(
-  input: {
-    organizationId: string;
-    reportId: string;
-    ownerContent: OwnerContentValues;
-  },
+  input: OwnerContentRevisionInput,
   port: OwnerContentRevisionPort,
 ) {
   const saved = await port.persist({
@@ -43,7 +44,13 @@ export async function saveOwnerContentWithRevision(
     reportId: input.reportId,
     ownerContent: {
       operation: "upsert",
-      values: input.ownerContent,
+      values: {
+        sourceKind: input.ownerContent.sourceKind,
+        sourceId: input.ownerContent.sourceId,
+        ownerText: input.ownerContent.ownerText,
+        sourceFingerprint: input.ownerContent.sourceFingerprint,
+        updatedAt: input.ownerContent.updatedAt,
+      },
     },
     reportRevision: {
       operation: "increment",

@@ -46,7 +46,11 @@ const ownerContentRevisionPort: OwnerContentRevisionPort = {
     const [savedRows] = await db.batch([
       db
         .insert(reportOwnerContent)
-        .values({ id: crypto.randomUUID(), ...ownerContent.values })
+        .values({
+          id: crypto.randomUUID(),
+          reportId,
+          ...ownerContent.values,
+        })
         .onConflictDoUpdate({
           target: [
             reportOwnerContent.reportId,
