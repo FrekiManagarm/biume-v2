@@ -1,104 +1,25 @@
 import { z } from "zod";
 import { CreatePetSchema } from "@biume/db/schema/index";
+import {
+  createReportSchema,
+  animalTypes,
+  anatomicalZones,
+  quickReportSchema,
+  reportSchema,
+  reportSectionStatesSchema,
+} from "@biume/contracts/report";
 
-export const createReportSchema = z.object({
-  title: z.string().optional(),
-  petId: z.string().optional(),
-  appointmentId: z.string().optional(),
-  consultationReason: z.string().optional(),
-  notes: z.string().optional(),
-  status: z.enum(["draft", "finalized", "sent"]).optional().default("draft"),
-});
+export { createReportSchema, quickReportSchema, reportSchema };
 
-const reportSchemaBase = z.object({
-  title: z.string().min(1, "Le titre est requis"),
-  petId: z.string().optional(),
-  appointmentId: z.string().optional(),
-  consultationReason: z.string().optional(),
-  notes: z.string().optional(),
-  status: z.enum(["draft", "finalized", "sent"]).optional().default("draft"),
-  observations: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        region: z.string(),
-        severity: z.number().min(1).max(5),
-        notes: z.string(),
-        type: z.enum(["static", "dynamic", "diagnosticExclusion", "none"]),
-        dysfunctionType: z.string().optional(),
-        interventionZone: z.string().optional(),
-        laterality: z.enum(["left", "right", "bilateral"]),
-        anatomicalPart: z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            zone: z.string(),
-            animalType: z.string(),
-          })
-          .optional(),
-      }),
-    )
-    .optional()
-    .default([]),
-  anatomicalIssues: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        type: z.enum(["dysfunction", "anatomicalSuspicion"]),
-        region: z.string(),
-        severity: z.number().min(1).max(5),
-        notes: z.string(),
-        interventionZone: z.string().optional(),
-        laterality: z.enum(["left", "right", "bilateral"]),
-        anatomicalPart: z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            zone: z.string(),
-            animalType: z.string(),
-          })
-          .optional(),
-      }),
-    )
-    .optional()
-    .default([]),
-  recommendations: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        content: z.string(),
-      }),
-    )
-    .optional()
-    .default([]),
-});
-
-export const reportSchema = reportSchemaBase.superRefine((report, context) => {
-  const anatomicalIds = [
-    ...report.observations.map((item) => item.id),
-    ...report.anatomicalIssues.map((item) => item.id),
-  ];
-  if (new Set(anatomicalIds).size !== anatomicalIds.length) {
-    context.addIssue({
-      code: "custom",
-      message: "Les identifiants anatomiques doivent être uniques",
-      path: ["anatomicalIssues"],
-    });
-  }
-
-  const recommendationIds = report.recommendations.map((item) => item.id);
-  if (new Set(recommendationIds).size !== recommendationIds.length) {
-    context.addIssue({
-      code: "custom",
-      message: "Les identifiants de recommandation doivent être uniques",
-      path: ["recommendations"],
-    });
-  }
+export const updateReportSchema = reportSchema.safeExtend({
+  reportId: z.string(),
+  expectedRevision: z.number().int().positive(),
+  sectionStates: reportSectionStatesSchema,
 });
 
 export const anatomicalIssueSchema = z.object({
-  animalType: z.enum(["DOG", "CAT", "HORSE"]),
-  zone: z.enum(["articulation", "fascias", "organes", "muscles"]),
+  animalType: z.enum(animalTypes),
+  zone: z.enum(anatomicalZones),
 });
 
 export const contactSchema = z.object({

@@ -19,6 +19,7 @@
     "@ai-sdk/openai": "^4.0.6",
     "@ai-sdk/react": "^4.0.10",
     "@biume/auth": "workspace:*",
+    "@biume/contracts": "workspace:*",
     "@biume/db": "workspace:*",
     "@biume/emails": "workspace:*",
     "@biume/env": "workspace:*",

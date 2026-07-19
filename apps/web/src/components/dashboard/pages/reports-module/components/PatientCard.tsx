@@ -6,10 +6,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Pet } from "@/lib/schemas";
+type PatientCardPatient = {
+  name: string;
+  type?: string | null;
+  gender?: "Male" | "Female" | null;
+  animal?: { name?: string | null } | null;
+};
 
 interface PatientCardProps {
-  patient: Pet;
+  patient: PatientCardPatient;
   onPatientClick: () => void;
   isCollapsed?: boolean;
 }

@@ -36,30 +36,32 @@ describe("region dropdown layering", () => {
   test.each([
     {
       fileName: "AddAnatomicalIssueDialog.tsx",
+      openExpression: "isOpen && !!animalType",
       dismissalGuard: "isSelectOpen",
       openHandler: "setIsInterventionZoneSelectOpen",
     },
     {
       fileName: "AddObservationsDialog.tsx",
+      openExpression: "isOpen && !!animalType",
       dismissalGuard: "isSelectOpen",
       openHandler: "setIsInterventionZoneSelectOpen",
     },
     {
       fileName: "InitializationDialog.tsx",
+      openExpression: "showInitDialog",
       dismissalGuard: "isSelectOpen",
       openHandler: "setIsPetSelectOpen",
     },
     {
       fileName: "InitializationDialog.tsx",
+      openExpression: "showInitDialog",
       dismissalGuard: "isSelectOpen",
       openHandler: "setIsAppointmentSelectOpen",
     },
   ])(
     "$fileName keeps the parent modal open while an inner select is closing",
-    ({ fileName, dismissalGuard, openHandler }) => {
+    ({ fileName, openExpression, dismissalGuard, openHandler }) => {
       const source = readComponentSource(fileName);
-      const openProp =
-        fileName === "InitializationDialog.tsx" ? "showInitDialog" : "isOpen";
       const openChangeProp =
         fileName === "InitializationDialog.tsx"
           ? "setShowInitDialog"
@@ -67,7 +69,7 @@ describe("region dropdown layering", () => {
 
       expect(source).toMatch(
         new RegExp(
-          `<Credenza[\\s\\S]*open=\\{${openProp}\\}[\\s\\S]*onOpenChange=\\{${openChangeProp}\\}[\\s\\S]*disablePointerDismissal=\\{${dismissalGuard}\\}`,
+          `<Credenza[\\s\\S]*open=\\{${openExpression}\\}[\\s\\S]*onOpenChange=\\{${openChangeProp}\\}[\\s\\S]*disablePointerDismissal=\\{${dismissalGuard}\\}`,
         ),
       );
       expect(source).toContain(`onOpenChange={${openHandler}}`);

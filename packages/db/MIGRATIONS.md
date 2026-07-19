@@ -2,8 +2,8 @@
 
 ## New or empty database
 
-Run the normal migration command. Drizzle applies `0000_baseline`, then
-`0001_report_owner_content`:
+Run the normal migration command. Drizzle applies `0000_baseline`, then every
+generated migration in journal order:
 
 ```sh
 bun run db:migrate
@@ -16,7 +16,14 @@ contains the initial `CREATE` statements and would collide with its tables.
 
 Use the guarded baseline operation below. It marks only `0000_baseline` as
 already applied and then invokes the Drizzle migrator, which executes
-`0001_report_owner_content`. It never marks `0001` in advance.
+all later generated migrations in journal order. It never marks later
+migrations in advance.
+
+`db:baseline-existing` requires the immutable prefix `0000_baseline` then
+`0001_report_owner_content`, validates every journaled migration hash, records
+the baseline only for a compatible pre-existing schema, and lets Drizzle apply
+all later generated migrations in journal order. New schema changes must be
+created with `bun --filter @biume/db db:generate --name=<snake_case_name>`.
 
 Preconditions:
 
@@ -62,10 +69,10 @@ The operation:
    defaults to `now()` when needed, so the skipped baseline is truthful;
 3. creates `drizzle.__drizzle_migrations` only if needed;
 4. inserts the `0000` history row without executing its SQL;
-5. invokes Drizzle's migrator so only the pending `0001` runs;
-6. verifies both the `0001` history row and `public.report_owner_content`.
+5. invokes Drizzle's migrator so every pending journaled migration runs;
+6. verifies every journaled history row and `public.report_owner_content`.
 
-The command is idempotent for the exact two-migration history. It refuses a
-changed migration set, unknown history rows, mismatched hashes, a missing
-baseline object, or partially applied owner-content objects. Resolve any such
-state manually on a database branch before touching production.
+The command accepts later generated migrations after its immutable two-entry
+prefix. It refuses a changed prefix, unknown history rows, mismatched hashes, a
+missing baseline object, or partially applied owner-content objects. Resolve
+any such state manually on a database branch before touching production.

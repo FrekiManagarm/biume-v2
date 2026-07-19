@@ -32,8 +32,15 @@ import {
   getAllPatients,
   getPatientById,
 } from "@/lib/api/actions/patients.action";
-import { createReport } from "@/lib/api/actions/reports.action";
-import { canSubmitReportDraft } from "./InitializationDialog.helpers";
+import {
+  createQuickReport,
+  createReport,
+} from "@/lib/api/actions/reports.action";
+import {
+  canSubmitReportDraft,
+  type ReportCreationMode,
+} from "./InitializationDialog.helpers";
+import { ReportCreationModeSelector } from "./ReportCreationModeSelector";
 
 type InitializationDialogProps = {
   showInitDialog: boolean;
@@ -67,6 +74,11 @@ export function InitializationDialog({
   >(null);
   const [consultationReason, setConsultationReason] = useState("");
   const [title, setTitle] = useState("Nouveau rapport");
+  const [mode, setMode] = useState<ReportCreationMode>("existing");
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [animalName, setAnimalName] = useState("");
+  const [clientRequestId] = useState(() => crypto.randomUUID());
   const [isPetSelectOpen, setIsPetSelectOpen] = useState(false);
   const [isAppointmentSelectOpen, setIsAppointmentSelectOpen] = useState(false);
 
@@ -101,27 +113,17 @@ export function InitializationDialog({
     },
   );
 
-  const { mutateAsync: createReportMutation, isPending: isCreatingReport } =
-    useMutation({
-      mutationFn: createReport,
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success("Rapport créé avec succès");
-          navigate({
-            to: "/dashboard/reports/$id/edit",
-            params: { id: data.reportId },
-          });
-        }
-      },
-      onError: (error) => {
-        toast.error("Erreur lors de la création du rapport");
-        console.error(error);
-      },
-    });
+  const existingReportMutation = useMutation({ mutationFn: createReport });
+  const quickReportMutation = useMutation({ mutationFn: createQuickReport });
+  const isCreatingReport =
+    existingReportMutation.isPending || quickReportMutation.isPending;
 
   const canCreate = canSubmitReportDraft({
+    mode,
     selectedPetId,
     consultationReason,
+    ownerName,
+    animalName,
     isLoadingPets,
     isLoadingPet,
     isCreatingReport,
@@ -133,17 +135,36 @@ export function InitializationDialog({
   };
 
   const onComplete = async () => {
-    if (!canCreate) {
-      return;
+    if (!canCreate) return;
+    try {
+      const result =
+        mode === "quick"
+          ? await quickReportMutation.mutateAsync({
+              clientRequestId,
+              ownerName,
+              ownerEmail,
+              animalName,
+              title: title.trim() || "Nouveau rapport",
+              consultationReason: consultationReason.trim(),
+            })
+          : await existingReportMutation.mutateAsync({
+              title: title.trim() || "Nouveau rapport",
+              petId: selectedPetId!,
+              appointmentId: selectedAppointmentId ?? undefined,
+              consultationReason: consultationReason.trim(),
+              status: "draft",
+            });
+      if (result.success) {
+        toast.success("Rapport créé avec succès");
+        navigate({
+          to: "/dashboard/reports/$id/edit",
+          params: { id: result.reportId },
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de la création du rapport");
     }
-
-    await createReportMutation({
-      title: title.trim() || "Nouveau rapport",
-      petId: selectedPetId ?? "",
-      appointmentId: selectedAppointmentId ?? undefined,
-      consultationReason: consultationReason.trim(),
-      status: "draft",
-    });
   };
 
   const isSelectOpen = isPetSelectOpen || isAppointmentSelectOpen;
@@ -166,6 +187,8 @@ export function InitializationDialog({
           </CredenzaHeader>
 
           <div className="grid max-h-[68vh] gap-5 overflow-y-auto px-5 py-5">
+            <ReportCreationModeSelector mode={mode} onModeChange={setMode} />
+
             <FieldGroup label="Titre" htmlFor="report-title">
               <Input
                 id="report-title"
@@ -176,179 +199,226 @@ export function InitializationDialog({
               />
             </FieldGroup>
 
-            <FieldGroup label="Animal" htmlFor="pet-select">
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                <Select
-                  open={isPetSelectOpen}
-                  onOpenChange={setIsPetSelectOpen}
-                  value={selectedPetId ?? ""}
-                  onValueChange={handlePetChange}
-                  disabled={isLoadingPets}
-                >
-                  <SelectTrigger id="pet-select" className="h-10 w-full">
-                    {isLoadingPets ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2Icon className="size-4 animate-spin" />
-                        <span>Chargement des animaux...</span>
-                      </div>
-                    ) : (
-                      <SelectValue placeholder="Sélectionner un animal" />
-                    )}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pets.length > 0 ? (
-                      <>
-                        <div className="px-2 py-2">
-                          <div className="flex items-center rounded-md border bg-muted/50 px-2">
-                            <Search className="mr-2 size-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Rechercher un animal..."
-                              className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-                              value={petSearchTerm}
-                              onChange={(event) =>
-                                setPetSearchTerm(event.target.value)
-                              }
-                            />
+            {mode === "existing" ? (
+              <>
+                <FieldGroup label="Animal" htmlFor="pet-select">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <Select
+                      open={isPetSelectOpen}
+                      onOpenChange={setIsPetSelectOpen}
+                      value={selectedPetId ?? ""}
+                      onValueChange={handlePetChange}
+                      disabled={isLoadingPets}
+                    >
+                      <SelectTrigger id="pet-select" className="h-10 w-full">
+                        {isLoadingPets ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2Icon className="size-4 animate-spin" />
+                            <span>Chargement des animaux...</span>
                           </div>
-                        </div>
-
-                        {filteredPets.length > 0 ? (
-                          filteredPets.map((pet) => (
-                            <SelectItem
-                              key={pet.id}
-                              value={pet.id}
-                              className="h-auto p-0 pl-8 pr-2"
-                            >
-                              <div className="flex min-w-0 items-center gap-3 py-2">
-                                <Avatar className="size-8 shrink-0 rounded-xl">
-                                  <AvatarImage
-                                    src={pet.image ?? undefined}
-                                    alt={pet.name ?? ""}
-                                  />
-                                  <AvatarFallback className="rounded-xl bg-muted text-xs">
-                                    {getInitials(pet.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="min-w-0">
-                                  <span className="block truncate text-sm font-medium">
-                                    {pet.name}
-                                  </span>
-                                  <span className="block truncate text-xs text-muted-foreground">
-                                    {pet.animal?.name ?? "Animal"}
-                                    {pet.breed ? ` - ${pet.breed}` : ""}
-                                    {pet.owner?.name
-                                      ? ` - ${pet.owner.name}`
-                                      : ""}
-                                  </span>
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))
                         ) : (
-                          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                          <SelectValue placeholder="Sélectionner un animal" />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pets.length > 0 ? (
+                          <>
+                            <div className="px-2 py-2">
+                              <div className="flex items-center rounded-md border bg-muted/50 px-2">
+                                <Search className="mr-2 size-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="Rechercher un animal..."
+                                  className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+                                  value={petSearchTerm}
+                                  onChange={(event) =>
+                                    setPetSearchTerm(event.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            {filteredPets.length > 0 ? (
+                              filteredPets.map((pet) => (
+                                <SelectItem
+                                  key={pet.id}
+                                  value={pet.id}
+                                  className="h-auto p-0 pl-8 pr-2"
+                                >
+                                  <div className="flex min-w-0 items-center gap-3 py-2">
+                                    <Avatar className="size-8 shrink-0 rounded-xl">
+                                      <AvatarImage
+                                        src={pet.image ?? undefined}
+                                        alt={pet.name ?? ""}
+                                      />
+                                      <AvatarFallback className="rounded-xl bg-muted text-xs">
+                                        {getInitials(pet.name)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="min-w-0">
+                                      <span className="block truncate text-sm font-medium">
+                                        {pet.name}
+                                      </span>
+                                      <span className="block truncate text-xs text-muted-foreground">
+                                        {pet.animal?.name ?? "Animal"}
+                                        {pet.breed ? ` - ${pet.breed}` : ""}
+                                        {pet.owner?.name
+                                          ? ` - ${pet.owner.name}`
+                                          : ""}
+                                      </span>
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                                Aucun animal trouvé
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <SelectItem value="no-pets" disabled>
                             Aucun animal trouvé
-                          </div>
+                          </SelectItem>
                         )}
-                      </>
-                    ) : (
-                      <SelectItem value="no-pets" disabled>
-                        Aucun animal trouvé
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                      </SelectContent>
+                    </Select>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAnimalCredenzaOpen(true)}
-                  disabled={!selectedPetId}
-                  className="h-10 justify-start sm:w-10 sm:px-0"
-                >
-                  <Search className="size-4" />
-                  <span className="sm:sr-only">Ouvrir le dossier animal</span>
-                </Button>
-              </div>
-
-              {selectedPet ? (
-                <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-3 rounded-lg border bg-muted/40 px-3 py-2">
-                  <Avatar className="size-8 rounded-lg">
-                    <AvatarImage
-                      src={selectedPet.image ?? undefined}
-                      alt={selectedPet.name}
-                    />
-                    <AvatarFallback className="rounded-lg bg-background text-xs font-semibold">
-                      {getInitials(selectedPet.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {selectedPet.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {selectedPet.animal?.name ?? "Animal"}
-                      {selectedPet.owner?.name
-                        ? ` - ${selectedPet.owner.name}`
-                        : ""}
-                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAnimalCredenzaOpen(true)}
+                      disabled={!selectedPetId}
+                      className="h-10 justify-start sm:w-10 sm:px-0"
+                    >
+                      <Search className="size-4" />
+                      <span className="sm:sr-only">
+                        Ouvrir le dossier animal
+                      </span>
+                    </Button>
                   </div>
-                </div>
-              ) : null}
-            </FieldGroup>
 
-            <FieldGroup
-              label="Rendez-vous (optionnel)"
-              htmlFor="appointment-select"
-            >
-              <Select
-                open={isAppointmentSelectOpen}
-                onOpenChange={setIsAppointmentSelectOpen}
-                value={selectedAppointmentId ?? NO_APPOINTMENT_VALUE}
-                onValueChange={(value) => {
-                  setSelectedAppointmentId(
-                    value === NO_APPOINTMENT_VALUE ? null : value,
-                  );
-                }}
-                disabled={!selectedPetId || isLoadingAppointments}
-              >
-                <SelectTrigger id="appointment-select" className="h-10 w-full">
-                  {isLoadingAppointments ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2Icon className="size-4 animate-spin" />
-                      <span>Chargement des rendez-vous...</span>
+                  {selectedPet ? (
+                    <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-3 rounded-lg border bg-muted/40 px-3 py-2">
+                      <Avatar className="size-8 rounded-lg">
+                        <AvatarImage
+                          src={selectedPet.image ?? undefined}
+                          alt={selectedPet.name}
+                        />
+                        <AvatarFallback className="rounded-lg bg-background text-xs font-semibold">
+                          {getInitials(selectedPet.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {selectedPet.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {selectedPet.animal?.name ?? "Animal"}
+                          {selectedPet.owner?.name
+                            ? ` - ${selectedPet.owner.name}`
+                            : ""}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <SelectValue placeholder="Aucun rendez-vous" />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_APPOINTMENT_VALUE}>
-                    Aucun rendez-vous
-                  </SelectItem>
-                  {appointmentsData?.length ? (
-                    appointmentsData.map((appointment) => (
-                      <SelectItem key={appointment.id} value={appointment.id}>
-                        {format(
-                          new Date(appointment.beginAt),
-                          "dd MMMM yyyy 'à' HH:mm",
-                          {
-                            locale: fr,
-                          },
-                        )}
-                        {getAppointmentStatusLabel(appointment.status)}
+                  ) : null}
+                </FieldGroup>
+
+                <FieldGroup
+                  label="Rendez-vous (optionnel)"
+                  htmlFor="appointment-select"
+                >
+                  <Select
+                    open={isAppointmentSelectOpen}
+                    onOpenChange={setIsAppointmentSelectOpen}
+                    value={selectedAppointmentId ?? NO_APPOINTMENT_VALUE}
+                    onValueChange={(value) => {
+                      setSelectedAppointmentId(
+                        value === NO_APPOINTMENT_VALUE ? null : value,
+                      );
+                    }}
+                    disabled={!selectedPetId || isLoadingAppointments}
+                  >
+                    <SelectTrigger
+                      id="appointment-select"
+                      className="h-10 w-full"
+                    >
+                      {isLoadingAppointments ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2Icon className="size-4 animate-spin" />
+                          <span>Chargement des rendez-vous...</span>
+                        </div>
+                      ) : (
+                        <SelectValue placeholder="Aucun rendez-vous" />
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_APPOINTMENT_VALUE}>
+                        Aucun rendez-vous
                       </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="__no_available__" disabled>
-                      Aucun rendez-vous disponible
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </FieldGroup>
+                      {appointmentsData?.length ? (
+                        appointmentsData.map((appointment) => (
+                          <SelectItem
+                            key={appointment.id}
+                            value={appointment.id}
+                          >
+                            {format(
+                              new Date(appointment.beginAt),
+                              "dd MMMM yyyy 'à' HH:mm",
+                              {
+                                locale: fr,
+                              },
+                            )}
+                            {getAppointmentStatusLabel(appointment.status)}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="__no_available__" disabled>
+                          Aucun rendez-vous disponible
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </FieldGroup>
+              </>
+            ) : (
+              <>
+                <FieldGroup label="Propriétaire" htmlFor="quick-owner-name">
+                  <Input
+                    id="quick-owner-name"
+                    value={ownerName}
+                    onChange={(event) => setOwnerName(event.target.value)}
+                    placeholder="Nom du propriétaire"
+                  />
+                </FieldGroup>
+                <FieldGroup
+                  label="E-mail (optionnel)"
+                  htmlFor="quick-owner-email"
+                >
+                  <Input
+                    id="quick-owner-email"
+                    type="email"
+                    value={ownerEmail}
+                    onChange={(event) => setOwnerEmail(event.target.value)}
+                    placeholder="proprietaire@exemple.fr"
+                  />
+                </FieldGroup>
+                <FieldGroup label="Animal" htmlFor="quick-animal-name">
+                  <Input
+                    id="quick-animal-name"
+                    value={animalName}
+                    onChange={(event) => setAnimalName(event.target.value)}
+                    placeholder="Nom de l’animal"
+                  />
+                </FieldGroup>
+              </>
+            )}
 
             <FieldGroup
-              label="Motif de la séance"
+              label={
+                mode === "quick"
+                  ? "Motif de la séance (optionnel)"
+                  : "Motif de la séance"
+              }
               htmlFor="consultation-reason"
             >
               <Textarea

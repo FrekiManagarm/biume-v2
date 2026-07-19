@@ -34,12 +34,13 @@ import {
   MixerHorizontalIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/style";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useHotkeys } from "react-hotkeys-hook";
 import { getAnatomicalParts } from "@/lib/api/actions/reports.action";
 import type { AnatomicalIssue } from "../types";
 import { AnatomicalHistoryAndDiagnosticPanel } from "./AnatomicalHistoryAndDiagnosticPanel";
+import { resolveAnatomicalAnimalType } from "../anatomical-species";
 import {
   anatomicalRegionsByCategory,
   interventionZones,
@@ -137,7 +138,7 @@ export function AddAnatomicalIssueDialog({
   animalData,
   selectedZone,
   isTestMode = false,
-  selectedAnimalType = "dog",
+  selectedAnimalType,
   submitLabel,
   petId,
 }: AddAnatomicalIssueDialogProps) {
@@ -149,48 +150,32 @@ export function AddAnatomicalIssueDialog({
   const [hoveredSeverity, setHoveredSeverity] = useState<number | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
 
-  const getAnimalType = () => {
-    const animalName = animalData?.name?.toLowerCase() || "";
-    const animalCode = animalData?.code?.toLowerCase() || "";
-
-    if (
-      animalName.includes("chat") ||
-      animalName.includes("cat") ||
-      animalCode.includes("cat")
-    ) {
-      return "CAT";
-    }
-
-    if (
-      animalName.includes("cheval") ||
-      animalName.includes("horse") ||
-      animalCode.includes("horse")
-    ) {
-      return "HORSE";
-    }
-
-    return "DOG";
-  };
-
-  const animalType = getAnimalType();
+  const animalType = resolveAnatomicalAnimalType(
+    isTestMode ? { code: selectedAnimalType } : animalData,
+  );
   const zone = selectedZone as AnatomicalZone | undefined;
 
+  useEffect(() => {
+    if (isOpen && !animalType) onOpenChange(false);
+  }, [animalType, isOpen, onOpenChange]);
+
   const getTestModeRegionsData = () => {
-    switch (selectedAnimalType) {
-      case "cat":
+    switch (animalType) {
+      case "CAT":
         return anatomicalRegionsByCategoryCat;
-      case "horse":
+      case "HORSE":
         return anatomicalRegionsByCategoryHorse;
-      case "dog":
-      default:
+      case "DOG":
         return anatomicalRegionsByCategory;
+      default:
+        return null;
     }
   };
 
   const { data: anatomicalPartsResponse, isLoading } = useQuery({
     queryKey: ["anatomicalParts", animalType, zone],
     queryFn: async () => {
-      if (!zone) {
+      if (!animalType || !zone) {
         return [];
       }
       const result = await getAnatomicalParts({ animalType, zone });
@@ -263,7 +248,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen,
+      enabled: isOpen && !!animalType,
       preventDefault: true,
     },
   );
@@ -276,7 +261,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen,
+      enabled: isOpen && !!animalType,
       preventDefault: true,
     },
   );
@@ -289,7 +274,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen,
+      enabled: isOpen && !!animalType,
       preventDefault: true,
     },
   );
@@ -302,7 +287,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 2,
+      enabled: isOpen && !!animalType && currentStep === 2,
       preventDefault: true,
     },
   );
@@ -315,7 +300,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 2,
+      enabled: isOpen && !!animalType && currentStep === 2,
       preventDefault: true,
     },
   );
@@ -328,7 +313,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 2,
+      enabled: isOpen && !!animalType && currentStep === 2,
       preventDefault: true,
     },
   );
@@ -343,7 +328,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 3,
+      enabled: isOpen && !!animalType && currentStep === 3,
       preventDefault: true,
     },
   );
@@ -356,7 +341,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 1,
+      enabled: isOpen && !!animalType && currentStep === 1,
       preventDefault: true,
     },
   );
@@ -369,7 +354,7 @@ export function AddAnatomicalIssueDialog({
       }
     },
     {
-      enabled: isOpen && currentStep === 1,
+      enabled: isOpen && !!animalType && currentStep === 1,
       preventDefault: true,
     },
   );
@@ -435,7 +420,7 @@ export function AddAnatomicalIssueDialog({
 
   return (
     <Credenza
-      open={isOpen}
+      open={isOpen && !!animalType}
       onOpenChange={onOpenChange}
       disablePointerDismissal={isSelectOpen}
     >

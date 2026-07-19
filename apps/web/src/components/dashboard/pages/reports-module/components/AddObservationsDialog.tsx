@@ -29,7 +29,7 @@ import {
   MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/style";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -40,6 +40,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAnatomicalParts } from "@/lib/api/actions/reports.action";
 import type { AnatomicalPart } from "@/lib/schemas/anatomicalPart";
 import { AnatomicalHistoryAndDiagnosticPanel } from "./AnatomicalHistoryAndDiagnosticPanel";
+import { resolveAnatomicalAnimalType } from "../anatomical-species";
 
 type AnatomicalZone = "articulation" | "fascias" | "organes" | "muscles";
 
@@ -143,36 +144,18 @@ export function AddObservationDialog({
   const [hoveredSeverity, setHoveredSeverity] = useState<number | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
 
-  // Déterminer le type d'animal pour la requête
-  const getAnimalType = () => {
-    const animalName = animalData?.name?.toLowerCase() || "";
-    const animalCode = animalData?.code?.toLowerCase() || "";
-
-    if (
-      animalName.includes("chat") ||
-      animalName.includes("cat") ||
-      animalCode.includes("cat")
-    ) {
-      return "CAT";
-    } else if (
-      animalName.includes("cheval") ||
-      animalName.includes("horse") ||
-      animalCode.includes("horse")
-    ) {
-      return "HORSE";
-    } else {
-      return "DOG";
-    }
-  };
-
-  const animalType = getAnimalType();
+  const animalType = resolveAnatomicalAnimalType(animalData);
   const zone = selectedZone as AnatomicalZone | undefined;
+
+  useEffect(() => {
+    if (isOpen && !animalType) onOpenChange(false);
+  }, [animalType, isOpen, onOpenChange]);
 
   // Récupérer les données anatomiques depuis la base de données
   const { data: anatomicalPartsResponse } = useQuery({
     queryKey: ["anatomicalParts", animalType, zone],
     queryFn: async () => {
-      if (!zone) {
+      if (!animalType || !zone) {
         return [];
       }
       const result = await getAnatomicalParts({ animalType, zone });
@@ -266,7 +249,7 @@ export function AddObservationDialog({
 
   return (
     <Credenza
-      open={isOpen}
+      open={isOpen && !!animalType}
       onOpenChange={onOpenChange}
       disablePointerDismissal={isSelectOpen}
     >
