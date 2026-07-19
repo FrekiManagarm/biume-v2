@@ -25,7 +25,7 @@ export function getAllReports(params: { search?: string; status?: string } = {})
   return getAllReportsFn({ data: params });
 }
 
-export function createReport(report: z.infer<typeof createReportSchema>) {
+export function createReport(report: z.input<typeof createReportSchema>) {
   return createReportFn({ data: report });
 }
 

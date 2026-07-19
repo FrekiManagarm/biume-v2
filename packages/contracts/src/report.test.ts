@@ -49,6 +49,24 @@ describe("report contracts", () => {
     });
   });
 
+  it("rejects a finalized report while any section is unresolved", () => {
+    const result = reportSchema.safeParse({
+      title: "Séance de Nox",
+      status: "finalized",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: "Chaque section doit être confirmée ou non applicable",
+          path: ["sectionStates"],
+        }),
+      ]),
+    );
+  });
+
   it("accepts the minimum quick-create identity", () => {
     expect(
       quickReportSchema.parse({ ownerName: "Camille", animalName: "Nox" }),
