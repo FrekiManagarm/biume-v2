@@ -78,6 +78,25 @@ export function getRemovedOwnerSources(
   });
 }
 
+export function buildQuickReportMutationQueries<
+  OwnerInsert,
+  AnimalInsert,
+  ReportInsert,
+  SectionStateInsert,
+>({
+  ownerInsert,
+  animalInsert,
+  reportInsert,
+  sectionStateInsert,
+}: {
+  ownerInsert: OwnerInsert;
+  animalInsert: AnimalInsert;
+  reportInsert: ReportInsert;
+  sectionStateInsert: SectionStateInsert;
+}) {
+  return [ownerInsert, animalInsert, reportInsert, sectionStateInsert] as const;
+}
+
 export function executeAtomicReportMutations<
   const Mutations extends readonly [unknown, ...unknown[]],
   Result,

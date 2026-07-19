@@ -1,4 +1,5 @@
 import { CalendarClockIcon, CheckIcon, EyeIcon, SaveIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 export type ReportWorkspaceHeaderProps = {
   title: string;
   onTitleChange: (title: string) => void;
-  patientSummary: string;
+  patientSummary: ReactNode;
   appointment?: { beginAt: Date; endAt: Date };
   onPreview: () => void;
   onSave: () => void;

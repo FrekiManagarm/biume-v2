@@ -40,6 +40,7 @@ import {
   canSubmitReportDraft,
   type ReportCreationMode,
 } from "./InitializationDialog.helpers";
+import { ReportCreationModeSelector } from "./ReportCreationModeSelector";
 
 type InitializationDialogProps = {
   showInitDialog: boolean;
@@ -184,25 +185,7 @@ export function InitializationDialog({
           </CredenzaHeader>
 
           <div className="grid max-h-[68vh] gap-5 overflow-y-auto px-5 py-5">
-            <div
-              className="grid grid-cols-2 gap-2"
-              aria-label="Mode de création"
-            >
-              <Button
-                type="button"
-                variant={mode === "existing" ? "secondary" : "outline"}
-                onClick={() => setMode("existing")}
-              >
-                Animal existant
-              </Button>
-              <Button
-                type="button"
-                variant={mode === "quick" ? "secondary" : "outline"}
-                onClick={() => setMode("quick")}
-              >
-                Nouveau dossier rapide
-              </Button>
-            </div>
+            <ReportCreationModeSelector mode={mode} onModeChange={setMode} />
 
             <FieldGroup label="Titre" htmlFor="report-title">
               <Input

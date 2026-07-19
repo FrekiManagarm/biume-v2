@@ -34,6 +34,7 @@ import {
 import { anatomicalRegionsHorse } from "#/components/dashboard/pages/reports-module/data/horse/typesHorse";
 import { anatomicalHorseRegionPaths } from "#/components/dashboard/pages/reports-module/data/horse/dataHorse";
 import {
+  buildQuickReportMutationQueries,
   buildReportChildRows,
   buildReportUpdateMutationQueries,
   executeAtomicReportMutations,
@@ -265,12 +266,17 @@ export const createQuickReport = createServerFn({ method: "POST" })
       now: new Date(),
     });
 
-    await db.batch([
-      db.insert(clients).values(rows.owner),
-      db.insert(pets).values(rows.animal),
-      db.insert(advancedReport).values(rows.report),
-      db.insert(reportSectionState).values(rows.sectionStates),
-    ] as const);
+    const mutations = buildQuickReportMutationQueries({
+      ownerInsert: db.insert(clients).values(rows.owner),
+      animalInsert: db.insert(pets).values(rows.animal),
+      reportInsert: db.insert(advancedReport).values(rows.report),
+      sectionStateInsert: db
+        .insert(reportSectionState)
+        .values(rows.sectionStates),
+    });
+    await executeAtomicReportMutations(mutations, (queries) =>
+      db.batch(queries),
+    );
 
     return {
       success: true as const,

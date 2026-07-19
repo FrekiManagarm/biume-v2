@@ -3,6 +3,17 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 describe("tenant-isolated creation wiring", () => {
+  test("quick report action accepts schema input before defaults are applied", () => {
+    const source = readFileSync(
+      new URL("../lib/api/actions/reports.action.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).toContain(
+      "createQuickReport(report: z.input<typeof quickReportSchema>)",
+    );
+  });
+
   test("createAppointment scopes its patient lookup before delegating the insert", () => {
     const source = readFileSync(
       new URL("./appointments.function.ts", import.meta.url),
@@ -38,7 +49,7 @@ describe("tenant-isolated creation wiring", () => {
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
   });
 
-  test("createQuickReport atomically inserts tenant-scoped owner, animal, report, and decisions", () => {
+  test("createQuickReport derives tenant and entity ids before the tested atomic executor", () => {
     const source = readFileSync(
       new URL("./reports.function.ts", import.meta.url),
       "utf8",
@@ -48,12 +59,11 @@ describe("tenant-isolated creation wiring", () => {
       source.indexOf("export const getReportById"),
     );
 
-    expect(createSource).toContain("organization.id");
-    expect(createSource).toContain("db.batch");
-    expect(createSource).toContain("clients");
-    expect(createSource).toContain("pets");
-    expect(createSource).toContain("advancedReport");
-    expect(createSource).toContain("reportSectionState");
+    expect(createSource).toContain(".validator(quickReportSchema)");
+    expect(createSource).toContain("organizationId: organization.id");
+    expect(createSource.match(/crypto\.randomUUID\(\)/g)).toHaveLength(3);
+    expect(createSource).toContain("buildQuickReportMutationQueries");
+    expect(createSource).toContain("executeAtomicReportMutations");
   });
 });
 

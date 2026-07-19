@@ -130,7 +130,11 @@ export const createReportSchema = z.object({
 
 export const quickReportSchema = z.object({
   ownerName: z.string().trim().min(1, "Le nom du propriétaire est requis"),
-  ownerEmail: z.union([z.literal(""), z.string().email()]).optional(),
+  ownerEmail: z
+    .string()
+    .trim()
+    .pipe(z.union([z.literal(""), z.string().email()]))
+    .optional(),
   animalName: z.string().trim().min(1, "Le nom de l’animal est requis"),
   title: z.string().trim().min(1).default("Nouveau rapport"),
   consultationReason: z.string().trim().default(""),

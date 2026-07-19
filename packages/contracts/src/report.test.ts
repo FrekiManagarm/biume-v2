@@ -78,6 +78,26 @@ describe("report contracts", () => {
     });
   });
 
+  it("normalizes a whitespace-only quick-create email to empty", () => {
+    expect(
+      quickReportSchema.parse({
+        ownerName: "Camille",
+        ownerEmail: "   ",
+        animalName: "Nox",
+      }).ownerEmail,
+    ).toBe("");
+  });
+
+  it("trims a valid quick-create email before validating it", () => {
+    expect(
+      quickReportSchema.parse({
+        ownerName: "Camille",
+        ownerEmail: "  camille@example.com  ",
+        animalName: "Nox",
+      }).ownerEmail,
+    ).toBe("camille@example.com");
+  });
+
   it("rejects duplicate anatomical and recommendation identifiers", () => {
     const base = {
       title: "Séance de Nox",

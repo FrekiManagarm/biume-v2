@@ -1,10 +1,42 @@
 import { describe, expect, test } from "vitest";
 import {
+  buildQuickReportMutationQueries,
   buildReportChildRows,
   buildReportUpdateMutationQueries,
   executeAtomicReportMutations,
   getRemovedOwnerSources,
 } from "./reports.persistence";
+
+describe("quick report mutation composition", () => {
+  test("delivers exactly four queries once and propagates batch failure", async () => {
+    const ownerInsert = { name: "insert-owner" } as const;
+    const animalInsert = { name: "insert-animal" } as const;
+    const reportInsert = { name: "insert-report" } as const;
+    const sectionStateInsert = { name: "insert-section-states" } as const;
+    const mutations = buildQuickReportMutationQueries({
+      ownerInsert,
+      animalInsert,
+      reportInsert,
+      sectionStateInsert,
+    });
+    const receivedBatches: Array<typeof mutations> = [];
+
+    await expect(
+      executeAtomicReportMutations(mutations, async (received) => {
+        receivedBatches.push(received);
+        throw new Error("owner insert failed");
+      }),
+    ).rejects.toThrow("owner insert failed");
+
+    expect(mutations).toEqual([
+      ownerInsert,
+      animalInsert,
+      reportInsert,
+      sectionStateInsert,
+    ]);
+    expect(receivedBatches).toEqual([mutations]);
+  });
+});
 
 describe("report child persistence", () => {
   test("reuses every validated client item id", () => {

@@ -19,6 +19,7 @@ import { SectionDecisionControl } from "./components/SectionDecisionControl";
 import { ReportReminderDialog } from "./components/ReportReminderDialog";
 import { TestModeSection } from "./components/TestModeSection";
 import { ReportWorkspaceHeader } from "./components/ReportWorkspaceHeader";
+import { ReportPatientIdentity } from "./components/ReportPatientIdentity";
 import { OwnerPreparationWarningDialog } from "./components/OwnerPreparationWarningDialog";
 import {
   ReportPanelController,
@@ -758,7 +759,7 @@ export function AdvancedReportEditor({
     setIsAddAnatomicalIssueOpen(false);
   };
 
-  const selectedPet = petData;
+  const selectedPet = petData ?? initialData.patient;
 
   const isCat =
     (selectedPet?.animal?.code &&
@@ -848,9 +849,7 @@ export function AdvancedReportEditor({
       return [tab.id, status];
     }),
   ) as Record<ReportSectionId, OwnerContentStatus | "not-applicable">;
-  const selectedPetSummary = selectedPet
-    ? `${selectedPet.name} · ${selectedPet.animal?.name || selectedPet.type}`
-    : "Aucun patient sélectionné";
+  const selectedPetSummary = <ReportPatientIdentity patient={selectedPet} />;
 
   return (
     <div className="min-h-dvh w-full bg-slate-50 text-slate-950">

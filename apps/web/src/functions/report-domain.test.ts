@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { quickReportSchema } from "@biume/contracts/report";
 import {
   buildQuickReportRows,
   buildReportSectionStateRows,
@@ -91,5 +92,20 @@ it("stores an omitted quick-create email as null", () => {
     ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
     now: new Date("2026-07-18T10:00:00.000Z"),
   });
+  expect(rows.owner.email).toBeNull();
+});
+
+it("stores a normalized whitespace-only quick-create email as null", () => {
+  const rows = buildQuickReportRows({
+    organizationId: "org-1",
+    input: quickReportSchema.parse({
+      ownerName: "Camille",
+      ownerEmail: "   ",
+      animalName: "Nox",
+    }),
+    ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    now: new Date("2026-07-18T10:00:00.000Z"),
+  });
+
   expect(rows.owner.email).toBeNull();
 });

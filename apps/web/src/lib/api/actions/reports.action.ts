@@ -33,7 +33,7 @@ export function createReport(report: z.input<typeof createReportSchema>) {
   return createReportFn({ data: report });
 }
 
-export function createQuickReport(report: z.infer<typeof quickReportSchema>) {
+export function createQuickReport(report: z.input<typeof quickReportSchema>) {
   return createQuickReportFn({ data: report });
 }
 
