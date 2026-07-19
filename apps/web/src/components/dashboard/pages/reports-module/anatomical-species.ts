@@ -1,6 +1,6 @@
 export type AnatomicalAnimalType = "DOG" | "CAT" | "HORSE";
 
-type AnimalSpecies = {
+export type AnimalSpecies = {
   code?: string | null;
   name?: string | null;
 };
@@ -25,4 +25,16 @@ export function resolveAnatomicalAnimalType(
   }
 
   return null;
+}
+
+type ReportEntryTab = "clinical" | "anatomical" | "recommendations" | "notes";
+
+export function canOpenAnatomicalEntryShortcut(
+  activeTab: ReportEntryTab,
+  animal?: AnimalSpecies | null,
+): boolean {
+  return (
+    (activeTab === "clinical" || activeTab === "anatomical") &&
+    resolveAnatomicalAnimalType(animal) !== null
+  );
 }

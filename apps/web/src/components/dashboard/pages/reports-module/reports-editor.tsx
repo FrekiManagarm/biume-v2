@@ -87,6 +87,10 @@ import {
   type ReportSectionStates,
 } from "@biume/contracts/report";
 import type { NormalizedAdvancedReport } from "#/functions/reports.function";
+import {
+  canOpenAnatomicalEntryShortcut,
+  resolveAnatomicalAnimalType,
+} from "./anatomical-species";
 
 type ReportData = NormalizedAdvancedReport;
 type LoadedAnatomicalIssue = ReportData["anatomicalIssues"][number];
@@ -389,10 +393,24 @@ export function AdvancedReportEditor({
     setSectionStates((current) => ({ ...current, [section]: state }));
   };
 
+  // Récupération des détails de l'animal sélectionné
+  const { data: petData } = useQuery({
+    queryKey: ["pet", selectedPetId],
+    queryFn: () => getPatientById(selectedPetId),
+    enabled: !!selectedPetId,
+  });
+  const selectedPet = petData ?? initialData.patient;
+  const entryAnimalData = isTestMode
+    ? { code: selectedAnimalType }
+    : selectedPet?.animal;
+  const hasSupportedEntrySpecies =
+    resolveAnatomicalAnimalType(entryAnimalData) !== null;
+
   // Configuration des raccourcis clavier globaux
   useHotkeys(
     "shift+n",
     () => {
+      if (!canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData)) return;
       if (activeTab === "anatomical") {
         setIsAddAnatomicalIssueOpen(true);
       } else if (activeTab === "clinical") {
@@ -401,7 +419,7 @@ export function AdvancedReportEditor({
     },
     {
       description: "Ouvrir la modale d'ajout d'élément (Shift+N)",
-      enabled: activeTab === "anatomical" || activeTab === "clinical",
+      enabled: canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData),
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -504,13 +522,6 @@ export function AdvancedReportEditor({
     },
   );
 
-  // Récupération des détails de l'animal sélectionné
-  const { data: petData } = useQuery({
-    queryKey: ["pet", selectedPetId],
-    queryFn: () => getPatientById(selectedPetId),
-    enabled: !!selectedPetId,
-  });
-
   // État temporaire pour la nouvelle observation
   const [newObservation, setNewObservation] = useState<NewObservation>({
     region: "",
@@ -570,11 +581,13 @@ export function AdvancedReportEditor({
   };
 
   const handleOpenAddObservation = () => {
+    if (!hasSupportedEntrySpecies) return;
     setEditingObservationId(null);
     setIsAddSheetOpen(true);
   };
 
   const handleEditObservation = (id: string) => {
+    if (!hasSupportedEntrySpecies) return;
     const obs = observations.find((o) => o.id === id);
     if (!obs) return;
     setEditingObservationId(id);
@@ -752,8 +765,6 @@ export function AdvancedReportEditor({
     setIsAddAnatomicalIssueOpen(false);
   };
 
-  const selectedPet = petData ?? initialData.patient;
-
   const isCat =
     (selectedPet?.animal?.code &&
       selectedPet.animal.code.toUpperCase() === "CAT") ||
@@ -924,6 +935,7 @@ export function AdvancedReportEditor({
                           onRemoveObservation={handleRemoveObservation}
                           onOpenAddSheet={handleOpenAddObservation}
                           onEditObservation={handleEditObservation}
+                          isEntryDisabled={!hasSupportedEntrySpecies}
                         />
                       </div>
                     )}
@@ -945,14 +957,14 @@ export function AdvancedReportEditor({
                         }}
                         isAddModalOpen={isAddAnatomicalIssueOpen}
                         setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
-                        animalData={petData?.animal}
+                        animalData={entryAnimalData}
                         isTestMode={isTestMode}
                         selectedAnimalType={selectedAnimalType}
                         anatomicalView={anatomicalView}
                         setAnatomicalView={setAnatomicalView}
                         onEditDysfunction={(id) => {
                           const it = anatomicalIssues.find((d) => d.id === id);
-                          if (!it) return;
+                          if (!it || !hasSupportedEntrySpecies) return;
                           setEditingAnatomicalIssueId(id);
                           setNewAnatomicalIssue({
                             type: it.type,
@@ -1045,6 +1057,7 @@ export function AdvancedReportEditor({
                 <Button
                   size="sm"
                   onClick={handleOpenAddObservation}
+                  disabled={!hasSupportedEntrySpecies}
                   className="h-9 rounded-xl bg-primary text-primary-foreground active:scale-[0.98]"
                   aria-label="Nouvelle observation"
                 >
@@ -1078,6 +1091,7 @@ export function AdvancedReportEditor({
               onRemoveObservation={handleRemoveObservation}
               onOpenAddSheet={handleOpenAddObservation}
               onEditObservation={handleEditObservation}
+              isEntryDisabled={!hasSupportedEntrySpecies}
             />
           </div>
 
@@ -1100,7 +1114,7 @@ export function AdvancedReportEditor({
               }}
               isAddModalOpen={isAddAnatomicalIssueOpen}
               setIsAddModalOpen={setIsAddAnatomicalIssueOpen}
-              animalData={petData?.animal}
+              animalData={entryAnimalData}
               isTestMode={isTestMode}
               selectedAnimalType={selectedAnimalType}
               anatomicalView={anatomicalView}
@@ -1150,7 +1164,7 @@ export function AdvancedReportEditor({
         newObservation={newObservation}
         setNewObservation={setNewObservation}
         onAdd={handleAddObservation}
-        animalData={selectedPet}
+        animalData={entryAnimalData}
         selectedZone={newObservation.interventionZone}
         submitLabel={editingObservationId ? "Mettre à jour" : "Ajouter"}
         petId={selectedPetId}
@@ -1163,7 +1177,7 @@ export function AdvancedReportEditor({
         newIssue={newAnatomicalIssue}
         setNewIssue={setNewAnatomicalIssue}
         onAdd={handleAddAnatomicalIssue}
-        animalData={selectedPet?.animal}
+        animalData={entryAnimalData}
         selectedZone={newAnatomicalIssue.interventionZone}
         isTestMode={isTestMode}
         selectedAnimalType={selectedAnimalType}

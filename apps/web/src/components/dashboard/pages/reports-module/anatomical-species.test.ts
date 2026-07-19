@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveAnatomicalAnimalType } from "./anatomical-species";
+import {
+  canOpenAnatomicalEntryShortcut,
+  resolveAnatomicalAnimalType,
+} from "./anatomical-species";
 
 describe("resolveAnatomicalAnimalType", () => {
   it.each([
@@ -18,4 +21,24 @@ describe("resolveAnatomicalAnimalType", () => {
       expect(resolveAnatomicalAnimalType(animal)).toBeNull();
     },
   );
+});
+
+describe("canOpenAnatomicalEntryShortcut", () => {
+  it.each([
+    [null, false],
+    [undefined, false],
+    [{ code: null, name: null }, false],
+    [{ code: "BIRD", name: "Perroquet" }, false],
+    [{ code: "DOG", name: "Chien" }, true],
+  ])("guards Shift+N for %o", (animal, expected) => {
+    expect(canOpenAnatomicalEntryShortcut("anatomical", animal)).toBe(expected);
+  });
+
+  it("does not enable Shift+N outside entry tabs", () => {
+    expect(
+      canOpenAnatomicalEntryShortcut("recommendations", {
+        code: "DOG",
+      }),
+    ).toBe(false);
+  });
 });

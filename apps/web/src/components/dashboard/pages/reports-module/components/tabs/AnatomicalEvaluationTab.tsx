@@ -58,7 +58,7 @@ export function AnatomicalEvaluationTab({
   setIsAddModalOpen,
   animalData,
   isTestMode = false,
-  selectedAnimalType = "dog",
+  selectedAnimalType,
   anatomicalView: externalAnatomicalView,
   setAnatomicalView: externalSetAnatomicalView,
   onEditDysfunction,
@@ -72,9 +72,9 @@ export function AnatomicalEvaluationTab({
   const setAnatomicalView =
     externalSetAnatomicalView ?? setInternalAnatomicalView;
 
-  const animalType = isTestMode
-    ? null
-    : resolveAnatomicalAnimalType(animalData);
+  const animalType = resolveAnatomicalAnimalType(
+    isTestMode ? { code: selectedAnimalType } : animalData,
+  );
 
   // Récupérer toutes les données anatomiques depuis la base de données (seulement en mode normal)
   useQuery({
@@ -93,7 +93,7 @@ export function AnatomicalEvaluationTab({
     enabled: !!animalType && !isTestMode,
   });
 
-  if (!isTestMode && !animalType) {
+  if (!animalType) {
     return (
       <div className="flex h-full w-full items-center justify-center p-6">
         <div
@@ -110,6 +110,19 @@ export function AnatomicalEvaluationTab({
       </div>
     );
   }
+
+  const testRegionPaths =
+    animalType === "CAT"
+      ? anatomicalCatRegionPaths
+      : animalType === "HORSE"
+        ? anatomicalHorseRegionPaths
+        : anatomicalRegionPaths;
+  const testRegionCategories =
+    animalType === "CAT"
+      ? anatomicalRegionsByCategoryCat
+      : animalType === "HORSE"
+        ? anatomicalRegionsByCategoryHorse
+        : anatomicalRegionsByCategory;
 
   const handleRemoveDysfunction = (id: string) => {
     setDysfunctions(dysfunctions.filter((d) => d.id !== id));
@@ -217,21 +230,7 @@ export function AnatomicalEvaluationTab({
         {dysfunctions.map((dysfunction) => {
           // En mode test, utiliser les données SVG selon le type d'animal sélectionné
           if (isTestMode) {
-            let svgData;
-            switch (selectedAnimalType) {
-              case "cat":
-                svgData = anatomicalCatRegionPaths;
-                break;
-              case "horse":
-                svgData = anatomicalHorseRegionPaths;
-                break;
-              case "dog":
-              default:
-                svgData = anatomicalRegionPaths;
-                break;
-            }
-
-            const regionData = svgData[dysfunction.region];
+            const regionData = testRegionPaths[dysfunction.region];
             if (!regionData) {
               console.warn(
                 "Données SVG manquantes pour la région:",
@@ -552,24 +551,8 @@ export function AnatomicalEvaluationTab({
                                   {isTestMode
                                     ? // En mode test, utiliser les données selon le type d'animal
                                       (() => {
-                                        let regionsData;
-                                        switch (selectedAnimalType) {
-                                          case "cat":
-                                            regionsData =
-                                              anatomicalRegionsByCategoryCat;
-                                            break;
-                                          case "horse":
-                                            regionsData =
-                                              anatomicalRegionsByCategoryHorse;
-                                            break;
-                                          case "dog":
-                                          default:
-                                            regionsData =
-                                              anatomicalRegionsByCategory;
-                                            break;
-                                        }
                                         return (
-                                          regionsData
+                                          testRegionCategories
                                             .find((r) =>
                                               r.items.find(
                                                 (i) => i.value === issue.region,

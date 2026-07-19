@@ -19,6 +19,7 @@ interface ObservationsTabProps {
   onRemoveObservation: (id: string) => void;
   onOpenAddSheet: () => void;
   onEditObservation?: (id: string) => void;
+  isEntryDisabled?: boolean;
 }
 
 const getSeverityConfig = (severity: number) => {
@@ -94,6 +95,7 @@ export function ObservationsTab({
   onRemoveObservation,
   onOpenAddSheet,
   onEditObservation,
+  isEntryDisabled = false,
 }: ObservationsTabProps) {
   return (
     <div className="flex flex-col h-full">
@@ -181,6 +183,7 @@ export function ObservationsTab({
                             variant="ghost"
                             size="icon-sm"
                             onClick={() => onEditObservation(obs.id)}
+                            disabled={isEntryDisabled}
                             aria-label={`Modifier l'observation ${regionLabel}`}
                             className="size-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98]"
                           >
@@ -258,6 +261,7 @@ export function ObservationsTab({
             </div>
             <Button
               onClick={onOpenAddSheet}
+              disabled={isEntryDisabled}
               variant="outline"
               className="gap-2 rounded-xl border-slate-200 bg-white text-slate-800 shadow-sm transition-all duration-200 hover:bg-slate-950 hover:text-white active:scale-[0.98]"
             >
