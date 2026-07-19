@@ -53,6 +53,7 @@
 ### Modified files
 
 - `packages/db/package.json` — depend on `@biume/contracts`.
+- `packages/db/drizzle.config.ts` — exclude colocated `*.test.ts` files from schema discovery.
 - `packages/db/src/schema/index.ts` — export both new tables.
 - `packages/db/src/schema/advancedReport/advancedReport.ts` — add `revision` and relations.
 - `packages/db/src/schema/pets.ts` — make profile-only animal fields nullable.
@@ -567,6 +568,7 @@ git commit -m "feat(reports): add canonical report contracts"
 - Create: `packages/db/src/schema/report-domain.test.ts`
 - Create: `packages/db/scripts/baseline-existing.test.ts`
 - Modify: `packages/db/package.json`
+- Modify: `packages/db/drizzle.config.ts`
 - Modify: `packages/db/src/schema/advancedReport/advancedReport.ts`
 - Modify: `packages/db/src/schema/pets.ts`
 - Modify: `packages/db/src/schema/index.ts`
@@ -580,6 +582,14 @@ git commit -m "feat(reports): add canonical report contracts"
 
 - Consumes: `ReportSectionId`, `ReportSectionState`, and `OwnerReportSnapshot` from `@biume/contracts/report`; `advancedReport` and `organization` Drizzle tables.
 - Produces: `reportSectionState`, `reportSharedVersion`, `advancedReport.revision`, nullable profile-only pet fields, and generated migration `0002_report_domain_foundation`.
+
+Before the first Drizzle generation, change `packages/db/drizzle.config.ts` from the schema directory to an explicit extglob that excludes colocated tests:
+
+```ts
+schema: "./src/schema/**/!(*.test).ts",
+```
+
+Verify this configuration by checking that `drizzle-kit generate` imports the schema modules without importing Vitest and actually creates the expected migration files; do not treat Bun's wrapper exit code alone as success.
 
 - [ ] **Step 1: Write failing schema-shape tests**
 
