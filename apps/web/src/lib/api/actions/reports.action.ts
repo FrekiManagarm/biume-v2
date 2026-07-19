@@ -1,4 +1,7 @@
-export type { GetAllReportsParams } from "#/functions/reports.function";
+export type {
+  AdvancedReportListItem,
+  GetAllReportsParams,
+} from "#/functions/reports.function";
 import {
   createReportSharedVersion as createReportSharedVersionFn,
   createQuickReport as createQuickReportFn,

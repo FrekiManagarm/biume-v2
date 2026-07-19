@@ -19,13 +19,18 @@ export const reportSectionIds = [
 export const reportSectionIdSchema = z.enum(reportSectionIds);
 export type ReportSectionId = z.infer<typeof reportSectionIdSchema>;
 
-export const reportSectionStateSchema = z.enum([
+export const reportSectionStateValues = [
   "empty",
   "proposed",
   "needs_confirmation",
   "confirmed",
   "not_applicable",
-]);
+] as const;
+export const resolvedReportSectionStateValues = [
+  "confirmed",
+  "not_applicable",
+] as const;
+export const reportSectionStateSchema = z.enum(reportSectionStateValues);
 export type ReportSectionState = z.infer<typeof reportSectionStateSchema>;
 
 export const reportSectionStatesSchema = z.object({
@@ -47,18 +52,43 @@ export function createInitialReportSectionStates(): ReportSectionStates {
 
 export function canFinalizeReport(states: ReportSectionStates) {
   return Object.values(states).every(
-    (state) => state === "confirmed" || state === "not_applicable",
+    (state) =>
+      resolvedReportSectionStateValues.some((resolved) => resolved === state),
   );
 }
 
-export const reportStatusSchema = z.enum(["draft", "finalized", "sent"]);
+export const reportStatuses = ["draft", "finalized", "sent"] as const;
+export const reportStatusSchema = z.enum(reportStatuses);
+
+export const lateralityValues = ["left", "right", "bilateral"] as const;
+export const observationTypeValues = [
+  "dynamic",
+  "static",
+  "diagnosticExclusion",
+  "none",
+] as const;
+export const anatomicalIssueTypes = [
+  "dysfunction",
+  "anatomicalSuspicion",
+] as const;
+export const persistedAnatomicalIssueTypes = [
+  ...anatomicalIssueTypes,
+  "observation",
+] as const;
+export const animalTypes = ["DOG", "CAT", "HORSE"] as const;
+export const anatomicalZones = [
+  "articulation",
+  "fascias",
+  "organes",
+  "muscles",
+] as const;
 
 export const anatomicalEntrySchema = z.object({
   id: z.string().min(1),
   region: z.string(),
   severity: z.number().min(1).max(5),
   notes: z.string(),
-  laterality: z.enum(["left", "right", "bilateral"]),
+  laterality: z.enum(lateralityValues),
   anatomicalPart: z
     .object({
       id: z.string(),
@@ -70,13 +100,13 @@ export const anatomicalEntrySchema = z.object({
 });
 
 export const observationSchema = anatomicalEntrySchema.extend({
-  type: z.enum(["static", "dynamic", "diagnosticExclusion", "none"]),
+  type: z.enum(observationTypeValues),
   dysfunctionType: z.string().optional(),
   interventionZone: z.string().optional(),
 });
 
 export const anatomicalIssueEntrySchema = anatomicalEntrySchema.extend({
-  type: z.enum(["dysfunction", "anatomicalSuspicion"]),
+  type: z.enum(anatomicalIssueTypes),
   interventionZone: z.string().optional(),
 });
 

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
+import type { AdvancedReportListItem } from "@/lib/api/actions/reports.action";
 import {
   ReportsHeader,
   ReportsStats,
@@ -10,7 +10,7 @@ import {
 } from "./components";
 
 interface AdvancedReportsTableProps {
-  reports: AdvancedReport[];
+  reports: AdvancedReportListItem[];
   // Props de contrôle optionnels (NuQS / URL state)
   searchQuery?: string;
   statusFilter?: string;

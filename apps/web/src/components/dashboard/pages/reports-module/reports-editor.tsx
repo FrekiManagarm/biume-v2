@@ -4,8 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { updateReport } from "@/lib/api/actions/reports.action";
 import { upsertReportOwnerContent } from "@/lib/api/actions/report-owner-content.action";
-import type { InferSelectModel } from "drizzle-orm";
-import type { advancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import { AnimalCredenza } from "@/components/animal-folder";
 import { ObservationsTab } from "./components/tabs/ObservationsTab";
 import { NotesTab } from "./components/tabs/NotesTab";
@@ -76,12 +74,6 @@ import {
   CredenzaBody,
   CredenzaFooter,
 } from "@/components/ui/credenza";
-import type {
-  AdvancedReportRecommendations,
-  Pet,
-  AnatomicalIssue as AnatomicalIssueSchema,
-  Appointment,
-} from "@/lib/schemas";
 import {
   Select,
   SelectContent,
@@ -94,15 +86,10 @@ import {
   createInitialReportSectionStates,
   type ReportSectionStates,
 } from "@biume/contracts/report";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 
-type ReportData = InferSelectModel<typeof advancedReport> & {
-  patient?: Pet | null;
-  anatomicalIssues?: AnatomicalIssueSchema[];
-  recommendations?: AdvancedReportRecommendations[];
-  ownerContents?: OwnerContentRecord[];
-  appointment?: Appointment | null;
-  sectionStates?: ReportSectionStates;
-};
+type ReportData = NormalizedAdvancedReport;
+type LoadedAnatomicalIssue = ReportData["anatomicalIssues"][number];
 
 interface AdvancedReportEditorProps {
   reportId: string;
@@ -134,8 +121,8 @@ export function AdvancedReportEditor({
   // Préparer les observations initiales
   const initialObservations: Observation[] =
     initialData.anatomicalIssues
-      ?.filter((issue: AnatomicalIssueSchema) => issue.type === "observation")
-      .map((issue: AnatomicalIssueSchema) => ({
+      ?.filter((issue: LoadedAnatomicalIssue) => issue.type === "observation")
+      .map((issue: LoadedAnatomicalIssue) => ({
         id: issue.id,
         region: issue.anatomicalPart?.name || issue.notes || "",
         severity: issue.severity,
@@ -151,8 +138,8 @@ export function AdvancedReportEditor({
   // Préparer les problèmes anatomiques initiaux
   const initialAnatomicalIssues: AnatomicalIssue[] =
     initialData.anatomicalIssues
-      ?.filter((issue: AnatomicalIssueSchema) => issue.type !== "observation")
-      .map((issue: AnatomicalIssueSchema) => ({
+      ?.filter((issue: LoadedAnatomicalIssue) => issue.type !== "observation")
+      .map((issue: LoadedAnatomicalIssue) => ({
         id: issue.id,
         type: issue.type as "dysfunction" | "anatomicalSuspicion",
         region: issue.anatomicalPart?.name || issue.notes || "",

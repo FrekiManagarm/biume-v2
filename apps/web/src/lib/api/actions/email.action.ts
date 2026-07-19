@@ -6,7 +6,7 @@ import z from "zod";
 import NewReportClientEmail from "@biume/emails/NewReportClientEmail";
 import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
 import { resend } from "#/lib/utils/resend";
-import type { AdvancedReport } from "#/lib/schemas/advancedReport/advancedReport";
+import type { AdvancedReportListItem } from "#/functions/reports.function";
 
 const sendNewReportClientEmailWithPDFSchema = z.object({
   to: z.string().email(),
@@ -23,7 +23,7 @@ const sendNewReportClientEmailWithPDFFn = createServerFn({ method: "POST" })
     const { to, clientName, petName, reportDate, reportUrl, report } =
       params as z.infer<typeof sendNewReportClientEmailWithPDFSchema> & {
         report: Pick<
-          AdvancedReport,
+          AdvancedReportListItem,
           | "id"
           | "title"
           | "createdAt"

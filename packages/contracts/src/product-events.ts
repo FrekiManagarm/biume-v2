@@ -1,6 +1,10 @@
 import { z } from "zod";
+import {
+  reportSectionIds,
+  resolvedReportSectionStateValues,
+} from "./report";
 
-export const productEventNameSchema = z.enum([
+export const productEventNames = [
   "capture_started",
   "capture_completed",
   "capture_queued_offline",
@@ -18,16 +22,16 @@ export const productEventNameSchema = z.enum([
   "owner_response_submitted",
   "followup_action_acknowledged",
   "followup_action_resolved",
-]);
+] as const;
+export const productEventNameSchema = z.enum(productEventNames);
 export type ProductEventName = z.infer<typeof productEventNameSchema>;
 
-const sourceSchema = z.enum(["web_existing_patient", "web_quick_create"]);
-const reportSectionSchema = z.enum([
-  "clinical",
-  "anatomical",
-  "recommendations",
-  "notes",
-]);
+export const productEventSources = [
+  "web_existing_patient",
+  "web_quick_create",
+] as const;
+const sourceSchema = z.enum(productEventSources);
+const reportSectionSchema = z.enum(reportSectionIds);
 
 const safePropertiesSchema = z
   .object({
@@ -57,7 +61,7 @@ const safePropertiesSchema = z
       .optional(),
     source: sourceSchema.optional(),
     section: reportSectionSchema.optional(),
-    state: z.enum(["confirmed", "not_applicable"]).optional(),
+    state: z.enum(resolvedReportSectionStateValues).optional(),
     reportRevision: z.number().int().positive().optional(),
   })
   .strict();

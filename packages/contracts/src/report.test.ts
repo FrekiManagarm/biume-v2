@@ -6,6 +6,9 @@ import {
   ownerSourceKinds,
   ownerReportSnapshotSchema,
   quickReportSchema,
+  reportSectionStateValues,
+  reportStatuses,
+  resolvedReportSectionStateValues,
   reportSchema,
 } from "./report";
 
@@ -49,6 +52,21 @@ describe("report contracts", () => {
       recommendations: "empty",
       notes: "empty",
     });
+  });
+
+  it("exports canonical readonly values for persistence and analytics", () => {
+    expect(reportSectionStateValues).toEqual([
+      "empty",
+      "proposed",
+      "needs_confirmation",
+      "confirmed",
+      "not_applicable",
+    ]);
+    expect(resolvedReportSectionStateValues).toEqual([
+      "confirmed",
+      "not_applicable",
+    ]);
+    expect(reportStatuses).toEqual(["draft", "finalized", "sent"]);
   });
 
   it("defaults omitted persisted decisions to empty states", () => {

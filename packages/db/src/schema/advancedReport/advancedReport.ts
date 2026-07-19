@@ -27,12 +27,9 @@ import type { Pet } from "../pets";
 import { appointments } from "../appointments";
 import type { Appointment } from "../appointments";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { reportStatuses } from "@biume/contracts/report";
 
-export const reportStatus = pgEnum("reportStatus", [
-  "draft",
-  "finalized",
-  "sent",
-]);
+export const reportStatus = pgEnum("reportStatus", reportStatuses);
 
 export const advancedReport = pgTable(
   "advancedReport",
@@ -93,14 +90,20 @@ export const advancedReportRelations = relations(
 export const advancedReportSchema = createInsertSchema(advancedReport);
 export const advancedReportSelectSchema = createSelectSchema(advancedReport);
 
-export type AdvancedReport = InferSelectModel<typeof advancedReport> & {
-  organization: Organization;
+export type AdvancedReport = InferSelectModel<typeof advancedReport>;
+
+export type AdvancedReportRelationMap = {
+  organization: Organization | null;
   anatomicalIssues: AnatomicalIssue[];
   recommendations: AdvancedReportRecommendations[];
   ownerContents: ReportOwnerContent[];
   sectionStates: PersistedReportSectionState[];
   sharedVersions: ReportSharedVersion[];
-  patient: Pet;
-  appointment?: Appointment | null;
+  patient: Pet | null;
+  appointment: Appointment | null;
 };
+
+export type AdvancedReportWithRelations<
+  Relation extends keyof AdvancedReportRelationMap = keyof AdvancedReportRelationMap,
+> = AdvancedReport & Pick<AdvancedReportRelationMap, Relation>;
 export type CreateAdvancedReport = typeof advancedReport.$inferInsert;

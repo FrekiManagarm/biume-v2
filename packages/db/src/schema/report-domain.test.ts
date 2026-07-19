@@ -1,7 +1,11 @@
 import { getTableColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { describe, expect, it } from "vitest";
-import { advancedReport } from "./advancedReport/advancedReport";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import {
+  advancedReport,
+  type AdvancedReport,
+  type AdvancedReportWithRelations,
+} from "./advancedReport/advancedReport";
 import {
   reportSection,
   reportSectionDecision,
@@ -11,6 +15,13 @@ import { reportSharedVersion } from "./advancedReport/reportSharedVersion";
 import { pets } from "./pets";
 
 describe("report domain schema", () => {
+  it("keeps unloaded relations out of the base report type", () => {
+    expectTypeOf<AdvancedReport>().not.toHaveProperty("patient");
+    expectTypeOf<AdvancedReportWithRelations<"patient">>().toHaveProperty(
+      "patient",
+    );
+  });
+
   it("persists a report revision", () => {
     expect(getTableColumns(advancedReport).revision.notNull).toBe(true);
     expect(getTableColumns(advancedReport).revision.default).toBe(1);

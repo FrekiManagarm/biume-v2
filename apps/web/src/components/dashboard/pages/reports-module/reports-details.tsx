@@ -22,7 +22,6 @@ import {
   StickyNote,
 } from "lucide-react";
 
-import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
 import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 import { cn } from "@/lib/style";
 import { Badge } from "@/components/ui/badge";
@@ -610,8 +609,8 @@ function ClinicalTab({
   anatomicalProblems,
 }: {
   report: NormalizedAdvancedReport;
-  observations: AdvancedReport["anatomicalIssues"];
-  anatomicalProblems: AdvancedReport["anatomicalIssues"];
+  observations: NormalizedAdvancedReport["anatomicalIssues"];
+  anatomicalProblems: NormalizedAdvancedReport["anatomicalIssues"];
 }) {
   const hasAnatomy = (report.anatomicalIssues?.length || 0) > 0;
 
@@ -668,7 +667,7 @@ function IssueList({
   title: string;
   description: string;
   icon: typeof FileText;
-  issues: AdvancedReport["anatomicalIssues"];
+  issues: NormalizedAdvancedReport["anatomicalIssues"];
   emptyTitle: string;
   emptyDescription: string;
 }) {
@@ -740,7 +739,7 @@ function IssueList({
 function RecommendationsTab({
   recommendations,
 }: {
-  recommendations: AdvancedReport["recommendations"];
+  recommendations: NormalizedAdvancedReport["recommendations"];
 }) {
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)] sm:p-6">

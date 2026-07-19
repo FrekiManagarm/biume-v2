@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scan, ChevronLeft, ChevronRight } from "lucide-react";
 import { AnatomicalImageWithOverlay } from "./AnatomicalImageWithOverlay";
-import type { AnatomicalIssue as DBAnatomicalIssue } from "@/lib/schemas/advancedReport/anatomicalIssue";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 import type { AnatomicalIssue as UIAnatomicalIssue } from "../types";
 import { resolveAnatomicalAnimalType } from "../anatomical-species";
 
 interface AnatomicalVisualizationProps {
-  anatomicalIssues: DBAnatomicalIssue[];
+  anatomicalIssues: NormalizedAdvancedReport["anatomicalIssues"];
   animalData?: {
     name?: string | null;
     code?: string | null;
@@ -24,7 +24,9 @@ export function AnatomicalVisualization({
   );
 
   // Convertir les données DB vers le format UI
-  const convertToUIFormat = (issue: DBAnatomicalIssue): UIAnatomicalIssue => {
+  const convertToUIFormat = (
+    issue: NormalizedAdvancedReport["anatomicalIssues"][number],
+  ): UIAnatomicalIssue => {
     return {
       id: issue.id,
       type: issue.type as "dysfunction" | "anatomicalSuspicion",

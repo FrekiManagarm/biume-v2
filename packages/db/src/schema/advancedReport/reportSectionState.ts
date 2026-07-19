@@ -1,3 +1,7 @@
+import {
+  reportSectionIds,
+  reportSectionStateValues,
+} from "@biume/contracts/report";
 import type {
   ReportSectionId,
   ReportSectionState,
@@ -6,20 +10,12 @@ import { relations } from "drizzle-orm";
 import { pgEnum, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { advancedReport } from "./advancedReport";
 
-export const reportSection = pgEnum("report_section", [
-  "clinical",
-  "anatomical",
-  "recommendations",
-  "notes",
-]);
+export const reportSection = pgEnum("report_section", reportSectionIds);
 
-export const reportSectionDecision = pgEnum("report_section_decision", [
-  "empty",
-  "proposed",
-  "needs_confirmation",
-  "confirmed",
-  "not_applicable",
-]);
+export const reportSectionDecision = pgEnum(
+  "report_section_decision",
+  reportSectionStateValues,
+);
 
 export const reportSectionState = pgTable(
   "report_section_state",

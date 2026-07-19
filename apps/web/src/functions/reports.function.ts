@@ -19,7 +19,6 @@ import {
   anatomicalPart,
   advancedReportRecommendations,
   anatomicalIssue,
-  type AdvancedReport,
   advancedReport,
   appointments,
   clients,
@@ -69,7 +68,89 @@ export type ReportItem = {
   updatedAt: Date | null;
 };
 
-export type NormalizedAdvancedReport = Omit<AdvancedReport, "sectionStates"> & {
+async function loadAllReportRows({
+  organizationId,
+  search,
+  status,
+}: {
+  organizationId: string;
+  search: string;
+  status: string;
+}) {
+  const conditions = [eq(advancedReport.createdBy, organizationId)];
+
+  if (status === "brouillons") {
+    conditions.push(eq(advancedReport.status, "draft"));
+  } else if (status === "finalises") {
+    conditions.push(eq(advancedReport.status, "finalized"));
+  }
+
+  if (search.trim().length > 0) {
+    const term = `%${search.trim().toLowerCase()}%`;
+    const searchCondition = or(
+      ilike(advancedReport.title, term),
+      ilike(advancedReport.consultationReason, term),
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
+  return db.query.advancedReport.findMany({
+    where: and(...conditions),
+    with: {
+      organization: true,
+      patient: {
+        with: {
+          owner: { columns: { name: true, email: true } },
+          animal: { columns: { name: true } },
+        },
+      },
+      anatomicalIssues: { with: { anatomicalPart: true } },
+      recommendations: true,
+    },
+    orderBy: [desc(advancedReport.createdAt)],
+  });
+}
+
+export type AdvancedReportListItem = Awaited<
+  ReturnType<typeof loadAllReportRows>
+>[number];
+
+async function loadReportDetailRow(
+  organizationId: string,
+  reportId: string,
+) {
+  return db.query.advancedReport.findFirst({
+    where: and(
+      eq(advancedReport.id, reportId),
+      eq(advancedReport.createdBy, organizationId),
+    ),
+    with: {
+      organization: true,
+      appointment: { with: { patient: true, organization: true } },
+      patient: {
+        with: {
+          owner: true,
+          animal: true,
+          advancedReport: true,
+          organization: true,
+        },
+      },
+      anatomicalIssues: { with: { anatomicalPart: true } },
+      recommendations: true,
+      ownerContents: true,
+      sectionStates: true,
+    },
+  });
+}
+
+type LoadedReportDetail = NonNullable<
+  Awaited<ReturnType<typeof loadReportDetailRow>>
+>;
+
+export type NormalizedAdvancedReport = Omit<
+  LoadedReportDetail,
+  "sectionStates"
+> & {
   sectionStates: ReportSectionStates;
 };
 
@@ -138,55 +219,11 @@ export const getAllReports = createServerFn({ method: "GET" })
 
       const { search = "", status = "tous" } = data;
 
-      const conditions = [eq(advancedReport.createdBy, organization.id)];
-
-      if (status === "brouillons") {
-        conditions.push(eq(advancedReport.status, "draft"));
-      } else if (status === "finalises") {
-        conditions.push(eq(advancedReport.status, "finalized"));
-      }
-
-      if (search.trim().length > 0) {
-        const term = `%${search.trim().toLowerCase()}%`;
-        const searchCondition = or(
-          ilike(advancedReport.title, term),
-          ilike(advancedReport.consultationReason, term),
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
-      }
-
-      const reports = await db.query.advancedReport.findMany({
-        where: and(...conditions),
-        with: {
-          organization: true,
-          patient: {
-            with: {
-              owner: {
-                columns: {
-                  name: true,
-                  email: true,
-                },
-              },
-              animal: {
-                columns: {
-                  name: true,
-                },
-              },
-            },
-          },
-          anatomicalIssues: {
-            with: {
-              anatomicalPart: true,
-            },
-          },
-          recommendations: true,
-        },
-        orderBy: [desc(advancedReport.createdAt)],
+      return loadAllReportRows({
+        organizationId: organization.id,
+        search,
+        status,
       });
-
-      return reports as AdvancedReport[];
     } catch (error) {
       console.error("Error getting all reports", error);
       throw new Error("Error getting all reports");
@@ -341,46 +378,18 @@ export const getReportById = createServerFn({ method: "GET" })
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
-      const report = await db.query.advancedReport.findFirst({
-        where: and(
-          eq(advancedReport.id, data.reportId),
-          eq(advancedReport.createdBy, organization.id),
-        ),
-        with: {
-          organization: true,
-          appointment: {
-            with: {
-              patient: true,
-              organization: true,
-            },
-          },
-          patient: {
-            with: {
-              owner: true,
-              animal: true,
-              advancedReport: true,
-              organization: true,
-            },
-          },
-          anatomicalIssues: {
-            with: {
-              anatomicalPart: true,
-            },
-          },
-          recommendations: true,
-          ownerContents: true,
-          sectionStates: true,
-        },
-      });
+      const report = await loadReportDetailRow(organization.id, data.reportId);
 
       if (!report) throw new Error("Report not found");
 
+      const normalizedReport: NormalizedAdvancedReport = {
+        ...report,
+        sectionStates: normalizeReportSectionStates(report.sectionStates),
+      };
+
       return {
         success: true,
-        data: {
-          ...report,
-          sectionStates: normalizeReportSectionStates(report.sectionStates),
-        } as NormalizedAdvancedReport,
+        data: normalizedReport,
       };
     } catch (error) {
       console.error("Error getting report by id", error);
