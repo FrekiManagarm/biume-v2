@@ -34,7 +34,7 @@ export function getReportById({ reportId }: { reportId: string }) {
 }
 
 export function updateReport(
-  report: z.infer<typeof reportSchema> & { reportId: string },
+  report: z.input<typeof reportSchema> & { reportId: string },
 ) {
   return updateReportFn({ data: report });
 }

@@ -367,7 +367,9 @@ const reportSchemaBase = z.object({
   observations: z.array(observationSchema).optional().default([]),
   anatomicalIssues: z.array(anatomicalIssueEntrySchema).optional().default([]),
   recommendations: z.array(recommendationSchema).optional().default([]),
-  sectionStates: reportSectionStatesSchema,
+  sectionStates: reportSectionStatesSchema
+    .optional()
+    .default(createInitialReportSectionStates),
 });
 
 export const reportSchema = reportSchemaBase.superRefine((report, context) => {

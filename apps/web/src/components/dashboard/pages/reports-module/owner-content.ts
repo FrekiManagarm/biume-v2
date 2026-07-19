@@ -1,7 +1,7 @@
+import type { ReportSectionId } from "@biume/contracts/report";
 import type { AnatomicalIssue, Observation } from "./types";
 
-export type ReportSectionId =
-  "clinical" | "anatomical" | "recommendations" | "notes";
+export type { ReportSectionId } from "@biume/contracts/report";
 export type OwnerSourceKind =
   | "consultationReason"
   | "observation"
