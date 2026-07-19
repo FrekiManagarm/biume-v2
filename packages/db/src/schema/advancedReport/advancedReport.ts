@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
-import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { organization } from "../organization";
 import type { Organization } from "../organization";
 import { anatomicalIssue } from "./anatomicalIssue";
@@ -11,6 +11,10 @@ import type {
 } from "./advancedReportRecommantations";
 import { reportOwnerContent } from "./reportOwnerContent";
 import type { ReportOwnerContent } from "./reportOwnerContent";
+import { reportSectionState } from "./reportSectionState";
+import type { PersistedReportSectionState } from "./reportSectionState";
+import { reportSharedVersion } from "./reportSharedVersion";
+import type { ReportSharedVersion } from "./reportSharedVersion";
 import { pets } from "../pets";
 import type { Pet } from "../pets";
 import { appointments } from "../appointments";
@@ -40,6 +44,7 @@ export const advancedReport = pgTable("advancedReport", {
   }),
   notes: text("notes").default(""),
   status: reportStatus("status").notNull().default("draft"),
+  revision: integer("revision").notNull().default(1),
   createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }),
 });
@@ -54,6 +59,8 @@ export const advancedReportRelations = relations(
     anatomicalIssues: many(anatomicalIssue),
     recommendations: many(advancedReportRecommendations),
     ownerContents: many(reportOwnerContent),
+    sectionStates: many(reportSectionState),
+    sharedVersions: many(reportSharedVersion),
     patient: one(pets, {
       fields: [advancedReport.patientId],
       references: [pets.id],
@@ -73,6 +80,8 @@ export type AdvancedReport = InferSelectModel<typeof advancedReport> & {
   anatomicalIssues: AnatomicalIssue[];
   recommendations: AdvancedReportRecommendations[];
   ownerContents: ReportOwnerContent[];
+  sectionStates: PersistedReportSectionState[];
+  sharedVersions: ReportSharedVersion[];
   patient: Pet;
   appointment?: Appointment | null;
 };

@@ -185,6 +185,7 @@
     "packages/db": {
       "name": "@biume/db",
       "dependencies": {
+        "@biume/contracts": "workspace:*",
         "@biume/env": "workspace:*",
         "@neondatabase/serverless": "^1.0.2",
         "dotenv": "catalog:",

@@ -14,6 +14,8 @@ export * from "./advancedReport/anatomicalIssue";
 export * from "./advancedReport/advancedReport";
 export * from "./advancedReport/advancedReportRecommantations";
 export * from "./advancedReport/reportOwnerContent";
+export * from "./advancedReport/reportSectionState";
+export * from "./advancedReport/reportSharedVersion";
 export * from "./anatomicalPart";
 export * from "./anatomicalPartType";
 export * from "./animals";
