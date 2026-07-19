@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { validateMigrationJournal } from "./baseline-existing";
+import {
+  requiresBaselineSchemaValidation,
+  validateMigrationJournal,
+} from "./baseline-existing";
 
 describe("validateMigrationJournal", () => {
   it("accepts baseline, owner content, and later generated migrations", () => {
@@ -38,5 +41,25 @@ describe("validateMigrationJournal", () => {
         ],
       }),
     ).toThrow("timestamps are missing or out of order");
+  });
+});
+
+describe("requiresBaselineSchemaValidation", () => {
+  const baseline = { idx: 0, when: 1, tag: "0000_baseline" };
+
+  it("skips the 0000 schema equality gate after the baseline is recorded", () => {
+    expect(
+      requiresBaselineSchemaValidation(
+        [
+          { created_at: 1 },
+          { created_at: 3 },
+        ],
+        baseline,
+      ),
+    ).toBe(false);
+  });
+
+  it("requires 0000 schema equality before the baseline is recorded", () => {
+    expect(requiresBaselineSchemaValidation([], baseline)).toBe(true);
   });
 });
