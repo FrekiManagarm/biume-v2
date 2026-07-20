@@ -530,14 +530,20 @@ const patientFormSchema = z.object({
   ownerId: z.string().trim().min(1, "Sélectionnez un propriétaire."),
   type: z.string().trim().min(1, "Sélectionnez une espèce."),
   breed: z.string().trim().min(1, "La race est requise."),
-  gender: z.enum(["Male", "Female"]),
+  gender: z
+    .string()
+    .refine(
+      (value) => value === "Male" || value === "Female",
+      "Sélectionnez un sexe.",
+    )
+    .transform((value) => value as "Male" | "Female"),
   birthDate: z.string().trim().min(1, "La date de naissance est requise."),
   weight: z.number().int().min(0, "Le poids doit être positif."),
   height: z.number().int().min(0, "La taille doit être positive."),
   description: z.string().trim(),
 });
 
-type PatientFormValues = z.infer<typeof patientFormSchema>;
+type PatientFormValues = z.input<typeof patientFormSchema>;
 
 function PatientFormDialog({
   animals,

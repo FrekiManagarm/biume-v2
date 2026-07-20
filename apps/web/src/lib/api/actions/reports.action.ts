@@ -1,5 +1,10 @@
-export type { GetAllReportsParams } from "#/functions/reports.function";
+export type {
+  AdvancedReportListItem,
+  GetAllReportsParams,
+} from "#/functions/reports.function";
 import {
+  createReportSharedVersion as createReportSharedVersionFn,
+  createQuickReport as createQuickReportFn,
   createReport as createReportFn,
   deleteReport as deleteReportFn,
   getAllReports as getAllReportsFn,
@@ -10,10 +15,11 @@ import {
   seedAnatomicalParts as seedAnatomicalPartsFn,
   updateReport as updateReportFn,
 } from "#/functions/reports.function";
+import type { quickReportSchema } from "@biume/contracts/report";
 import type {
   anatomicalIssueSchema,
   createReportSchema,
-  reportSchema,
+  updateReportSchema,
 } from "#/lib/utils/schemas";
 import type { z } from "zod";
 
@@ -21,21 +27,29 @@ export function getLatestReports(limit = 10) {
   return getLatestReportsFn({ data: { limit } });
 }
 
-export function getAllReports(params: { search?: string; status?: string } = {}) {
+export function getAllReports(
+  params: { search?: string; status?: string } = {},
+) {
   return getAllReportsFn({ data: params });
 }
 
-export function createReport(report: z.infer<typeof createReportSchema>) {
+export function createReport(report: z.input<typeof createReportSchema>) {
   return createReportFn({ data: report });
+}
+
+export function createQuickReport(report: z.input<typeof quickReportSchema>) {
+  return createQuickReportFn({ data: report });
+}
+
+export function createReportSharedVersion(reportId: string) {
+  return createReportSharedVersionFn({ data: { reportId } });
 }
 
 export function getReportById({ reportId }: { reportId: string }) {
   return getReportByIdFn({ data: { reportId } });
 }
 
-export function updateReport(
-  report: z.infer<typeof reportSchema> & { reportId: string },
-) {
+export function updateReport(report: z.input<typeof updateReportSchema>) {
   return updateReportFn({ data: report });
 }
 

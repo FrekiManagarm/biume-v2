@@ -30,26 +30,23 @@ const faqItems = [
 
 export function LandingFaq() {
   return (
-    <div
-      data-landing-faq
-      className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16"
-    >
-      <div className="max-w-xl">
-        <h2 className="max-w-[15ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-bold leading-none tracking-[-0.03em] text-[color:var(--machine-ink)]">
-          Les questions qui comptent avant de commencer.
+    <div data-landing-faq>
+      <div className="max-w-2xl">
+        <h2 className="max-w-[14ch] text-balance text-[clamp(2.25rem,4.5vw,4.5rem)] font-semibold leading-none tracking-[-0.03em] text-[color:var(--atelier-ink)]">
+          Avant de commencer.
         </h2>
-        <p className="mt-5 text-sm leading-6 text-[color:var(--machine-muted)] md:text-base md:leading-7">
+        <p className="mt-5 max-w-[62ch] text-pretty text-sm leading-6 text-[color:var(--atelier-muted)] md:text-base md:leading-7">
           Pour la confidentialité, consultez notre{" "}
           <Link
             href="/privacy"
-            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--machine-ink)] underline decoration-[color:var(--machine-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--atelier-ink)] underline decoration-[color:var(--atelier-blue)] underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]"
           >
             politique de confidentialité
           </Link>
           . Les conditions contractuelles sont détaillées dans nos{" "}
           <Link
             href="/cgu"
-            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--machine-ink)] underline decoration-[color:var(--machine-blue)] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--machine-violet)]"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-[color:var(--atelier-ink)] underline decoration-[color:var(--atelier-blue)] underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--atelier-violet)]"
           >
             CGU
           </Link>
@@ -57,24 +54,24 @@ export function LandingFaq() {
         </p>
       </div>
 
-      <div className="border-t border-[color:var(--machine-line)]">
+      <div className="mt-10 border-t border-[color:var(--atelier-line)]">
         {faqItems.map((item) => (
           <details
             key={item.question}
             data-faq-item={item.question}
-            className="group border-b border-[color:var(--machine-line)] py-4"
+            className="group border-b border-[color:var(--atelier-line)] py-4"
           >
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-5 rounded-sm py-2 text-base font-semibold leading-7 text-[color:var(--machine-ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--machine-violet)]">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-5 rounded-sm py-2 text-base font-semibold leading-7 text-[color:var(--atelier-ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--atelier-violet)]">
               <span>{item.question}</span>
               <span
                 data-faq-indicator
                 aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--machine-line)] text-lg font-medium"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--atelier-line)] text-lg font-medium text-[color:var(--atelier-violet)]"
               >
                 +
               </span>
             </summary>
-            <p className="max-w-[68ch] pb-3 pt-2 text-sm leading-6 text-[color:var(--machine-muted)] md:text-base md:leading-7">
+            <p className="max-w-[68ch] pb-3 pt-2 text-pretty text-sm leading-6 text-[color:var(--atelier-muted)] md:text-base md:leading-7">
               {item.answer}
             </p>
           </details>

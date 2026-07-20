@@ -78,6 +78,25 @@ export function getRemovedOwnerSources(
   });
 }
 
+export function buildQuickReportMutationQueries<
+  OwnerInsert,
+  AnimalInsert,
+  ReportInsert,
+  SectionStateInsert,
+>({
+  ownerInsert,
+  animalInsert,
+  reportInsert,
+  sectionStateInsert,
+}: {
+  ownerInsert: OwnerInsert;
+  animalInsert: AnimalInsert;
+  reportInsert: ReportInsert;
+  sectionStateInsert: SectionStateInsert;
+}) {
+  return [ownerInsert, animalInsert, reportInsert, sectionStateInsert] as const;
+}
+
 export function executeAtomicReportMutations<
   const Mutations extends readonly [unknown, ...unknown[]],
   Result,
@@ -86,4 +105,32 @@ export function executeAtomicReportMutations<
   executeBatch: (mutations: Mutations) => Promise<Result>,
 ) {
   return executeBatch(mutations);
+}
+
+export function buildReportUpdateMutationQueries<
+  ReportUpdate,
+  SectionStateUpsert,
+  const OwnerSourceDeletions extends readonly unknown[],
+  const ChildDeletions extends readonly unknown[],
+  const ChildInserts extends readonly unknown[],
+>({
+  reportUpdate,
+  sectionStateUpsert,
+  ownerSourceDeletions,
+  childDeletions,
+  childInserts,
+}: {
+  reportUpdate: ReportUpdate;
+  sectionStateUpsert: SectionStateUpsert;
+  ownerSourceDeletions: OwnerSourceDeletions;
+  childDeletions: ChildDeletions;
+  childInserts: ChildInserts;
+}) {
+  return [
+    reportUpdate,
+    sectionStateUpsert,
+    ...ownerSourceDeletions,
+    ...childDeletions,
+    ...childInserts,
+  ] as const;
 }

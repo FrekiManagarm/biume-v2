@@ -18,23 +18,30 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/style";
+import type { ReportSectionState } from "@biume/contracts/report";
 import type { OwnerContentStatus, ReportSectionId } from "../owner-content";
-import type { ProfessionalSectionStatus } from "../reports-editor.helpers";
 
 type ReportTab = {
   id: ReportSectionId;
   label: string;
   count: number;
-  professionalStatus: ProfessionalSectionStatus;
+  professionalStatus: ReportSectionState;
 };
 
-const professionalStatusPresentation: Record<
-  ProfessionalSectionStatus,
-  { label: string; className: string }
-> = {
-  empty: { label: "Vide", className: "text-primary-foreground/60" },
-  "in-progress": { label: "En cours", className: "text-primary-foreground/85" },
-  complete: { label: "Complet", className: "text-emerald-200" },
+const professionalStateLabel: Record<ReportSectionState, string> = {
+  empty: "À renseigner",
+  proposed: "Proposé",
+  needs_confirmation: "À confirmer",
+  confirmed: "Confirmé",
+  not_applicable: "Non applicable",
+};
+
+const professionalStateClassName: Record<ReportSectionState, string> = {
+  empty: "text-primary-foreground/60",
+  proposed: "text-primary-foreground/75",
+  needs_confirmation: "text-primary-foreground/85",
+  confirmed: "text-emerald-200",
+  not_applicable: "text-primary-foreground/75",
 };
 
 const tabIcons = {
@@ -88,7 +95,9 @@ export function ReportSidebarNavigation({
   onToggleCollapse?: () => void;
 }) {
   const completedCount = tabs.filter(
-    (tab) => tab.professionalStatus === "complete",
+    (tab) =>
+      tab.professionalStatus === "confirmed" ||
+      tab.professionalStatus === "not_applicable",
   ).length;
   const progressPercent = Math.round((completedCount / tabs.length) * 100);
   const controlClassName =
@@ -184,8 +193,6 @@ export function ReportSidebarNavigation({
               ownerStatus === "not-applicable"
                 ? null
                 : ownerStatusPresentation[ownerStatus];
-            const professionalStatus =
-              professionalStatusPresentation[tab.professionalStatus];
             const button = (
               <button
                 key={tab.id}
@@ -217,14 +224,16 @@ export function ReportSidebarNavigation({
                       <span
                         className={cn(
                           "mt-0.5 block text-[10px] font-medium",
-                          isActive && tab.professionalStatus === "complete"
+                          isActive && tab.professionalStatus === "confirmed"
                             ? "text-emerald-700"
                             : isActive
                               ? "text-primary/75"
-                              : professionalStatus.className,
+                              : professionalStateClassName[
+                                  tab.professionalStatus
+                                ],
                         )}
                       >
-                        {professionalStatus.label}
+                        {professionalStateLabel[tab.professionalStatus]}
                       </span>
                     </span>
                     {status ? (

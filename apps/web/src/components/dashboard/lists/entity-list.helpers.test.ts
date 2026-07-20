@@ -119,6 +119,32 @@ describe("getPatientFormValues", () => {
       description: "",
     });
   });
+
+  test("keeps all missing patient profile fields blank or zero", () => {
+    expect(
+      getPatientFormValues({
+        name: "Nala",
+        ownerId: "client-1",
+        type: "animal-1",
+        breed: null,
+        gender: null,
+        birthDate: null,
+        weight: null,
+        height: null,
+        description: null,
+      }),
+    ).toEqual({
+      name: "Nala",
+      ownerId: "client-1",
+      type: "animal-1",
+      breed: "",
+      gender: "",
+      birthDate: "",
+      weight: 0,
+      height: 0,
+      description: "",
+    });
+  });
 });
 
 describe("patient action helpers", () => {

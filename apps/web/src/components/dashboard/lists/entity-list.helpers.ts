@@ -12,11 +12,11 @@ export type PatientFormSource = {
   name: string;
   ownerId: string | null;
   type: string | null;
-  breed: string;
-  gender: "Male" | "Female";
-  birthDate: Date;
-  weight: number;
-  height: number;
+  breed: string | null;
+  gender: "Male" | "Female" | null;
+  birthDate: Date | null;
+  weight: number | null;
+  height: number | null;
   description: string | null;
 };
 
@@ -96,19 +96,23 @@ export function getPatientFormValues(
     };
   }
 
-  const year = patient.birthDate.getFullYear();
-  const month = String(patient.birthDate.getMonth() + 1).padStart(2, "0");
-  const day = String(patient.birthDate.getDate()).padStart(2, "0");
+  let birthDate = "";
+  if (patient.birthDate) {
+    const year = patient.birthDate.getFullYear();
+    const month = String(patient.birthDate.getMonth() + 1).padStart(2, "0");
+    const day = String(patient.birthDate.getDate()).padStart(2, "0");
+    birthDate = `${year}-${month}-${day}`;
+  }
 
   return {
     name: patient.name,
     ownerId: patient.ownerId ?? "",
     type: patient.type ?? "",
-    breed: patient.breed,
-    gender: patient.gender,
-    birthDate: `${year}-${month}-${day}`,
-    weight: patient.weight,
-    height: patient.height,
+    breed: patient.breed ?? "",
+    gender: patient.gender ?? "",
+    birthDate,
+    weight: patient.weight ?? 0,
+    height: patient.height ?? 0,
     description: patient.description ?? "",
   };
 }

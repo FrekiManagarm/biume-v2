@@ -1,10 +1,10 @@
 
 import { useMemo } from "react";
-import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
+import type { AdvancedReportListItem } from "@/lib/api/actions/reports.action";
 import { AdvancedReportsTable } from ".";
 
 interface ReportsPageClientProps {
-  reports: AdvancedReport[];
+  reports: AdvancedReportListItem[];
   searchQuery: string;
   statusFilter: string;
   currentPage: number;

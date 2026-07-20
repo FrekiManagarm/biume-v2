@@ -40,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { AdvancedReport } from "@/lib/schemas/advancedReport/advancedReport";
+import type { AdvancedReportListItem } from "@/lib/api/actions/reports.action";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { deleteReport } from "@/lib/api/actions/reports.action";
 import { toast } from "sonner";
@@ -52,11 +52,11 @@ import { cn } from "#/lib/utils";
 type ReportStatus = "brouillon" | "finalisé" | "envoyé";
 
 interface ReportsTableProps {
-  reports: AdvancedReport[];
+  reports: AdvancedReportListItem[];
 }
 
 // Fonction helper pour obtenir le statut d'un rapport
-const getReportStatus = (report: AdvancedReport): ReportStatus => {
+const getReportStatus = (report: AdvancedReportListItem): ReportStatus => {
   switch (report.status) {
     case "draft":
       return "brouillon";
@@ -124,9 +124,8 @@ const formatDate = (date: Date) => {
 export function ReportsTable({ reports }: ReportsTableProps) {
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState<AdvancedReport | null>(
-    null,
-  );
+  const [reportToDelete, setReportToDelete] =
+    useState<AdvancedReportListItem | null>(null);
 
   // Mutation pour la suppression du rapport
   const deleteReportMutation = useMutation({
@@ -154,7 +153,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
     navigate({ to: "/dashboard/reports/$id/edit", params: { id: reportId } });
   };
 
-  const handleDeleteReport = (report: AdvancedReport) => {
+  const handleDeleteReport = (report: AdvancedReportListItem) => {
     setReportToDelete(report);
     setIsDeleteDialogOpen(true);
   };
@@ -167,7 +166,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
     onError: () => toast.error("Échec de l'envoi de l'email"),
   });
 
-  const handleSendReportByEmail = async (report: AdvancedReport) => {
+  const handleSendReportByEmail = async (report: AdvancedReportListItem) => {
     const to = report.patient?.owner?.email;
     if (!to) {
       toast.error("Aucune adresse email client disponible");

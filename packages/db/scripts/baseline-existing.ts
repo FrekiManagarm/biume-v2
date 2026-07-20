@@ -9,7 +9,7 @@ import {
   type BaselineSnapshot,
 } from "./baseline-schema-compatibility";
 
-type JournalEntry = {
+export type JournalEntry = {
   idx: number;
   when: number;
   tag: string;
@@ -61,27 +61,32 @@ function migrationHash(sql: string) {
   return new Bun.CryptoHasher("sha256").update(sql).digest("hex");
 }
 
-function validateJournal(journal: Journal) {
-  const tags = journal.entries.map((entry) => entry.tag);
-
+export function validateMigrationJournal(journal: Journal) {
+  const [baseline, ownerContent, ...later] = journal.entries;
   if (
-    journal.entries.length !== 2 ||
-    tags[0] !== "0000_baseline" ||
-    tags[1] !== "0001_report_owner_content"
+    baseline?.tag !== "0000_baseline" ||
+    ownerContent?.tag !== "0001_report_owner_content"
   ) {
     throw new Error(
-      `Expected exactly 0000_baseline and 0001_report_owner_content; found ${tags.join(", ") || "none"}. Review this operation before applying a changed migration set.`,
+      "Expected migration history to start with 0000_baseline and 0001_report_owner_content.",
     );
   }
-
-  const [baseline, feature] = journal.entries;
-  if (!baseline || !feature || baseline.when >= feature.when) {
-    throw new Error(
-      "Migration journal timestamps are missing or out of order.",
-    );
+  const entries = [baseline, ownerContent, ...later];
+  for (let index = 1; index < entries.length; index += 1) {
+    if (entries[index - 1]!.when >= entries[index]!.when) {
+      throw new Error("Migration journal timestamps are missing or out of order.");
+    }
   }
+  return entries;
+}
 
-  return { baseline, feature };
+export function requiresBaselineSchemaValidation(
+  history: Array<Pick<MigrationRow, "created_at">>,
+  baseline: JournalEntry,
+) {
+  return !history.some(
+    (row) => Number(row.created_at) === baseline.when,
+  );
 }
 
 function validateKnownHistory(
@@ -138,23 +143,41 @@ async function main() {
     throw new Error("DATABASE_URL is required.");
   }
 
-  const [journal, baselineSnapshot, baselineSql, featureSql] =
-    await Promise.all([
-      Bun.file(journalPath).json() as Promise<Journal>,
-      Bun.file(baselineSnapshotPath).json() as Promise<BaselineSnapshot>,
-      Bun.file(`${migrationsFolder}/0000_baseline.sql`).text(),
-      Bun.file(`${migrationsFolder}/0001_report_owner_content.sql`).text(),
-    ]);
-
-  const { baseline, feature } = validateJournal(journal);
-  const baselineHash = migrationHash(baselineSql);
-  const featureHash = migrationHash(featureSql);
-  const knownMigrations = new Map([
-    [baseline.when, baselineHash],
-    [feature.when, featureHash],
+  const journal = (await Bun.file(journalPath).json()) as Journal;
+  const entries = validateMigrationJournal(journal);
+  const [baselineSnapshot, migrationSql] = await Promise.all([
+    Bun.file(baselineSnapshotPath).json() as Promise<BaselineSnapshot>,
+    Promise.all(
+      entries.map(async (entry) => ({
+        entry,
+        sql: await Bun.file(`${migrationsFolder}/${entry.tag}.sql`).text(),
+      })),
+    ),
   ]);
+  const knownMigrations = new Map(
+    migrationSql.map(({ entry, sql }) => [entry.when, migrationHash(sql)]),
+  );
+  const [baseline, ownerContent] = entries;
 
   const sql = neon(databaseUrl);
+  const [migrationTable] = (await sql`
+    select to_regclass('drizzle.__drizzle_migrations')::text as name
+  `) as Array<{ name: string | null }>;
+  let history: MigrationRow[] = [];
+
+  if (migrationTable?.name) {
+    history = (await sql`
+      select hash, created_at
+      from drizzle.__drizzle_migrations
+      order by created_at asc
+    `) as MigrationRow[];
+    validateKnownHistory(history, knownMigrations);
+  }
+
+  const baselineSchemaValidationRequired =
+    requiresBaselineSchemaValidation(history, baseline);
+  const baselineRecorded = !baselineSchemaValidationRequired;
+
   const tableRows = (await sql`
     select schemaname || '.' || tablename as name
     from pg_catalog.pg_tables
@@ -258,46 +281,44 @@ async function main() {
     where namespace.nspname = 'public'
     group by namespace.nspname, table_class.relname, index_class.relname, index_row.indisunique
   `) as ActualBaselineSchema["indexes"];
-  const [migrationTable] = (await sql`
-    select to_regclass('drizzle.__drizzle_migrations')::text as name
-  `) as Array<{ name: string | null }>;
-
   const columnsByTable = Map.groupBy(columnRows, (column) => column.table_name);
   const actualTables = new Set(tableRows.map((row) => row.name));
   const actualEnums = new Set(enumRows.map((row) => row.name));
-  const schemaMismatches = compareBaselineSchema(
-    baselineSnapshot,
-    {
-      tables: [...actualTables],
-      columns: columnRows.map((column) => ({
-        tableName: column.table_name,
-        name: column.column_name,
-        type: column.udt_name,
-        notNull: column.is_nullable === "NO",
-        defaultValue: column.column_default,
-      })),
-      enums: [...actualEnums],
-      enumValues: enumValueRows.map((row) => ({
-        enumName: row.enum_name,
-        value: row.enum_value,
-      })),
-      primaryKeys: primaryKeyRows,
-      foreignKeys: foreignKeyRows,
-      uniqueConstraints: uniqueConstraintRows,
-      indexes: indexRows,
-    },
-    {
-      allowedDefaultMismatches: new Set([
-        "public.reminder.createdAt",
-        "public.signatures.createdAt",
-      ]),
-    },
-  );
-
-  if (schemaMismatches.length > 0) {
-    throw new Error(
-      `Existing schema differs from 0000_baseline: ${schemaMismatches.slice(0, 20).join("; ")}${schemaMismatches.length > 20 ? `; and ${schemaMismatches.length - 20} more` : ""}.`,
+  if (baselineSchemaValidationRequired) {
+    const schemaMismatches = compareBaselineSchema(
+      baselineSnapshot,
+      {
+        tables: [...actualTables],
+        columns: columnRows.map((column) => ({
+          tableName: column.table_name,
+          name: column.column_name,
+          type: column.udt_name,
+          notNull: column.is_nullable === "NO",
+          defaultValue: column.column_default,
+        })),
+        enums: [...actualEnums],
+        enumValues: enumValueRows.map((row) => ({
+          enumName: row.enum_name,
+          value: row.enum_value,
+        })),
+        primaryKeys: primaryKeyRows,
+        foreignKeys: foreignKeyRows,
+        uniqueConstraints: uniqueConstraintRows,
+        indexes: indexRows,
+      },
+      {
+        allowedDefaultMismatches: new Set([
+          "public.reminder.createdAt",
+          "public.signatures.createdAt",
+        ]),
+      },
     );
+
+    if (schemaMismatches.length > 0) {
+      throw new Error(
+        `Existing schema differs from 0000_baseline: ${schemaMismatches.slice(0, 20).join("; ")}${schemaMismatches.length > 20 ? `; and ${schemaMismatches.length - 20} more` : ""}.`,
+      );
+    }
   }
 
   const temporalDefaultMismatches = [
@@ -312,41 +333,33 @@ async function main() {
     );
   });
 
-  const featureTableExists = actualTables.has("public.report_owner_content");
-  const featureEnumExists = actualEnums.has(
+  const ownerContentTableExists = actualTables.has("public.report_owner_content");
+  const ownerContentEnumExists = actualEnums.has(
     "public.report_owner_content_source_kind",
   );
-  let history: MigrationRow[] = [];
-
-  if (migrationTable?.name) {
-    history = (await sql`
-      select hash, created_at
-      from drizzle.__drizzle_migrations
-      order by created_at asc
-    `) as MigrationRow[];
-    validateKnownHistory(history, knownMigrations);
-  }
-
-  const baselineRecorded = history.some(
-    (row) => Number(row.created_at) === baseline.when,
-  );
-  const featureRecorded = history.some(
-    (row) => Number(row.created_at) === feature.when,
+  const ownerContentRecorded = history.some(
+    (row) => Number(row.created_at) === ownerContent.when,
   );
 
-  if (featureRecorded && !baselineRecorded) {
+  if (ownerContentRecorded && !baselineRecorded) {
     throw new Error(
       "0001 is recorded without 0000_baseline; manual recovery is required.",
     );
   }
 
-  if (featureRecorded && (!featureTableExists || !featureEnumExists)) {
+  if (
+    ownerContentRecorded &&
+    (!ownerContentTableExists || !ownerContentEnumExists)
+  ) {
     throw new Error(
       "0001 is recorded but its table or enum is missing; manual recovery is required.",
     );
   }
 
-  if (!featureRecorded && (featureTableExists || featureEnumExists)) {
+  if (
+    !ownerContentRecorded &&
+    (ownerContentTableExists || ownerContentEnumExists)
+  ) {
     throw new Error(
       "Owner-content objects already exist without a matching 0001 history row; refusing to baseline over an inconsistent state.",
     );
@@ -362,15 +375,10 @@ async function main() {
     );
   }
 
-  if (featureRecorded) {
-    console.log(
-      "0000 and 0001 are already recorded and present; no action needed.",
-    );
-    return;
-  }
-
   console.log(
-    `Preflight passed: ${Object.keys(baselineSnapshot.tables).length} tables, ${columnRows.filter((column) => baselineSnapshot.tables[column.table_name]).length} columns, and ${Object.keys(baselineSnapshot.enums).length} enums match 0000_baseline.`,
+    baselineSchemaValidationRequired
+      ? `Preflight passed: ${Object.keys(baselineSnapshot.tables).length} tables, ${columnRows.filter((column) => baselineSnapshot.tables[column.table_name]).length} columns, and ${Object.keys(baselineSnapshot.enums).length} enums match 0000_baseline.`
+      : "0000_baseline is recorded; skipped the pre-baselining schema equality check.",
   );
   if (temporalDefaultMismatches.length > 0) {
     console.log(
@@ -378,16 +386,26 @@ async function main() {
     );
   }
 
+  const recordedTimestamps = new Set(
+    history.map((row) => Number(row.created_at)),
+  );
+  const pendingEntries = entries.filter(
+    (entry) => !recordedTimestamps.has(entry.when),
+  );
+
   if (checkOnly) {
     console.log(
-      baselineRecorded
-        ? "0000_baseline is already recorded; 0001 is ready to migrate."
-        : "0000_baseline is not recorded; --apply will record it before running 0001.",
+      pendingEntries.length === 0
+        ? "All journaled migrations are already recorded."
+        : `${pendingEntries.length} migration(s) are ready to apply: ${pendingEntries
+            .map((entry) => entry.tag)
+            .join(", ")}.`,
     );
     return;
   }
 
   if (!baselineRecorded) {
+    const baselineHash = migrationHash(migrationSql[0]!.sql);
     await sql.transaction([
       sql`create schema if not exists drizzle`,
       sql`create table if not exists drizzle.__drizzle_migrations (
@@ -418,18 +436,25 @@ async function main() {
   `) as MigrationRow[];
   validateKnownHistory(finalHistory, knownMigrations);
 
-  const featureApplied = finalHistory.some(
-    (row) => Number(row.created_at) === feature.when,
+  const finalTimestamps = new Set(
+    finalHistory.map((row) => Number(row.created_at)),
   );
-  if (!ownerTable?.name || !featureApplied) {
+  const missingEntries = entries.filter(
+    (entry) => !finalTimestamps.has(entry.when),
+  );
+  if (!ownerTable?.name || missingEntries.length > 0) {
     throw new Error(
-      "Migration finished without a verified 0001 history row and owner-content table.",
+      `Migration finished with missing history: ${missingEntries
+        .map((entry) => entry.tag)
+        .join(", ") || "owner-content table"}.`,
     );
   }
 
   console.log(
-    "Reconciled temporal defaults, recorded 0000_baseline, applied 0001_report_owner_content, and verified the resulting table and migration history.",
+    `Reconciled the baseline and verified ${entries.length} journaled migrations.`,
   );
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

@@ -7,15 +7,22 @@ import type { AnatomicalPart } from "../anatomicalPart"
 import type { AnatomicalPartType } from "../anatomicalPartType"
 import { advancedReport } from "./advancedReport"
 import type { AdvancedReport } from "./advancedReport"
+import {
+  lateralityValues,
+  observationTypeValues,
+  persistedAnatomicalIssueTypes,
+} from "@biume/contracts/report"
 
 // Définition des enums pour les types
-export const anatomicalIssueType = pgEnum("anatomical_issue_type", [
-  "dysfunction",
-  "anatomicalSuspicion",
-  "observation",
-])
-export const lateralityType = pgEnum("laterality_type", ["left", "right", "bilateral"])
-export const anatomicalIssueObservationType = pgEnum("anatomical_issue_observation_type", ["dynamic", "static", "diagnosticExclusion", "none"])
+export const anatomicalIssueType = pgEnum(
+  "anatomical_issue_type",
+  persistedAnatomicalIssueTypes,
+)
+export const lateralityType = pgEnum("laterality_type", lateralityValues)
+export const anatomicalIssueObservationType = pgEnum(
+  "anatomical_issue_observation_type",
+  observationTypeValues,
+)
 
 export const anatomicalIssue = pgTable("anatomical_issue", {
   id: text("id")

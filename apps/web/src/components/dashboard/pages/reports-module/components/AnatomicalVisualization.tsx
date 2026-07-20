@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scan, ChevronLeft, ChevronRight } from "lucide-react";
 import { AnatomicalImageWithOverlay } from "./AnatomicalImageWithOverlay";
-import type { AnatomicalIssue as DBAnatomicalIssue } from "@/lib/schemas/advancedReport/anatomicalIssue";
+import type { NormalizedAdvancedReport } from "#/functions/reports.function";
 import type { AnatomicalIssue as UIAnatomicalIssue } from "../types";
+import { resolveAnatomicalAnimalType } from "../anatomical-species";
 
 interface AnatomicalVisualizationProps {
-  anatomicalIssues: DBAnatomicalIssue[];
+  anatomicalIssues: NormalizedAdvancedReport["anatomicalIssues"];
   animalData?: {
     name?: string | null;
     code?: string | null;
@@ -23,7 +24,9 @@ export function AnatomicalVisualization({
   );
 
   // Convertir les données DB vers le format UI
-  const convertToUIFormat = (issue: DBAnatomicalIssue): UIAnatomicalIssue => {
+  const convertToUIFormat = (
+    issue: NormalizedAdvancedReport["anatomicalIssues"][number],
+  ): UIAnatomicalIssue => {
     return {
       id: issue.id,
       type: issue.type as "dysfunction" | "anatomicalSuspicion",
@@ -46,6 +49,7 @@ export function AnatomicalVisualization({
 
   // Combiner pour la visualisation
   const allIssues = [...observations, ...anatomicalProblems];
+  const anatomicalAnimalType = resolveAnatomicalAnimalType(animalData);
 
   // Filtrer selon la vue
   const filteredIssues = allIssues.filter((issue) => {
@@ -194,6 +198,20 @@ export function AnatomicalVisualization({
     return null;
   }
 
+  if (!anatomicalAnimalType) {
+    return (
+      <Card className="no-print">
+        <CardContent className="p-6">
+          <p className="font-semibold">Espèce requise</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Complétez l’espèce de l’animal pour afficher la cartographie
+            anatomique. Aucune anatomie n’est déduite automatiquement.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="no-print">
       <CardHeader>
@@ -239,6 +257,7 @@ export function AnatomicalVisualization({
               renderAnatomicalSVG={renderAnatomicalSVG}
               animalData={animalData}
               isTestMode={false}
+              anatomicalAnimalType={anatomicalAnimalType}
             />
           </div>
 
