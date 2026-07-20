@@ -1,5 +1,6 @@
 import { webAppPath } from "../../lib/web-app-url";
-import { MagneticLink, TransitDocuments } from "./prototype-motion";
+import { OrbitCaseRelay, OrbitDocumentStack, OrbitTrajectory } from "./after-dark-orbit-motion";
+import { MagneticLink } from "./prototype-motion";
 import { SAAS_NARRATIVE_CONTENT } from "./prototype-saas-content";
 
 const signupUrl = webAppPath("/signup");
@@ -58,14 +59,16 @@ export function NarrativeSaasSections() {
             </div>
             <p className={`max-w-[52ch] text-pretty text-lg leading-8 ${theme.muted}`}>{SAAS_NARRATIVE_CONTENT.tension.body}</p>
           </div>
-          <ol className={`mt-14 border-t ${theme.line}`}>
-            {methodSteps.map((step, index) => (
-              <li key={step} className={`grid gap-4 border-b py-5 sm:grid-cols-[4rem_1fr] sm:items-center ${theme.line}`}>
-                <span className={`font-mono text-xs font-semibold tracking-[0.16em] ${theme.accent}`}>0{index + 1}</span>
-                <p className="max-w-[55ch] text-lg leading-7">{step}</p>
-              </li>
-            ))}
-          </ol>
+          <OrbitTrajectory stages={["Observer", "Clarifier", "Transmettre", "Suivre"]}>
+            <ol className={`mt-10 border-t ${theme.line}`}>
+              {methodSteps.map((step, index) => (
+                <li key={step} className={`grid gap-4 border-b py-5 sm:grid-cols-[4rem_1fr] sm:items-center ${theme.line}`}>
+                  <span className={`font-mono text-xs font-semibold tracking-[0.16em] ${theme.accent}`}>0{index + 1}</span>
+                  <p className="max-w-[55ch] text-lg leading-7">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </OrbitTrajectory>
         </div>
       </section>
 
@@ -79,7 +82,7 @@ export function NarrativeSaasSections() {
               ))}
             </ul>
           </div>
-          <div className="mt-16"><TransitDocuments /></div>
+          <div className="mt-16"><OrbitDocumentStack /></div>
         </div>
       </section>
 
@@ -87,15 +90,7 @@ export function NarrativeSaasSections() {
         <div className="mx-auto max-w-[1400px]">
           <p className={`text-sm font-semibold ${theme.accent}`}>Dans la pratique</p>
           <h2 className="mt-5 max-w-[13ch] text-balance text-[clamp(2.8rem,5vw,5rem)] font-semibold leading-[0.91] tracking-[-0.038em]">Trois moments où garder le fil.</h2>
-          <div className={`mt-12 divide-y border-y ${theme.line}`}>
-            {useCases.map((useCase, index) => (
-              <article key={useCase.title} className="grid gap-4 py-7 md:grid-cols-[5rem_minmax(12rem,0.55fr)_1fr] md:items-start">
-                <span className={`font-mono text-xs font-semibold tracking-[0.16em] ${theme.accent}`}>0{index + 1}</span>
-                <h3 className="text-xl font-semibold tracking-[-0.02em]">{useCase.title}</h3>
-                <p className={`max-w-[48ch] leading-7 ${theme.muted}`}>{useCase.body}</p>
-              </article>
-            ))}
-          </div>
+          <div className="mt-12"><OrbitCaseRelay items={useCases} /></div>
         </div>
       </section>
 

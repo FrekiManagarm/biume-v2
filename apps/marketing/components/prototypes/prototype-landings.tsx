@@ -5,9 +5,9 @@ import { webAppPath } from "../../lib/web-app-url";
 import {
   ContinuityPath,
   MagneticLink,
-  ParallaxMedia,
   TransitRail,
 } from "./prototype-motion";
+import { OrbitHeroMedia } from "./after-dark-orbit-motion";
 import { NarrativeSaasSections } from "./prototype-saas-sections";
 
 const signupUrl = webAppPath("/signup");
@@ -57,10 +57,15 @@ export function AfterDarkLanding() {
 
       <main id="after-dark-contenu" tabIndex={-1}>
         <section className="relative isolate flex min-h-[100dvh] items-end overflow-hidden px-4 pb-12 pt-28 md:px-6 md:pb-16 lg:px-8 lg:pb-20">
-          <ParallaxMedia className="absolute inset-0 -z-20" distance={10}>
+          <OrbitHeroMedia className="absolute inset-0 -z-20">
             <Image src="/assets/images/prototypes/after-dark-hero.webp" alt="Une main de praticien posée sur l’épaule d’un cheval à la tombée du jour" fill priority sizes="100vw" className="object-cover object-[61%_center]" />
-          </ParallaxMedia>
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(8,18,19,0.94),rgba(8,18,19,0.56)_45%,rgba(8,18,19,0.08)_78%)]" />
+          </OrbitHeroMedia>
+          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[#081213]/55" />
+          <div aria-hidden="true" className="absolute right-4 top-28 flex items-center gap-3 font-mono text-[0.65rem] font-semibold tracking-[0.16em] text-[#ef9b70] md:right-6 lg:right-8">
+            <span>01</span>
+            <span className="h-px w-14 bg-[#ef9b70]" />
+            <span>04</span>
+          </div>
           <div className="mx-auto w-full max-w-[1400px]">
             <p className="max-w-[30ch] text-sm font-semibold leading-6 text-[#ef9b70]">Le regard reste présent quand le propriétaire est de nouveau seul avec son animal.</p>
             <h1 className="mt-6 max-w-[7ch] text-balance text-[clamp(4rem,8vw,6rem)] font-semibold leading-[0.86] tracking-[-0.04em]">La suite commence ici.</h1>

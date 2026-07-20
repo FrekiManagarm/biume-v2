@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import * as landings from "./prototype-landings";
+import { AfterDarkLanding } from "./prototype-landings";
 import { NarrativeSaasSections } from "./prototype-saas-sections";
 
 const requiredSectionIds = ["preuve", "methode", "produit", "cas", "comparatif", "tarifs", "faq"];
@@ -21,7 +22,20 @@ describe("NarrativeSaasSections", () => {
 
   test("keeps the document triptych to the product section", () => {
     const html = renderToStaticMarkup(<landings.AfterDarkLanding />);
+    const documentLabel = "Ce que vous observez";
+    const productStart = html.indexOf('id="produit"');
+    const casesStart = html.indexOf('id="cas"');
 
-    expect(html.split("Ce que vous observez").length - 1).toBe(1);
+    expect(html.indexOf(documentLabel)).toBeGreaterThan(productStart);
+    expect(html.lastIndexOf(documentLabel)).toBeLessThan(casesStart);
+  });
+
+  test("keeps the orbital scroll choreography in the dark route", () => {
+    const html = renderToStaticMarkup(<AfterDarkLanding />);
+
+    expect(html).toContain('data-orbit-hero="true"');
+    expect(html).toContain('data-orbit-trajectory="true"');
+    expect(html).toContain('data-orbit-documents="true"');
+    expect(html).toContain('data-orbit-cases="true"');
   });
 });
