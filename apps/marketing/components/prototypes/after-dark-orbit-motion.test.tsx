@@ -20,6 +20,18 @@ test("renders the trajectory stages and the orbital sequence markers", () => {
   expect(html).toContain("Suivre");
 });
 
+test("keeps mobile trajectory stages in the normal reading flow", async () => {
+  const source = await Bun.file(
+    "apps/marketing/components/prototypes/after-dark-orbit-motion.tsx",
+  ).text();
+
+  expect(source).toContain('className="relative md:overflow-clip"');
+  expect(source).toContain('className="relative grid gap-3 md:hidden"');
+  expect(source).toContain(
+    'className="relative hidden md:grid md:grid-cols-4 md:gap-0"',
+  );
+});
+
 test("renders the remaining orbital sequence markers", () => {
   const hero = renderToStaticMarkup(
     <OrbitHeroMedia>

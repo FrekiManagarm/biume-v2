@@ -55,7 +55,7 @@ export function OrbitTrajectory({
       <section
         ref={target}
         data-orbit-trajectory="true"
-        className="relative overflow-clip"
+        className="relative md:overflow-clip"
       >
         <m.svg
           aria-hidden="true"
@@ -70,7 +70,17 @@ export function OrbitTrajectory({
             style={{ pathLength }}
           />
         </m.svg>
-        <ol className="relative grid gap-3 md:grid-cols-4 md:gap-0">
+        <ol className="relative grid gap-3 md:hidden">
+          {stages.map((stage) => (
+            <li
+              key={stage}
+              className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#ef9b70]"
+            >
+              {stage}
+            </li>
+          ))}
+        </ol>
+        <ol className="relative hidden md:grid md:grid-cols-4 md:gap-0">
           {stages.map((stage, index) => (
             <m.li
               key={stage}
