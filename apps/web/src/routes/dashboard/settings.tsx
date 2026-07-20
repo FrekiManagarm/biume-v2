@@ -1,3 +1,4 @@
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCustomer } from "autumn-js/react";
@@ -31,13 +32,10 @@ import {
 } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
-import { getSession } from "#/functions/auth.function";
-import {
-  getOrganizationSettings,
-  updateOrganization,
-} from "#/functions/organization.function";
+import { updateOrganization } from "#/functions/organization.function";
 import { updateUserNotifications } from "#/functions/user.function";
 import { autumnFeatureIds, autumnPlanIds } from "#/lib/constants/autumn-ids";
+import { organizationSettingsQueryOptions } from "#/lib/api/queries/settings.query";
 import { cn } from "#/lib/utils";
 import { useUploadThing } from "#/lib/utils/uploadthing";
 
@@ -104,20 +102,18 @@ export const Route = createFileRoute("/dashboard/settings")({
       },
     ],
   }),
-  loader: async () => {
-    const [session, organization] = await Promise.all([
-      getSession(),
-      getOrganizationSettings(),
-    ]);
-
-    return { session, organization };
-  },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(organizationSettingsQueryOptions()),
   component: SettingsPage,
 });
 
 function SettingsPage() {
+  const queryClient = useQueryClient();
   const router = useRouter();
-  const { session, organization } = Route.useLoaderData();
+  const { session } = Route.useRouteContext();
+  const { data: organization } = useSuspenseQuery(
+    organizationSettingsQueryOptions(),
+  );
   const [activeTab, setActiveTab] = useState<SettingsTabId>("organization");
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
 
@@ -158,6 +154,7 @@ function SettingsPage() {
       await updateOrganization({
         data: organizationSettingsSchema.parse(value),
       });
+      await queryClient.invalidateQueries({ queryKey: ["organizations"] });
       await router.invalidate();
       toast.success("Organisation mise à jour.");
     },

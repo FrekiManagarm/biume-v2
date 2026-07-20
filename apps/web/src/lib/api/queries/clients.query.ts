@@ -5,6 +5,8 @@ import {
   type GetAllClientsParams,
 } from "#/lib/api/actions/clients.action";
 
+import { dashboardCacheTimes } from "./query-cache";
+
 export const clientsQueryOptions = (params: GetAllClientsParams = {}) => {
   const normalizedParams = {
     search: params.search ?? "",
@@ -15,5 +17,6 @@ export const clientsQueryOptions = (params: GetAllClientsParams = {}) => {
   return queryOptions({
     queryKey: ["clients", "list", normalizedParams] as const,
     queryFn: () => getAllClients(normalizedParams),
+    ...dashboardCacheTimes.entity,
   });
 };

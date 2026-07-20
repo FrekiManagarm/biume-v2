@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { AgendaPage } from "#/components/dashboard/agenda/agenda-page";
 import { appointmentsQueryOptions } from "#/lib/api/queries/appointments.query";
+import { patientsQueryOptions } from "#/lib/api/queries/patients.query";
 
 export const Route = createFileRoute("/dashboard/agenda")({
   head: () => ({
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/dashboard/agenda")({
     ],
   }),
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(appointmentsQueryOptions()),
+    Promise.all([
+      context.queryClient.ensureQueryData(appointmentsQueryOptions()),
+      context.queryClient.ensureQueryData(patientsQueryOptions()),
+    ]),
   component: AgendaPage,
 });

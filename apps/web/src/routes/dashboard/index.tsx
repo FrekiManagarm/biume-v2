@@ -1,10 +1,7 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "#/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { DashboardOverviewView } from "#/components/dashboard/overview/dashboard-overview-view";
 import {
   dashboardOverviewQueryOptions,
@@ -36,7 +33,10 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardIndexPage() {
-  const data = Route.useLoaderData();
+  const { selectedDate } = Route.useLoaderDeps();
+  const { data } = useSuspenseQuery(
+    dashboardOverviewQueryOptions(selectedDate),
+  );
 
   return (
     <DashboardOverviewView

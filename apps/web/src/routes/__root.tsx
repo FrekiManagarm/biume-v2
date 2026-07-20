@@ -12,7 +12,6 @@ import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { getContext } from "#/integrations/tanstack-query/root-provider";
 import { AutumnProvider } from "autumn-js/react";
 import { TooltipProvider } from "@biume/ui/components/tooltip";
 import { Toaster } from "@biume/ui/components/sonner";
@@ -51,7 +50,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 export function RootDocument() {
-  const queryClient = getContext();
+  const { queryClient } = Route.useRouteContext();
 
   return (
     <html lang="fr">
@@ -59,7 +58,7 @@ export function RootDocument() {
         <HeadContent />
       </head>
       <body>
-        <QueryClientProvider client={queryClient.queryClient}>
+        <QueryClientProvider client={queryClient}>
           <AutumnProvider pathPrefix="/api/autumn" includeCredentials>
             <TooltipProvider>
               <Outlet />

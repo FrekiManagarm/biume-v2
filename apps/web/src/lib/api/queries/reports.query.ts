@@ -6,6 +6,8 @@ import {
   type GetAllReportsParams,
 } from "#/lib/api/actions/reports.action";
 
+import { dashboardCacheTimes } from "./query-cache";
+
 export const reportsQueryOptions = (params: GetAllReportsParams = {}) => {
   const normalizedParams = {
     search: params.search ?? "",
@@ -15,6 +17,7 @@ export const reportsQueryOptions = (params: GetAllReportsParams = {}) => {
   return queryOptions({
     queryKey: ["reports", "list", normalizedParams] as const,
     queryFn: () => getAllReports(normalizedParams),
+    ...dashboardCacheTimes.entity,
   });
 };
 
@@ -22,4 +25,5 @@ export const reportQueryOptions = (reportId: string) =>
   queryOptions({
     queryKey: ["reports", "detail", reportId] as const,
     queryFn: () => getReportById({ reportId }),
+    ...dashboardCacheTimes.entity,
   });

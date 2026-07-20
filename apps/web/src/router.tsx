@@ -12,7 +12,7 @@ export function getRouter() {
     context,
     scrollRestoration: true,
     defaultPreload: "intent",
-    defaultPreloadStaleTime: 0,
+    defaultPreloadStaleTime: 30_000,
     defaultPendingComponent: RouterPendingComponent,
     defaultNotFoundComponent: () => <div>Not Found</div>,
   });

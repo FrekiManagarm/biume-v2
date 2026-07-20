@@ -43,11 +43,8 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
 
     return { org: currentOrganization };
   },
-  loader: async ({ context, params }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(reportQueryOptions(params.id)),
-    ]);
-  },
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(reportQueryOptions(params.id)),
   component: RouteComponent,
 });
 

@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
   Outlet,
@@ -9,12 +10,11 @@ import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header";
 import { DashboardPageBanner } from "#/components/dashboard/layout/dashboard-page-banner";
 import { cn } from "@biume/ui/lib/utils";
+import { getCurrentOrganization, getSession } from "#/functions/auth.function";
 import {
-  getCurrentOrganization,
-  getOrganizations,
-  getSession,
-} from "#/functions/auth.function";
-import { getSidebarDefaultOpen } from "#/functions/sidebar.function";
+  organizationsQueryOptions,
+  sidebarDefaultOpenQueryOptions,
+} from "#/lib/api/queries/dashboard-layout.query";
 import type { Organization } from "@biume/db/schema/organization";
 import type { AuthSession } from "@biume/auth";
 
@@ -79,18 +79,21 @@ export const Route = createFileRoute("/dashboard")({
       throw redirect({ to: redirectTarget });
     }
 
-    const [organizations, sidebarDefaultOpen] = await Promise.all([
-      getOrganizations(),
-      getSidebarDefaultOpen(),
-    ]);
-
-    return { session, organizations, sidebarDefaultOpen };
+    return { session };
   },
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(organizationsQueryOptions()),
+      context.queryClient.ensureQueryData(sidebarDefaultOpenQueryOptions()),
+    ]),
 });
 
 function RouteComponent() {
-  const { session, organizations, sidebarDefaultOpen } =
-    Route.useRouteContext();
+  const { session } = Route.useRouteContext();
+  const { data: organizations } = useSuspenseQuery(organizationsQueryOptions());
+  const { data: sidebarDefaultOpen } = useSuspenseQuery(
+    sidebarDefaultOpenQueryOptions(),
+  );
   const pathname = useLocation({ select: (location) => location.pathname });
   const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
 
