@@ -61,7 +61,7 @@ export function MagneticLink({
   );
 }
 
-export function TransitRail({ tone = "light" }: { tone?: "light" | "night" }) {
+export function TransitRail() {
   const words = ["observer", "rendre lisible", "rester présent"];
   const content = [...words, ...words, ...words];
 
@@ -69,11 +69,7 @@ export function TransitRail({ tone = "light" }: { tone?: "light" | "night" }) {
     <LazyMotion features={domAnimation} strict>
       <div
         aria-hidden="true"
-        className={`overflow-hidden border-y py-3 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${
-          tone === "light"
-            ? "border-[#16322e]/20 text-[#176a5a]"
-            : "border-[#ef9b70]/35 text-[#ef9b70]"
-        }`}
+        className="overflow-hidden border-y border-[#ef9b70]/35 py-3 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#ef9b70]"
       >
         <m.div
           className="flex w-max gap-8 whitespace-nowrap"
@@ -115,7 +111,7 @@ export function ParallaxMedia({
   );
 }
 
-export function TransitDocuments({ tone }: { tone: "light" | "night" }) {
+export function TransitDocuments() {
   const stages = [
     { label: "Ce que vous observez", body: "Tension dorsale plus souple après relâchement. Appui à surveiller sur les départs.", offset: -18 },
     { label: "Ce que Biume organise", body: "Les observations deviennent un résumé fidèle, prêt à être relu par vous.", offset: 0 },
@@ -133,17 +129,13 @@ export function TransitDocuments({ tone }: { tone: "light" | "night" }) {
             viewport={{ once: true, amount: 0.55 }}
             transition={{ duration: 0.56, delay: index * 0.08, ease: easeOut }}
             className={`relative min-h-64 border p-6 md:min-h-72 md:p-7 ${
-              tone === "light"
-                ? index === 1
-                  ? "z-10 bg-[#d8e9df] text-[#16322e]"
-                  : "bg-[#f4f6f1] text-[#16322e]"
-                : index === 1
-                  ? "z-10 bg-[#e48c65] text-[#192023]"
-                  : "bg-[#18282a] text-[#f5f3eb]"
+              index === 1
+                ? "z-10 bg-[#e48c65] text-[#192023]"
+                : "bg-[#18282a] text-[#f5f3eb]"
             }`}
           >
             <p className="text-sm font-semibold">{stage.label}</p>
-            <p className={`mt-8 max-w-[24ch] text-lg leading-7 ${tone === "light" || index === 1 ? "text-current/75" : "text-white/70"}`}>
+            <p className={`mt-8 max-w-[24ch] text-lg leading-7 ${index === 1 ? "text-current/75" : "text-white/70"}`}>
               {stage.body}
             </p>
             <span className="absolute bottom-6 right-6 font-mono text-xs opacity-55">0{index + 1}</span>

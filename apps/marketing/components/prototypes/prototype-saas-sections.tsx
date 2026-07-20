@@ -4,29 +4,16 @@ import { SAAS_NARRATIVE_CONTENT } from "./prototype-saas-content";
 
 const signupUrl = webAppPath("/signup");
 
-const themes = {
-  light: {
-    section: "border-[#16322e]/20",
-    muted: "text-[#31514b]",
-    accent: "text-[#176a5a]",
-    surface: "bg-[#d8e9df]",
-    quietSurface: "bg-[#f4f6f1]",
-    contrastSurface: "bg-[#16322e] text-[#f5f3eb]",
-    button: "bg-[#176a5a] text-white hover:bg-[#115246]",
-    line: "border-[#16322e]/20",
-    comparison: "bg-[#e4e9e3]",
-  },
-  night: {
-    section: "border-white/15",
-    muted: "text-white/70",
-    accent: "text-[#ef9b70]",
-    surface: "bg-[#172a2b]",
-    quietSurface: "bg-[#18282a]",
-    contrastSurface: "bg-[#e48c65] text-[#192023]",
-    button: "bg-[#ef9b70] text-[#101d1e] hover:bg-[#ffc19e]",
-    line: "border-white/15",
-    comparison: "bg-[#142526]",
-  },
+const theme = {
+  section: "border-white/15",
+  muted: "text-white/70",
+  accent: "text-[#ef9b70]",
+  surface: "bg-[#172a2b]",
+  quietSurface: "bg-[#18282a]",
+  contrastSurface: "bg-[#e48c65] text-[#192023]",
+  button: "bg-[#ef9b70] text-[#101d1e] hover:bg-[#ffc19e]",
+  line: "border-white/15",
+  comparison: "bg-[#142526]",
 } as const;
 
 function Arrow() {
@@ -37,8 +24,7 @@ function Arrow() {
   );
 }
 
-export function NarrativeSaasSections({ tone }: { tone: "light" | "night" }) {
-  const theme = themes[tone];
+export function NarrativeSaasSections() {
   const methodSteps = [
     "Vos notes restent la base.",
     ...SAAS_NARRATIVE_CONTENT.method.steps,
@@ -89,11 +75,11 @@ export function NarrativeSaasSections({ tone }: { tone: "light" | "night" }) {
             <h2 className="max-w-[9ch] text-balance text-[clamp(2.8rem,5vw,5rem)] font-semibold leading-[0.91] tracking-[-0.038em]">Un parcours que vous gardez en main.</h2>
             <ul className={`grid gap-x-8 gap-y-4 border-l pl-6 text-lg leading-7 sm:grid-cols-2 ${theme.line}`}>
               {SAAS_NARRATIVE_CONTENT.benefits.map((benefit) => (
-                <li key={benefit} className="flex gap-3"><span aria-hidden="true" className={`mt-2 size-2 shrink-0 rounded-full ${tone === "light" ? "bg-[#176a5a]" : "bg-[#ef9b70]"}`} />{benefit}</li>
+                <li key={benefit} className="flex gap-3"><span aria-hidden="true" className="mt-2 size-2 shrink-0 rounded-full bg-[#ef9b70]" />{benefit}</li>
               ))}
             </ul>
           </div>
-          <div className="mt-16"><TransitDocuments tone={tone} /></div>
+          <div className="mt-16"><TransitDocuments /></div>
         </div>
       </section>
 
@@ -177,7 +163,7 @@ export function NarrativeSaasSections({ tone }: { tone: "light" | "night" }) {
             <p className="text-sm font-semibold opacity-75">Prêt à préparer votre premier suivi ?</p>
             <h2 className="mt-4 max-w-[12ch] text-balance text-[clamp(2.8rem,5vw,5rem)] font-semibold leading-[0.91] tracking-[-0.038em]">Vos notes peuvent déjà faire le lien.</h2>
           </div>
-          <MagneticLink href={signupUrl} dataConversion="prototype-signup" className={`transit-focus transit-action inline-flex min-h-12 shrink-0 items-center justify-center px-5 text-sm font-semibold ${tone === "light" ? "bg-[#f5f3eb] text-[#16322e] hover:bg-white" : "bg-[#101d1e] text-[#f5f3eb] hover:bg-[#263a3b]"}`}>
+          <MagneticLink href={signupUrl} dataConversion="prototype-signup" className="transit-focus transit-action inline-flex min-h-12 shrink-0 items-center justify-center bg-[#101d1e] px-5 text-sm font-semibold text-[#f5f3eb] hover:bg-[#263a3b]">
             Essayer gratuitement<Arrow />
           </MagneticLink>
         </div>
