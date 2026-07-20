@@ -47,10 +47,10 @@ export function LaboratoireLanding() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between border-b border-[#16322e]/20 pb-4">
           <Brand />
           <nav className="hidden items-center gap-7 text-sm font-medium text-[#31514b] md:flex" aria-label="Navigation principale">
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#methode">La méthode</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#produit">Le produit</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#tarifs">Tarifs</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#faq">FAQ</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#methode">La méthode</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#produit">Le produit</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#tarifs">Tarifs</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#faq">FAQ</a>
           </nav>
           <Link href={demoUrl} target="_blank" rel="noopener noreferrer" className="transit-focus hidden min-h-11 items-center text-sm font-semibold underline decoration-[#176a5a] underline-offset-4 md:inline-flex">
             Demander une démo
@@ -114,7 +114,7 @@ export function LaboratoireLanding() {
       <footer className="border-t border-[#16322e]/20 px-4 py-8 md:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1400px] flex-col justify-between gap-4 text-sm text-[#31514b] sm:flex-row">
           <p>Biume · des notes au propriétaire, sans perdre le fil.</p>
-          <Link href="/" className="transit-focus font-semibold text-[#176a5a]">Retour à Biume</Link>
+          <Link href="/" className="transit-focus inline-flex min-h-11 items-center font-semibold text-[#176a5a]">Retour à Biume</Link>
         </div>
       </footer>
     </div>
@@ -129,11 +129,11 @@ export function AfterDarkLanding() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between">
           <Brand inverted />
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/75 md:flex" aria-label="Navigation principale">
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#methode">La méthode</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#produit">Le produit</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#tarifs">Tarifs</a>
-            <a className="transit-focus inline-flex min-h-11 items-center" href="#faq">FAQ</a>
-            <Link href={signupUrl} prefetch={false} className="transit-focus border border-[#ef9b70] px-4 py-2 text-[#ef9b70]">Essayer</Link>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#methode">La méthode</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#produit">Le produit</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#tarifs">Tarifs</a>
+            <a className="transit-focus inline-flex min-h-11 min-w-11 items-center justify-center" href="#faq">FAQ</a>
+            <Link href={signupUrl} prefetch={false} className="transit-focus inline-flex min-h-11 items-center border border-[#ef9b70] px-4 text-[#ef9b70]">Essayer</Link>
           </nav>
         </div>
       </header>
@@ -190,7 +190,7 @@ export function AfterDarkLanding() {
       <footer className="border-t border-white/15 px-4 py-8 md:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1400px] flex-col justify-between gap-4 text-sm text-white/65 sm:flex-row">
           <p>Biume · l’observation reste disponible, le praticien reste décideur.</p>
-          <Link href="/" className="transit-focus font-semibold text-[#ef9b70]">Retour à Biume</Link>
+          <Link href="/" className="transit-focus inline-flex min-h-11 items-center font-semibold text-[#ef9b70]">Retour à Biume</Link>
         </div>
       </footer>
     </div>
