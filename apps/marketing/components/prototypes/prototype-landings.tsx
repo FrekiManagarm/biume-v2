@@ -6,7 +6,6 @@ import {
   ContinuityPath,
   MagneticLink,
   ParallaxMedia,
-  TransitDocuments,
   TransitRail,
 } from "./prototype-motion";
 import { NarrativeSaasSections } from "./prototype-saas-sections";
@@ -96,9 +95,6 @@ export function LaboratoireLanding() {
               <h2 className="max-w-[10ch] text-balance text-[clamp(2.8rem,5.5vw,5.2rem)] font-semibold leading-[0.91] tracking-[-0.038em]">Une seule séance, trois langages.</h2>
               <p className="max-w-[48ch] text-pretty text-lg leading-8 text-[#31514b]">Vos notes restent professionnelles. Biume prépare une version claire. Le propriétaire reçoit des repères qu’il peut réellement utiliser. Aucun de ces passages ne vous enlève la décision.</p>
             </div>
-            <div className="mt-14">
-              <TransitDocuments tone="light" />
-            </div>
           </div>
         </section>
 
@@ -171,9 +167,6 @@ export function AfterDarkLanding() {
             <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
               <h2 className="max-w-[10ch] text-balance text-[clamp(2.8rem,5.4vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.038em]">Une trajectoire, pas un envoi isolé.</h2>
               <p className="max-w-[48ch] text-pretty text-lg leading-8 text-white/70">Le bon compte rendu relie la précision de votre séance à ce que le propriétaire peut observer, appliquer et vous raconter ensuite.</p>
-            </div>
-            <div className="mt-16">
-              <TransitDocuments tone="night" />
             </div>
           </div>
         </section>
