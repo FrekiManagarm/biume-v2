@@ -152,7 +152,6 @@ export function OrbitDocumentStack() {
           {documents.map((document, index) => (
             <m.article
               key={document.label}
-              layout
               style={{
                 y: offsets[index],
                 rotate:
@@ -212,7 +211,6 @@ export function OrbitCaseRelay({ items }: { items: readonly CaseRelayItem[] }) {
           {items.map((item, index) => (
             <m.article
               key={item.title}
-              layout
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.45 }}
