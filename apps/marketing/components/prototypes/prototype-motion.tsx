@@ -5,7 +5,6 @@ import {
   LazyMotion,
   m,
   useMotionValue,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
@@ -27,14 +26,13 @@ export function MagneticLink({
   className: string;
   dataConversion?: string;
 }) {
-  const reduceMotion = useReducedMotion();
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
   const x = useSpring(rawX, spring);
   const y = useSpring(rawY, spring);
 
   function move(event: PointerEvent<HTMLAnchorElement>) {
-    if (reduceMotion || event.pointerType !== "mouse") return;
+    if (event.pointerType !== "mouse") return;
 
     const bounds = event.currentTarget.getBoundingClientRect();
     rawX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 10);
@@ -52,7 +50,7 @@ export function MagneticLink({
         href={href}
         data-conversion={dataConversion}
         className={className}
-        style={reduceMotion ? undefined : { x, y }}
+        style={{ x, y }}
         onPointerMove={move}
         onPointerLeave={reset}
         onBlur={reset}
@@ -64,7 +62,6 @@ export function MagneticLink({
 }
 
 export function TransitRail({ tone = "light" }: { tone?: "light" | "night" }) {
-  const reduceMotion = useReducedMotion();
   const words = ["observer", "rendre lisible", "rester présent"];
   const content = [...words, ...words, ...words];
 
@@ -80,8 +77,8 @@ export function TransitRail({ tone = "light" }: { tone?: "light" | "night" }) {
       >
         <m.div
           className="flex w-max gap-8 whitespace-nowrap"
-          animate={reduceMotion ? undefined : { x: ["0%", "-33.333%"] }}
-          transition={reduceMotion ? undefined : { duration: 21, repeat: Infinity, ease: "linear" }}
+          animate={{ x: ["0%", "-33.333%"] }}
+          transition={{ duration: 21, repeat: Infinity, ease: "linear" }}
         >
           {content.map((word, index) => (
             <span key={`${word}-${index}`} className="flex items-center gap-8">
@@ -105,14 +102,13 @@ export function ParallaxMedia({
   distance?: number;
 }) {
   const target = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", `${distance}%`]);
   const scale = useTransform(scrollYProgress, [0, 1], [1.07, 1]);
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <m.div ref={target} className={className} style={reduceMotion ? undefined : { y, scale }}>
+      <m.div ref={target} className={className} style={{ y, scale }}>
         {children}
       </m.div>
     </LazyMotion>
@@ -120,7 +116,6 @@ export function ParallaxMedia({
 }
 
 export function TransitDocuments({ tone }: { tone: "light" | "night" }) {
-  const reduceMotion = useReducedMotion();
   const stages = [
     { label: "Ce que vous observez", body: "Tension dorsale plus souple après relâchement. Appui à surveiller sur les départs.", offset: -18 },
     { label: "Ce que Biume organise", body: "Les observations deviennent un résumé fidèle, prêt à être relu par vous.", offset: 0 },
@@ -134,7 +129,7 @@ export function TransitDocuments({ tone }: { tone: "light" | "night" }) {
           <m.article
             key={stage.label}
             initial={false}
-            whileInView={reduceMotion ? undefined : { y: stage.offset, rotate: (index - 1) * 1.2 }}
+            whileInView={{ y: stage.offset, rotate: (index - 1) * 1.2 }}
             viewport={{ once: true, amount: 0.55 }}
             transition={{ duration: 0.56, delay: index * 0.08, ease: easeOut }}
             className={`relative min-h-64 border p-6 md:min-h-72 md:p-7 ${
@@ -160,8 +155,6 @@ export function TransitDocuments({ tone }: { tone: "light" | "night" }) {
 }
 
 export function ContinuityPath() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <LazyMotion features={domAnimation} strict>
       <m.svg aria-hidden="true" viewBox="0 0 1000 180" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 top-0 h-28 w-full text-[#ef9b70] md:h-36">
@@ -173,7 +166,7 @@ export function ContinuityPath() {
           initial={{ pathLength: 0, opacity: 0 }}
           whileInView={{ pathLength: 1, opacity: 0.9 }}
           viewport={{ once: true, amount: 0.45 }}
-          transition={{ duration: reduceMotion ? 0 : 1.2, ease: easeOut }}
+          transition={{ duration: 1.2, ease: easeOut }}
         />
       </m.svg>
     </LazyMotion>
