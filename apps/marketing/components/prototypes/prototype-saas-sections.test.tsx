@@ -38,4 +38,12 @@ describe("NarrativeSaasSections", () => {
     expect(html).toContain('data-orbit-documents="true"');
     expect(html).toContain('data-orbit-cases="true"');
   });
+
+  test("does not remount the global TransitRail loop", async () => {
+    const source = await Bun.file(
+      "apps/marketing/components/prototypes/prototype-landings.tsx",
+    ).text();
+
+    expect(source).not.toContain("TransitRail");
+  });
 });

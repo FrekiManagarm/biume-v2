@@ -5,7 +5,6 @@ import { webAppPath } from "../../lib/web-app-url";
 import {
   ContinuityPath,
   MagneticLink,
-  TransitRail,
 } from "./prototype-motion";
 import { OrbitHeroMedia } from "./after-dark-orbit-motion";
 import { NarrativeSaasSections } from "./prototype-saas-sections";
@@ -76,10 +75,6 @@ export function AfterDarkLanding() {
             </div>
           </div>
         </section>
-
-        <div className="mx-auto max-w-[1400px] px-4 md:px-6 lg:px-8">
-          <TransitRail />
-        </div>
 
         <NarrativeSaasSections />
 
