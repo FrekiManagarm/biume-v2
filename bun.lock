@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "biume",
@@ -24,6 +23,7 @@
         "fumadocs-mdx": "^14.2.11",
         "fumadocs-ui": "^16.7.4",
         "gray-matter": "^4.0.3",
+        "lucide-react": "^0.546.0",
         "motion": "^12.42.2",
         "next": "16.2.9",
         "react": "catalog:",

@@ -171,6 +171,52 @@ details[open] [data-faq-indicator] {
   }
 }
 
+.transit-action {
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.transit-action:hover {
+  transform: translateY(-2px);
+}
+
+.transit-action:active {
+  transform: scale(0.98);
+}
+
+.transit-focus:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.transit-skip {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0 0.75rem;
+  background: #f5f3eb;
+  color: #16322e;
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.transit-skip:focus {
+  transform: translateY(0);
+}
+
+.transit-skip-night {
+  background: #f5f3eb;
+  color: #101d1e;
+}
+
 .atelier-theme {
   --background: #f7f7f4;
   --foreground: #1d1d21;

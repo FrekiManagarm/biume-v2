@@ -113,7 +113,7 @@
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "skillPath": ".agents/skills/impeccable/SKILL.md",
-      "computedHash": "e07098370ad7fd4605b67d305d8c06623a5c7d7737d2364e30932294ef880ff6"
+      "computedHash": "661cb3bf14973f592d78f5da962dba66469aa42b0f4903bff97dd2c7a03a4f47"
     },
     "launch": {
       "source": "coreyhaines31/marketingskills",
@@ -198,6 +198,12 @@
       "sourceType": "github",
       "skillPath": "skills/public-relations/SKILL.md",
       "computedHash": "1b13653b478b49049e4df4981ea032de63833387c4f914eadaeb070f6ecbdc5c"
+    },
+    "refero-design": {
+      "source": "referodesign/refero_skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "31a559a556a0bba06320f709041acaf5b9418d5cc136f7d3ae120850eef794b0"
     },
     "referrals": {
       "source": "coreyhaines31/marketingskills",
