@@ -1,143 +1,145 @@
-/* ---------------------------------------------------------------------------
- * Biume — landing v2 « Carnet éditorial »
- * Direction indépendante : papier crème, encre, terracotta unique.
- * ------------------------------------------------------------------------- */
+/* ============================================================
+   Biume Landing v2 — direction « produit d'abord »
+   Canvas neutre clair, accent violet réservé aux CTA et états
+   actifs, preuve produit visible dès le hero.
+   ============================================================ */
 
 .v2 {
-  --v2-paper: #f6f1e7;
-  --v2-sheet: #fdfaf3;
-  --v2-ink: #1c1917;
-  --v2-ink-soft: #5c544c;
-  --v2-ink-faint: #6f655b;
-  --v2-line: rgba(28, 25, 23, 0.16);
-  --v2-line-strong: rgba(28, 25, 23, 0.34);
-  --v2-accent: #b4502e;
-  --v2-accent-deep: #9a4425;
-  --v2-accent-soft: rgba(180, 80, 46, 0.12);
+  /* Palette neutre */
+  --v2-canvas: #fafafa;
+  --v2-panel: #ffffff;
+  --v2-ink: #171717;
+  --v2-ink-soft: #525252;
+  --v2-ink-faint: #8a8a8a;
+  --v2-line: rgba(23, 23, 23, 0.08);
+  --v2-line-strong: rgba(23, 23, 23, 0.14);
 
-  background-color: var(--v2-paper);
+  /* Accent unique — CTA, liens, états actifs uniquement */
+  --v2-accent: #6b5ac8;
+  --v2-accent-deep: #5648b0;
+  --v2-accent-soft: rgba(107, 90, 200, 0.08);
+
+  --v2-font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --v2-font-mono: var(--font-v2-mono), ui-monospace, "SF Mono", Menlo,
+    monospace;
+
+  background: var(--v2-canvas);
   color: var(--v2-ink);
-  font-family: var(--font-v2-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--v2-font-sans);
   text-rendering: optimizeLegibility;
-  position: relative;
-}
-
-/* Grain papier : fixe, hors flux, jamais sur un conteneur scrollant. */
-.v2::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-font-smoothing: antialiased;
 }
 
 .v2-display {
-  font-family: var(--font-v2-display), Georgia, serif;
-  font-optical-sizing: auto;
-  font-variation-settings:
-    "WONK" 0,
-    "SOFT" 0;
-}
-
-.v2-display-wonk {
-  font-variation-settings:
-    "WONK" 1,
-    "SOFT" 0;
+  font-family: var(--v2-font-sans);
+  letter-spacing: -0.02em;
 }
 
 .v2-mono {
-  font-family: var(--font-v2-mono), ui-monospace, monospace;
+  font-family: var(--v2-font-mono);
 }
 
-/* Feuille réglée (carnet de notes) */
-.v2-ruled {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 27px,
-    var(--v2-line) 27px,
-    var(--v2-line) 28px
-  );
-}
-
-/* Marge rouge de carnet */
-.v2-margin-line {
-  background-image: linear-gradient(
-    to right,
-    transparent 0,
-    transparent 2.75rem,
-    rgba(180, 80, 46, 0.35) 2.75rem,
-    rgba(180, 80, 46, 0.35) calc(2.75rem + 1px),
-    transparent calc(2.75rem + 1px)
-  );
-}
-
-/* Traitement photo : noir & blanc chaud façon plaque éditoriale */
-.v2-plate img {
-  filter: grayscale(1) sepia(0.32) contrast(1.04) brightness(1.03);
-}
-.v2-plate::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--v2-paper);
-  mix-blend-mode: lighten;
-  opacity: 0.14;
-  pointer-events: none;
-}
-
-/* Lettrine */
-.v2-dropcap::first-letter {
-  font-family: var(--font-v2-display), Georgia, serif;
-  font-weight: 560;
-  float: left;
-  font-size: 3.4em;
-  line-height: 0.82;
-  padding-right: 0.12em;
-  padding-top: 0.06em;
+.v2-eyebrow {
+  font-family: var(--v2-font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--v2-accent-deep);
 }
 
-/* Guillemets éditoriaux sur les citations */
-.v2-pullquote {
-  hanging-punctuation: first;
+/* Panneau produit : blanc, filet discret, ombre douce */
+.v2-panel {
+  background: var(--v2-panel);
+  border: 1px solid var(--v2-line);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(23, 23, 23, 0.04),
+    0 16px 40px -20px rgba(23, 23, 23, 0.14);
 }
 
-/* Lien éditorial : souligné qui glisse */
-.v2-link {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 100% 1px;
-  background-position: 0 100%;
-  background-repeat: no-repeat;
+/* Boutons — l'accent violet ne sort pas de ces rôles */
+.v2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   transition:
-    background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.2s ease;
+    transform 0.2s ease-out,
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out,
+    color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
 }
-.v2-link:hover {
-  background-size: 0% 1px;
-  color: var(--v2-accent-deep);
+.v2-btn:active {
+  transform: scale(0.98);
 }
-.v2-link:focus-visible {
+.v2-btn:focus-visible {
   outline: 2px solid var(--v2-accent-deep);
   outline-offset: 3px;
 }
-
-/* Cercle à main levée (annotation) */
-.v2-hand-circle {
-  border: 1.5px solid var(--v2-accent);
-  border-radius: 48% 52% 55% 45% / 58% 44% 56% 42%;
-  transform: rotate(-1.5deg);
+.v2-btn-primary {
+  background: var(--v2-accent);
+  color: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(23, 23, 23, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.v2-btn-primary:hover {
+  background: var(--v2-accent-deep);
+  transform: translateY(-1px);
+}
+.v2-btn-secondary {
+  background: var(--v2-panel);
+  color: var(--v2-ink);
+  border: 1px solid var(--v2-line-strong);
+}
+.v2-btn-secondary:hover {
+  border-color: var(--v2-ink);
+  transform: translateY(-1px);
 }
 
-/* Tampon de validation */
-.v2-stamp {
-  border: 1.5px solid var(--v2-accent-deep);
+/* Lien souligné animé */
+.v2-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: left calc(100% - 0.05em);
+  transition:
+    background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.25s ease-out;
+}
+.v2-link:hover {
+  background-size: 100% 1px;
   color: var(--v2-accent-deep);
-  transform: rotate(-2deg);
-  box-shadow: inset 0 0 0 1px rgba(154, 68, 37, 0.18);
+}
+.v2-link:focus-visible {
+  outline: 2px solid var(--v2-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Badge discret de validation */
+.v2-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(107, 90, 200, 0.24);
+  background: var(--v2-accent-soft);
+  color: var(--v2-accent-deep);
+  font-family: var(--v2-font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @media (prefers-reduced-motion: reduce) {

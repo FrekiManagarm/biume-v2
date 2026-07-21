@@ -12,7 +12,7 @@ import {
   V2Control,
   V2Field,
   V2FollowUp,
-  V2Transformation,
+  V2HowItWorks,
 } from "./sections-story";
 
 export function V2Landing() {
@@ -22,7 +22,7 @@ export function V2Landing() {
         <V2Masthead />
         <main id="contenu">
           <V2Hero />
-          <V2Transformation />
+          <V2HowItWorks />
           <V2Control />
           <V2FollowUp />
           <V2Field />
