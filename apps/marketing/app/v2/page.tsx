@@ -7,7 +7,14 @@ import "./v2.css";
 export const metadata: Metadata = {
   title: "Biume — Votre regard métier, jusqu'au propriétaire",
   description:
-    "Prototype éditorial de la landing Biume : de vos notes de séance au compte rendu propriétaire, sans perdre votre regard métier.",
+    "Dictez vos observations après chaque séance. Biume prépare un compte rendu propriétaire clair et professionnel — vous relisez, vous validez, le propriétaire le reçoit.",
+  keywords: [
+    "ostéopathe animalier",
+    "compte rendu ostéopathie animale",
+    "compte rendu propriétaire",
+    "logiciel ostéopathe animalier",
+    "suivi propriétaire",
+  ],
   robots: { index: false, follow: false },
 };
 

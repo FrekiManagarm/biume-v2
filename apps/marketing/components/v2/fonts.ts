@@ -1,17 +1,8 @@
-import { Archivo, Fraunces, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
 
-export const v2Display = Fraunces({
+export const v2Sans = Inter({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["opsz", "SOFT", "WONK"],
-  variable: "--font-v2-display",
-  display: "swap",
-});
-
-export const v2Body = Archivo({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-v2-body",
+  variable: "--font-v2-sans",
   display: "swap",
 });
 
@@ -22,8 +13,4 @@ export const v2Mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-export const v2FontVariables = [
-  v2Display.variable,
-  v2Body.variable,
-  v2Mono.variable,
-].join(" ");
+export const v2FontVariables = [v2Sans.variable, v2Mono.variable].join(" ");

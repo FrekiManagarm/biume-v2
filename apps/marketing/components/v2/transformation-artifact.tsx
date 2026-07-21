@@ -1,115 +1,105 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import { memo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { NotesSheet, V2Badge } from "./artifacts";
 import type { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
-import { NotesSheet, Stamp } from "./artifacts";
 
 type Demo = typeof REPORT_TRANSFORMATION_DEMO;
 
-/**
- * Artefact signature : la feuille de notes devient compte rendu.
- * Micro-interaction perpétuelle isolée ici (memo + interval nettoyé),
- * jamais dans le layout parent. Désactivée en reduced-motion.
- */
-export const TransformationArtifact = memo(function TransformationArtifact({
+const ACTIVE_MS = 2000;
+
+/** Indicateur discret qui progresse section par section, en boucle. */
+function useActiveSection(count: number): number {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setActive((current) => (current + 1) % count);
+    }, ACTIVE_MS);
+    return () => window.clearInterval(id);
+  }, [count]);
+
+  return active;
+}
+
+export function TransformationArtifact({
   note,
   sections,
   ownerSummary,
-  className = "",
 }: {
   note: Demo["note"];
   sections: Demo["sections"];
   ownerSummary: Demo["ownerSummary"];
-  className?: string;
 }) {
-  const reduce = useReducedMotion();
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    if (reduce) return;
-    const id = window.setInterval(
-      () => setActive((current) => (current + 1) % sections.length),
-      2600,
-    );
-    return () => window.clearInterval(id);
-  }, [reduce, sections.length]);
+  const active = useActiveSection(sections.length);
 
   return (
-    <div className={`grid items-center gap-6 md:grid-cols-[0.92fr_auto_1fr] ${className}`}>
-      <div className="relative">
+    <div className="grid gap-5 md:grid-cols-[1fr_auto_1.35fr] md:items-center md:gap-6">
+      <div>
+        <p className="v2-eyebrow mb-3">Notes de séance</p>
         <NotesSheet note={note} />
-        {!reduce && (
-          <motion.span
-            aria-hidden="true"
-            className="absolute -bottom-1 left-16 h-4 w-px bg-[color:var(--v2-accent)]"
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ duration: 1.1, repeat: Number.POSITIVE_INFINITY }}
-          />
-        )}
       </div>
 
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 48 24"
-        className="mx-auto h-5 w-10 rotate-90 text-[color:var(--v2-ink-faint)] md:rotate-0"
-      >
-        <motion.path
-          d="M2 12 H40 M34 6 L42 12 L34 18"
+      <div className="flex items-center justify-center" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5 rotate-90 text-[color:var(--v2-accent)] md:rotate-0"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2, ease: "easeInOut", delay: 0.3 }}
-        />
-      </svg>
+        >
+          <path d="M5 12h14" />
+          <path d="m13 6 6 6-6 6" />
+        </svg>
+      </div>
 
-      <figure className="relative rotate-[0.6deg] border border-[color:var(--v2-line)] bg-[color:var(--v2-sheet)] px-6 py-5 shadow-[0_24px_44px_-28px_rgba(28,25,23,0.5)]">
-        <figcaption className="v2-mono mb-4 flex items-baseline justify-between gap-4 border-b border-[color:var(--v2-line)] pb-3 text-[0.65rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
-          <span>Compte rendu · Biume</span>
-          <span>Fig. 01</span>
+      <figure className="overflow-hidden rounded-xl border border-[color:var(--v2-line)] bg-[color:var(--v2-panel)] shadow-[0_1px_2px_rgba(23,23,23,0.05)]">
+        <figcaption className="flex items-center justify-between gap-4 border-b border-[color:var(--v2-line)] px-5 py-3">
+          <span className="v2-eyebrow">Compte rendu propriétaire</span>
+          <V2Badge>Relu et validé par vous</V2Badge>
         </figcaption>
-
-        <dl className="space-y-3">
-          {sections.map((section, index) => (
-            <div key={section.label} className="relative pl-4">
-              {active === index && (
-                <motion.span
-                  layoutId="v2-pulse"
-                  aria-hidden="true"
-                  className="absolute left-0 top-1 bottom-1 w-[2px] bg-[color:var(--v2-accent)]"
-                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                />
-              )}
-              <dt
-                className={`v2-mono text-[0.62rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
-                  active === index
-                    ? "text-[color:var(--v2-accent-deep)]"
-                    : "text-[color:var(--v2-ink-faint)]"
+        <div className="divide-y divide-[color:var(--v2-line)]">
+          {sections.map((section, index) => {
+            const isActive = index === active;
+            return (
+              <div
+                key={section.label}
+                className={`grid gap-1 px-5 py-3.5 transition-colors duration-500 ${
+                  isActive ? "bg-[color:var(--v2-accent-soft)]" : ""
                 }`}
               >
-                {section.label}
-              </dt>
-              <dd className="mt-0.5 text-[0.85rem] leading-snug text-[color:var(--v2-ink)]">
-                {section.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="v2-display mt-4 border-t border-[color:var(--v2-line)] pt-3 text-[0.95rem] italic leading-snug text-[color:var(--v2-ink)]">
-          «&nbsp;{ownerSummary}&nbsp;»
-        </p>
-
-        <div className="mt-4 flex justify-end">
-          <Stamp>Relu &amp; validé par vous</Stamp>
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className={`h-1.5 w-1.5 rounded-full transition-colors duration-500 ${
+                      isActive
+                        ? "bg-[color:var(--v2-accent)]"
+                        : "bg-[color:var(--v2-line-strong)]"
+                    }`}
+                  />
+                  <p className="v2-mono text-[0.62rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
+                    {section.label}
+                  </p>
+                </div>
+                <p className="text-[0.85rem] leading-6 text-[color:var(--v2-ink)]">
+                  {section.value}
+                </p>
+              </div>
+            );
+          })}
+          <div className="px-5 py-3.5">
+            <p className="v2-mono text-[0.62rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
+              En résumé
+            </p>
+            <p className="mt-1 text-[0.85rem] leading-6 text-[color:var(--v2-ink)]">
+              «&nbsp;{ownerSummary}&nbsp;»
+            </p>
+          </div>
         </div>
       </figure>
     </div>
   );
-});
+}
