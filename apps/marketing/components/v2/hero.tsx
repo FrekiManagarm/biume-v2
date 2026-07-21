@@ -1,8 +1,8 @@
-import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
+import Image from "next/image";
+
 import { webAppPath } from "../../lib/web-app-url";
 import { Magnetic } from "./magnetic";
 import { HeroItem, HeroReveal, Reveal } from "./reveal";
-import { TransformationArtifact } from "./transformation-artifact";
 
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
 
@@ -18,7 +18,7 @@ function ProofItem({ label }: { label: string }) {
       <svg
         aria-hidden="true"
         viewBox="0 0 12 12"
-        className="h-3 w-3 shrink-0 text-[color:var(--v2-accent)]"
+        className="h-3 w-3 shrink-0 text-[color:var(--v2-green)]"
       >
         <path
           d="M2 6.5 4.6 9 10 3.5"
@@ -37,7 +37,7 @@ function ProofItem({ label }: { label: string }) {
 export function V2Hero() {
   return (
     <section aria-labelledby="v2-hero-title" className="relative overflow-hidden">
-      {/* Halo vert discret en haut de page */}
+      {/* Halo violet + pointe de vert en haut de page */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[36rem]"
@@ -54,7 +54,7 @@ export function V2Hero() {
               <p className="v2-eyebrow flex items-center gap-2.5">
                 <span
                   aria-hidden="true"
-                  className="v2-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--v2-accent)]"
+                  className="v2-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--v2-green)]"
                 />
                 Pour les ostéopathes animaliers indépendants
               </p>
@@ -62,9 +62,9 @@ export function V2Hero() {
             <HeroItem className="mt-6">
               <h1
                 id="v2-hero-title"
-                className="v2-display max-w-[12ch] text-[clamp(2.7rem,5.6vw,4.6rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-[color:var(--v2-ink)] [text-wrap:balance]"
+                className="v2-display max-w-[13ch] text-[clamp(2.9rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-[color:var(--v2-ink)] [text-wrap:balance]"
               >
-                Le compte rendu propriétaire, prêt avant de quitter l'écurie.
+                Trois phrases. Un compte rendu.
               </h1>
             </HeroItem>
             <HeroItem className="mt-6">
@@ -99,19 +99,35 @@ export function V2Hero() {
             </HeroItem>
           </HeroReveal>
 
-          {/* Preuve produit : panneau décalé sur dalle verte */}
+          {/* Preuve produit : le vrai produit, cadré sur l'aperçu du compte rendu */}
           <Reveal delay={0.25} className="relative lg:mt-10">
             <div
               aria-hidden="true"
               className="absolute -right-4 -top-4 bottom-8 left-8 rounded-[2.5rem] bg-[color:var(--v2-accent-soft)] md:-right-6 md:-top-6"
             />
-            <div className="v2-panel relative p-5 md:p-7">
-              <TransformationArtifact
-                note={REPORT_TRANSFORMATION_DEMO.note}
-                sections={REPORT_TRANSFORMATION_DEMO.sections}
-                ownerSummary={REPORT_TRANSFORMATION_DEMO.ownerSummary}
-              />
-            </div>
+            <figure className="v2-panel relative overflow-hidden !p-0">
+              <div
+                aria-hidden="true"
+                className="flex items-center gap-1.5 border-b border-[color:var(--v2-line)] px-4 py-3"
+              >
+                <span className="size-2 rounded-full bg-[color:var(--v2-line-strong)]" />
+                <span className="size-2 rounded-full bg-[color:var(--v2-line-strong)]" />
+                <span className="size-2 rounded-full bg-[color:var(--v2-green)]" />
+                <span className="v2-mono ml-3 text-[0.62rem] uppercase tracking-[0.12em] text-[color:var(--v2-ink-faint)]">
+                  Aperçu du compte rendu
+                </span>
+              </div>
+              <div className="relative aspect-[4/5] sm:aspect-[5/6] lg:aspect-[4/5]">
+                <Image
+                  src="/assets/images/dashboard-image.jpg"
+                  alt="L'application Biume : aperçu du compte rendu avec ses sections à relire et la barre de validation"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 44rem, 100vw"
+                  className="object-cover object-right"
+                />
+              </div>
+            </figure>
           </Reveal>
         </div>
 
