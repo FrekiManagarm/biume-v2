@@ -39,6 +39,21 @@
   font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  /* Pont pour les pages marketing historiques encore composées avec les
+     variables sémantiques partagées. */
+  --background: var(--v2-canvas);
+  --foreground: var(--v2-ink);
+  --card: var(--v2-surface);
+  --card-foreground: var(--v2-ink);
+  --muted: var(--v2-bone);
+  --muted-foreground: var(--v2-ink-soft);
+  --border: var(--v2-line-strong);
+  --primary: var(--v2-violet-ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--v2-green);
+  --secondary-foreground: #ffffff;
+  --ring: var(--v2-violet-ink);
 }
 
 /* ---------- Typographie ---------- */
@@ -164,6 +179,18 @@
 
 .v2-link:hover {
   color: var(--v2-violet-ink);
+}
+
+/* Les titres des gabarits SEO historiques gardent leur contenu, sans l'ancien
+   traitement dégradé qui ne fait pas partie du langage V2. */
+.v2 .bg-clip-text {
+  background-image: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.v2 .text-transparent {
+  color: inherit !important;
 }
 
 /* ---------- FAQ — ouverture courte, sans animer la mise en page ---------- */
