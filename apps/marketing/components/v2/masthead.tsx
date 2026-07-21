@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
 
@@ -10,8 +13,25 @@ const anchorLinks = [
 ] as const;
 
 export function V2Masthead() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateScrolledState = () => setIsScrolled(window.scrollY > 16);
+
+    updateScrolledState();
+    window.addEventListener("scroll", updateScrolledState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateScrolledState);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 bg-[color:var(--v2-canvas)]/85 backdrop-blur-md">
+    <header
+      className={`fixed inset-x-0 top-0 z-40 border-b transition-[background-color,border-color,backdrop-filter] duration-300 ${
+        isScrolled
+          ? "border-[color:var(--v2-line)] bg-[color:var(--v2-canvas)]/95 backdrop-blur-md"
+          : "border-transparent bg-transparent"
+      }`}
+    >
       <a
         href="#contenu"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-[color:var(--v2-espresso)] focus:px-4 focus:py-2 focus:text-sm focus:text-white"
@@ -35,7 +55,11 @@ export function V2Masthead() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="v2-link text-[0.88rem] text-[color:var(--v2-ink-soft)]"
+                  className={`v2-link text-[0.88rem] ${
+                    isScrolled
+                      ? "text-[color:var(--v2-ink-soft)]"
+                      : "text-[color:var(--v2-ink)]"
+                  }`}
                 >
                   {link.label}
                 </a>

@@ -89,12 +89,12 @@
 }
 
 .v2-btn-primary {
-  background: var(--v2-accent); /* violet clair Biume */
-  color: var(--v2-ink);
+  background: var(--v2-violet-ink);
+  color: #ffffff;
 }
 
 .v2-btn-primary:hover {
-  background: var(--v2-accent-hover);
+  background: var(--v2-espresso-hover);
 }
 
 .v2-btn-secondary {
