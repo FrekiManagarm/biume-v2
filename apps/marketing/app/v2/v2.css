@@ -1,7 +1,7 @@
 /* ============================================================
    Biume Landing v2 — direction « produit d'abord »
-   Canvas neutre clair, accent violet réservé aux CTA et états
-   actifs, preuve produit visible dès le hero.
+   Canvas neutre clair, accent vert Biume réservé aux CTA et
+   états actifs, preuve produit visible dès le hero.
    ============================================================ */
 
 .v2 {
@@ -15,9 +15,10 @@
   --v2-line-strong: rgba(23, 23, 23, 0.14);
 
   /* Accent unique — CTA, liens, états actifs uniquement */
-  --v2-accent: #6b5ac8;
-  --v2-accent-deep: #5648b0;
-  --v2-accent-soft: rgba(107, 90, 200, 0.08);
+  --v2-accent: #52796f;
+  --v2-accent-deep: #3d5f57;
+  --v2-accent-soft: rgba(82, 121, 111, 0.08);
+  --v2-pine: #2f4a42;
 
   --v2-font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
@@ -104,6 +105,40 @@
   border-color: var(--v2-ink);
   transform: translateY(-1px);
 }
+/* Point de statut respirant */
+.v2-pulse-dot {
+  animation: v2-pulse 2.4s ease-in-out infinite;
+}
+@keyframes v2-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.75);
+  }
+}
+
+/* Bouton inversé — uniquement sur fond vert profond */
+.v2-btn-invert {
+  background: #ffffff;
+  color: var(--v2-pine);
+}
+.v2-btn-invert:hover {
+  background: rgba(255, 255, 255, 0.88);
+  transform: translateY(-1px);
+}
+.v2-btn-outline-invert {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.v2-btn-outline-invert:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
 
 /* Lien souligné animé */
 .v2-link {
@@ -132,7 +167,7 @@
   gap: 0.45rem;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
-  border: 1px solid rgba(107, 90, 200, 0.24);
+  border: 1px solid rgba(82, 121, 111, 0.3);
   background: var(--v2-accent-soft);
   color: var(--v2-accent-deep);
   font-family: var(--v2-font-mono);
