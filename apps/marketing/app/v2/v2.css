@@ -1,31 +1,34 @@
 /* ============================================================
-   Biume Landing v2 — Direction "Produit d'abord"
-   Canvas neutre clair, violet de marque pour les actions,
-   vert de marque pour la validation et les preuves.
-   Réfs : Linear / Attio (clair) — couleurs : packages/ui globals
+   Biume Landing v2 — Direction Duna
+   Canvas lin chaud, interface ~99% achromatique, encre aubergine.
+   Un seul moment de couleur : le hero full-bleed.
+   Zéro ombre portée — l'élévation est une bordure hairline.
+   Couleurs de marque préservées : violet hsl(251 73% 72%),
+   vert hsl(148 71% 45%) — micro-accents uniquement.
    ============================================================ */
 
 .v2 {
-  --v2-canvas: #fafaf9;
-  --v2-panel: #ffffff;
-  --v2-ink: #171717;
-  --v2-ink-soft: #525252;
-  --v2-ink-faint: #8a8a8a;
-  --v2-line: rgba(23, 23, 23, 0.08);
-  --v2-line-strong: rgba(23, 23, 23, 0.16);
+  /* Surfaces */
+  --v2-canvas: #f7f6f2; /* lin chaud */
+  --v2-surface: #ffffff;
+  --v2-bone: #edece7;
 
-  /* Violet de marque (packages/ui --primary: hsl(251 73% 72%)) */
-  --v2-violet: hsl(251 73% 72%);
-  --v2-accent: hsl(251 56% 50%);
-  --v2-accent-deep: hsl(251 58% 40%);
-  --v2-accent-soft: hsl(251 73% 72% / 0.16);
-  --v2-grape: hsl(251 45% 22%);
+  /* Encre aubergine — dérivée de la teinte de marque (251) */
+  --v2-ink: #211129;
+  --v2-ink-soft: #766a7c; /* warm ash */
+  --v2-ink-faint: #8d8790; /* stone */
+  --v2-line: rgba(33, 17, 41, 0.1);
+  --v2-line-strong: rgba(33, 17, 41, 0.22);
 
-  /* Vert de marque (packages/ui --secondary: hsl(148 71% 45%)) */
-  --v2-green: hsl(148 71% 45%);
-  --v2-green-deep: hsl(148 55% 30%);
-  --v2-green-soft: hsl(148 71% 45% / 0.12);
-  --v2-pine: hsl(148 45% 15%);
+  /* Action primaire — espresso, seul fill interactif */
+  --v2-espresso: #251136;
+  --v2-espresso-hover: #371c4f;
+
+  /* Marque — couleurs de base du globals.css */
+  --v2-accent: hsl(251 73% 72%); /* violet — fill CTA, lavis hero */
+  --v2-accent-hover: hsl(251 74% 64%); /* violet plus soutenu au survol */
+  --v2-violet-ink: #6b5ac8; /* violet profond (landing-theme) — textes accentués */
+  --v2-green: hsl(148 71% 45%); /* vert — validations */
 
   --font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-v2-mono), ui-monospace, "SF Mono", monospace;
@@ -38,9 +41,11 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* ---------- Typographie ---------- */
+
 .v2-display {
   font-family: var(--font-sans);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.055em; /* signature éditoriale à 72px+ */
 }
 
 .v2-mono {
@@ -53,141 +58,110 @@
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--v2-accent-deep);
+  color: var(--v2-violet-ink);
 }
 
-/* Lien : souligné qui grandit au survol */
-.v2-link {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 0% 1px;
-  background-repeat: no-repeat;
-  background-position: left calc(100% - 0.02em);
-  transition:
-    background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.25s;
-}
-.v2-link:hover {
-  background-size: 100% 1px;
-  color: var(--v2-accent-deep);
-}
-.v2-link:focus-visible {
-  outline: 2px solid var(--v2-accent);
-  outline-offset: 3px;
-  border-radius: 2px;
+.v2-eyebrow-green {
+  color: var(--v2-green);
 }
 
-/* Panneau produit */
-.v2-panel {
-  background: var(--v2-panel);
-  border: 1px solid var(--v2-line);
-  border-radius: 20px;
-  box-shadow:
-    0 1px 2px rgba(23, 23, 23, 0.04),
-    0 16px 40px -20px rgba(23, 23, 23, 0.14);
-}
+/* ---------- Boutons — pill 999px, zéro ombre ---------- */
 
-/* Boutons — le violet est réservé aux actions */
 .v2-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3rem;
-  padding: 0 1.5rem;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
   letter-spacing: -0.005em;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
   transition:
-    transform 0.2s ease-out,
-    background-color 0.2s,
-    border-color 0.2s,
-    color 0.2s;
-}
-.v2-btn:active {
-  transform: scale(0.98);
-}
-.v2-btn-primary {
-  background: var(--v2-accent);
-  color: #ffffff;
-  box-shadow:
-    0 1px 2px rgba(23, 23, 23, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-.v2-btn-primary:hover {
-  background: var(--v2-accent-deep);
-  transform: translateY(-1px);
-}
-.v2-btn-secondary {
-  background: var(--v2-panel);
-  color: var(--v2-ink);
-  border: 1px solid var(--v2-line-strong);
-}
-.v2-btn-secondary:hover {
-  border-color: var(--v2-ink);
-  transform: translateY(-1px);
-}
-/* Boutons inversés — uniquement sur fond coloré profond */
-.v2-btn-invert {
-  background: #ffffff;
-  color: var(--v2-ink);
-}
-.v2-btn-invert:hover {
-  background: rgba(255, 255, 255, 0.88);
-  transform: translateY(-1px);
-}
-.v2-btn-outline-invert {
-  background: transparent;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-}
-.v2-btn-outline-invert:hover {
-  border-color: rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
-}
-.v2-btn:focus-visible {
-  outline: 2px solid var(--v2-accent-deep);
-  outline-offset: 3px;
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
 }
 
-/* Badge de validation — vert de marque */
-.v2-badge {
+.v2-btn-primary {
+  background: var(--v2-accent); /* violet clair Biume */
+  color: var(--v2-ink);
+}
+
+.v2-btn-primary:hover {
+  background: var(--v2-accent-hover);
+}
+
+.v2-btn-secondary {
+  background: transparent;
+  color: var(--v2-ink);
+  border-color: var(--v2-line-strong);
+}
+
+.v2-btn-secondary:hover {
+  border-color: var(--v2-green); /* vert Biume */
+}
+
+.v2-btn-lg {
+  border-radius: 60px;
+  padding: 20px 32px;
+  font-size: 1.02rem;
+}
+
+.v2-btn-sm {
+  padding: 10px 18px;
+  font-size: 0.88rem;
+}
+
+/* ---------- Surfaces ---------- */
+
+/* Seule "élévation" du système : ring inset hairline */
+.v2-panel {
+  background: var(--v2-surface);
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 1px rgba(33, 17, 41, 0.08);
+}
+
+.v2-card {
+  background: var(--v2-surface);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(33, 17, 41, 0.08);
+}
+
+/* ---------- Pill d'annonce ---------- */
+
+.v2-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--v2-green-deep);
-  background: var(--v2-green-soft);
-  border: 1px solid hsl(148 71% 45% / 0.3);
+  gap: 8px;
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
+  background: var(--v2-espresso);
+  color: #ffffff;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
-/* Point de statut respirant */
-.v2-pulse-dot {
-  animation: v2-pulse 2.4s ease-in-out infinite;
-}
-@keyframes v2-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.75);
-  }
+.v2-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--v2-green); /* vert de marque */
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .v2 *,
-  .v2 *::before,
-  .v2 *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* ---------- Liens ---------- */
+
+.v2-link {
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.v2-link:hover {
+  color: var(--v2-violet-ink);
 }
