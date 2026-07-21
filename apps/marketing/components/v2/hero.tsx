@@ -4,8 +4,6 @@ import Link from "next/link";
 import { webAppPath } from "../../lib/web-app-url";
 import { HeroItem, HeroReveal } from "./reveal";
 
-const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
-
 export function V2Hero() {
   return (
     <section
@@ -35,7 +33,7 @@ export function V2Hero() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(247,246,242,0.52) 0%, rgba(247,246,242,0.18) 32%, rgba(247,246,242,0.30) 58%, rgba(247,246,242,0.88) 84%, #f7f6f2 100%)",
+              "radial-gradient(72% 58% at 50% 48%, rgba(247,246,242,0.38) 0%, rgba(247,246,242,0.18) 56%, transparent 100%), linear-gradient(180deg, rgba(247,246,242,0.54) 0%, rgba(247,246,242,0.28) 32%, rgba(247,246,242,0.4) 58%, rgba(247,246,242,0.88) 84%, #f7f6f2 100%)",
           }}
         />
       </div>
@@ -44,7 +42,7 @@ export function V2Hero() {
         <HeroItem>
           <p className="v2-pill mx-auto w-fit">
             <span aria-hidden="true" className="v2-pill-dot" />
-            Pour les ostéopathes animaliers indépendants
+            Pour les ostéopathes animaliers
           </p>
         </HeroItem>
 
@@ -53,14 +51,14 @@ export function V2Hero() {
             id="v2-hero-title"
             className="v2-display mx-auto mt-7 max-w-[16ch] text-[clamp(2.9rem,7.2vw,5.5rem)] font-medium leading-[1.0] text-[color:var(--v2-ink)] [text-wrap:balance]"
           >
-            Trois phrases. Un compte rendu.
+            Votre regard métier, jusqu’au propriétaire.
           </h1>
         </HeroItem>
 
         <HeroItem>
-          <p className="mx-auto mt-6 max-w-[54ch] text-[1.08rem] leading-[1.6] text-[color:var(--v2-ink-soft)] [text-wrap:pretty]">
-            Dictez vos observations entre deux écuries. Biume prépare un compte
-            rendu propriétaire structuré — vous relisez, vous validez, il part.
+          <p className="mx-auto mt-6 max-w-[54ch] text-[1.08rem] font-medium leading-[1.6] text-[color:var(--v2-ink)] [text-wrap:pretty]">
+            Biume transforme vos notes en un compte rendu clair, que vous
+            relisez, adaptez et partagez uniquement quand vous le décidez.
           </p>
         </HeroItem>
 
@@ -72,23 +70,20 @@ export function V2Hero() {
               data-conversion="hero-signup"
               className="v2-btn v2-btn-primary v2-btn-lg w-full sm:w-auto"
             >
-              Commencer gratuitement
+              Préparer mon premier compte rendu
             </Link>
             <a
-              href={DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-conversion="hero-demo"
-              className="v2-btn v2-btn-secondary v2-btn-lg w-full sm:w-auto"
+              href="#produit"
+              className="v2-btn v2-btn-secondary v2-btn-lg w-full bg-white/90 backdrop-blur-sm sm:w-auto"
             >
-              Demander une démo
+              Voir le parcours
             </a>
           </div>
         </HeroItem>
 
         <HeroItem>
-          <p className="mt-6 text-[0.84rem] text-[color:var(--v2-ink-soft)]">
-            15 jours d’essai · Sans carte bancaire
+          <p className="mt-6 text-[0.84rem] font-medium text-[color:var(--v2-ink)]">
+            15 jours gratuits · Sans carte bancaire
           </p>
         </HeroItem>
       </HeroReveal>
