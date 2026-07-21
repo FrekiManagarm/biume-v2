@@ -46,22 +46,38 @@ export function V2HowItWorks() {
       aria-labelledby="v2-how-title"
       className="scroll-mt-24 border-t border-[color:var(--v2-line)]"
     >
-      <div className="mx-auto max-w-[1200px] px-5 py-20 md:px-8 md:py-28">
-        <SectionIntro eyebrow="Comment ça marche" title="Du terrain au compte rendu, en trois étapes." id="v2-how-title" align="center" />
+      <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-20 md:px-8 md:py-28 lg:grid-cols-[0.85fr_1.15fr] lg:gap-24">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionIntro
+            eyebrow="Comment ça marche"
+            title="Du terrain au compte rendu, en trois étapes."
+            id="v2-how-title"
+          >
+            <p>
+              Pas de logiciel à apprendre, pas de soirée passée à rédiger. Le
+              compte rendu se construit dans le fil de la journée.
+            </p>
+          </SectionIntro>
+        </div>
 
-        <ol className="mt-14 grid gap-5 md:grid-cols-3 md:gap-6">
+        <ol className="divide-y divide-[color:var(--v2-line)] border-y border-[color:var(--v2-line)]">
           {howItWorksSteps.map((step, index) => (
             <Reveal key={step.n} delay={index * 0.08}>
-              <li className="v2-panel h-full p-7">
-                <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[color:var(--v2-accent-deep)]">
+              <li className="group grid gap-3 py-8 transition-colors duration-300 hover:bg-[color:var(--v2-accent-soft)] sm:grid-cols-[auto_1fr] sm:gap-8 sm:py-10">
+                <p
+                  aria-hidden="true"
+                  className="v2-mono pl-1 text-[2.6rem] font-medium leading-none tracking-[-0.04em] text-[color:var(--v2-accent)] sm:pl-4"
+                >
                   {step.n}
                 </p>
-                <h3 className="v2-display mt-4 text-[1.3rem] font-semibold tracking-[-0.015em] text-[color:var(--v2-ink)]">
-                  {step.title}
-                </h3>
-                <p className="mt-3 text-[0.92rem] leading-6 text-[color:var(--v2-ink-soft)]">
-                  {step.text}
-                </p>
+                <div className="pr-1 sm:pr-4">
+                  <h3 className="v2-display text-[1.35rem] font-semibold tracking-[-0.015em] text-[color:var(--v2-ink)]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2.5 max-w-[52ch] text-[0.95rem] leading-6 text-[color:var(--v2-ink-soft)]">
+                    {step.text}
+                  </p>
+                </div>
               </li>
             </Reveal>
           ))}
@@ -140,16 +156,22 @@ const followUpSteps = [
     n: "01",
     title: "Le compte rendu part",
     text: "Le propriétaire reçoit un document clair, à votre nom, qu'il peut relire calmement après la séance.",
+    span: "lg:col-span-5",
+    featured: true,
   },
   {
     n: "02",
     title: "Le suivi reste tracé",
     text: "Chaque séance s'ajoute à l'historique de l'animal : observations, évolutions, recommandations.",
+    span: "lg:col-span-4",
+    featured: false,
   },
   {
     n: "03",
     title: "La prochaine séance est prête",
     text: "Rappels et points de vigilance repartent du compte rendu précédent, pas d'une page blanche.",
+    span: "lg:col-span-3",
+    featured: false,
   },
 ] as const;
 
@@ -168,11 +190,17 @@ export function V2FollowUp() {
           </p>
         </SectionIntro>
 
-        <ol className="mt-12 grid gap-5 md:grid-cols-3 md:gap-6">
+        <ol className="mt-12 grid gap-5 lg:grid-cols-12">
           {followUpSteps.map((step, index) => (
-            <Reveal key={step.n} delay={index * 0.08}>
-              <li className="h-full rounded-xl border border-[color:var(--v2-line)] bg-[color:var(--v2-panel)] p-7">
-                <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[color:var(--v2-ink-faint)]">
+            <Reveal key={step.n} delay={index * 0.08} className={step.span}>
+              <li
+                className={`h-full rounded-2xl border p-7 ${
+                  step.featured
+                    ? "border-[color:var(--v2-line)] bg-[color:var(--v2-accent-soft)]"
+                    : "border-[color:var(--v2-line)] bg-[color:var(--v2-panel)]"
+                }`}
+              >
+                <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[color:var(--v2-accent-deep)]">
                   {step.n}
                 </p>
                 <h3 className="v2-display mt-4 text-[1.15rem] font-semibold tracking-[-0.01em] text-[color:var(--v2-ink)]">
@@ -210,24 +238,30 @@ export function V2Field() {
       aria-labelledby="v2-field-title"
       className="scroll-mt-24 border-t border-[color:var(--v2-line)]"
     >
-      <div className="mx-auto max-w-[1200px] px-5 py-20 md:px-8 md:py-28">
-        <SectionIntro eyebrow="Le terrain" title="Conçu pour le terrain, pas pour le bureau." id="v2-field-title">
-          <p>
-            Biume s'utilise entre deux écuries, sur téléphone, avec des notes
-            courtes. Le soir, il ne reste rien à rédiger.
-          </p>
-        </SectionIntro>
+      <div className="mx-auto grid max-w-[1200px] items-start gap-12 px-5 py-20 md:px-8 md:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+        <div className="lg:sticky lg:top-28">
+          <SectionIntro eyebrow="Le terrain" title="Conçu pour le terrain, pas pour le bureau." id="v2-field-title">
+            <p>
+              Biume s'utilise entre deux écuries, sur téléphone, avec des notes
+              courtes. Le soir, il ne reste rien à rédiger.
+            </p>
+          </SectionIntro>
+        </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-2 md:gap-6">
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
           {fieldPhotos.map((photo, index) => (
-            <Reveal key={photo.src} delay={index * 0.08}>
-              <figure className="overflow-hidden rounded-2xl border border-[color:var(--v2-line)] bg-[color:var(--v2-panel)]">
+            <Reveal
+              key={photo.src}
+              delay={index * 0.1}
+              className={index === 1 ? "sm:mt-14" : ""}
+            >
+              <figure className="group overflow-hidden rounded-[1.75rem] border border-[color:var(--v2-line)] bg-[color:var(--v2-panel)]">
                 <Image
                   src={photo.src}
                   alt={photo.alt}
                   width={1200}
                   height={800}
-                  className="aspect-[3/2] w-full object-cover"
+                  className="aspect-[4/5] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
                 <figcaption className="v2-mono flex items-center gap-2 border-t border-[color:var(--v2-line)] px-5 py-3 text-[0.65rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
                   <span

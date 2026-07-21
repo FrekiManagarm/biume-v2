@@ -13,12 +13,12 @@ const included = [
   "Suivi et rappel après séance",
 ] as const;
 
-function IncludedCheck() {
+function IncludedCheck({ className = "" }: { className?: string }) {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 16 16"
-      className="mt-0.5 size-4 shrink-0 text-[color:var(--v2-accent)]"
+      className={`mt-0.5 size-4 shrink-0 ${className}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
@@ -37,7 +37,7 @@ export function V2Pricing() {
       aria-labelledby="v2-tarifs-title"
       className="scroll-mt-24 border-t border-[color:var(--v2-line)]"
     >
-      <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-20 md:px-8 md:py-28 lg:grid-cols-2 lg:gap-20">
+      <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-5 py-20 md:px-8 md:py-28 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         <SectionIntro eyebrow="Tarifs" title="Une seule formule. Tout le parcours." id="v2-tarifs-title">
           <p>
             Pensée pour un praticien indépendant : pas de module caché, pas de
@@ -47,27 +47,29 @@ export function V2Pricing() {
         </SectionIntro>
 
         <Reveal delay={0.1}>
-          <div className="v2-panel p-8 md:p-10">
-            <p className="v2-eyebrow">Formule Indépendant</p>
+          <div className="rounded-[2rem] bg-[color:var(--v2-pine)] p-8 text-white shadow-[0_32px_64px_-28px_rgba(47,74,66,0.55)] md:p-10">
+            <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-white/70">
+              Formule Indépendant
+            </p>
             <p className="mt-5 flex items-baseline gap-2">
-              <span className="v2-display text-[clamp(2.6rem,4vw,3.4rem)] font-semibold tracking-[-0.03em] text-[color:var(--v2-ink)]">
+              <span className="v2-display text-[clamp(2.6rem,4vw,3.4rem)] font-semibold tracking-[-0.03em] text-white">
                 24,99&nbsp;€
               </span>
-              <span className="text-[0.95rem] text-[color:var(--v2-ink-soft)]">
+              <span className="text-[0.95rem] text-white/70">
                 / mois, facturé annuellement
               </span>
             </p>
-            <p className="v2-mono mt-2 text-[0.7rem] uppercase tracking-[0.12em] text-[color:var(--v2-ink-faint)]">
+            <p className="v2-mono mt-2 text-[0.7rem] uppercase tracking-[0.12em] text-white/55">
               Soit 299,88&nbsp;€ par an — ou 29,99&nbsp;€ en mensuel
             </p>
 
-            <ul className="mt-8 space-y-3 border-t border-[color:var(--v2-line)] pt-8">
+            <ul className="mt-8 space-y-3 border-t border-white/15 pt-8">
               {included.map((item) => (
                 <li
                   key={item}
-                  className="flex items-start gap-3 text-[0.92rem] leading-6 text-[color:var(--v2-ink)]"
+                  className="flex items-start gap-3 text-[0.92rem] leading-6 text-white"
                 >
-                  <IncludedCheck />
+                  <IncludedCheck className="text-white/80" />
                   {item}
                 </li>
               ))}
@@ -78,7 +80,7 @@ export function V2Pricing() {
                 href={webAppPath("/signup")}
                 prefetch={false}
                 data-conversion="pricing-signup"
-                className="v2-btn v2-btn-primary flex-1"
+                className="v2-btn v2-btn-invert flex-1"
               >
                 Commencer l'essai gratuit
               </Link>
@@ -87,12 +89,12 @@ export function V2Pricing() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-conversion="pricing-demo"
-                className="v2-btn v2-btn-secondary flex-1"
+                className="v2-btn v2-btn-outline-invert flex-1"
               >
                 Demander une démo
               </a>
             </div>
-            <p className="v2-mono mt-5 text-center text-[0.68rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
+            <p className="v2-mono mt-5 text-center text-[0.68rem] uppercase tracking-[0.14em] text-white/55">
               15 jours d'essai · Sans carte bancaire
             </p>
           </div>
@@ -147,7 +149,7 @@ export function V2Faq() {
                 {item.question}
                 <span
                   aria-hidden="true"
-                  className="v2-display shrink-0 text-[1.4rem] font-normal leading-none text-[color:var(--v2-ink-faint)] transition-transform duration-300 group-open:rotate-45"
+                  className="v2-display shrink-0 text-[1.4rem] font-normal leading-none text-[color:var(--v2-accent)] transition-transform duration-300 group-open:rotate-45"
                 >
                   +
                 </span>
@@ -167,31 +169,40 @@ export function V2Close() {
   return (
     <section
       aria-labelledby="v2-close-title"
-      className="relative overflow-hidden border-t border-[color:var(--v2-line)]"
+      className="relative overflow-hidden bg-[color:var(--v2-pine)]"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[420px]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"
         style={{
           background:
-            "radial-gradient(52% 60% at 50% 100%, rgba(107, 90, 200, 0.08) 0%, rgba(107, 90, 200, 0) 100%)",
+            "radial-gradient(58% 62% at 50% 0%, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 100%)",
         }}
       />
       <div className="relative mx-auto max-w-[1200px] px-5 py-24 text-center md:px-8 md:py-32">
-        <SectionIntro eyebrow="Essai gratuit" title="Préparez votre prochain compte rendu." id="v2-close-title" align="center">
-          <p className="mx-auto">
+        <Reveal>
+          <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-white/70">
+            Essai gratuit
+          </p>
+          <h2
+            id="v2-close-title"
+            className="v2-display mx-auto mt-5 max-w-[18ch] text-[clamp(2.1rem,3.6vw,3.1rem)] font-semibold leading-[1.08] tracking-[-0.025em] text-white [text-wrap:balance]"
+          >
+            Préparez votre prochain compte rendu.
+          </h2>
+          <p className="mx-auto mt-5 max-w-[52ch] text-[1rem] leading-[1.65] text-white/75 [text-wrap:pretty]">
             Dictez vos observations de demain matin. Relisez le soir même un
             compte rendu prêt à partir — ou décidez que Biume n'est pas pour
             vous, sans rien payer.
           </p>
-        </SectionIntro>
+        </Reveal>
         <Reveal delay={0.1}>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={webAppPath("/signup")}
               prefetch={false}
               data-conversion="close-signup"
-              className="v2-btn v2-btn-primary w-full sm:w-auto"
+              className="v2-btn v2-btn-invert w-full sm:w-auto"
             >
               Commencer gratuitement
             </Link>
@@ -200,12 +211,12 @@ export function V2Close() {
               target="_blank"
               rel="noopener noreferrer"
               data-conversion="close-demo"
-              className="v2-btn v2-btn-secondary w-full sm:w-auto"
+              className="v2-btn v2-btn-outline-invert w-full sm:w-auto"
             >
               Demander une démo
             </a>
           </div>
-          <p className="v2-mono mt-5 text-[0.68rem] uppercase tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
+          <p className="v2-mono mt-5 text-[0.68rem] uppercase tracking-[0.14em] text-white/55">
             15 jours d'essai · Sans carte bancaire
           </p>
         </Reveal>
