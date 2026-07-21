@@ -1,48 +1,54 @@
 /* ============================================================
-   Biume Landing v2 — direction « produit d'abord »
-   Canvas neutre clair, accent vert Biume réservé aux CTA et
-   états actifs, preuve produit visible dès le hero.
+   Biume Landing v2 — Direction "Produit d'abord"
+   Canvas neutre clair, violet de marque pour les actions,
+   vert de marque pour la validation et les preuves.
+   Réfs : Linear / Attio (clair) — couleurs : packages/ui globals
    ============================================================ */
 
 .v2 {
-  /* Palette neutre */
-  --v2-canvas: #fafafa;
+  --v2-canvas: #fafaf9;
   --v2-panel: #ffffff;
   --v2-ink: #171717;
   --v2-ink-soft: #525252;
   --v2-ink-faint: #8a8a8a;
   --v2-line: rgba(23, 23, 23, 0.08);
-  --v2-line-strong: rgba(23, 23, 23, 0.14);
+  --v2-line-strong: rgba(23, 23, 23, 0.16);
 
-  /* Accent unique — CTA, liens, états actifs uniquement */
-  --v2-accent: #52796f;
-  --v2-accent-deep: #3d5f57;
-  --v2-accent-soft: rgba(82, 121, 111, 0.08);
-  --v2-pine: #2f4a42;
+  /* Violet de marque (packages/ui --primary: hsl(251 73% 72%)) */
+  --v2-violet: hsl(251 73% 72%);
+  --v2-accent: hsl(251 56% 50%);
+  --v2-accent-deep: hsl(251 58% 40%);
+  --v2-accent-soft: hsl(251 73% 72% / 0.16);
+  --v2-grape: hsl(251 45% 22%);
 
-  --v2-font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  --v2-font-mono: var(--font-v2-mono), ui-monospace, "SF Mono", Menlo,
-    monospace;
+  /* Vert de marque (packages/ui --secondary: hsl(148 71% 45%)) */
+  --v2-green: hsl(148 71% 45%);
+  --v2-green-deep: hsl(148 55% 30%);
+  --v2-green-soft: hsl(148 71% 45% / 0.12);
+  --v2-pine: hsl(148 45% 15%);
+
+  --font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-v2-mono), ui-monospace, "SF Mono", monospace;
 
   background: var(--v2-canvas);
   color: var(--v2-ink);
-  font-family: var(--v2-font-sans);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 .v2-display {
-  font-family: var(--v2-font-sans);
+  font-family: var(--font-sans);
   letter-spacing: -0.02em;
 }
 
 .v2-mono {
-  font-family: var(--v2-font-mono);
+  font-family: var(--font-mono);
 }
 
 .v2-eyebrow {
-  font-family: var(--v2-font-mono);
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -50,17 +56,37 @@
   color: var(--v2-accent-deep);
 }
 
-/* Panneau produit : blanc, filet discret, ombre douce */
+/* Lien : souligné qui grandit au survol */
+.v2-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: left calc(100% - 0.02em);
+  transition:
+    background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.25s;
+}
+.v2-link:hover {
+  background-size: 100% 1px;
+  color: var(--v2-accent-deep);
+}
+.v2-link:focus-visible {
+  outline: 2px solid var(--v2-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Panneau produit */
 .v2-panel {
   background: var(--v2-panel);
   border: 1px solid var(--v2-line);
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow:
     0 1px 2px rgba(23, 23, 23, 0.04),
     0 16px 40px -20px rgba(23, 23, 23, 0.14);
 }
 
-/* Boutons — l'accent violet ne sort pas de ces rôles */
+/* Boutons — le violet est réservé aux actions */
 .v2-btn {
   display: inline-flex;
   align-items: center;
@@ -73,17 +99,12 @@
   letter-spacing: -0.005em;
   transition:
     transform 0.2s ease-out,
-    background-color 0.2s ease-out,
-    border-color 0.2s ease-out,
-    color 0.2s ease-out,
-    box-shadow 0.2s ease-out;
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
 }
 .v2-btn:active {
   transform: scale(0.98);
-}
-.v2-btn:focus-visible {
-  outline: 2px solid var(--v2-accent-deep);
-  outline-offset: 3px;
 }
 .v2-btn-primary {
   background: var(--v2-accent);
@@ -105,26 +126,10 @@
   border-color: var(--v2-ink);
   transform: translateY(-1px);
 }
-/* Point de statut respirant */
-.v2-pulse-dot {
-  animation: v2-pulse 2.4s ease-in-out infinite;
-}
-@keyframes v2-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.75);
-  }
-}
-
-/* Bouton inversé — uniquement sur fond vert profond */
+/* Boutons inversés — uniquement sur fond coloré profond */
 .v2-btn-invert {
   background: #ffffff;
-  color: var(--v2-pine);
+  color: var(--v2-ink);
 }
 .v2-btn-invert:hover {
   background: rgba(255, 255, 255, 0.88);
@@ -139,42 +144,42 @@
   border-color: rgba(255, 255, 255, 0.8);
   transform: translateY(-1px);
 }
-
-/* Lien souligné animé */
-.v2-link {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 0% 1px;
-  background-repeat: no-repeat;
-  background-position: left calc(100% - 0.05em);
-  transition:
-    background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.25s ease-out;
-}
-.v2-link:hover {
-  background-size: 100% 1px;
-  color: var(--v2-accent-deep);
-}
-.v2-link:focus-visible {
-  outline: 2px solid var(--v2-accent);
+.v2-btn:focus-visible {
+  outline: 2px solid var(--v2-accent-deep);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
-/* Badge discret de validation */
+/* Badge de validation — vert de marque */
 .v2-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(82, 121, 111, 0.3);
-  background: var(--v2-accent-soft);
-  color: var(--v2-accent-deep);
-  font-family: var(--v2-font-mono);
+  gap: 0.4rem;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--v2-green-deep);
+  background: var(--v2-green-soft);
+  border: 1px solid hsl(148 71% 45% / 0.3);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+}
+
+/* Point de statut respirant */
+.v2-pulse-dot {
+  animation: v2-pulse 2.4s ease-in-out infinite;
+}
+@keyframes v2-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.75);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

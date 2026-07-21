@@ -131,7 +131,7 @@ export function V2Control() {
           {controlPoints.map((point, index) => (
             <Reveal key={point.title} delay={index * 0.06}>
               <li className="flex gap-4 rounded-xl border border-[color:var(--v2-line)] bg-[color:var(--v2-panel)] p-5">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--v2-accent-soft)]">
+                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--v2-green-soft)]">
                   <StepCheck />
                 </span>
                 <div>

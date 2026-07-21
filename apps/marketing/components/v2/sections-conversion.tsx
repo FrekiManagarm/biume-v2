@@ -47,7 +47,7 @@ export function V2Pricing() {
         </SectionIntro>
 
         <Reveal delay={0.1}>
-          <div className="rounded-[2rem] bg-[color:var(--v2-pine)] p-8 text-white shadow-[0_32px_64px_-28px_rgba(47,74,66,0.55)] md:p-10">
+          <div className="rounded-[2rem] bg-[color:var(--v2-grape)] p-8 text-white shadow-[0_32px_64px_-28px_hsl(251_45%_22%/0.6)] md:p-10">
             <p className="v2-mono text-[0.68rem] font-medium uppercase tracking-[0.16em] text-white/70">
               Formule Indépendant
             </p>
