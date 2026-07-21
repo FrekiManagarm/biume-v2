@@ -35,7 +35,7 @@ export function V2Hero() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(247,246,242,0.52) 0%, rgba(247,246,242,0.18) 32%, rgba(247,246,242,0.30) 58%, rgba(247,246,242,0.88) 84%, #f7f6f2 100%)",
+              "radial-gradient(72% 58% at 50% 48%, rgba(247,246,242,0.38) 0%, rgba(247,246,242,0.18) 56%, transparent 100%), linear-gradient(180deg, rgba(247,246,242,0.54) 0%, rgba(247,246,242,0.28) 32%, rgba(247,246,242,0.4) 58%, rgba(247,246,242,0.88) 84%, #f7f6f2 100%)",
           }}
         />
       </div>
@@ -58,7 +58,7 @@ export function V2Hero() {
         </HeroItem>
 
         <HeroItem>
-          <p className="mx-auto mt-6 max-w-[54ch] text-[1.08rem] leading-[1.6] text-[color:var(--v2-ink-soft)] [text-wrap:pretty]">
+          <p className="mx-auto mt-6 max-w-[54ch] text-[1.08rem] font-medium leading-[1.6] text-[color:var(--v2-ink)] [text-wrap:pretty]">
             Dictez vos observations entre deux écuries. Biume prépare un compte
             rendu propriétaire structuré — vous relisez, vous validez, il part.
           </p>
@@ -79,7 +79,7 @@ export function V2Hero() {
               target="_blank"
               rel="noopener noreferrer"
               data-conversion="hero-demo"
-              className="v2-btn v2-btn-secondary v2-btn-lg w-full sm:w-auto"
+              className="v2-btn v2-btn-secondary v2-btn-lg w-full bg-white/90 backdrop-blur-sm sm:w-auto"
             >
               Demander une démo
             </a>
@@ -87,7 +87,7 @@ export function V2Hero() {
         </HeroItem>
 
         <HeroItem>
-          <p className="mt-6 text-[0.84rem] text-[color:var(--v2-ink-soft)]">
+          <p className="mt-6 text-[0.84rem] font-medium text-[color:var(--v2-ink)]">
             15 jours d’essai · Sans carte bancaire
           </p>
         </HeroItem>
