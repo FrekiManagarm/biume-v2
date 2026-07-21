@@ -165,3 +165,27 @@
 .v2-link:hover {
   color: var(--v2-violet-ink);
 }
+
+/* ---------- FAQ — ouverture courte, sans animer la mise en page ---------- */
+
+@keyframes v2-faq-answer-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.4rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.v2 details[open] .v2-faq-answer {
+  animation: v2-faq-answer-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2 details[open] .v2-faq-answer {
+    animation: none;
+  }
+}

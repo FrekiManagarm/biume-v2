@@ -436,19 +436,30 @@ export function V2Faq() {
         <div>
           {faqItems.map((item, i) => (
             <Reveal key={item.question} delay={i * 0.05}>
-              <details className="group border-b border-[color:var(--v2-line)] py-6 first:pt-0">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[1.05rem] font-medium tracking-[-0.01em] text-[color:var(--v2-ink)] [&::-webkit-details-marker]:hidden">
-                  {item.question}
+              <details
+                data-v2-faq-item={item.question}
+                className="group border-b border-[color:var(--v2-line)] first:border-t"
+              >
+                <summary className="grid cursor-pointer list-none grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-4 py-6 text-left [&::-webkit-details-marker]:hidden md:gap-6 md:py-7">
+                  <span className="v2-mono text-[0.72rem] font-medium tracking-[0.14em] text-[color:var(--v2-ink-faint)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-[1.06rem] font-medium leading-[1.35] tracking-[-0.02em] text-[color:var(--v2-ink)] transition-colors duration-200 group-hover:text-[color:var(--v2-violet-ink)] group-open:text-[color:var(--v2-violet-ink)] md:text-[1.18rem]">
+                    {item.question}
+                  </span>
                   <span
                     aria-hidden="true"
-                    className="shrink-0 text-[1.3rem] font-light leading-none text-[color:var(--v2-violet-ink)] transition-transform duration-300 group-open:rotate-45"
+                    className="flex size-10 items-center justify-center rounded-full border border-[color:var(--v2-line-strong)] text-[1.35rem] font-light leading-none text-[color:var(--v2-violet-ink)] transition-[background-color,border-color,color,transform] duration-300 group-hover:border-[color:var(--v2-violet-ink)] group-open:rotate-45 group-open:border-[color:var(--v2-violet-ink)] group-open:bg-[color:var(--v2-violet-ink)] group-open:text-white"
                   >
                     +
                   </span>
                 </summary>
-                <p className="mt-4 max-w-[58ch] text-[0.95rem] leading-[1.65] text-[color:var(--v2-ink-soft)]">
-                  {item.answer}
-                </p>
+                <div className="v2-faq-answer grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 pb-7 md:gap-6 md:pb-8">
+                  <span aria-hidden="true" />
+                  <p className="max-w-[54ch] text-[0.95rem] leading-[1.7] text-[color:var(--v2-ink-soft)]">
+                    {item.answer}
+                  </p>
+                </div>
               </details>
             </Reveal>
           ))}
@@ -554,9 +565,19 @@ export function V2Footer() {
       <div className="mx-auto max-w-[1200px] px-5 py-16 md:px-8">
         <div className="grid gap-12 md:grid-cols-[1.1fr_1.6fr_0.6fr]">
           <div>
-            <p className="v2-display text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)]">
+            <Link
+              href="/"
+              className="v2-display flex min-h-11 items-center gap-2 text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
+            >
+              <Image
+                src="/brand/biume-logo.svg"
+                alt=""
+                width={32}
+                height={32}
+                className="size-8"
+              />
               Biume<span className="text-[color:var(--v2-accent)]">.</span>
-            </p>
+            </Link>
             <p className="mt-4 max-w-[30ch] text-[0.9rem] leading-[1.6] text-[color:var(--v2-ink-soft)]">
               Le compte rendu propriétaire et le suivi post-séance pour les
               ostéopathes animaliers.
@@ -565,7 +586,11 @@ export function V2Footer() {
           {footerColumns.map((column) => (
             <nav key={column.title} aria-label={`Pied de page — ${column.title}`}>
               <p className="v2-eyebrow">{column.title}</p>
-              <ul className="mt-5 space-y-3">
+              <ul
+                className={`mt-5 gap-x-8 gap-y-3 ${
+                  column.title === "Produit" ? "grid sm:grid-cols-2" : "space-y-3"
+                }`}
+              >
                 {column.links.map((link) => (
                   <li key={link.href}>
                     {link.href.startsWith("http") ? (

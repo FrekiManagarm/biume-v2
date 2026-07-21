@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -41,8 +42,15 @@ export function V2Masthead() {
       <div className="relative mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 md:px-8">
         <Link
           href="/"
-          className="v2-display flex min-h-11 items-center text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
+          className="v2-display flex min-h-11 items-center gap-2 text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
         >
+          <Image
+            src="/brand/biume-logo.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8"
+          />
           Biume<span className="text-[color:var(--v2-accent)]">.</span>
         </Link>
 
