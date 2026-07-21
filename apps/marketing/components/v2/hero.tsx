@@ -43,7 +43,7 @@ export function V2Hero() {
         className="pointer-events-none absolute inset-x-0 top-0 h-[36rem]"
         style={{
           background:
-            "radial-gradient(58% 46% at 68% 12%, rgba(82,121,111,0.16) 0%, rgba(82,121,111,0.06) 42%, rgba(250,250,250,0) 74%)",
+            "radial-gradient(52% 44% at 70% 10%, hsl(251 73% 72% / 0.20) 0%, hsl(251 73% 72% / 0.07) 45%, rgba(250,250,250,0) 75%), radial-gradient(34% 30% at 12% 30%, hsl(148 71% 45% / 0.10) 0%, rgba(250,250,250,0) 70%)",
         }}
       />
 
