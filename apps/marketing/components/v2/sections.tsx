@@ -1,17 +1,15 @@
 import {
-  CalendarCheck,
   Check,
   FileSearch,
   FileText,
-  History,
   Mic,
-  Send,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
+import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
 import { Reveal } from "./reveal";
 
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
@@ -77,98 +75,56 @@ function SectionIntro({
   );
 }
 
-/* ---------- Stat row — chiffres oversize, sans cartes ---------- */
+/* ---------- Transformation — les contenus validés de l'accueil ---------- */
 
-const stats = [
-  { value: "3 phrases", label: "dictées entre deux écuries" },
-  { value: "≈ 2 min", label: "de relecture avant validation" },
-  { value: "0", label: "compte rendu à rédiger le soir" },
-] as const;
-
-export function V2Stats() {
-  return (
-    <section
-      aria-label="Chiffres clés"
-      className="border-b border-[color:var(--v2-line)]"
-    >
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-20 md:grid-cols-3 md:px-8 md:py-24">
-        {stats.map((stat, i) => (
-          <Reveal key={stat.label} delay={i * 0.08}>
-            <p className="v2-display text-[clamp(2.6rem,4.6vw,4.5rem)] font-medium leading-none text-[color:var(--v2-ink)]">
-              {stat.value}
-            </p>
-            <p className="mt-3 text-[0.88rem] text-[color:var(--v2-ink-faint)]">
-              {stat.label}
-            </p>
-          </Reveal>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Feature grid — cartes blanches, icônes thin-stroke ---------- */
-
-const features = [
+const transformationStages = [
   {
     icon: Mic,
-    title: "Dictée terrain",
-    body: "Trois phrases à voix haute entre deux séances. Pas de clavier, pas de formulaire à remplir dans la boue.",
+    title: "Notes de séance",
+    body: REPORT_TRANSFORMATION_DEMO.note,
   },
   {
     icon: FileSearch,
-    title: "Relecture contrôlée",
-    body: "Biume propose, passage par passage. Vous corrigez directement, rien ne part sans votre validation.",
+    title: "Reformulation proposée",
+    body: REPORT_TRANSFORMATION_DEMO.sections
+      .map((section) => `${section.label} : ${section.value}`)
+      .join(" · "),
   },
   {
     icon: FileText,
-    title: "Compte rendu PDF",
-    body: "Un document structuré et professionnel, à votre nom, prêt à être remis ou envoyé au propriétaire.",
-  },
-  {
-    icon: History,
-    title: "Historique animal",
-    body: "Chaque compte rendu enrichit le dossier de l'animal. La séance suivante part de ce qui s'est passé avant.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Séances pré-remplies",
-    body: "Le suivi est préparé avant votre arrivée : points d'attention, évolutions, notes de la dernière fois.",
-  },
-  {
-    icon: Send,
-    title: "Envoi en un clic",
-    body: "Le compte rendu part au propriétaire dès validation. Vous ne courez plus après vos envois le soir.",
+    title: "Compte rendu à valider",
+    body: REPORT_TRANSFORMATION_DEMO.ownerSummary,
   },
 ] as const;
 
 export function V2Features() {
   return (
-    <SectionShell id="fonctionnalites" ariaLabelledBy="v2-features-title">
+    <SectionShell id="produit" ariaLabelledBy="v2-features-title">
       <SectionIntro
-        eyebrow="Fonctionnalités"
-        title="Du terrain au compte rendu, sans détour."
+        eyebrow="Le parcours"
+        title="Ce que vous notez reste précis. Ce que le propriétaire lit devient clair."
         id="v2-features-title"
       >
         <p>
-          Chaque fonction existe pour une raison : vous faire gagner du temps
-          sans jamais écrire à votre place.
+          Biume organise vos observations sans les appauvrir. Vous retrouvez
+          chaque information, puis vous relisez la version destinée au
+          propriétaire.
         </p>
       </SectionIntro>
       <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature, i) => (
-          <Reveal key={feature.title} delay={(i % 3) * 0.08}>
+        {transformationStages.map((stage, i) => (
+          <Reveal key={stage.title} delay={i * 0.08}>
             <article className="v2-card h-full p-8">
-              <feature.icon
+              <stage.icon
                 aria-hidden="true"
                 className="size-6 text-[color:var(--v2-violet-ink)]"
                 strokeWidth={1.5}
               />
               <h3 className="mt-5 text-[1.15rem] font-medium tracking-[-0.01em] text-[color:var(--v2-ink)]">
-                {feature.title}
+                {stage.title}
               </h3>
               <p className="mt-2.5 text-[0.95rem] leading-[1.6] text-[color:var(--v2-ink-soft)]">
-                {feature.body}
+                {stage.body}
               </p>
             </article>
           </Reveal>
@@ -179,12 +135,6 @@ export function V2Features() {
 }
 
 /* ---------- Split éditorial — contrôle ---------- */
-
-const controlPoints = [
-  "Relu et validé par vous, passage par passage",
-  "Corrections directes dans le texte proposé",
-  "Modifiable jusqu'à l'envoi — rien ne part seul",
-] as const;
 
 export function V2Control() {
   return (
@@ -197,19 +147,23 @@ export function V2Control() {
         <div>
           <SectionIntro
             eyebrow="Le contrôle"
-            title="Biume prépare. Vous décidez."
+            title="Biume prépare. Vous gardez la main."
             id="v2-controle-title"
             eyebrowTone="green"
           >
             <p>
-              La reformulation n’est jamais un texte imposé. C’est une base de
-              travail que vous relisez avec votre regard de praticien — le
-              compte rendu final reste le vôtre.
+              Biume structure vos notes sans décider à votre place. Vous
+              relisez, reformulez et validez chaque passage. Rien n’est partagé
+              automatiquement.
             </p>
           </SectionIntro>
           <Reveal delay={0.1}>
             <ul className="mt-8 space-y-3.5">
-              {controlPoints.map((point) => (
+              {[
+                "Vous relisez et validez chaque passage",
+                "Vous pouvez reformuler directement le texte proposé",
+                "Vous validez chaque passage avant le partage",
+              ].map((point) => (
                 <li key={point} className="flex items-start gap-3">
                   <Check
                     aria-hidden="true"
@@ -245,7 +199,7 @@ export function V2Control() {
 export function V2FollowUp() {
   return (
     <SectionShell
-      id="suivi"
+      id="methode"
       ariaLabelledBy="v2-suivi-title"
       className="border-t border-[color:var(--v2-line)]"
     >
@@ -263,23 +217,22 @@ export function V2FollowUp() {
         </Reveal>
         <div>
           <SectionIntro
-            eyebrow="La continuité"
+            eyebrow="La méthode"
             title="Le compte rendu ouvre la suite."
             id="v2-suivi-title"
             eyebrowTone="green"
           >
             <p>
-              Le document ne dort pas dans un dossier. Il part au propriétaire,
-              il nourrit l’historique de l’animal, et il prépare votre prochaine
-              séance avant même que vous arriviez.
+              Vous finalisez le compte rendu, préparez le prochain contact et
+              confirmez le rappel à la date choisie.
             </p>
           </SectionIntro>
           <Reveal delay={0.1}>
             <ul className="mt-8 space-y-3.5">
               {[
-                "Le propriétaire reçoit un compte rendu lisible, à votre nom",
-                "L'historique de l'animal s'enrichit à chaque séance",
-                "La séance suivante démarre avec les points d'attention déjà notés",
+                "Vous relisez et finalisez le document après la séance.",
+                "Vous choisissez la date et le message du prochain rappel.",
+                "Le rappel est enregistré à la date que vous avez choisie.",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-3">
                   <Check
@@ -295,6 +248,49 @@ export function V2FollowUp() {
             </ul>
           </Reveal>
         </div>
+      </div>
+    </SectionShell>
+  );
+}
+
+/* ---------- Terrain — séquence réelle de l'accueil ---------- */
+
+export function V2FieldStories() {
+  return (
+    <SectionShell
+      ariaLabelledBy="v2-field-stories-title"
+      className="border-t border-[color:var(--v2-line)]"
+    >
+      <div className="grid items-center gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+        <SectionIntro
+          eyebrow="Le terrain"
+          title="Conçu autour du terrain, pas autour d’un écran."
+          id="v2-field-stories-title"
+        >
+          <p>
+            Biume suit la séquence réelle après la séance : écrire à partir de
+            vos notes, expliquer clairement au propriétaire, valider avant
+            l’envoi, puis maintenir le contact.
+          </p>
+        </SectionIntro>
+        <Reveal delay={0.12}>
+          <div className="grid grid-cols-[1.14fr_0.86fr] items-end gap-4 md:gap-6">
+            <Image
+              src="/assets/images/landing/atelier-practice.webp"
+              alt="Les mains d’une ostéopathe animalière palpant l’épaule d’un chien calme"
+              width={1122}
+              height={1402}
+              className="w-full rounded-[24px]"
+            />
+            <Image
+              src="/assets/images/landing/atelier-owner.webp"
+              alt="Une ostéopathe animalière échangeant avec la propriétaire d’un chien après la séance"
+              width={1122}
+              height={1402}
+              className="mb-[12%] w-full rounded-[24px]"
+            />
+          </div>
+        </Reveal>
       </div>
     </SectionShell>
   );
@@ -318,14 +314,13 @@ export function V2Pricing() {
     >
       <SectionIntro
         eyebrow="Tarifs"
-        title="Une seule formule. Tout le parcours."
+        title="Tout le parcours. Un seul abonnement."
         id="v2-tarifs-title"
         center
       >
         <p>
-          Pensée pour un praticien indépendant : pas de module caché, pas de
-          tarif au rapport. L’essai gratuit permet de valider sur vos vraies
-          séances.
+          Essai gratuit de 15 jours, sans carte bancaire. L’abonnement peut
+          être arrêté depuis les paramètres.
         </p>
       </SectionIntro>
       <Reveal delay={0.1}>
@@ -336,11 +331,11 @@ export function V2Pricing() {
               24,99 €
             </span>
             <span className="text-[0.95rem] text-[color:var(--v2-ink-faint)]">
-              / mois, facturé à l’année
+              par mois, facturé annuellement
             </span>
           </p>
           <p className="mt-2 text-[0.88rem] text-[color:var(--v2-ink-faint)]">
-            ou 29,99 € sans engagement
+            299,88 € facturés une fois par an
           </p>
           <ul className="mt-8 space-y-3.5 border-t border-[color:var(--v2-line)] pt-8">
             {included.map((item) => (
@@ -356,6 +351,17 @@ export function V2Pricing() {
               </li>
             ))}
           </ul>
+          <div className="mt-6 border-t border-[color:var(--v2-line)] pt-6">
+            <p className="v2-display text-[1.6rem] font-medium leading-none tracking-[-0.04em] text-[color:var(--v2-ink)]">
+              29,99 €{" "}
+              <span className="text-[0.95rem] font-normal tracking-normal text-[color:var(--v2-ink-faint)]">
+                par mois
+              </span>
+            </p>
+            <p className="mt-2 text-[0.88rem] text-[color:var(--v2-ink-faint)]">
+              Facturation mensuelle, résiliable en fin de période
+            </p>
+          </div>
           <div className="mt-9 flex flex-col gap-3">
             <Link
               href={webAppPath("/signup")}
@@ -363,7 +369,7 @@ export function V2Pricing() {
               data-conversion="pricing-signup"
               className="v2-btn v2-btn-primary v2-btn-lg w-full"
             >
-              Commencer l’essai gratuit
+              Essayer gratuitement
             </Link>
             <a
               href={DEMO_URL}
@@ -388,29 +394,29 @@ export function V2Pricing() {
 
 const faqItems = [
   {
-    question: "Biume écrit-il le compte rendu à ma place ?",
+    question: "Biume remplace-t-il un logiciel de gestion ?",
     answer:
-      "Non. Biume reformule vos observations dictées en une proposition structurée, que vous relisez et validez passage par passage. Le texte final est celui que vous avez approuvé — rien ne part sans vous.",
+      "Non. Biume se concentre sur le compte rendu propriétaire et le suivi post-séance. Il complète votre organisation actuelle.",
   },
   {
-    question: "Combien de temps prend une séance avec Biume ?",
+    question: "Biume écrit-il à la place du praticien ?",
     answer:
-      "Dicter vos observations prend une à deux minutes, à chaud, entre deux écuries. La relecture du compte rendu prend environ deux minutes le soir ou entre deux rendez-vous. C'est tout.",
+      "Biume prépare une proposition à partir de vos notes. Lorsque vous l'appliquez, elle remplace le texte du champ courant et reste entièrement modifiable.",
   },
   {
-    question: "Et si le style ne me ressemble pas ?",
+    question: "Chaque texte peut-il être modifié avant le partage ?",
     answer:
-      "Vous corrigez directement la proposition, et Biume apprend de vos corrections au fil des comptes rendus. Le style converge vers le vôtre — jamais l'inverse.",
+      "Oui. Vous pouvez modifier chaque champ avant de déclencher vous-même le téléchargement ou l'envoi.",
   },
   {
-    question: "Que reçoit exactement le propriétaire ?",
+    question: "Que reçoit le propriétaire ?",
     answer:
-      "Un compte rendu PDF clair et professionnel, à votre nom : les observations de la séance, les points d'attention et les recommandations. Rien de plus, rien de moins.",
+      "Le propriétaire reçoit le PDF professionnel joint à l'email que vous choisissez d'envoyer.",
   },
   {
-    question: "L'essai gratuit est-il vraiment sans engagement ?",
+    question: "Comment arrêter l'abonnement ?",
     answer:
-      "Oui. Quinze jours, sur vos vraies séances, sans carte bancaire. Si Biume ne vous fait pas gagner de temps, vous n'avez rien à payer ni à annuler.",
+      "Vous pouvez demander l'annulation depuis les paramètres de facturation. Elle prend effet à la fin de la période en cours.",
   },
 ] as const;
 
@@ -424,7 +430,7 @@ export function V2Faq() {
       <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
         <SectionIntro
           eyebrow="Questions"
-          title="Les réponses avant l'essai."
+          title="Avant de commencer."
           id="v2-faq-title"
         />
         <div>
@@ -470,9 +476,7 @@ export function V2Close() {
             Préparez votre prochain compte rendu.
           </h2>
           <p className="mx-auto mt-6 max-w-[52ch] text-[1.02rem] leading-[1.65] text-[color:var(--v2-ink-soft)] [text-wrap:pretty]">
-            Dictez vos observations de demain matin. Relisez le soir même un
-            compte rendu prêt à partir — ou décidez que Biume n’est pas pour
-            vous, sans rien payer.
+            15 jours pour découvrir tout le parcours, sans carte bancaire.
           </p>
         </Reveal>
         <Reveal delay={0.1}>
@@ -483,7 +487,7 @@ export function V2Close() {
               data-conversion="close-signup"
               className="v2-btn v2-btn-primary v2-btn-lg w-full sm:w-auto"
             >
-              Commencer gratuitement
+              Essayer gratuitement
             </Link>
             <a
               href={DEMO_URL}
@@ -510,25 +514,35 @@ const footerColumns = [
   {
     title: "Produit",
     links: [
-      { href: "#fonctionnalites", label: "Fonctionnalités" },
-      { href: "#controle", label: "Le contrôle" },
-      { href: "#suivi", label: "La continuité" },
-      { href: "#tarifs", label: "Tarifs" },
-    ],
-  },
-  {
-    title: "Ressources",
-    links: [
-      { href: "/blog", label: "Blog" },
-      { href: "/a-propos", label: "À propos" },
-      { href: "/contact", label: "Contact" },
+      { href: "/osteopathe-animalier", label: "Ostéopathe animalier" },
+      {
+        href: "/logiciel-osteopathe-animalier",
+        label: "Logiciel ostéopathe animalier",
+      },
+      {
+        href: "/compte-rendu-osteopathe-animalier",
+        label: "Compte rendu propriétaire",
+      },
+      {
+        href: "/modele-compte-rendu-osteopathe-animalier",
+        label: "Modèle de compte rendu",
+      },
+      { href: "/suivi-post-seance-animal", label: "Suivi post-séance" },
+      { href: "/blog", label: "Blog ostéopathe animalier" },
+      { href: "/tarifs", label: "Tarifs" },
+      { href: "/comparatifs", label: "Comparatifs" },
+      { href: "/alternatives/animalib", label: "Alternative Animalib" },
+      { href: "/alternatives/kiwiappli", label: "Alternative Kiwi Appli" },
+      { href: "/alternatives/mytour", label: "Alternative MyTour" },
+      { href: "/comparatifs/neovoice-vs-biume", label: "NeoVoice vs Biume" },
+      { href: "/alternatives/neovoice", label: "Alternative NeoVoice" },
+      { href: DEMO_URL, label: "Démo" },
     ],
   },
   {
     title: "Légal",
     links: [
-      { href: "/mentions-legales", label: "Mentions légales" },
-      { href: "/confidentialite", label: "Confidentialité" },
+      { href: "/privacy", label: "Confidentialité" },
       { href: "/cgu", label: "CGU" },
     ],
   },
@@ -538,14 +552,14 @@ export function V2Footer() {
   return (
     <footer className="border-t border-[color:var(--v2-line)]">
       <div className="mx-auto max-w-[1200px] px-5 py-16 md:px-8">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="grid gap-12 md:grid-cols-[1.1fr_1.6fr_0.6fr]">
           <div>
             <p className="v2-display text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)]">
               Biume<span className="text-[color:var(--v2-accent)]">.</span>
             </p>
             <p className="mt-4 max-w-[30ch] text-[0.9rem] leading-[1.6] text-[color:var(--v2-ink-soft)]">
-              Le compte rendu propriétaire des ostéopathes animaliers
-              indépendants — dicté sur le terrain, validé par vous.
+              Le compte rendu propriétaire et le suivi post-séance pour les
+              ostéopathes animaliers.
             </p>
           </div>
           {footerColumns.map((column) => (
@@ -554,9 +568,11 @@ export function V2Footer() {
               <ul className="mt-5 space-y-3">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    {link.href.startsWith("#") ? (
+                    {link.href.startsWith("http") ? (
                       <a
                         href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="v2-link text-[0.9rem] text-[color:var(--v2-ink-soft)]"
                       >
                         {link.label}
@@ -577,9 +593,6 @@ export function V2Footer() {
         </div>
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-[color:var(--v2-line)] pt-7 text-[0.82rem] text-[color:var(--v2-ink-faint)] sm:flex-row sm:items-center">
           <p>© 2026 Biume. Tous droits réservés.</p>
-          <Link href="/" className="v2-link">
-            Voir la version actuelle du site
-          </Link>
         </div>
       </div>
     </footer>

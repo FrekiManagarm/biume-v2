@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import { webAppPath } from "../../lib/web-app-url";
 
 const anchorLinks = [
-  { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#controle", label: "Le contrôle" },
+  { href: "#produit", label: "Produit" },
+  { href: "#methode", label: "Méthode" },
   { href: "#tarifs", label: "Tarifs" },
-  { href: "#questions", label: "Questions" },
+  { href: "/blog", label: "Ressources" },
 ] as const;
 
 export function V2Masthead() {
@@ -40,7 +40,7 @@ export function V2Masthead() {
       </a>
       <div className="relative mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 md:px-8">
         <Link
-          href="/v2"
+          href="/"
           className="v2-display flex min-h-11 items-center text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
         >
           Biume<span className="text-[color:var(--v2-accent)]">.</span>
@@ -74,7 +74,7 @@ export function V2Masthead() {
           data-conversion="masthead-signup"
           className="v2-btn v2-btn-primary v2-btn-sm"
         >
-          Commencer
+          Essayer gratuitement
         </Link>
       </div>
     </header>
