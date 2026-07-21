@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import { V2Landing } from "../../components/v2/v2-landing";
 
-import "./v2.css";
-
 export const metadata: Metadata = {
   title: "Biume — Votre regard métier, jusqu'au propriétaire",
   description:

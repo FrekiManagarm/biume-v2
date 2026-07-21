@@ -65,25 +65,21 @@ export function MarketingPage({
     <>
       <JsonLd data={pageBreadcrumbJsonLd({ path, name: breadcrumbName })} />
       <Header />
-      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
-        <main>
-          <section className="relative overflow-hidden px-4 pb-10 pt-30 md:px-6 md:pb-14 md:pt-34">
-            <PageBackdrop />
+      <div className="min-h-dvh overflow-x-hidden bg-[color:var(--v2-canvas)] text-[color:var(--v2-ink)] selection:bg-[color:var(--v2-accent)]/25">
+        <main id="contenu" tabIndex={-1}>
+          <section className="border-b border-[color:var(--v2-line)] px-5 py-20 md:px-8 md:py-28">
 
-            <div className="relative mx-auto grid w-full max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <div className="mx-auto grid w-full max-w-[1200px] gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
               <div className="max-w-3xl">
-                <div className="landing-reveal inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary shadow-[0_16px_44px_-34px_rgba(124,102,238,0.6)] backdrop-blur-md">
-                  <span className="relative flex size-2.5 rounded-full bg-secondary">
-                    <span className="absolute inset-0 rounded-full bg-secondary/45 landing-pulse" />
-                  </span>
+                <p className="v2-eyebrow landing-reveal">
                   {eyebrow}
-                </div>
+                </p>
 
-                <h1 className="landing-reveal landing-reveal-2 mt-7 max-w-3xl text-4xl font-semibold leading-none tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+                <h1 className="v2-display landing-reveal landing-reveal-2 mt-5 max-w-[16ch] text-[clamp(2.7rem,6vw,5.4rem)] font-medium leading-[1.02] tracking-[-0.05em] [text-wrap:balance]">
                   {title}
                 </h1>
 
-                <p className="landing-reveal landing-reveal-3 mt-6 max-w-[62ch] text-base leading-7 text-muted-foreground md:text-lg">
+                <p className="landing-reveal landing-reveal-3 mt-6 max-w-[60ch] text-base leading-7 text-[color:var(--v2-ink-soft)] md:text-[1.05rem] md:leading-8">
                   {description}
                 </p>
 
@@ -91,26 +87,25 @@ export function MarketingPage({
                   <Link
                     href={webAppPath("/signup")}
                     prefetch={false}
-                    className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_42px_-30px_rgba(124,102,238,0.75)] transition-all hover:bg-primary/88 active:scale-[0.98] sm:w-auto"
+                    className="v2-btn v2-btn-primary v2-btn-lg w-full sm:w-auto"
                   >
                     Commencer gratuitement
-                    <ArrowIcon />
                   </Link>
                   <Link
                     href="/"
-                    className="inline-flex w-full items-center justify-center rounded-full border border-border bg-card/70 px-5 py-3 text-sm font-semibold text-foreground transition-all hover:border-foreground/20 hover:bg-card active:scale-[0.98] sm:w-auto"
+                    className="v2-btn v2-btn-secondary v2-btn-lg w-full sm:w-auto"
                   >
                     Retour a l&apos;accueil
                   </Link>
                 </div>
 
-                <div className="landing-reveal landing-reveal-5 mt-10 grid max-w-xl grid-cols-3 divide-x divide-border border-y border-border py-4">
+                <div className="landing-reveal landing-reveal-5 mt-10 grid max-w-xl grid-cols-3 divide-x divide-[color:var(--v2-line)] border-y border-[color:var(--v2-line)] py-4">
                   {stats.map((stat) => (
                     <div key={stat.label} className="px-4 first:pl-0 last:pr-0">
-                      <p className="font-mono text-lg font-semibold tracking-tight text-foreground md:text-2xl">
+                      <p className="v2-mono text-lg font-medium tracking-tight md:text-2xl">
                         {stat.value}
                       </p>
-                      <p className="mt-1 text-xs font-medium leading-4 text-muted-foreground">
+                      <p className="mt-1 text-xs font-medium leading-4 text-[color:var(--v2-ink-faint)]">
                         {stat.label}
                       </p>
                     </div>
@@ -128,51 +123,51 @@ export function MarketingPage({
             </div>
           </section>
 
-          <section className="px-4 py-8 md:px-6 md:py-14">
-            <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[1.12fr_0.88fr]">
-              <div className="grid gap-4 md:grid-cols-2">
+          <section className="px-5 py-20 md:px-8 md:py-28">
+            <div className="mx-auto grid max-w-[1200px] gap-5 lg:grid-cols-[1.12fr_0.88fr]">
+              <div className="grid gap-5 md:grid-cols-2">
                 {sections.map((section, index) => (
                   <article
                     key={section.title}
                     className={
                       index === 0
-                        ? "rounded-[1.7rem] border border-primary/20 bg-primary/10 p-6 shadow-[0_28px_80px_-66px_rgba(124,102,238,0.55)] md:col-span-2 md:p-8"
-                        : "rounded-[1.7rem] border border-border bg-card p-6 md:p-7"
+                        ? "v2-panel bg-[color:var(--v2-bone)] p-7 md:col-span-2 md:p-10"
+                        : "v2-card p-7 md:p-8"
                     }
                   >
-                    <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    <p className="v2-eyebrow">
                       {section.eyebrow}
                     </p>
-                    <h2 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+                    <h2 className="v2-display mt-5 text-[clamp(1.7rem,3vw,2.8rem)] font-medium leading-[1.08] tracking-[-0.04em]">
                       {section.title}
                     </h2>
-                    <p className="mt-4 text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
+                    <p className="mt-4 text-sm leading-6 text-[color:var(--v2-ink-soft)] md:text-base md:leading-7">
                       {section.body}
                     </p>
                   </article>
                 ))}
               </div>
 
-              <aside className="rounded-4xl border border-border bg-foreground p-6 text-background shadow-[0_34px_100px_-76px_rgba(20,18,28,0.66)] md:p-8">
-                <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              <aside className="rounded-[24px] bg-[color:var(--v2-espresso)] p-7 text-white md:p-9">
+                <p className="v2-eyebrow text-[color:var(--v2-green)]">
                   {sidePanel.eyebrow}
                 </p>
-                <h2 className="mt-4 text-3xl font-semibold leading-none tracking-tight md:text-5xl">
+                <h2 className="v2-display mt-5 text-[clamp(2rem,4vw,3.4rem)] font-medium leading-[1.02] tracking-[-0.045em]">
                   {sidePanel.title}
                 </h2>
-                <p className="mt-5 text-sm leading-6 text-background/62 md:text-base md:leading-7">
+                <p className="mt-5 text-sm leading-6 text-white/65 md:text-base md:leading-7">
                   {sidePanel.body}
                 </p>
-                <div className="mt-7 divide-y divide-background/10">
+                <div className="mt-7 divide-y divide-white/12">
                   {sidePanel.items.map((item, index) => (
                     <div
                       key={item}
                       className="grid grid-cols-[auto_1fr] gap-3 py-4 first:pt-0 last:pb-0"
                     >
-                      <span className="font-mono text-sm font-semibold text-background/42">
+                      <span className="v2-mono text-sm font-medium text-white/45">
                         0{index + 1}
                       </span>
-                      <p className="text-sm font-medium leading-6 text-background">
+                      <p className="text-sm font-medium leading-6 text-white">
                         {item}
                       </p>
                     </div>
@@ -203,32 +198,27 @@ function PageVisual({
 }) {
   return (
     <div className="landing-reveal landing-reveal-3 min-w-0">
-      <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-4xl border border-border bg-card/95 p-3 shadow-[0_42px_110px_-72px_rgba(20,18,28,0.52)] backdrop-blur-xl">
-        <div
-          className="pointer-events-none absolute inset-0 rounded-4xl bg-[linear-gradient(rgba(20,18,28,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(20,18,28,0.04)_1px,transparent_1px)] bg-size-[34px_34px]"
-          aria-hidden="true"
-        />
-
-        <div className="relative overflow-hidden rounded-[1.7rem] border border-border/70 bg-background text-foreground shadow-[0_30px_76px_-58px_rgba(20,18,28,0.74)]">
-          <div className="border-b border-border bg-card/70 px-4 py-4 md:px-5">
+      <div className="v2-panel relative mx-auto w-full max-w-2xl overflow-hidden p-2.5">
+        <div className="overflow-hidden rounded-[18px] bg-[color:var(--v2-surface)] text-[color:var(--v2-ink)]">
+          <div className="border-b border-[color:var(--v2-line)] px-4 py-4 md:px-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="v2-eyebrow text-[10px]">
                   Biume
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+                <h2 className="v2-display mt-2 text-2xl font-medium tracking-[-0.04em]">
                   {title}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+                <p className="mt-1 text-sm text-[color:var(--v2-ink-soft)]">{subtitle}</p>
               </div>
-              <div className="hidden rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary sm:block">
+              <div className="hidden rounded-full bg-[color:var(--v2-green-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--v2-green-ink)] sm:block">
                 {badge}
               </div>
             </div>
           </div>
 
           <div className="grid gap-0 md:grid-cols-[1.04fr_0.96fr]">
-            <div className="relative min-h-65 border-b border-border bg-muted/25 md:border-b-0 md:border-r">
+            <div className="relative min-h-65 border-b border-[color:var(--v2-line)] bg-[color:var(--v2-bone)] md:border-b-0 md:border-r">
               <Image
                 src={image.src}
                 alt={image.alt}
@@ -237,27 +227,27 @@ function PageVisual({
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-linear-to-t from-background/82 via-background/10 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-[color:var(--v2-canvas)]/82 via-transparent to-transparent" />
             </div>
 
             <div className="p-5">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary">
+              <p className="v2-eyebrow v2-eyebrow-green text-[10px]">
                 Points cles
               </p>
-              <div className="mt-4 divide-y divide-border">
+              <div className="mt-4 divide-y divide-[color:var(--v2-line)]">
                 {items.map((item) => (
                   <div key={item.label} className="py-4 first:pt-0 last:pb-0">
-                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    <p className="v2-mono text-[10px] font-medium uppercase tracking-[0.16em] text-[color:var(--v2-ink-faint)]">
                       {item.label}
                     </p>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-foreground">
+                    <p className="mt-2 text-sm font-medium leading-6">
                       {item.value}
                     </p>
                   </div>
                 ))}
               </div>
-              <div className="mt-5 rounded-[1.1rem] border border-secondary/20 bg-secondary/8 px-4 py-3">
-                <p className="text-sm font-semibold text-foreground">
+              <div className="mt-5 border-t border-[color:var(--v2-line)] pt-4">
+                <p className="text-sm font-medium text-[color:var(--v2-ink-soft)]">
                   Meme exigence produit, meme clarte pour chaque page.
                 </p>
               </div>
@@ -266,41 +256,5 @@ function PageVisual({
         </div>
       </div>
     </div>
-  );
-}
-
-function PageBackdrop() {
-  return (
-    <div className="absolute inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-background" />
-      <div
-        className="absolute inset-0 opacity-[0.62] dark:opacity-[0.18]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, color-mix(in oklab, var(--border) 72%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--border) 62%, transparent) 1px, transparent 1px)",
-          backgroundSize: "54px 54px",
-        }}
-      />
-      <div className="absolute inset-x-0 bottom-0 h-44 bg-linear-to-t from-background to-transparent" />
-    </div>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      className="size-4 transition-transform group-hover:translate-x-0.5"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
   );
 }

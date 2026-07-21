@@ -39,7 +39,8 @@ describe("marketing sub pages", () => {
       expect(html).not.toContain('href="/contact"');
       expect(html).not.toContain("Hébergé en France");
       expect(html).not.toContain("conforme au RGPD");
-      expect(html).toContain("selection:bg-primary/20");
+      expect(html).toContain("selection:bg-[color:var(--v2-accent)]/25");
+      expect(html).toContain("v2-display");
       expect(html).toContain("landing-reveal");
       expect(html).toContain('"@type":"BreadcrumbList"');
       expect(html).toContain('"name":"Accueil"');
