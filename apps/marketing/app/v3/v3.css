@@ -8,9 +8,6 @@
   --v3-ash: #999999;
   --v3-lavender: #918df6;
   --v3-iris: #9580ff;
-  --v3-mint: #33c758;
-  --v3-mint-wash: #def6e4;
-  --v3-panel-shadow: 0 12px 30px rgb(24 25 37 / 8%);
   background: var(--v3-paper);
   color: var(--v3-carbon);
   font-family: var(--font-v3-sans), sans-serif;
@@ -140,7 +137,6 @@
 .v3-primary-action:hover {
   background: var(--v3-iris);
   border-color: var(--v3-iris);
-  box-shadow: 0 8px 18px rgb(145 141 246 / 24%);
   color: var(--v3-carbon);
 }
 
@@ -152,7 +148,6 @@
 
 .v3-secondary-action:hover {
   border-color: var(--v3-fog);
-  box-shadow: 0 5px 14px rgb(24 25 37 / 7%);
   color: var(--v3-carbon);
 }
 
@@ -162,7 +157,7 @@
   outline-offset: 4px;
 }
 
-.v3-skip-link {
+.v3 .v3-skip-link {
   align-items: center;
   background: var(--v3-carbon);
   border-radius: 9999px;
@@ -367,7 +362,6 @@
   background: var(--v3-paper);
   border: 1px solid var(--v3-fog);
   border-radius: 1rem;
-  box-shadow: var(--v3-panel-shadow);
 }
 
 .v3-journey-card {
@@ -380,7 +374,6 @@
 
 .v3-journey-card:hover {
   border-color: var(--v3-ash);
-  box-shadow: 0 15px 32px rgb(24 25 37 / 10%);
 }
 
 .v3-stage-label {
@@ -515,8 +508,8 @@
 }
 
 .v3-demo-state {
-  background: var(--v3-mint-wash);
-  border: 1px solid color-mix(in srgb, var(--v3-mint) 40%, var(--v3-fog));
+  background: var(--v3-paper);
+  border: 1px solid var(--v3-fog);
   border-radius: 9999px;
   color: var(--v3-carbon);
   font-size: 0.78rem;
@@ -554,13 +547,13 @@
 }
 
 .v3-control-list li svg {
-  color: var(--v3-mint);
+  color: var(--v3-carbon);
 }
 
 .v3-validation-proof {
   align-items: flex-start;
   align-self: end;
-  background: var(--v3-mint-wash);
+  background: var(--v3-mist);
   display: flex;
   gap: 0.9rem;
   grid-column: 2;
@@ -568,7 +561,7 @@
 }
 
 .v3-validation-proof > svg {
-  color: var(--v3-mint);
+  color: var(--v3-carbon);
 }
 
 .v3-validation-proof strong {
@@ -631,7 +624,7 @@
 }
 
 .v3-pricing-card li svg {
-  color: var(--v3-mint);
+  color: var(--v3-carbon);
   margin-top: 0.05rem;
 }
 

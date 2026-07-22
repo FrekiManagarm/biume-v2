@@ -104,6 +104,14 @@ describe("V3 Clinical Studio landing", () => {
     ]);
   });
 
+  test("keeps V3 data surfaces flat with Fog borders instead of shadows", async () => {
+    const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
+
+    expect(css).toContain("border: 1px solid var(--v3-fog)");
+    expect(css).not.toContain("box-shadow");
+    expect(css).not.toContain("--v3-mint");
+  });
+
   test("uses one geometric sans-serif family for the V3 interface", async () => {
     const source = await Bun.file(
       new URL("../components/v3/v3-landing.tsx", import.meta.url),
@@ -128,10 +136,11 @@ describe("V3 Clinical Studio landing", () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
     ).text();
-    const skipLinkRule = css.match(/\.v3-skip-link\s*{([^}]*)}/)?.[1];
+    const skipLinkRule = css.match(/\.v3 \.v3-skip-link\s*{([^}]*)}/)?.[1];
 
     expect(skipLinkRule).toBeDefined();
     expect(skipLinkRule).not.toContain("background: var(--v3-lavender)");
+    expect(skipLinkRule).toContain("color: var(--v3-paper)");
   });
 
   test("uses contrast-safe focus and tiny-label roles", async () => {
