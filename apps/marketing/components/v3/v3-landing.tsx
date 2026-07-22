@@ -176,7 +176,11 @@ function ProductWorkbench() {
           <p className="v3-eyebrow">Dans Biume</p>
           <h2 id="v3-workbench-title"><span className="v3-heading-reveal">Une démonstration de votre espace de travail.</span></h2>
         </div>
-        <div className="v3-workbench-demo" aria-label="Démonstration statique du produit">
+        <div
+          aria-label="Démonstration statique du produit"
+          className="v3-workbench-demo"
+          role="group"
+        >
           <div className="v3-demo-toolbar">
             <span>Séance de Luma</span>
             <span className="v3-static-status">Brouillon</span>

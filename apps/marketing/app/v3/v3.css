@@ -322,7 +322,7 @@
 .v3-static-status {
   background: var(--v3-lavender);
   border: 1px solid var(--v3-carbon);
-  color: var(--v3-paper);
+  color: var(--v3-carbon);
   margin-left: auto;
   padding: 0.35rem 0.45rem;
 }
@@ -416,7 +416,7 @@
 
 .v3-product-band {
   background: linear-gradient(110deg,#2c78fc 0%,#918df6 100%);
-  color: var(--v3-paper);
+  color: var(--v3-carbon);
   padding-bottom: clamp(4.5rem, 9vw, 8.5rem);
   padding-top: clamp(4.5rem, 9vw, 8.5rem);
 }
@@ -428,7 +428,7 @@
 }
 
 .v3-workbench .v3-eyebrow::before {
-  border-color: var(--v3-paper);
+  border-color: var(--v3-carbon);
 }
 
 .v3-workbench-demo {
@@ -493,7 +493,7 @@
 }
 
 .v3-demo-state {
-  color: color-mix(in srgb, var(--v3-ink) 70%, transparent);
+  color: var(--v3-carbon);
   font-size: 0.78rem;
   font-weight: 650;
 }

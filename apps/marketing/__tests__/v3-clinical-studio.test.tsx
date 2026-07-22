@@ -36,6 +36,24 @@ describe("V3 Clinical Studio landing", () => {
     expect(html).not.toContain("Relire le compte rendu");
   });
 
+  test("keeps the static workbench free of retired previews and controls", async () => {
+    const [landingSource, css] = await Promise.all([
+      Bun.file(new URL("../components/v3/v3-landing.tsx", import.meta.url)).text(),
+      Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text(),
+    ]);
+    const html = renderWithLandingImageConfig(<V3Page />);
+    const workbenchStart = html.indexOf('<section id="produit"');
+    const workbenchEnd = html.indexOf('<section id="controle"');
+    const workbenchMarkup = html.slice(workbenchStart, workbenchEnd);
+
+    expect(`${landingSource}\n${css}`).not.toContain("v3-scan");
+    expect(`${landingSource}\n${css}`).not.toContain("v3-hero-preview");
+    expect(workbenchStart).toBeGreaterThanOrEqual(0);
+    expect(workbenchEnd).toBeGreaterThan(workbenchStart);
+    expect(workbenchMarkup).toContain('role="group"');
+    expect(workbenchMarkup).not.toContain("<button");
+  });
+
   test("uses the reference-locked canvas, CTA and product-band roles", async () => {
     const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
     const html = renderWithLandingImageConfig(<V3Page />);
