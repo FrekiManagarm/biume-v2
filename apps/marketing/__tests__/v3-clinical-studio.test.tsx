@@ -17,7 +17,7 @@ describe("V3 Clinical Studio landing", () => {
     expect(LandingShell).toBeFunction();
   });
 
-  test("places the Biume workbench in the dedicated product band", () => {
+  test("places the workbench in the dedicated product band", () => {
     const html = renderWithLandingImageConfig(<V3Page />);
     const heroIndex = html.indexOf('class="v3-hero"');
     const bandIndex = html.indexOf('class="v3-product-band"');
@@ -81,6 +81,14 @@ describe("V3 Clinical Studio landing", () => {
     expect(productEyebrowRule).not.toContain("var(--v3-lavender)");
   });
 
+  test("keeps lavender limited to conversion and the product atmosphere", async () => {
+    const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
+
+    expect(css).toMatch(/\.v3-primary-action[^}]*background:\s*var\(--v3-lavender\)/);
+    expect(css).toMatch(/\.v3-product-band[^}]*linear-gradient/);
+    expect(css).not.toContain("var(--v3-lavender);\n  color");
+  });
+
   test("uses one geometric sans-serif family for the V3 interface", async () => {
     const source = await Bun.file(
       new URL("../components/v3/v3-landing.tsx", import.meta.url),
@@ -93,11 +101,23 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("--font-v3-display");
   });
 
-  test("keeps V3 without a reduced-motion override", async () => {
+  test("keeps the reference implementation without a reduced-motion override", async () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
     ).text();
 
+    expect(css).not.toContain("prefers-reduced-motion");
+  });
+
+  test("removes retired display and animation concepts from the styles", async () => {
+    const css = await Bun.file(
+      new URL("../app/v3/v3.css", import.meta.url),
+    ).text();
+
+    expect(css).not.toMatch(/font-family:[^;]*(?:,\s*serif\b|\bserif\s*,)/);
+    expect(css).not.toContain("--font-v3-display");
+    expect(css).not.toContain("v3-scan");
+    expect(css).not.toContain("v3-heading-reveal");
     expect(css).not.toContain("prefers-reduced-motion");
   });
 

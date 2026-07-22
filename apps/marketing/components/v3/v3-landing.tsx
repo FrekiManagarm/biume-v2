@@ -111,7 +111,7 @@ function ClinicalHero() {
         </p>
         <p className="v3-eyebrow">Pour les ostéopathes animaliers indépendants</p>
         <h1 id="v3-hero-title">
-          <span className="v3-heading-reveal">Vos notes gardent votre regard.</span>
+          <span>Vos notes gardent votre regard.</span>
         </h1>
         <p className="v3-hero-subhead">
           Biume accompagne les ostéopathes animaliers indépendants, de leurs
@@ -145,7 +145,7 @@ function CareJourney() {
     >
       <div className="v3-section-intro">
         <p className="v3-eyebrow">Un parcours court, votre regard à chaque étape</p>
-        <h2><span className="v3-heading-reveal">De l’observation à votre validation.</span></h2>
+        <h2><span>De l’observation à votre validation.</span></h2>
       </div>
       <div className="v3-journey-track">
         {journeyStages.map((stage) => (
@@ -174,7 +174,7 @@ function ProductWorkbench() {
       <div className="v3-workbench">
         <div className="v3-section-intro">
           <p className="v3-eyebrow">Dans Biume</p>
-          <h2 id="v3-workbench-title"><span className="v3-heading-reveal">Une démonstration de votre espace de travail.</span></h2>
+          <h2 id="v3-workbench-title"><span>Une démonstration de votre espace de travail.</span></h2>
         </div>
         <div
           aria-label="Démonstration statique du produit"
@@ -216,7 +216,7 @@ function ControlProof() {
     <section id="controle" aria-labelledby="v3-control-title" className="v3-control">
       <div className="v3-section-intro">
         <p className="v3-eyebrow">Votre contrôle</p>
-        <h2 id="v3-control-title"><span className="v3-heading-reveal">La validation reste entre vos mains.</span></h2>
+        <h2 id="v3-control-title"><span>La validation reste entre vos mains.</span></h2>
         <p>
           Biume prépare une base. Vous relisez, adaptez, validez et choisissez
           vous-même si et quand le compte rendu est envoyé.
@@ -252,7 +252,7 @@ function PricingPanel() {
     <section id="tarifs" aria-labelledby="v3-pricing-title" className="v3-pricing">
       <div className="v3-section-intro">
         <p className="v3-eyebrow">Tarifs</p>
-        <h2 id="v3-pricing-title"><span className="v3-heading-reveal">Un abonnement pour suivre votre rythme.</span></h2>
+        <h2 id="v3-pricing-title"><span>Un abonnement pour suivre votre rythme.</span></h2>
       </div>
       <article className="v3-pricing-card">
         <p className="v3-price">24,99 € / mois</p>
@@ -284,7 +284,7 @@ function V3Close() {
     <section aria-labelledby="v3-close-title" className="v3-close">
       <div>
         <p className="v3-eyebrow">Prêt pour la prochaine séance</p>
-        <h2 id="v3-close-title"><span className="v3-heading-reveal">Gardez la main sur chaque compte rendu.</span></h2>
+        <h2 id="v3-close-title"><span>Gardez la main sur chaque compte rendu.</span></h2>
       </div>
       <div className="v3-close-actions">
         <a className={`v3-primary-action ${focusClassName}`} href={webAppPath("/signup")}>
