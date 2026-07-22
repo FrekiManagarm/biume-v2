@@ -22,6 +22,19 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("prefers-reduced-motion");
   });
 
+  test("keeps V3 brand and skip links as 44px touch targets", async () => {
+    const css = await Bun.file(
+      new URL("../app/v3/v3.css", import.meta.url),
+    ).text();
+
+    expect(css).toMatch(
+      /\.v3-brand,[\s\S]*\.v3-footer > a\s*{[\s\S]*min-height:\s*2\.75rem;[\s\S]*min-width:\s*2\.75rem;/,
+    );
+    expect(css).toMatch(
+      /\.v3-skip-link\s*{[\s\S]*display:\s*inline-flex;[\s\S]*min-height:\s*2\.75rem;[\s\S]*min-width:\s*2\.75rem;/,
+    );
+  });
+
   test("keeps the route private to experiments", () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(metadata.title).toContain("Biume");

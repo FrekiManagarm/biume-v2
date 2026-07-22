@@ -59,7 +59,10 @@
   font-size: 1.08rem;
   font-weight: 700;
   gap: 0.55rem;
+  justify-content: center;
   letter-spacing: -0.04em;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 .v3-brand img {
@@ -147,10 +150,15 @@
 }
 
 .v3-skip-link {
+  align-items: center;
   background: var(--v3-signal);
   color: var(--v3-ink);
+  display: inline-flex;
   font-weight: 700;
+  justify-content: center;
   left: 1rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   padding: 0.7rem 1rem;
   position: fixed;
   top: 0.75rem;
