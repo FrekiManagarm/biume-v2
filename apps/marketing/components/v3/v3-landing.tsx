@@ -105,6 +105,10 @@ function ClinicalHero() {
   return (
     <section aria-labelledby="v3-hero-title" className="v3-hero">
       <div className="v3-hero-copy">
+        <p className="v3-hero-announcement">
+          <span>NOUVEAU</span>
+          <span>Le compte rendu reste sous votre contrôle.</span>
+        </p>
         <p className="v3-eyebrow">Pour les ostéopathes animaliers indépendants</p>
         <h1 id="v3-hero-title">
           <span className="v3-heading-reveal">Vos notes gardent votre regard.</span>
@@ -128,20 +132,6 @@ function ClinicalHero() {
           </a>
         </div>
       </div>
-      <aside aria-label="Aperçu de séance" className="v3-hero-preview v3-scan-frame">
-        <div className="v3-preview-heading">
-          <ClipboardPenLine aria-hidden="true" size={20} />
-          <span>Note de séance</span>
-          <span className="v3-static-status">À préparer</span>
-        </div>
-        <p>Mobilité plus libre à droite. Marche douce aujourd’hui.</p>
-        <span className="v3-static-connector" aria-hidden="true" />
-        <div className="v3-preview-heading">
-          <FileText aria-hidden="true" size={20} />
-          <span>Compte rendu propriétaire</span>
-        </div>
-        <p>Une version claire, prête à être relue et adaptée.</p>
-      </aside>
     </section>
   );
 }
@@ -176,35 +166,41 @@ function CareJourney() {
 
 function ProductWorkbench() {
   return (
-    <section id="produit" aria-labelledby="v3-workbench-title" className="v3-workbench">
-      <div className="v3-section-intro">
-        <p className="v3-eyebrow">Dans Biume</p>
-        <h2 id="v3-workbench-title"><span className="v3-heading-reveal">Une démonstration de votre espace de travail.</span></h2>
-      </div>
-      <div className="v3-workbench-demo" aria-label="Démonstration statique du produit">
-        <div className="v3-demo-toolbar">
-          <span>Séance de Luma</span>
-          <span className="v3-static-status">Brouillon</span>
+    <section
+      id="produit"
+      aria-labelledby="v3-workbench-title"
+      className="v3-product-band"
+    >
+      <div className="v3-workbench">
+        <div className="v3-section-intro">
+          <p className="v3-eyebrow">Dans Biume</p>
+          <h2 id="v3-workbench-title"><span className="v3-heading-reveal">Une démonstration de votre espace de travail.</span></h2>
         </div>
-        <div className="v3-demo-columns">
-          <article>
-            <div className="v3-demo-label">
-              <ClipboardPenLine aria-hidden="true" size={18} />
-              <h3>Votre note</h3>
-            </div>
-            <p>Mobilité plus libre à droite. Marche douce aujourd’hui.</p>
-          </article>
-          <article>
-            <div className="v3-demo-label">
-              <FileText aria-hidden="true" size={18} />
-              <h3>Version propriétaire</h3>
-            </div>
-            <p>Luma a retrouvé plus de liberté dans ses mouvements.</p>
-          </article>
-        </div>
-        <div className="v3-demo-footer">
-          <span>Préparation en cours</span>
-          <span className="v3-static-affordance">Relire le compte rendu</span>
+        <div className="v3-workbench-demo" aria-label="Démonstration statique du produit">
+          <div className="v3-demo-toolbar">
+            <span>Séance de Luma</span>
+            <span className="v3-static-status">Brouillon</span>
+          </div>
+          <div className="v3-demo-columns">
+            <article>
+              <div className="v3-demo-label">
+                <ClipboardPenLine aria-hidden="true" size={18} />
+                <h3>Votre note</h3>
+              </div>
+              <p>Mobilité plus libre à droite. Marche douce aujourd’hui.</p>
+            </article>
+            <article>
+              <div className="v3-demo-label">
+                <FileText aria-hidden="true" size={18} />
+                <h3>Version propriétaire</h3>
+              </div>
+              <p>Luma a retrouvé plus de liberté dans ses mouvements.</p>
+            </article>
+          </div>
+          <div className="v3-demo-footer">
+            <span>Préparation en cours</span>
+            <span className="v3-static-affordance">Relire le compte rendu</span>
+          </div>
         </div>
       </div>
     </section>

@@ -17,6 +17,18 @@ describe("V3 Clinical Studio landing", () => {
     expect(LandingShell).toBeFunction();
   });
 
+  test("places the Biume workbench in the dedicated product band", () => {
+    const html = renderWithLandingImageConfig(<V3Page />);
+    const heroIndex = html.indexOf('class="v3-hero"');
+    const bandIndex = html.indexOf('class="v3-product-band"');
+    const workbenchIndex = html.indexOf('class="v3-workbench-demo"');
+
+    expect(heroIndex).toBeGreaterThanOrEqual(0);
+    expect(bandIndex).toBeGreaterThan(heroIndex);
+    expect(workbenchIndex).toBeGreaterThan(bandIndex);
+    expect(html).toContain("Préparer mon premier compte rendu");
+  });
+
   test("uses the Visitors-first canvas, CTA and product-band roles", async () => {
     const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
     const html = renderWithLandingImageConfig(<V3Page />);
