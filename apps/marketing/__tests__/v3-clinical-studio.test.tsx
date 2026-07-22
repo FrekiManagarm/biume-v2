@@ -37,4 +37,16 @@ describe("V3 Clinical Studio landing", () => {
       'aria-label="Parcours de la note au compte rendu"',
     );
   });
+
+  test("makes annual billing and the approved plan inclusions explicit", () => {
+    const content = textOnly(renderWithLandingImageConfig(<V3Page />));
+
+    expect(content).toContain("24,99 € / mois");
+    expect(content).toContain("Facturé annuellement.");
+    expect(content).toContain("29,99 € sans engagement");
+    expect(content).toContain(
+      "Reformulation et validation passage par passage",
+    );
+    expect(content).toContain("Suivi et rappel après séance");
+  });
 });

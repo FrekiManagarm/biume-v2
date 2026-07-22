@@ -42,9 +42,9 @@ const journeyStages = [
 
 const pricingInclusions = [
   "Compte rendu propriétaire structuré",
-  "Validation passage par passage",
+  "Reformulation et validation passage par passage",
   "Export PDF professionnel",
-  "Suivi après séance",
+  "Suivi et rappel après séance",
 ] as const;
 
 const focusClassName = "v3-focus-ring focus-visible:outline-2 focus-visible:outline-offset-4";
@@ -247,6 +247,7 @@ function PricingPanel() {
       </div>
       <article className="v3-pricing-card">
         <p className="v3-price">24,99 € / mois</p>
+        <p>Facturé annuellement.</p>
         <p className="v3-price-equivalent">29,99 € sans engagement</p>
         <ul>
           {pricingInclusions.map((inclusion) => (
