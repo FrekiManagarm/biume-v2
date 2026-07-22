@@ -1,10 +1,27 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 
-import V3Page, { metadata } from "../app/v3/page";
 import { webAppPath } from "../lib/web-app-url";
 import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
 
+mock.module("next/font/google", () => ({
+  Fraunces: () => ({ variable: "font-v3-display" }),
+  Instrument_Sans: () => ({ variable: "font-v3-sans" }),
+}));
+
+const { default: V3Page, metadata } = await import("../app/v3/page");
+
 describe("V3 Clinical Studio landing", () => {
+  test("uses the Clinical Studio scan effects without a reduced-motion override", async () => {
+    const css = await Bun.file(
+      new URL("../app/v3/v3.css", import.meta.url),
+    ).text();
+
+    expect(css).toContain("@keyframes v3-scan");
+    expect(css).toContain("@keyframes v3-reveal");
+    expect(css).toContain(".v3-journey-track");
+    expect(css).not.toContain("prefers-reduced-motion");
+  });
+
   test("keeps the route private to experiments", () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(metadata.title).toContain("Biume");
