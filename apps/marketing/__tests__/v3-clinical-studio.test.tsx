@@ -5,12 +5,19 @@ import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
 
 mock.module("next/font/google", () => ({
   Fraunces: () => ({ variable: "font-v3-display" }),
+  Hanken_Grotesk: () => ({ variable: "font-hanken" }),
   Instrument_Sans: () => ({ variable: "font-v3-sans" }),
 }));
 
 const { default: V3Page, metadata } = await import("../app/v3/page");
 
 describe("V3 Clinical Studio landing", () => {
+  test("keeps shared landing shell imports compatible with the font mock", async () => {
+    const { LandingShell } = await import("../components/landing/landing-shell");
+
+    expect(LandingShell).toBeFunction();
+  });
+
   test("uses the Clinical Studio scan effects without a reduced-motion override", async () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
