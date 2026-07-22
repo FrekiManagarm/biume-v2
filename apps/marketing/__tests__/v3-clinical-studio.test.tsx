@@ -4,9 +4,8 @@ import { webAppPath } from "../lib/web-app-url";
 import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
 
 mock.module("next/font/google", () => ({
-  Fraunces: () => ({ variable: "font-v3-display" }),
+  DM_Sans: () => ({ variable: "font-v3-sans" }),
   Hanken_Grotesk: () => ({ variable: "font-hanken" }),
-  Instrument_Sans: () => ({ variable: "font-v3-sans" }),
 }));
 
 const { default: V3Page, metadata } = await import("../app/v3/page");
@@ -16,6 +15,32 @@ describe("V3 Clinical Studio landing", () => {
     const { LandingShell } = await import("../components/landing/landing-shell");
 
     expect(LandingShell).toBeFunction();
+  });
+
+  test("uses the Visitors-first canvas, CTA and product-band roles", async () => {
+    const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
+    const html = renderWithLandingImageConfig(<V3Page />);
+
+    expect(css).toContain("--v3-paper: #ffffff");
+    expect(css).toContain("--v3-carbon: #181925");
+    expect(css).toContain("--v3-fog: #e8e8e8");
+    expect(css).toContain("--v3-lavender: #918df6");
+    expect(css).toContain(".v3-product-band");
+    expect(css).toContain("linear-gradient");
+    expect(css).not.toContain("--v3-signal");
+    expect(css).not.toContain("v3-scan");
+    expect(html).toContain('class="v3-product-band"');
+    expect(html).toContain("Une démonstration de votre espace de travail.");
+  });
+
+  test("uses one geometric sans-serif family for the V3 interface", async () => {
+    const source = await Bun.file(
+      new URL("../components/v3/v3-landing.tsx", import.meta.url),
+    ).text();
+
+    expect(source).toContain('import { DM_Sans } from "next/font/google"');
+    expect(source).not.toContain("Fraunces");
+    expect(source).not.toContain("Instrument_Sans");
   });
 
   test("uses the Clinical Studio scan effects without a reduced-motion override", async () => {

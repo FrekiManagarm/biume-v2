@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Fraunces, Instrument_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import {
   ArrowRight,
   Check,
@@ -14,13 +14,7 @@ import { webAppPath } from "../../lib/web-app-url";
 
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
 
-const v3Display = Fraunces({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-v3-display",
-});
-
-const v3Sans = Instrument_Sans({
+const v3Sans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-v3-sans",
@@ -324,7 +318,7 @@ function V3Footer() {
 
 export function V3Landing() {
   return (
-    <div className={`v3 ${v3Display.variable} ${v3Sans.variable} min-h-[100dvh] overflow-x-clip`}>
+    <div className={`v3 ${v3Sans.variable} min-h-[100dvh] overflow-x-clip`}>
       <V3Header />
       <main id="contenu" tabIndex={-1}>
         <ClinicalHero />
