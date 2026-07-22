@@ -18,6 +18,9 @@ describe("V3 Clinical Studio landing", () => {
 
     expect(css).toContain("@keyframes v3-scan");
     expect(css).toContain("@keyframes v3-reveal");
+    expect(css).toMatch(
+      /\.v3-heading-reveal\s*{[\s\S]*display:\s*block;/,
+    );
     expect(css).toContain(".v3-journey-track");
     expect(css).not.toContain("prefers-reduced-motion");
   });

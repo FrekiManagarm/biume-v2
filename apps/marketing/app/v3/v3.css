@@ -248,7 +248,7 @@
 
 .v3-heading-reveal {
   animation: v3-reveal 800ms var(--v3-ease) both;
-  display: inline;
+  display: block;
 }
 
 .v3-hero-subhead {
