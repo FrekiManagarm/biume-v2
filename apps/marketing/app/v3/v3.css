@@ -95,6 +95,7 @@
 
 .v3-nav a {
   border-bottom: 1px solid transparent;
+  min-width: 2.75rem;
 }
 
 .v3-nav a:hover {

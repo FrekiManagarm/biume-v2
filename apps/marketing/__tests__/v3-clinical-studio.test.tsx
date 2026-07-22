@@ -33,6 +33,9 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).toMatch(
       /\.v3-skip-link\s*{[\s\S]*display:\s*inline-flex;[\s\S]*min-height:\s*2\.75rem;[\s\S]*min-width:\s*2\.75rem;/,
     );
+    expect(css).toMatch(
+      /\.v3-nav a\s*{[^}]*min-width:\s*2\.75rem;/,
+    );
   });
 
   test("keeps the route private to experiments", () => {
