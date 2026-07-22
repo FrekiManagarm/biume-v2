@@ -129,7 +129,7 @@
 
 .v3-header-signup,
 .v3-primary-action {
-  color: var(--v3-paper);
+  color: var(--v3-carbon);
   background: var(--v3-lavender);
   border: 1px solid var(--v3-lavender);
   gap: 0.65rem;
@@ -141,6 +141,7 @@
   background: var(--v3-iris);
   border-color: var(--v3-iris);
   box-shadow: 0 8px 18px rgb(145 141 246 / 24%);
+  color: var(--v3-carbon);
 }
 
 .v3-secondary-action {
@@ -157,7 +158,7 @@
 
 .v3-focus-ring:focus-visible,
 .v3 a:focus-visible {
-  outline: 3px solid var(--v3-lavender);
+  outline: 3px solid var(--v3-carbon);
   outline-offset: 4px;
 }
 
@@ -411,7 +412,7 @@
 }
 
 .v3-stage-sample > span {
-  color: var(--v3-ash);
+  color: var(--v3-graphite);
 }
 
 .v3-stage-sample p {
@@ -665,6 +666,10 @@
 
 .v3-footer > a img {
   filter: grayscale(1) brightness(0) invert(1);
+}
+
+.v3-footer a:focus-visible {
+  outline-color: var(--v3-paper);
 }
 
 .v3-footer p {

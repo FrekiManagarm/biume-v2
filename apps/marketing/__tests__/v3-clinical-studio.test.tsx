@@ -83,10 +83,25 @@ describe("V3 Clinical Studio landing", () => {
 
   test("keeps lavender limited to conversion and the product atmosphere", async () => {
     const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
+    const conversionRule = css.match(
+      /\.v3-header-signup,\s*\.v3-primary-action\s*{([^}]*)}/,
+    )?.[1];
+    const conversionHoverRule = css.match(
+      /\.v3-header-signup:hover,\s*\.v3-primary-action:hover\s*{([^}]*)}/,
+    )?.[1];
+    const productBandRule = css.match(/\.v3-product-band\s*{([^}]*)}/)?.[1];
+    const lavenderRuleSelectors = [
+      ...css.matchAll(/([^{}]+)\{([^{}]*var\(--v3-lavender\)[^{}]*)}/g),
+    ].map((match) => match[1].trim());
 
-    expect(css).toMatch(/\.v3-primary-action[^}]*background:\s*var\(--v3-lavender\)/);
-    expect(css).toMatch(/\.v3-product-band[^}]*linear-gradient/);
-    expect(css).not.toContain("var(--v3-lavender);\n  color");
+    expect(conversionRule).toContain("background: var(--v3-lavender)");
+    expect(conversionRule).toContain("color: var(--v3-carbon)");
+    expect(conversionHoverRule).toContain("color: var(--v3-carbon)");
+    expect(productBandRule).toContain("linear-gradient");
+    expect(lavenderRuleSelectors).toEqual([
+      ".v3-header-signup,\n.v3-primary-action",
+      ".v3-product-band",
+    ]);
   });
 
   test("uses one geometric sans-serif family for the V3 interface", async () => {
@@ -117,6 +132,25 @@ describe("V3 Clinical Studio landing", () => {
 
     expect(skipLinkRule).toBeDefined();
     expect(skipLinkRule).not.toContain("background: var(--v3-lavender)");
+  });
+
+  test("uses contrast-safe focus and tiny-label roles", async () => {
+    const css = await Bun.file(
+      new URL("../app/v3/v3.css", import.meta.url),
+    ).text();
+    const focusRule = css.match(
+      /\.v3-focus-ring:focus-visible,\s*\.v3 a:focus-visible\s*{([^}]*)}/,
+    )?.[1];
+    const sampleLabelRule = css.match(
+      /\.v3-stage-sample > span\s*{([^}]*)}/,
+    )?.[1];
+    const footerFocusRule = css.match(
+      /\.v3-footer a:focus-visible\s*{([^}]*)}/,
+    )?.[1];
+
+    expect(focusRule).toContain("outline: 3px solid var(--v3-carbon)");
+    expect(sampleLabelRule).toContain("color: var(--v3-graphite)");
+    expect(footerFocusRule).toContain("outline-color: var(--v3-paper)");
   });
 
   test("removes retired display and animation concepts from the styles", async () => {
