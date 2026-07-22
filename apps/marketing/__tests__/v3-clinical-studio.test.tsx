@@ -52,6 +52,9 @@ describe("V3 Clinical Studio landing", () => {
     expect(workbenchEnd).toBeGreaterThan(workbenchStart);
     expect(workbenchMarkup).toContain('role="group"');
     expect(workbenchMarkup).not.toContain("<button");
+    expect(workbenchMarkup).not.toMatch(/<a(?=[\s>])/);
+    expect(workbenchMarkup).not.toContain("href=");
+    expect(workbenchMarkup).not.toContain("v3-static-affordance");
   });
 
   test("uses the reference-locked canvas, CTA and product-band roles", async () => {
@@ -68,6 +71,14 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("v3-scan");
     expect(html).toContain('class="v3-product-band"');
     expect(html).toContain("Une démonstration de votre espace de travail.");
+
+    const productEyebrowRule = css.match(
+      /\.v3-product-band \.v3-eyebrow\s*{([^}]*)}/,
+    )?.[1];
+
+    expect(productEyebrowRule).toContain("background: var(--v3-paper)");
+    expect(productEyebrowRule).toContain("color: var(--v3-carbon)");
+    expect(productEyebrowRule).not.toContain("var(--v3-lavender)");
   });
 
   test("uses one geometric sans-serif family for the V3 interface", async () => {

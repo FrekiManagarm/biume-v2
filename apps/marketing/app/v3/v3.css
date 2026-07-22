@@ -427,6 +427,15 @@
   max-width: 80.5rem;
 }
 
+.v3-product-band .v3-eyebrow {
+  background: var(--v3-paper);
+  border: 1px solid var(--v3-fog);
+  border-radius: 999px;
+  color: var(--v3-carbon);
+  padding: 0.45rem 0.65rem;
+  width: fit-content;
+}
+
 .v3-workbench .v3-eyebrow::before {
   border-color: var(--v3-carbon);
 }
