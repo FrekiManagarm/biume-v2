@@ -109,6 +109,16 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("prefers-reduced-motion");
   });
 
+  test("keeps the skip link outside the lavender conversion role", async () => {
+    const css = await Bun.file(
+      new URL("../app/v3/v3.css", import.meta.url),
+    ).text();
+    const skipLinkRule = css.match(/\.v3-skip-link\s*{([^}]*)}/)?.[1];
+
+    expect(skipLinkRule).toBeDefined();
+    expect(skipLinkRule).not.toContain("background: var(--v3-lavender)");
+  });
+
   test("removes retired display and animation concepts from the styles", async () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
