@@ -29,7 +29,14 @@ describe("V3 Clinical Studio landing", () => {
     expect(html).toContain("Préparer mon premier compte rendu");
   });
 
-  test("uses the Visitors-first canvas, CTA and product-band roles", async () => {
+  test("shows a static review state instead of a fake product action", () => {
+    const html = renderWithLandingImageConfig(<V3Page />);
+
+    expect(html).toContain("Prêt pour votre relecture");
+    expect(html).not.toContain("Relire le compte rendu");
+  });
+
+  test("uses the reference-locked canvas, CTA and product-band roles", async () => {
     const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
     const html = renderWithLandingImageConfig(<V3Page />);
 

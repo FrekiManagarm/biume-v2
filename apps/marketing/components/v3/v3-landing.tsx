@@ -199,7 +199,7 @@ function ProductWorkbench() {
           </div>
           <div className="v3-demo-footer">
             <span>Préparation en cours</span>
-            <span className="v3-static-affordance">Relire le compte rendu</span>
+            <span className="v3-demo-state">Prêt pour votre relecture</span>
           </div>
         </div>
       </div>
