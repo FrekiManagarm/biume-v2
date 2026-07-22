@@ -1,4 +1,4 @@
-# Landing V3 — Clinical Studio
+# Landing V3 — Visitors-first Blueprint
 
 ## Intention
 
@@ -8,19 +8,37 @@ Cette variante ne s’appuie ni sur `DESIGN.md` ni sur `PRODUCT.md`. Elle ne mod
 
 ## Direction créative
 
-**Clinical Studio** associe une mise en page éditoriale à des fragments d’interface clinique. La palette est volontairement restreinte : papier chaud, encre presque noire, vert acide comme signal d’action et gris technique. La typographie combine un caractère éditorial expressif pour les titres et une sans-serif compacte et nette pour le produit.
+**Visitors-first Blueprint** remplace la direction Clinical Studio. La référence principale est [Visitors](https://visitors.now/) : un canvas blanc, une grille d’ingénierie très plate, une typographie sans-serif géométrique serrée, des bordures structurelles d’un pixel et une lavande réservée aux moments de conversion. La page conserve le produit Biume et son audience ; elle ne reprend ni le contenu analytics ni les éléments de marque de Visitors.
 
-L’effet mémorable est la métaphore du scan : la page dévoile et met au point les éléments de travail du praticien. Les transitions sont volontaires et visibles ; aucune variante `prefers-reduced-motion` ne sera ajoutée, conformément à la décision validée.
+La référence secondaire est [Plausible](https://plausible.io/) pour la retenue d’un SaaS de confiance et une démonstration produit lisible. Le principe de composition reste : message centré, CTAs très nets, puis une grande surface produit qui démontre le travail réel. Aucune variante `prefers-reduced-motion` ne sera ajoutée, conformément à la décision validée.
+
+### Reference lock
+
+- **Préserver :** canvas `#ffffff`, carbone `#181925`, traits `#e8e8e8`, contrôles entièrement pill, espacement généreux, typographie sans-serif compacte, panneau produit flottant dans une bande bleu → lavande.
+- **Emprunter seulement :** la navigation-pilule et le passage hero → grand produit de Visitors ; la lisibilité calme de la démo de Plausible.
+- **Règles de rôle :** `#918df6` est réservé aux CTAs et à la bande héro ; vert, ambre, rose et bleu servent seulement aux données ou catégories Biume ; pas de lavande dans le texte courant ou les bordures.
+- **Média :** interfaces Biume construites comme données et comptes rendus, jamais comme un faux dashboard analytics ; aucune photo lifestyle.
+- **Rejeter :** papier chaud, vert acide, titres sérif, panneaux sombres, ombres fortes, et toute transposition de libellés, logos ou données Visitors.
+
+### Decision ledger
+
+| Décision | Source | Règle | Raison |
+| --- | --- | --- | --- |
+| Fond blanc + traits Fog | Visitors | surfaces plates et bordures 1 px | Crée une précision technique sans alourdir le produit |
+| Sans-serif géométrique unique | Visitors | titres serrés, même famille pour l’UI | Rend le parcours Biume plus net et opérationnel |
+| CTA lavande | Visitors | conversion uniquement | Rend l’action visible sans recolorer l’interface |
+| Bande bleu → lavande | Visitors | atmosphère derrière la démo seulement | Met la preuve produit au centre sans créer un gradient SaaS générique |
+| Démo calme et lisible | Plausible | UI comme preuve, pas décoration | Préserve la confiance nécessaire à la pratique |
 
 ## Structure de page
 
-1. **Navigation compacte** — marque, ancres de section, connexion, CTA d’inscription.
-2. **Hero / manifesto** — promesse orientée métier, CTA principal et aperçu d’une séance à relire. Une ligne lumineuse traverse l’aperçu lors de son entrée.
-3. **Parcours horizontal** — trois panneaux : note de terrain, préparation par Biume, validation humaine. Desktop : défilement horizontal guidé ; mobile : pile verticale sans perte de contenu.
-4. **Démonstration produit** — écran de travail dense avec signal vocal, texte source et compte rendu propriétaire. Les zones se synchronisent au survol ou à la progression dans la section.
-5. **Preuve de contrôle** — manifeste court et modules qui rendent visible la validation par le praticien.
-6. **Tarification et conversion** — prix, essai, bénéfices essentiels et CTA final.
-7. **Pied de page** — navigation secondaire et liens existants.
+1. **Navigation pill flottante** — marque, ancres, connexion et inscription dans un seul contrôle blanc bordé.
+2. **Hero centré** — chip de contexte, promesse orientée métier, stack de CTAs et phrase de réassurance.
+3. **Bande héro produit** — dégradé bleu → lavande réservé à cette section, contenant une grande démo Biume en surface blanche.
+4. **Parcours en trois étapes** — note, préparation, validation présentées comme modules à données, stack vertical mobile et rail horizontal desktop.
+5. **Démonstration Biume** — tableau de travail avec signal vocal, texte source et version propriétaire, traité comme la preuve produit centrale.
+6. **Contrôle, tarification et conversion** — panneaux blancs fins, métriques ou signaux de statut seulement quand ils portent du sens.
+7. **Pied de page minimal** — navigation secondaire et liens existants.
 
 ## Composants et responsabilités
 
@@ -35,11 +53,11 @@ Les composants réutilisables restent dans `apps/marketing/components/v3/`. Les 
 
 ## Interaction et animation
 
-- Entrée du hero : révélation masquée de la typographie, puis mise en place différée des panneaux produit.
-- Aperçu produit : une ligne de scan et un curseur de lecture créent la sensation d’inspection.
-- Parcours : progression pilotée par le scroll, avec cartes qui s’alignent et s’éclairent successivement.
-- Modules UI : micro-transitions sur couleur, bordure et ombre au survol, sans déplacement qui ferait bouger la mise en page.
-- Les animations ne dépendent pas de JavaScript pour préserver un premier affichage stable ; elles utilisent CSS et des attributs de données lorsque nécessaire.
+- Entrée du hero : une courte révélation typographique et la montée de la démo.
+- Bande produit : gradient atmosphérique derrière une surface Biume blanche ; aucune couleur de gradient dans les boutons ou cartes.
+- Parcours : progression horizontale desktop, pile mobile ; accentuation par bordure, couleur et ombre subtile uniquement.
+- Modules UI : transitions courtes sur couleur, trait et ombre, sans déplacement de mise en page.
+- Les animations restent CSS afin de préserver le rendu serveur et un premier affichage stable.
 
 ## Intégration et données
 
@@ -54,6 +72,7 @@ La landing emploie les routes et URLs déjà présentes : inscription, connexion
 - Les interactions clavier restent disponibles pour les liens et CTAs.
 - Aucun emoji n’est utilisé comme icône ; les icônes sont issues de Lucide.
 - La page reste lisible à 375 px, 768 px, 1024 px et 1440 px, sans défilement horizontal parasite.
+- Le rendu visuel est comparé à la reference lock Visitors-first avant livraison ; toute dérive P1 ou P2 est corrigée.
 
 ## Vérification prévue
 
