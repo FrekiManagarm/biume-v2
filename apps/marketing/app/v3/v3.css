@@ -227,7 +227,7 @@
 
 .v3 h1,
 .v3 h2 {
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
   letter-spacing: -0.065em;
@@ -330,7 +330,7 @@
 
 .v3-hero-preview > p {
   border-left: 1px solid var(--v3-line);
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-size: clamp(1.45rem, 2.4vw, 2rem);
   letter-spacing: -0.04em;
   line-height: 1.12;
@@ -413,7 +413,7 @@
 }
 
 .v3-journey-card h3 {
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-size: clamp(1.65rem, 2.7vw, 2.45rem);
   font-weight: 600;
   letter-spacing: -0.055em;
@@ -438,7 +438,7 @@
 }
 
 .v3-stage-sample p {
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-size: 1.15rem;
   letter-spacing: -0.035em;
   line-height: 1.2;
@@ -506,7 +506,7 @@
 }
 
 .v3-demo-columns article > p {
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-size: clamp(1.45rem, 2.8vw, 2.45rem);
   letter-spacing: -0.055em;
   line-height: 1.06;
@@ -602,7 +602,7 @@
 }
 
 .v3-price {
-  font-family: var(--font-v3-display), serif;
+  font-family: var(--font-v3-sans), sans-serif;
   font-size: clamp(2.5rem, 4vw, 4rem);
   font-weight: 600;
   letter-spacing: -0.065em;

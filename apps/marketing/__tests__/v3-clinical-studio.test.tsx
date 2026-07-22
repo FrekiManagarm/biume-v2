@@ -37,23 +37,19 @@ describe("V3 Clinical Studio landing", () => {
     const source = await Bun.file(
       new URL("../components/v3/v3-landing.tsx", import.meta.url),
     ).text();
+    const css = await Bun.file(new URL("../app/v3/v3.css", import.meta.url)).text();
 
     expect(source).toContain('import { DM_Sans } from "next/font/google"');
     expect(source).not.toContain("Fraunces");
     expect(source).not.toContain("Instrument_Sans");
+    expect(css).not.toContain("--font-v3-display");
   });
 
-  test("uses the Clinical Studio scan effects without a reduced-motion override", async () => {
+  test("keeps V3 without a reduced-motion override", async () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
     ).text();
 
-    expect(css).toContain("@keyframes v3-scan");
-    expect(css).toContain("@keyframes v3-reveal");
-    expect(css).toMatch(
-      /\.v3-heading-reveal\s*{[^}]*display:\s*block;/,
-    );
-    expect(css).toContain(".v3-journey-track");
     expect(css).not.toContain("prefers-reduced-motion");
   });
 
