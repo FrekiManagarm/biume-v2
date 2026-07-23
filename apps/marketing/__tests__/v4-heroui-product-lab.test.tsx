@@ -69,13 +69,13 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(globalsCss).not.toContain('@import "@heroui/styles";');
   expect(v4Css).not.toContain('@import "@heroui/styles";');
   expect(existsSync(v4CssPath)).toBeTrue();
-  expect(v4Css).toContain("--v4-surface: #ffffff;");
-  expect(v4Css).toContain("--v4-accent-soft: #e5f4ed;");
-  expect(modalPortalTokens).toContain("--v4-surface: #ffffff;");
-  expect(modalPortalTokens).toContain("--v4-ink: #1a2621;");
-  expect(modalPortalTokens).toContain("--v4-muted: #64716b;");
-  expect(modalPortalTokens).toContain("--v4-line: #dbe2de;");
-  expect(modalPortalTokens).toContain("--v4-accent: #1f8a62;");
+  expect(v4Css).toContain("--v4-glass: rgb(14 25 43 / 72%);");
+  expect(v4Css).toContain("--v4-accent-soft: rgb(89 214 160 / 16%);");
+  expect(modalPortalTokens).toContain("--v4-glass: rgb(14 25 43 / 72%);");
+  expect(modalPortalTokens).toContain("--v4-ink: #f3f8f6;");
+  expect(modalPortalTokens).toContain("--v4-muted: #aab8c9;");
+  expect(modalPortalTokens).toContain("--v4-line: rgb(206 228 255 / 20%);");
+  expect(modalPortalTokens).toContain("--v4-accent: #59d6a0;");
   expect(sourceFilesReferencingHeroUIStyles).toEqual([]);
 });
 
@@ -204,6 +204,30 @@ test("opens a V4 FAQ answer from its accessible HeroUI trigger", async () => {
   ).not.toBeNull();
 });
 
+test("keeps the V4 dark product-glass visual contract", async () => {
+  const v4Css = await Bun.file(
+    new URL("../app/v4/v4.css", import.meta.url),
+  ).text();
+  const modalPortalTokens =
+    v4Css.match(/\.v4-console-modal-backdrop\s*\{[^}]*\}/)?.[0] ?? "";
+
+  expect(v4Css).toContain("--v4-canvas: #070b14;");
+  expect(v4Css).toContain("--v4-glass: rgb(14 25 43 / 72%);");
+  expect(v4Css).toContain("--v4-glass-strong: rgb(11 21 37 / 88%);");
+  expect(v4Css).toContain("--v4-accent: #59d6a0;");
+  expect(v4Css).toContain(".v4::before");
+  expect(v4Css).toContain(".v4::after");
+  expect(v4Css).toContain("backdrop-filter: blur(18px);");
+  expect(v4Css).toContain(
+    "box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%)",
+  );
+  expect(v4Css).toContain("@media (max-width: 767px)");
+  expect(modalPortalTokens).toContain("--v4-glass: rgb(14 25 43 / 72%);");
+  expect(modalPortalTokens).toContain("--v4-ink: #f3f8f6;");
+  expect(v4Css).not.toContain("@heroui/styles");
+  expect(v4Css).not.toContain("prefers-reduced-motion");
+});
+
 test("keeps V4 distinct from the Visitors-first V3 grammar", async () => {
   const [v4Source, v4Css] = await Promise.all([
     Bun.file(
@@ -214,7 +238,7 @@ test("keeps V4 distinct from the Visitors-first V3 grammar", async () => {
 
   expect(v4Source).toContain("Accordion");
   expect(v4Source).toContain("V4SessionConsole");
-  expect(v4Css).toContain("--v4-accent: #1f8a62");
+  expect(v4Css).toContain("--v4-accent: #59d6a0");
   expect(v4Css).toContain(
     "grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr)",
   );
