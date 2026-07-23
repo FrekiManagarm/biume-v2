@@ -334,6 +334,10 @@
 }
 
 .v4-console-tabs-list-container {
+  overflow: visible;
+}
+
+.v4-console-tabs-list-container > [data-slot="scroll-shadow"] {
   -webkit-overflow-scrolling: touch;
   overflow-x: auto;
   overflow-y: hidden;

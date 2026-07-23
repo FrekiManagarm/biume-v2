@@ -237,8 +237,13 @@ test("keeps the V4 console tabs horizontally reachable on narrow screens", async
     "";
   const tabList =
     v4Css.match(/\.v4-console-tabs-list\s*\{[^}]*\}/)?.[0] ?? "";
+  const scrollSurface =
+    v4Css.match(
+      /\.v4-console-tabs-list-container\s*>\s*\[data-slot="scroll-shadow"\]\s*\{[^}]*\}/,
+    )?.[0] ?? "";
 
-  expect(tabListContainer).toContain("overflow-x: auto;");
+  expect(tabListContainer).not.toContain("overflow-x: auto;");
+  expect(scrollSurface).toContain("overflow-x: auto;");
   expect(tabList).toContain("white-space: nowrap;");
 });
 
