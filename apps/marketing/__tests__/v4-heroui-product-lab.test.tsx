@@ -106,12 +106,20 @@ test("moves through the three review stages with keyboard-accessible tabs", asyn
   const consoleUi = within(container);
 
   const preparation = consoleUi.getByRole("tab", { name: "Préparation" });
-  expect(
-    consoleUi.getByRole("tab", { name: "Consultation" }),
-  ).not.toBeNull();
+  const consultation = consoleUi.getByRole("tab", { name: "Consultation" });
   expect(
     consoleUi.getByRole("tab", { name: "Compte rendu" }),
   ).not.toBeNull();
+  expect(preparation.getAttribute("aria-selected")).toBe("true");
+
+  await act(async () => {
+    fireEvent.click(consultation);
+    await Promise.resolve();
+  });
+
+  expect(consultation.getAttribute("aria-selected")).toBe("true");
+  expect(consoleUi.getByText("Votre observation, sans détour.")).not.toBeNull();
+
   await act(async () => {
     fireEvent.click(preparation);
     await Promise.resolve();
