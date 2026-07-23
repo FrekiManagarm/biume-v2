@@ -66,6 +66,8 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(globalsCss).not.toContain('@import "@heroui/styles";');
   expect(v4Css).not.toContain('@import "@heroui/styles";');
   expect(existsSync(v4CssPath)).toBeTrue();
+  expect(v4Css).toContain("--v4-surface: #ffffff;");
+  expect(v4Css).toContain("--v4-accent-soft: #e5f4ed;");
   expect(sourceFilesReferencingHeroUIStyles).toEqual([]);
 });
 
@@ -76,6 +78,10 @@ test("V4 Product Lab exposes the private practitioner landing shell", () => {
   const content = textOnly(html);
 
   expect(metadata.robots).toEqual({ index: false, follow: false });
+  expect(metadata.title).toBe("Biume — Préparez, relisez, décidez");
+  expect(metadata.description).toBe(
+    "Biume aide les ostéopathes animaliers à préparer, relire et décider de leurs comptes rendus de séance avant de les partager.",
+  );
   expect(content).toContain("Vos notes restent le point de départ.");
   expect(content).toContain("Préparez. Relisez. Décidez.");
   expect(html).toContain('data-v4-section="hero"');

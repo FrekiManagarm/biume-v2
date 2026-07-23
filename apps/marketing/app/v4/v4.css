@@ -1,10 +1,11 @@
 .v4 {
   --v4-canvas: #f4f5f5;
-  --v4-surface: #fff;
+  --v4-surface: #ffffff;
   --v4-ink: #1a2621;
   --v4-muted: #64716b;
   --v4-line: #dbe2de;
   --v4-accent: #1f8a62;
+  --v4-accent-soft: #e5f4ed;
   background: var(--v4-canvas);
   color: var(--v4-ink);
   isolation: isolate;
