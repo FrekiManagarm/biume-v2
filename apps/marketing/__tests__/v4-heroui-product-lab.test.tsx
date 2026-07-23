@@ -228,6 +228,20 @@ test("keeps the V4 dark product-glass visual contract", async () => {
   expect(v4Css).not.toContain("prefers-reduced-motion");
 });
 
+test("keeps the V4 console tabs horizontally reachable on narrow screens", async () => {
+  const v4Css = await Bun.file(
+    new URL("../app/v4/v4.css", import.meta.url),
+  ).text();
+  const tabListContainer =
+    v4Css.match(/\.v4-console-tabs-list-container\s*\{[^}]*\}/)?.[0] ??
+    "";
+  const tabList =
+    v4Css.match(/\.v4-console-tabs-list\s*\{[^}]*\}/)?.[0] ?? "";
+
+  expect(tabListContainer).toContain("overflow-x: auto;");
+  expect(tabList).toContain("white-space: nowrap;");
+});
+
 test("keeps V4 distinct from the Visitors-first V3 grammar", async () => {
   const [v4Source, v4Css] = await Promise.all([
     Bun.file(

@@ -334,13 +334,18 @@
 }
 
 .v4-console-tabs-list-container {
-  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .v4-console-tabs-list {
   border-bottom: 1px solid var(--v4-line);
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.25rem;
+  white-space: nowrap;
+  width: max-content;
 }
 
 .v4-console-tab {
