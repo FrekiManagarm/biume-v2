@@ -30,8 +30,9 @@
 
 .v4-header,
 .v4-hero,
-.v4-journey,
+.v4-proof-grid,
 .v4-pricing,
+.v4-faq,
 .v4-close,
 .v4-footer {
   padding-inline: clamp(1.25rem, 4vw, 4rem);
@@ -212,7 +213,8 @@
 }
 
 .v4-hero-description,
-.v4-journey > p,
+.v4-proof-card > p:last-child,
+.v4-faq-body,
 .v4-price-note,
 .v4-footer p {
   color: var(--v4-muted);
@@ -437,8 +439,9 @@
   justify-content: flex-end;
 }
 
-.v4-journey,
+.v4-proof-grid,
 .v4-pricing,
+.v4-faq,
 .v4-close {
   border-top: 1px solid var(--v4-line);
   margin: 0 auto;
@@ -447,22 +450,87 @@
   padding-top: clamp(4rem, 8vw, 7rem);
 }
 
-.v4-journey {
+.v4-proof-grid {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.7fr);
+  gap: 1rem;
+  grid-template-areas:
+    "intro owner"
+    "source owner"
+    "source decision";
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
 }
 
-.v4-journey > p {
-  font-size: 1.08rem;
-  margin: 0;
+.v4-proof-intro {
+  align-self: end;
+  grid-area: intro;
+  padding: clamp(0.5rem, 2vw, 1.5rem) 0;
+}
+
+.v4-proof-card {
+  background: var(--v4-surface);
+  border: 1px solid var(--v4-line);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 14rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.v4-proof-card-source {
+  background: var(--v4-ink);
+  border-color: var(--v4-ink);
+  color: var(--v4-surface);
+  grid-area: source;
+  min-height: 29rem;
+}
+
+.v4-proof-card-owner {
+  grid-area: owner;
+}
+
+.v4-proof-card-decision {
+  background: var(--v4-accent-soft);
+  border-color: transparent;
+  grid-area: decision;
+}
+
+.v4-proof-index {
+  color: var(--v4-accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin-bottom: auto;
+}
+
+.v4-proof-card-source .v4-proof-index {
+  color: #8bd4b2;
+}
+
+.v4-proof-card h3 {
+  font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0 0 0.8rem;
+}
+
+.v4-proof-card > p:last-child {
+  margin-bottom: 0;
+  max-width: 30rem;
+}
+
+.v4-proof-card-source > p:last-child {
+  color: var(--v4-line);
 }
 
 .v4-pricing {
-  align-items: start;
   display: grid;
   gap: 2rem;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.75fr);
+}
+
+.v4-pricing > div,
+.v4-faq-intro {
+  max-width: 42rem;
 }
 
 .v4-pricing-card {
@@ -507,6 +575,64 @@
   width: 0.45rem;
 }
 
+.v4-faq {
+  display: grid;
+  gap: clamp(2.5rem, 7vw, 7rem);
+  grid-template-columns: minmax(0, 0.85fr) minmax(22rem, 1.15fr);
+}
+
+.v4-faq-list {
+  border-top: 1px solid var(--v4-line);
+}
+
+.v4-faq-item {
+  border-bottom: 1px solid var(--v4-line);
+}
+
+.v4-faq-heading {
+  margin: 0;
+}
+
+.v4-faq-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--v4-ink);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 750;
+  gap: 1rem;
+  justify-content: space-between;
+  min-height: 3.5rem;
+  padding: 1rem 0;
+  text-align: left;
+  width: 100%;
+}
+
+.v4-faq-trigger:focus-visible {
+  outline: 3px solid var(--v4-accent);
+  outline-offset: 3px;
+}
+
+.v4-faq-indicator {
+  color: var(--v4-accent);
+  flex: none;
+  height: 1.15rem;
+  transition: transform 160ms ease;
+  width: 1.15rem;
+}
+
+.v4-faq-item[data-expanded="true"] .v4-faq-indicator {
+  transform: rotate(45deg);
+}
+
+.v4-faq-body {
+  max-width: 38rem;
+  padding: 0 2.25rem 1.25rem 0;
+}
+
 .v4-close {
   align-items: end;
   display: flex;
@@ -548,10 +674,23 @@
   }
 
   .v4-hero-grid,
-  .v4-journey,
+  .v4-proof-grid,
   .v4-pricing,
+  .v4-faq,
   .v4-footer {
     grid-template-columns: 1fr;
+  }
+
+  .v4-proof-grid {
+    grid-template-areas:
+      "intro"
+      "source"
+      "owner"
+      "decision";
+  }
+
+  .v4-proof-card-source {
+    min-height: 20rem;
   }
 
   .v4-console {

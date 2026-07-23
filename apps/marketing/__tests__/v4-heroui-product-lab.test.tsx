@@ -80,6 +80,7 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
 });
 
 const { default: V4Page, metadata } = await import("../app/v4/page");
+const { V4Landing } = await import("../components/v4/v4-landing");
 const { V4SessionConsole } = await import(
   "../components/v4/v4-session-console"
 );
@@ -160,4 +161,60 @@ test("opens and dismisses the read-only owner report preview", async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
   expect(within(document.body).queryByRole("dialog")).toBeNull();
+});
+
+test("keeps the proof grid, plan inclusions and HeroUI FAQ in the rendered page", () => {
+  const html = renderWithLandingImageConfig(<V4Page />);
+  const content = textOnly(html);
+
+  expect(content).toContain("Votre note reste la source.");
+  expect(content).toContain("Rien ne part sans votre décision.");
+  expect(content).toContain("Suivi et rappel après séance");
+  expect(content).toContain("Questions fréquentes");
+  expect(content).toContain(
+    "Est-ce que Biume envoie le compte rendu à ma place ?",
+  );
+});
+
+test("opens a V4 FAQ answer from its accessible HeroUI trigger", async () => {
+  const { container } = render(<V4Landing />);
+  const faq = within(container).getByRole("region", {
+    name: "Questions fréquentes",
+  });
+  const trigger = within(faq).getByRole("button", {
+    name: "Est-ce que Biume envoie le compte rendu à ma place ?",
+  });
+
+  expect(trigger.getAttribute("aria-expanded")).toBe("false");
+
+  await act(async () => {
+    fireEvent.click(trigger);
+    await Promise.resolve();
+  });
+
+  expect(trigger.getAttribute("aria-expanded")).toBe("true");
+  expect(
+    within(faq).getByText(
+      "Non. Biume prépare une base et vous choisissez si, quand et dans quelle version le compte rendu est partagé.",
+    ),
+  ).not.toBeNull();
+});
+
+test("keeps V4 distinct from the Visitors-first V3 grammar", async () => {
+  const [v4Source, v4Css] = await Promise.all([
+    Bun.file(
+      new URL("../components/v4/v4-landing.tsx", import.meta.url),
+    ).text(),
+    Bun.file(new URL("../app/v4/v4.css", import.meta.url)).text(),
+  ]);
+
+  expect(v4Source).toContain("Accordion");
+  expect(v4Source).toContain("V4SessionConsole");
+  expect(v4Css).toContain("--v4-accent: #1f8a62");
+  expect(v4Css).toContain(
+    "grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr)",
+  );
+  expect(v4Css).not.toContain("--v3-lavender");
+  expect(v4Css).not.toContain("prefers-reduced-motion");
+  expect(v4Css).not.toContain("v3-product-band");
 });

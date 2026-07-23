@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Accordion } from "@heroui/react";
 
 import { webAppPath } from "../../lib/web-app-url";
 
@@ -79,17 +80,32 @@ function V4Hero() {
   );
 }
 
-function V4Journey() {
+function V4ProofGrid() {
   return (
-    <section id="parcours" aria-labelledby="v4-journey-title" className="v4-journey">
-      <div>
-        <p className="v4-eyebrow">Un parcours concret</p>
-        <h2 id="v4-journey-title">De vos notes à une décision relue.</h2>
+    <section
+      id="parcours"
+      aria-labelledby="v4-proof-title"
+      className="v4-proof-grid"
+    >
+      <div className="v4-proof-intro">
+        <p className="v4-eyebrow">Votre méthode, rendue lisible</p>
+        <h2 id="v4-proof-title">Votre note reste la source.</h2>
       </div>
-      <p>
-        Après la séance, vous conservez vos observations, préparez un compte
-        rendu clair et choisissez vous-même ce qui est prêt à être partagé.
-      </p>
+      <article className="v4-proof-card v4-proof-card-source">
+        <p className="v4-proof-index">01</p>
+        <h3>Observer</h3>
+        <p>Vous posez les éléments de séance pendant qu’ils sont encore précis.</p>
+      </article>
+      <article className="v4-proof-card v4-proof-card-owner">
+        <p className="v4-proof-index">02</p>
+        <h3>Préparer</h3>
+        <p>Le propriétaire reçoit une version claire, que vous pouvez relire.</p>
+      </article>
+      <article className="v4-proof-card v4-proof-card-decision">
+        <p className="v4-proof-index">03</p>
+        <h3>Décider</h3>
+        <p>Rien ne part sans votre décision.</p>
+      </article>
     </section>
   );
 }
@@ -122,6 +138,64 @@ function V4Pricing() {
           Choisir Biume
         </a>
       </article>
+    </section>
+  );
+}
+
+const faqItems = [
+  {
+    id: "validation",
+    question: "Est-ce que Biume envoie le compte rendu à ma place ?",
+    answer:
+      "Non. Biume prépare une base et vous choisissez si, quand et dans quelle version le compte rendu est partagé.",
+  },
+  {
+    id: "modification",
+    question: "Chaque texte peut-il être modifié avant le partage ?",
+    answer:
+      "Oui. Vous pouvez modifier chaque champ avant de déclencher vous-même le téléchargement ou l’envoi.",
+  },
+  {
+    id: "owner",
+    question: "Que reçoit le propriétaire ?",
+    answer:
+      "Le propriétaire reçoit le PDF professionnel joint à l’email que vous choisissez d’envoyer.",
+  },
+  {
+    id: "billing",
+    question: "Comment arrêter l’abonnement ?",
+    answer:
+      "Vous pouvez demander l’annulation depuis les paramètres de facturation. Elle prend effet à la fin de la période en cours.",
+  },
+] as const;
+
+function V4Faq() {
+  return (
+    <section
+      aria-labelledby="v4-faq-kicker"
+      className="v4-faq"
+    >
+      <div className="v4-faq-intro">
+        <p className="v4-eyebrow" id="v4-faq-kicker">
+          Questions fréquentes
+        </p>
+        <h2 id="v4-faq-title">Ce qui reste entre vos mains.</h2>
+      </div>
+      <Accordion className="v4-faq-list">
+        {faqItems.map((item) => (
+          <Accordion.Item className="v4-faq-item" id={item.id} key={item.id}>
+            <Accordion.Heading className="v4-faq-heading">
+              <Accordion.Trigger className="v4-faq-trigger">
+                <span>{item.question}</span>
+                <Accordion.Indicator className="v4-faq-indicator" />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel className="v4-faq-panel">
+              <Accordion.Body className="v4-faq-body">{item.answer}</Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
     </section>
   );
 }
@@ -180,8 +254,9 @@ export function V4Landing() {
       <V4Header />
       <main id="contenu" tabIndex={-1}>
         <V4Hero />
-        <V4Journey />
+        <V4ProofGrid />
         <V4Pricing />
+        <V4Faq />
         <V4Close />
       </main>
       <V4Footer />
