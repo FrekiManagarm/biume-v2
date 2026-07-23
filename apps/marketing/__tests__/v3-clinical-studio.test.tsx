@@ -101,6 +101,7 @@ describe("V3 Clinical Studio landing", () => {
     expect(lavenderRuleSelectors).toEqual([
       ".v3-header-signup,\n.v3-primary-action",
       ".v3-product-band",
+      ".v3-product-band .v3-demo-trace i",
     ]);
   });
 

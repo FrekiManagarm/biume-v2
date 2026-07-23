@@ -81,9 +81,6 @@ function V3Header() {
           <a className={focusClassName} href="#fonctionnement">
             Fonctionnement
           </a>
-          <a className={focusClassName} href="#controle">
-            Votre contrôle
-          </a>
           <a className={focusClassName} href="#tarifs">
             Tarifs
           </a>
@@ -109,7 +106,6 @@ function ClinicalHero() {
           <span>NOUVEAU</span>
           <span>Le compte rendu reste sous votre contrôle.</span>
         </p>
-        <p className="v3-eyebrow">Pour les ostéopathes animaliers indépendants</p>
         <h1 id="v3-hero-title">
           <span>Vos notes gardent votre regard.</span>
         </h1>
@@ -131,6 +127,12 @@ function ClinicalHero() {
             Voir le parcours
           </a>
         </div>
+        <p className="v3-hero-signals" aria-label="Repères Biume">
+          <span>Notes de séance</span>
+          <span>Compte rendu clair</span>
+          <span>Validation manuelle</span>
+          <span>Pour les praticiens indépendants</span>
+        </p>
       </div>
     </section>
   );
@@ -172,9 +174,14 @@ function ProductWorkbench() {
       className="v3-product-band"
     >
       <div className="v3-workbench">
-        <div className="v3-section-intro">
-          <p className="v3-eyebrow">Dans Biume</p>
-          <h2 id="v3-workbench-title"><span>Une démonstration de votre espace de travail.</span></h2>
+        <h2 className="v3-sr-only" id="v3-workbench-title">
+          Une démonstration de votre espace de travail.
+        </h2>
+        <div className="v3-product-tabs" aria-label="Aperçu de l’application">
+          <span className="v3-product-tab-active">Aujourd’hui</span>
+          <span>Séances</span>
+          <span>Comptes rendus</span>
+          <span>Suivi</span>
         </div>
         <div
           aria-label="Démonstration statique du produit"
@@ -182,8 +189,14 @@ function ProductWorkbench() {
           role="group"
         >
           <div className="v3-demo-toolbar">
-            <span>Séance de Luma</span>
+            <span className="v3-demo-product-mark">Biume</span>
+            <span className="v3-demo-date">Aujourd’hui</span>
             <span className="v3-static-status">Brouillon</span>
+          </div>
+          <div className="v3-demo-metrics" aria-label="Résumé de la journée">
+            <div><span>À relire</span><strong>1 séance</strong></div>
+            <div><span>En préparation</span><strong>2 comptes rendus</strong></div>
+            <div><span>Prochain rendez-vous</span><strong>16:30 · Luma</strong></div>
           </div>
           <div className="v3-demo-columns">
             <article>
@@ -192,6 +205,9 @@ function ProductWorkbench() {
                 <h3>Votre note</h3>
               </div>
               <p>Mobilité plus libre à droite. Marche douce aujourd’hui.</p>
+              <div className="v3-demo-trace" aria-hidden="true">
+                <i /><i /><i /><i /><i /><i /><i /><i /><i />
+              </div>
             </article>
             <article>
               <div className="v3-demo-label">
@@ -199,6 +215,9 @@ function ProductWorkbench() {
                 <h3>Version propriétaire</h3>
               </div>
               <p>Luma a retrouvé plus de liberté dans ses mouvements.</p>
+              <div className="v3-demo-checklist" aria-hidden="true">
+                <span /><span /><span />
+              </div>
             </article>
           </div>
           <div className="v3-demo-footer">
@@ -322,8 +341,8 @@ export function V3Landing() {
       <V3Header />
       <main id="contenu" tabIndex={-1}>
         <ClinicalHero />
-        <CareJourney />
         <ProductWorkbench />
+        <CareJourney />
         <ControlProof />
         <PricingPanel />
         <V3Close />
