@@ -2,6 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "bun:test";
 
+import { webAppPath } from "../lib/web-app-url";
+import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
+
 const marketingRoot = join(import.meta.dir, "..");
 const dependencySections = [
   "dependencies",
@@ -62,6 +65,26 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(prohibitedDirectDependencies).toEqual([]);
   expect(globalsCss).not.toContain('@import "@heroui/styles";');
   expect(v4Css).not.toContain('@import "@heroui/styles";');
-  expect(existsSync(v4CssPath)).toBeFalse();
+  expect(existsSync(v4CssPath)).toBeTrue();
   expect(sourceFilesReferencingHeroUIStyles).toEqual([]);
+});
+
+const { default: V4Page, metadata } = await import("../app/v4/page");
+
+test("V4 Product Lab exposes the private practitioner landing shell", () => {
+  const html = renderWithLandingImageConfig(<V4Page />);
+  const content = textOnly(html);
+
+  expect(metadata.robots).toEqual({ index: false, follow: false });
+  expect(content).toContain("Vos notes restent le point de départ.");
+  expect(content).toContain("Préparez. Relisez. Décidez.");
+  expect(html).toContain('data-v4-section="hero"');
+  expect(html).toContain('data-v4-section="pricing"');
+  expect(html).toContain(`href="${webAppPath("/signin")}"`);
+  expect(html).toContain(`href="${webAppPath("/signup")}"`);
+  expect(html).toContain('data-conversion="v4-hero-signup"');
+  expect(html).toContain('data-conversion="v4-pricing-signup"');
+  expect(content).toContain("24,99 € / mois");
+  expect(content).not.toContain("diagnostic");
+  expect(content).not.toContain("guéri");
 });
