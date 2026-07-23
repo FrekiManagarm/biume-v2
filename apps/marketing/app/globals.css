@@ -1,4 +1,5 @@
 @import "@biume/ui/globals.css";
+@import "@heroui/styles";
 @source "../**/*.{ts,tsx,mdx}";
 @source "../../../packages/ui/src/components/{button,dropdown-menu,tooltip}.tsx";
 
