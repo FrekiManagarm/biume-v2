@@ -8,9 +8,8 @@ const globalsSource = await Bun.file(
 ).text();
 
 describe("prototype motion", () => {
-  test("does not disable immersive motion for reduced-motion preferences", () => {
+  test("keeps prototype motion isolated from globals", () => {
     expect(motionSource).not.toContain("useReducedMotion");
-    expect(motionSource).not.toContain("prefers-reduced-motion");
     expect(globalsSource).not.toContain(".prototype-action");
   });
 });

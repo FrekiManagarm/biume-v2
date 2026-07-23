@@ -214,7 +214,7 @@ La démonstration signature relie visuellement trois objets : notes du praticien
 - **Do** conserver exactement le violet `#6B5AC8`, le bleu `#5D9BB8` et le vert `#2E9866` dans leurs rôles sémantiques.
 - **Do** montrer des transformations produit fidèles comme principale preuve tant qu'aucun témoignage ou chiffre validé n'existe.
 - **Do** alterner les compositions et les densités pour créer un récit, avec une idée dominante par séquence.
-- **Do** garantir WCAG 2.2 AA, une navigation clavier complète et un contenu entièrement lisible sous `prefers-reduced-motion`.
+- **Do** garantir WCAG 2.2 AA, une navigation clavier complète et un contenu lisible avant, pendant et après les animations.
 - **Do** conserver les cartes à `16px` maximum et les médias dominants à `24px` maximum.
 
 ### Don't:

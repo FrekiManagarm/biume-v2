@@ -125,14 +125,6 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("--font-v3-display");
   });
 
-  test("keeps the reference implementation without a reduced-motion override", async () => {
-    const css = await Bun.file(
-      new URL("../app/v3/v3.css", import.meta.url),
-    ).text();
-
-    expect(css).not.toContain("prefers-reduced-motion");
-  });
-
   test("keeps the skip link outside the lavender conversion role", async () => {
     const css = await Bun.file(
       new URL("../app/v3/v3.css", import.meta.url),
@@ -172,7 +164,6 @@ describe("V3 Clinical Studio landing", () => {
     expect(css).not.toContain("--font-v3-display");
     expect(css).not.toContain("v3-scan");
     expect(css).not.toContain("v3-heading-reveal");
-    expect(css).not.toContain("prefers-reduced-motion");
   });
 
   test("keeps V3 brand and skip links as 44px touch targets", async () => {

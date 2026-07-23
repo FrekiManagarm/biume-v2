@@ -110,9 +110,6 @@ describe("follow-up continuity", () => {
     expect(css).toContain(
       '[data-sequence-active="true"] .atelier-sequence-step',
     );
-    expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.atelier-sequence-step[\s\S]*animation:\s*none/,
-    );
     expect(continuityHtml).not.toMatch(/opacity(?:-|:)0(?:\D|$)/);
   });
 

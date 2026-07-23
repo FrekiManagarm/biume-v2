@@ -4,22 +4,22 @@ import { Button, Chip, Modal, Tabs } from "@heroui/react";
 
 const stages = [
   {
-    id: "preparation",
-    label: "Préparation",
-    title: "Une version claire attend votre relecture.",
-    body: "Luma a retrouvé plus de liberté dans ses mouvements.",
+    id: "notes",
+    label: "Notes",
+    title: "Votre observation reste intacte.",
+    body: "Restriction thoracique gauche. Mobilité améliorée après travail manuel.",
   },
   {
-    id: "consultation",
-    label: "Consultation",
-    title: "Votre observation, sans détour.",
-    body: "Mobilité plus libre à droite. Marche douce aujourd’hui.",
+    id: "relecture",
+    label: "Relecture",
+    title: "La version propriétaire attend votre accord.",
+    body: "La mobilité du thorax a été travaillée pendant la séance.",
   },
   {
-    id: "report",
-    label: "Compte rendu",
-    title: "La décision vous appartient.",
-    body: "Rien ne part sans votre accord explicite.",
+    id: "suivi",
+    label: "Suivi",
+    title: "Le rappel est prêt, pas automatique.",
+    body: "Conseiller une activité calme pendant 48 heures, puis proposer un point de suivi.",
   },
 ] as const;
 
@@ -29,12 +29,12 @@ export function V4SessionConsole() {
       <div className="v4-console-header">
         <div>
           <p className="v4-console-kicker">Séance de Luma</p>
-          <p className="v4-console-date">Aujourd’hui · 14:30</p>
+          <p className="v4-console-date">Aujourd'hui · 14:30</p>
         </div>
-        <Chip className="v4-console-chip">Préparation en cours</Chip>
+        <Chip className="v4-console-chip">À valider</Chip>
       </div>
 
-      <Tabs className="v4-console-tabs" defaultSelectedKey="preparation">
+      <Tabs className="v4-console-tabs" defaultSelectedKey="notes">
         <Tabs.ListContainer className="v4-console-tabs-list-container">
           <Tabs.List aria-label="Étapes d’une séance" className="v4-console-tabs-list">
             {stages.map((stage) => (
@@ -50,9 +50,19 @@ export function V4SessionConsole() {
             <p className="v4-console-panel-label">{stage.label}</p>
             <h2>{stage.title}</h2>
             <p>{stage.body}</p>
+            <div className="v4-console-fields" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
           </Tabs.Panel>
         ))}
       </Tabs>
+
+      <div className="v4-console-status">
+        <span>Document lisible</span>
+        <span>Envoi manuel</span>
+      </div>
 
       <Modal>
         <Modal.Trigger className="v4-console-preview-trigger">
@@ -71,10 +81,11 @@ export function V4SessionConsole() {
                 </Modal.Heading>
               </Modal.Header>
               <Modal.Body className="v4-console-modal-body">
-                <p>Luma a retrouvé plus de liberté dans ses mouvements.</p>
+                <p>La mobilité du thorax a été travaillée pendant la séance.</p>
                 <p>
-                  Vous pourrez relire et adapter cette version avant tout
-                  partage.
+                  Une activité calme est recommandée pendant les prochaines
+                  48 heures. Vous pouvez relire et adapter cette version avant
+                  tout partage.
                 </p>
               </Modal.Body>
               <Modal.Footer className="v4-console-modal-footer">

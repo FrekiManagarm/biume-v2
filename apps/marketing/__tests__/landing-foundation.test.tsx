@@ -30,7 +30,7 @@ describe("atelier precision landing foundation", () => {
     expect(page).not.toContain("carnet-theme");
   });
 
-  test("defines semantic colors, restrained radii and reduced motion", async () => {
+  test("defines semantic colors, restrained radii and reveal motion", async () => {
     const css = await Bun.file(new URL("../app/globals.css", import.meta.url)).text();
 
     expect(css).toMatch(/--atelier-violet:\s*#6b5ac8;/i);
@@ -40,10 +40,6 @@ describe("atelier precision landing foundation", () => {
     expect(css).toMatch(/--atelier-media-radius:\s*1\.5rem;/);
     expect(css).toMatch(/\.atelier-reveal\s*{[^}]*animation:/s);
     expect(css).toMatch(/@keyframes atelier-reveal[\s\S]*opacity:\s*0\.[1-9]/);
-    expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.atelier-reveal\s*{[^}]*animation:\s*none;/,
-    );
-    expect(css).toContain("prefers-reduced-motion: reduce");
     expect(css).not.toContain("background-clip: text");
     expect(css).not.toContain("repeating-linear-gradient");
   });

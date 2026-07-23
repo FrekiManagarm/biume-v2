@@ -145,32 +145,6 @@ details[open] [data-faq-indicator] {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .landing-theme details::details-content,
-  [data-faq-indicator] {
-    transition: none;
-  }
-
-  .landing-reveal,
-  .landing-reassurance,
-  .landing-reassurance-item {
-    animation: none;
-  }
-
-  .landing-button {
-    transition: none;
-  }
-
-  .landing-button:hover,
-  .landing-button:active {
-    transform: none;
-  }
-
-  html:focus-within {
-    scroll-behavior: auto;
-  }
-}
-
 .transit-action {
   transition:
     transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -333,32 +307,5 @@ details[open] [data-faq-indicator] {
   .atelier-theme details[open]::details-content {
     block-size: auto;
     opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .atelier-action {
-    transition: none;
-  }
-
-  .atelier-action:hover,
-  .atelier-action:active {
-    transform: none;
-  }
-
-  .atelier-reveal {
-    animation: none;
-  }
-
-  [data-sequence-active="true"] .atelier-sequence-step {
-    animation: none;
-  }
-
-  .atelier-theme details::details-content {
-    transition: none;
-  }
-
-  html:focus-within {
-    scroll-behavior: auto;
   }
 }

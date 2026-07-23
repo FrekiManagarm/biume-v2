@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Accordion } from "@heroui/react";
 
 import { webAppPath } from "../../lib/web-app-url";
@@ -8,10 +9,38 @@ import { V4SessionConsole } from "./v4-session-console";
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
 
 const pricingInclusions = [
+  "Essai gratuit de 15 jours sans carte bancaire",
   "Compte rendu propriétaire structuré",
   "Reformulation et validation passage par passage",
   "Export PDF professionnel",
   "Suivi et rappel après séance",
+] as const;
+
+const journeyChapters = [
+  {
+    id: "terrain",
+    marker: "Carnet",
+    title: "La séance garde sa texture.",
+    body: "Vous partez de vos mots, de vos zones observées, de ce qui mérite d'être transmis et de ce qui doit rester dans votre lecture métier.",
+    image: "/assets/images/landing/atelier-practice.webp",
+    alt: "Carnet et mains d'une praticienne pendant une séance d'ostéopathie animale",
+  },
+  {
+    id: "atelier",
+    marker: "Atelier",
+    title: "Biume met de l'ordre sans prendre la main.",
+    body: "La note devient un compte rendu lisible, découpé en passages courts. Chaque proposition reste modifiable avant toute exportation.",
+    image: "/assets/images/landing/soft-machine-hero.png",
+    alt: "Interface Biume illustrant la transformation d'une note de séance",
+  },
+  {
+    id: "proprietaire",
+    marker: "Lien",
+    title: "Le propriétaire reçoit une suite claire.",
+    body: "Le PDF et le message de suivi gardent le ton professionnel, les conseils utiles et le rappel que vous choisissez d'envoyer.",
+    image: "/assets/images/landing/atelier-owner.webp",
+    alt: "Propriétaire consultant un compte rendu après une séance animale",
+  },
 ] as const;
 
 function V4Header() {
@@ -27,6 +56,9 @@ function V4Header() {
         <nav aria-label="Navigation principale" className="v4-nav">
           <a className="v4-focus-ring" href="#parcours">
             Parcours
+          </a>
+          <a className="v4-focus-ring" href="#controle">
+            Contrôle
           </a>
           <a className="v4-focus-ring" href="#tarifs">
             Tarifs
@@ -54,12 +86,13 @@ function V4Hero() {
     >
       <div className="v4-hero-grid">
         <div className="v4-hero-copy">
-          <p className="v4-eyebrow">Le compte rendu, à votre rythme</p>
-          <h1 id="v4-hero-title">Vos notes restent le point de départ.</h1>
+          <p className="v4-kicker">Landing v4 · atelier HeroUI</p>
+          <h1 id="v4-hero-title">De vos notes au propriétaire, sans perdre votre regard métier.</h1>
           <p className="v4-hero-line">Préparez. Relisez. Décidez.</p>
           <p className="v4-hero-description">
-            Biume vous aide à organiser votre compte rendu à partir de votre
-            séance, puis vous laisse la dernière lecture avant tout partage.
+            Biume accompagne les ostéopathes animaliers dans le passage délicat
+            entre l'observation de séance et le compte rendu compréhensible.
+            Le produit prépare la matière, vous gardez la dernière décision.
           </p>
           <div className="v4-hero-actions">
             <a
@@ -67,45 +100,100 @@ function V4Hero() {
               data-conversion="v4-hero-signup"
               href={webAppPath("/signup")}
             >
-              Commencer avec Biume
+              Essayer gratuitement
             </a>
             <a className="v4-secondary-action v4-focus-ring" href="#parcours">
               Voir le parcours
             </a>
           </div>
+          <p className="v4-trial-note">15 jours gratuits, sans carte bancaire.</p>
         </div>
-        <V4SessionConsole />
+        <div className="v4-hero-stage" aria-label="Carnet de séance Biume">
+          <div className="v4-hero-image">
+            <Image
+              src="/assets/images/landing/hero-practitioner-horse.png"
+              alt="Une ostéopathe animalière accompagne un cheval pendant une séance"
+              fill
+              priority
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
+          </div>
+          <V4SessionConsole />
+        </div>
       </div>
     </section>
   );
 }
 
-function V4ProofGrid() {
+function V4Journey() {
   return (
     <section
       id="parcours"
       aria-labelledby="v4-proof-title"
-      className="v4-proof-grid"
+      className="v4-journey"
     >
-      <div className="v4-proof-intro">
-        <p className="v4-eyebrow">Votre méthode, rendue lisible</p>
-        <h2 id="v4-proof-title">Votre note reste la source.</h2>
+      <div className="v4-section-intro">
+        <p className="v4-kicker">Un récit de séance</p>
+        <h2 id="v4-proof-title">Votre note reste la source. Le reste devient partageable.</h2>
+        <p>
+          La page suit le même trajet que votre fin de séance: une trace précise,
+          une reformulation contrôlée, puis une continuité claire pour le propriétaire.
+        </p>
       </div>
-      <article className="v4-proof-card v4-proof-card-source">
-        <p className="v4-proof-index">01</p>
-        <h3>Observer</h3>
-        <p>Vous posez les éléments de séance pendant qu’ils sont encore précis.</p>
-      </article>
-      <article className="v4-proof-card v4-proof-card-owner">
-        <p className="v4-proof-index">02</p>
-        <h3>Préparer</h3>
-        <p>Le propriétaire reçoit une version claire, que vous pouvez relire.</p>
-      </article>
-      <article className="v4-proof-card v4-proof-card-decision">
-        <p className="v4-proof-index">03</p>
-        <h3>Décider</h3>
-        <p>Rien ne part sans votre décision.</p>
-      </article>
+      <div className="v4-journey-grid">
+        {journeyChapters.map((chapter) => (
+          <article className={`v4-chapter v4-chapter-${chapter.id}`} key={chapter.id}>
+            <div className="v4-chapter-media">
+              <Image
+                src={chapter.image}
+                alt={chapter.alt}
+                fill
+                priority={chapter.id === "terrain"}
+                sizes="(min-width: 1024px) 34vw, 100vw"
+              />
+            </div>
+            <div className="v4-chapter-copy">
+              <p>{chapter.marker}</p>
+              <h3>{chapter.title}</h3>
+              <span>{chapter.body}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function V4Control() {
+  return (
+    <section
+      id="controle"
+      aria-labelledby="v4-control-title"
+      className="v4-control"
+    >
+      <div className="v4-control-copy">
+        <p className="v4-kicker">Le violet décide, le vert confirme</p>
+        <h2 id="v4-control-title">Biume propose. Vous validez chaque passage.</h2>
+        <p>
+          La nouvelle fiche de style reprend les rôles HeroUI: l'accent violet
+          guide l'action, le vert ne signale que les états terminés. Le résultat
+          reste lisible, sobre et directement relié au produit.
+        </p>
+      </div>
+      <div className="v4-control-panel" aria-label="Étapes de validation">
+        <div className="v4-note-card v4-note-card-raw">
+          <span>Note métier</span>
+          <p>Restriction thoracique gauche. Mobilité améliorée après travail.</p>
+        </div>
+        <div className="v4-note-card v4-note-card-review">
+          <span>Version à relire</span>
+          <p>La mobilité du thorax a été travaillée pendant la séance.</p>
+        </div>
+        <div className="v4-note-card v4-note-card-done">
+          <span>Validé par vous</span>
+          <p>PDF prêt, message de suivi préparé, envoi sous votre contrôle.</p>
+        </div>
+      </div>
     </section>
   );
 }
@@ -119,12 +207,16 @@ function V4Pricing() {
       data-v4-section="pricing"
     >
       <div>
-        <p className="v4-eyebrow">Tarifs</p>
-        <h2 id="v4-pricing-title">Un abonnement pour vos comptes rendus.</h2>
+        <p className="v4-kicker">Tarifs simples</p>
+        <h2 id="v4-pricing-title">Un abonnement pour installer le réflexe après séance.</h2>
+        <p>
+          L'objectif n'est pas de rajouter un outil à votre journée, mais de
+          raccourcir le moment où vos notes deviennent un document utile.
+        </p>
       </div>
       <article className="v4-pricing-card">
         <p className="v4-price">24,99 € / mois</p>
-        <p className="v4-price-note">Facturé annuellement.</p>
+        <p className="v4-price-note">Facturé annuellement après l'essai gratuit.</p>
         <ul>
           {pricingInclusions.map((inclusion) => (
             <li key={inclusion}>{inclusion}</li>
@@ -135,7 +227,7 @@ function V4Pricing() {
           data-conversion="v4-pricing-signup"
           href={webAppPath("/signup")}
         >
-          Choisir Biume
+          Démarrer l'essai gratuit
         </a>
       </article>
     </section>
@@ -176,7 +268,7 @@ function V4Faq() {
       className="v4-faq"
     >
       <div className="v4-faq-intro">
-        <p className="v4-eyebrow" id="v4-faq-kicker">
+        <p className="v4-kicker" id="v4-faq-kicker">
           Questions fréquentes
         </p>
         <h2 id="v4-faq-title">Ce qui reste entre vos mains.</h2>
@@ -204,12 +296,12 @@ function V4Close() {
   return (
     <section aria-labelledby="v4-close-title" className="v4-close">
       <div>
-        <p className="v4-eyebrow">Pour la prochaine séance</p>
-        <h2 id="v4-close-title">Gardez le dernier mot sur chaque compte rendu.</h2>
+        <p className="v4-kicker">Pour la prochaine séance</p>
+        <h2 id="v4-close-title">Gardez le dernier mot, même quand Biume prépare le terrain.</h2>
       </div>
       <div className="v4-close-actions">
         <a className="v4-action v4-focus-ring" href={webAppPath("/signup")}>
-          Essayer Biume
+          Essayer gratuitement
         </a>
         <a
           className="v4-secondary-action v4-focus-ring"
@@ -250,11 +342,12 @@ function V4Footer() {
 
 export function V4Landing() {
   return (
-    <div className="v4">
+    <div className="v4 light" data-theme="biume-heroui">
       <V4Header />
       <main id="contenu" tabIndex={-1}>
         <V4Hero />
-        <V4ProofGrid />
+        <V4Journey />
+        <V4Control />
         <V4Pricing />
         <V4Faq />
         <V4Close />
