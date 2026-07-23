@@ -80,7 +80,7 @@ describe("landing objection handling and close", () => {
     expect(demoAnchors[0]).toContain("whitespace-nowrap");
   });
 
-  test("keeps every footer destination and external attribute on atelier tokens", () => {
+  test("keeps every footer destination and external attribute in the V2 system", () => {
     const html = renderWithLandingImageConfig(<LandingFooter />);
     const anchors = html.match(/<a\b[^>]*>/g) ?? [];
     const hrefs = anchors.map(
@@ -109,10 +109,9 @@ describe("landing objection handling and close", () => {
     const demoAnchor = anchors.find((anchor) => anchor.includes("cal.com"));
     expect(demoAnchor).toContain('target="_blank"');
     expect(demoAnchor).toContain('rel="noopener noreferrer"');
-    expect(html).toContain("var(--atelier-anthracite)");
-    expect(html).toContain("var(--atelier-line)");
-    expect(html).toContain("var(--atelier-muted");
-    expect(html).toContain("var(--atelier-violet)");
+    expect(html).toContain("var(--v2-line)");
+    expect(html).toContain("var(--v2-ink-soft)");
+    expect(html).toContain("var(--v2-accent)");
     expect(html).not.toContain("machine-");
     expect(html).not.toContain('href="/contact"');
     expect(html).not.toContain("Hébergé en France");

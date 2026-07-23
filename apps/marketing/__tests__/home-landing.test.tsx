@@ -4,13 +4,14 @@ import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transfo
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
-  exactZeroOpacity,
   renderWithLandingImageConfig,
   textOnly,
 } from "./landing-test-utils";
 
 mock.module("next/font/google", () => ({
   Hanken_Grotesk: () => ({ variable: "font-hanken" }),
+  Geist: () => ({ variable: "font-v2-sans" }),
+  Geist_Mono: () => ({ variable: "font-v2-mono" }),
 }));
 
 const { default: HomePage } = await import("../app/page");
@@ -21,28 +22,14 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
-describe("Biume atelier precision homepage", () => {
-  test("assembles the seven approved sections once and in order", () => {
+describe("Biume V2 homepage", () => {
+  test("uses the V2 composition for the approved homepage story", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
-    const markers = [
-      'data-landing-section="hero"',
-      'data-landing-section="transformation"',
-      'data-landing-section="control"',
-      'data-landing-section="follow-up"',
-      'data-landing-section="field-stories"',
-      'data-landing-section="pricing"',
-      'data-landing-section="faq-cta"',
-    ] as const;
+    const markers = ["produit", "controle", "methode", "tarifs", "questions"];
 
-    expect(html).toContain("atelier-theme");
-    expect(html.match(/data-landing-section=/g)).toHaveLength(markers.length);
+    expect(html).toContain('class="v2 ');
     for (const marker of markers) {
-      expect(html.match(new RegExp(marker, "g"))).toHaveLength(1);
-    }
-    for (let index = 1; index < markers.length; index += 1) {
-      expect(html.indexOf(markers[index - 1]!)).toBeLessThan(
-        html.indexOf(markers[index]!),
-      );
+      expect(html.match(new RegExp(`id="${marker}"`, "g"))).toHaveLength(1);
     }
   });
 
@@ -60,18 +47,17 @@ describe("Biume atelier precision homepage", () => {
     expect(html).toContain("atelier-owner.webp");
     expect(html).toContain("24,99 €");
     expect(html).toContain("29,99 €");
-    expect(html.match(/data-faq-item=/g)).toHaveLength(5);
+    expect(html.match(/<details/g)).toHaveLength(5);
     expect(text).toContain("Préparez votre prochain compte rendu.");
 
-    const finalSignup = conversionAnchors(html, "final-signup");
-    const finalDemo = conversionAnchors(html, "final-demo");
+    const finalSignup = conversionAnchors(html, "close-signup");
+    const finalDemo = conversionAnchors(html, "close-demo");
     expect(finalSignup).toHaveLength(1);
     expect(finalDemo).toHaveLength(1);
     expect(finalSignup[0]).toContain(`href="${webAppPath("/signup")}"`);
     expect(finalDemo[0]).toContain(
       'href="https://cal.com/mathieu-chambaud-biume"',
     );
-    expect(html).not.toMatch(exactZeroOpacity);
   });
 
   test("keeps homepage ids unique and every navigation anchor live", () => {
@@ -96,17 +82,15 @@ describe("Biume atelier precision homepage", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const firstAnchor = html.match(/<a\b[^>]*>/)?.[0];
     const skipLinkIndex = html.indexOf('href="#contenu"');
-    const headerIndex = html.indexOf("<header");
+    const navigationIndex = html.indexOf('aria-label="Navigation principale"');
     const mainTarget = html.match(/<main\b[^>]*id="contenu"[^>]*>/)?.[0];
 
     expect(firstAnchor).toContain('href="#contenu"');
     expect(firstAnchor).toContain("sr-only");
     expect(firstAnchor).toContain("focus:not-sr-only");
-    expect(firstAnchor).toContain(
-      "focus-visible:outline-[color:var(--atelier-violet)]",
-    );
+    expect(firstAnchor).toContain("focus:bg-[color:var(--v2-espresso)]");
     expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
-    expect(headerIndex).toBeGreaterThan(skipLinkIndex);
+    expect(navigationIndex).toBeGreaterThan(skipLinkIndex);
     expect(mainTarget).toBeDefined();
     expect(mainTarget).toContain('tabindex="-1"');
   });

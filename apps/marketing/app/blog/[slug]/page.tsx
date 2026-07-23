@@ -101,18 +101,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         data={pageBreadcrumbJsonLd({ path: post.path, name: post.title })}
       />
       <Header />
-      <div className="min-h-dvh overflow-x-hidden bg-background text-foreground selection:bg-primary/20">
-        <main>
-          <article className="px-4 pb-8 pt-30 md:px-6 md:pb-14 md:pt-34">
+      <div className="min-h-dvh overflow-x-hidden bg-[color:var(--v2-canvas)] text-[color:var(--v2-ink)] selection:bg-[color:var(--v2-accent)]/25">
+        <main id="contenu" tabIndex={-1}>
+          <article className="px-5 pb-20 pt-20 md:px-8 md:pb-28 md:pt-28">
             <div className="mx-auto max-w-3xl">
               <Link
                 href="/blog"
-                className="landing-reveal text-sm font-semibold text-primary hover:text-primary/78"
+                className="v2-link landing-reveal text-sm font-semibold text-[color:var(--v2-violet-ink)]"
               >
                 Blog
               </Link>
-              <div className="landing-reveal landing-reveal-2 mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold text-muted-foreground">
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+              <div className="landing-reveal landing-reveal-2 mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold text-[color:var(--v2-ink-faint)]">
+                <span className="rounded-full bg-[color:var(--v2-violet-soft)] px-3 py-1 text-[color:var(--v2-violet-ink)]">
                   {post.category}
                 </span>
                 <span>{post.readingTime}</span>
@@ -120,16 +120,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   Mis à jour le {formatDate(post.updatedAt)}
                 </time>
               </div>
-              <h1 className="landing-reveal landing-reveal-3 mt-6 text-4xl font-semibold leading-none tracking-tight sm:text-5xl md:text-6xl">
+              <h1 className="v2-display landing-reveal landing-reveal-3 mt-6 text-[clamp(2.7rem,6vw,5.4rem)] font-medium leading-[1.02] tracking-[-0.05em]">
                 {post.title}
               </h1>
-              <p className="landing-reveal landing-reveal-4 mt-6 text-lg leading-8 text-muted-foreground">
+              <p className="landing-reveal landing-reveal-4 mt-6 text-lg leading-8 text-[color:var(--v2-ink-soft)]">
                 {post.description}
               </p>
 
               {post.takeaways.length > 0 ? (
-                <div className="landing-reveal landing-reveal-5 mt-8 rounded-3xl border border-primary/20 bg-primary/10 p-5">
-                  <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                <div className="landing-reveal landing-reveal-5 mt-8 border-y border-[color:var(--v2-line)] py-6">
+                  <p className="v2-eyebrow">
                     À retenir
                   </p>
                   <ul className="mt-4 space-y-3 text-sm leading-6">
@@ -138,7 +138,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         key={takeaway}
                         className="grid grid-cols-[auto_1fr] gap-3"
                       >
-                        <span className="mt-2 size-1.5 rounded-full bg-secondary" />
+                        <span className="mt-2 size-1.5 rounded-full bg-[color:var(--v2-green)]" />
                         <span>{takeaway}</span>
                       </li>
                     ))}
@@ -146,7 +146,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
               ) : null}
 
-              <div className="mt-10 space-y-7 text-base leading-8 text-muted-foreground [&_a]:font-semibold [&_a]:text-primary [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-5 [&_blockquote]:text-foreground [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:leading-tight [&_h1]:tracking-tight [&_h2]:pt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:tracking-tight [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-foreground [&_hr]:border-border [&_li]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-6">
+              <div className="mt-10 space-y-7 text-base leading-8 text-[color:var(--v2-ink-soft)] [&_a]:font-semibold [&_a]:text-[color:var(--v2-violet-ink)] [&_blockquote]:border-l-2 [&_blockquote]:border-[color:var(--v2-violet-ink)] [&_blockquote]:pl-5 [&_blockquote]:text-[color:var(--v2-ink)] [&_h1]:text-3xl [&_h1]:font-medium [&_h1]:leading-tight [&_h1]:tracking-tight [&_h2]:pt-4 [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:leading-tight [&_h2]:tracking-tight [&_h2]:text-[color:var(--v2-ink)] [&_h3]:text-xl [&_h3]:font-medium [&_h3]:text-[color:var(--v2-ink)] [&_hr]:border-[color:var(--v2-line)] [&_li]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_strong]:font-semibold [&_strong]:text-[color:var(--v2-ink)] [&_ul]:list-disc [&_ul]:pl-6">
                 {typeof Mdx === "function" ? (
                   <Mdx components={defaultMdxComponents} />
                 ) : (
@@ -156,27 +156,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
           </article>
 
-          <section className="px-4 py-8 md:px-6 md:py-14">
-            <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-4xl border border-border bg-foreground p-6 text-background md:p-8">
-                <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <section className="border-t border-[color:var(--v2-line)] px-5 py-20 md:px-8 md:py-28">
+            <div className="mx-auto grid max-w-[1200px] gap-5 lg:grid-cols-[0.82fr_1.18fr]">
+              <div className="rounded-[24px] bg-[color:var(--v2-espresso)] p-7 text-white md:p-9">
+                <p className="v2-eyebrow text-[color:var(--v2-green)]">
                   Continuer
                 </p>
-                <h2 className="mt-4 text-3xl font-semibold leading-none tracking-tight md:text-5xl">
+                <h2 className="v2-display mt-5 text-[clamp(2rem,4vw,3.4rem)] font-medium leading-[1.02] tracking-[-0.045em]">
                   Relier l&apos;article à votre pratique.
                 </h2>
-                <p className="mt-5 text-sm leading-6 text-background/62">
+                <p className="mt-5 text-sm leading-6 text-white/65">
                   Chaque ressource pointe vers une page utile pour approfondir,
                   comparer ou essayer Biume en situation réelle.
                 </p>
               </div>
-              <div className="rounded-4xl border border-border bg-card p-5 md:p-7">
+              <div className="v2-panel p-7 md:p-8">
                 <div className="flex flex-wrap gap-3">
                   {post.relatedLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                      className="v2-btn v2-btn-secondary px-4 py-2 text-sm"
                     >
                       {link.label}
                     </Link>
@@ -185,7 +185,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <Link
                   href={webAppPath("/signup")}
                   prefetch={false}
-                  className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_42px_-30px_rgba(124,102,238,0.75)] transition-all hover:bg-primary/88 active:scale-[0.98]"
+                  className="v2-btn v2-btn-primary v2-btn-lg mt-6"
                 >
                   Essayer 15 jours gratuitement
                 </Link>

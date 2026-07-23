@@ -139,7 +139,7 @@ describe("marketing SEO", () => {
   test("product page mentions agenda and owner patient management", () => {
     const html = renderToStaticMarkup(<ProductPage />);
 
-    expect(html).toContain("landing-theme");
+    expect(html).toContain("bg-[color:var(--v2-canvas)]");
     expect(html).toContain("agenda");
     expect(html).toContain("propriétaires");
     expect(html).toContain("patients");
