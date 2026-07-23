@@ -181,6 +181,15 @@ test("keeps the proof grid, plan inclusions and HeroUI FAQ in the rendered page"
   );
 });
 
+test("uses HeroUI Card slots as the landing page's primary surface grammar", () => {
+  const html = renderWithLandingImageConfig(<V4Page />);
+
+  expect(html.match(/data-slot="card"/g)?.length).toBeGreaterThanOrEqual(10);
+  expect(html).toContain('data-slot="card-header"');
+  expect(html).toContain('data-slot="card-content"');
+  expect(html).toContain('data-slot="card-footer"');
+});
+
 test("opens a V4 FAQ answer from its accessible HeroUI trigger", async () => {
   const { container } = render(<V4Landing />);
   const faq = within(container).getByRole("region", {

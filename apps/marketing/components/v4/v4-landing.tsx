@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Accordion } from "@heroui/react";
+import { Accordion, Card } from "@heroui/react";
 
 import { webAppPath } from "../../lib/web-app-url";
 
@@ -109,7 +109,8 @@ function V4Hero() {
           <p className="v4-trial-note">15 jours gratuits, sans carte bancaire.</p>
         </div>
         <div className="v4-hero-stage" aria-label="Carnet de séance Biume">
-          <div className="v4-hero-image">
+          <Card.Root className="v4-hero-image" variant="secondary">
+            <Card.Content className="v4-hero-image-content">
             <Image
               src="/assets/images/landing/hero-practitioner-horse.png"
               alt="Une ostéopathe animalière accompagne un cheval pendant une séance"
@@ -117,7 +118,8 @@ function V4Hero() {
               priority
               sizes="(min-width: 1024px) 42vw, 100vw"
             />
-          </div>
+            </Card.Content>
+          </Card.Root>
           <V4SessionConsole />
         </div>
       </div>
@@ -142,8 +144,12 @@ function V4Journey() {
       </div>
       <div className="v4-journey-grid">
         {journeyChapters.map((chapter) => (
-          <article className={`v4-chapter v4-chapter-${chapter.id}`} key={chapter.id}>
-            <div className="v4-chapter-media">
+          <Card.Root
+            className={`v4-chapter v4-chapter-${chapter.id}`}
+            key={chapter.id}
+            variant="default"
+          >
+            <Card.Content className="v4-chapter-media">
               <Image
                 src={chapter.image}
                 alt={chapter.alt}
@@ -151,13 +157,15 @@ function V4Journey() {
                 priority={chapter.id === "terrain"}
                 sizes="(min-width: 1024px) 34vw, 100vw"
               />
-            </div>
-            <div className="v4-chapter-copy">
+            </Card.Content>
+            <Card.Footer className="v4-chapter-copy">
               <p>{chapter.marker}</p>
-              <h3>{chapter.title}</h3>
-              <span>{chapter.body}</span>
-            </div>
-          </article>
+              <Card.Title>{chapter.title}</Card.Title>
+              <Card.Description className="v4-chapter-description">
+                {chapter.body}
+              </Card.Description>
+            </Card.Footer>
+          </Card.Root>
         ))}
       </div>
     </section>
@@ -181,18 +189,36 @@ function V4Control() {
         </p>
       </div>
       <div className="v4-control-panel" aria-label="Étapes de validation">
-        <div className="v4-note-card v4-note-card-raw">
-          <span>Note métier</span>
-          <p>Restriction thoracique gauche. Mobilité améliorée après travail.</p>
-        </div>
-        <div className="v4-note-card v4-note-card-review">
-          <span>Version à relire</span>
-          <p>La mobilité du thorax a été travaillée pendant la séance.</p>
-        </div>
-        <div className="v4-note-card v4-note-card-done">
-          <span>Validé par vous</span>
-          <p>PDF prêt, message de suivi préparé, envoi sous votre contrôle.</p>
-        </div>
+        <Card.Root className="v4-note-card v4-note-card-raw" variant="tertiary">
+          <Card.Header>
+            <Card.Title className="v4-note-card-label">Note métier</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <Card.Description>
+              Restriction thoracique gauche. Mobilité améliorée après travail.
+            </Card.Description>
+          </Card.Content>
+        </Card.Root>
+        <Card.Root className="v4-note-card v4-note-card-review" variant="secondary">
+          <Card.Header>
+            <Card.Title className="v4-note-card-label">Version à relire</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <Card.Description>
+              La mobilité du thorax a été travaillée pendant la séance.
+            </Card.Description>
+          </Card.Content>
+        </Card.Root>
+        <Card.Root className="v4-note-card v4-note-card-done" variant="default">
+          <Card.Header>
+            <Card.Title className="v4-note-card-label">Validé par vous</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <Card.Description>
+              PDF prêt, message de suivi préparé, envoi sous votre contrôle.
+            </Card.Description>
+          </Card.Content>
+        </Card.Root>
       </div>
     </section>
   );
@@ -214,22 +240,33 @@ function V4Pricing() {
           raccourcir le moment où vos notes deviennent un document utile.
         </p>
       </div>
-      <article className="v4-pricing-card">
-        <p className="v4-price">24,99 € / mois</p>
-        <p className="v4-price-note">Facturé annuellement après l'essai gratuit.</p>
-        <ul>
-          {pricingInclusions.map((inclusion) => (
-            <li key={inclusion}>{inclusion}</li>
-          ))}
-        </ul>
-        <a
-          className="v4-action v4-focus-ring"
-          data-conversion="v4-pricing-signup"
-          href={webAppPath("/signup")}
-        >
-          Démarrer l'essai gratuit
-        </a>
-      </article>
+      <Card.Root
+        className="v4-pricing-card"
+        variant="secondary"
+      >
+        <Card.Header>
+          <Card.Title className="v4-price">24,99 € / mois</Card.Title>
+          <Card.Description className="v4-price-note">
+            Facturé annuellement après l'essai gratuit.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <ul>
+            {pricingInclusions.map((inclusion) => (
+              <li key={inclusion}>{inclusion}</li>
+            ))}
+          </ul>
+        </Card.Content>
+        <Card.Footer>
+          <a
+            className="v4-action v4-focus-ring"
+            data-conversion="v4-pricing-signup"
+            href={webAppPath("/signup")}
+          >
+            Démarrer l'essai gratuit
+          </a>
+        </Card.Footer>
+      </Card.Root>
     </section>
   );
 }
@@ -273,33 +310,43 @@ function V4Faq() {
         </p>
         <h2 id="v4-faq-title">Ce qui reste entre vos mains.</h2>
       </div>
-      <Accordion className="v4-faq-list">
-        {faqItems.map((item) => (
-          <Accordion.Item className="v4-faq-item" id={item.id} key={item.id}>
-            <Accordion.Heading className="v4-faq-heading">
-              <Accordion.Trigger className="v4-faq-trigger">
-                <span>{item.question}</span>
-                <Accordion.Indicator className="v4-faq-indicator" />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel className="v4-faq-panel">
-              <Accordion.Body className="v4-faq-body">{item.answer}</Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
-        ))}
-      </Accordion>
+      <Card.Root className="v4-faq-list" variant="secondary">
+        <Card.Content className="v4-faq-content">
+          <Accordion>
+            {faqItems.map((item) => (
+              <Accordion.Item className="v4-faq-item" id={item.id} key={item.id}>
+                <Accordion.Heading className="v4-faq-heading">
+                  <Accordion.Trigger className="v4-faq-trigger">
+                    <span>{item.question}</span>
+                    <Accordion.Indicator className="v4-faq-indicator" />
+                  </Accordion.Trigger>
+                </Accordion.Heading>
+                <Accordion.Panel className="v4-faq-panel">
+                  <Accordion.Body className="v4-faq-body">{item.answer}</Accordion.Body>
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+          </Accordion>
+        </Card.Content>
+      </Card.Root>
     </section>
   );
 }
 
 function V4Close() {
   return (
-    <section aria-labelledby="v4-close-title" className="v4-close">
-      <div>
+    <Card.Root
+      aria-labelledby="v4-close-title"
+      className="v4-close"
+      variant="secondary"
+    >
+      <Card.Header>
         <p className="v4-kicker">Pour la prochaine séance</p>
-        <h2 id="v4-close-title">Gardez le dernier mot, même quand Biume prépare le terrain.</h2>
-      </div>
-      <div className="v4-close-actions">
+        <Card.Title id="v4-close-title">
+          Gardez le dernier mot, même quand Biume prépare le terrain.
+        </Card.Title>
+      </Card.Header>
+      <Card.Footer className="v4-close-actions">
         <a className="v4-action v4-focus-ring" href={webAppPath("/signup")}>
           Essayer gratuitement
         </a>
@@ -311,8 +358,8 @@ function V4Close() {
         >
           Demander une démo
         </a>
-      </div>
-    </section>
+      </Card.Footer>
+    </Card.Root>
   );
 }
 
