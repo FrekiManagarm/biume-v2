@@ -39,6 +39,8 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   const globalsCss = readFileSync(join(marketingRoot, "app/globals.css"), "utf8");
   const v4CssPath = join(marketingRoot, "app/v4/v4.css");
   const v4Css = existsSync(v4CssPath) ? readFileSync(v4CssPath, "utf8") : "";
+  const modalPortalTokens =
+    v4Css.match(/\.v4-console-modal-backdrop\s*\{[^}]*\}/)?.[0] ?? "";
   const sourceFiles: string[] = [];
 
   for await (const sourceFile of new Bun.Glob("**/*.{css,ts,tsx}").scan({
@@ -69,6 +71,11 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(existsSync(v4CssPath)).toBeTrue();
   expect(v4Css).toContain("--v4-surface: #ffffff;");
   expect(v4Css).toContain("--v4-accent-soft: #e5f4ed;");
+  expect(modalPortalTokens).toContain("--v4-surface: #ffffff;");
+  expect(modalPortalTokens).toContain("--v4-ink: #1a2621;");
+  expect(modalPortalTokens).toContain("--v4-muted: #64716b;");
+  expect(modalPortalTokens).toContain("--v4-line: #dbe2de;");
+  expect(modalPortalTokens).toContain("--v4-accent: #1f8a62;");
   expect(sourceFilesReferencingHeroUIStyles).toEqual([]);
 });
 
