@@ -82,8 +82,10 @@ lavande et la bande bleu → lavande de V3 ne sont pas réutilisées.
 ## Intégration HeroUI
 
 La V4 utilisera HeroUI v3, pas la génération v2. Elle requiert `@heroui/react`
-et `@heroui/styles`, puis l’import global de styles officiel après Tailwind.
-HeroUI v3 ne nécessite pas de provider global ni Framer Motion.
+et `@heroui/styles`. Les styles HeroUI sont importés uniquement depuis la feuille
+de styles de route V4 `app/v4/v4.css`, jamais depuis `app/globals.css`, afin de
+ne pas les charger sur les routes marketing existantes ou V3. HeroUI v3 ne
+nécessite pas de provider global ni Framer Motion.
 
 Les primitives sont limitées à : `Button`, `Chip`, `Tabs`, `Modal`, `Card` et
 `Accordion`. Elles sont personnalisées avec les tokens V4 : l’objectif est de
