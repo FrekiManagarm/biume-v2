@@ -155,6 +155,10 @@ test("opens and dismisses the read-only owner report preview", async () => {
   expect(
     within(dialog).getByText("Compte rendu propriétaire — Luma"),
   ).not.toBeNull();
+  const closeTrigger = within(dialog)
+    .getAllByRole("button", { name: "Fermer l’aperçu" })
+    .find((button) => button.classList.contains("v4-console-modal-close"));
+  expect(closeTrigger).not.toBeUndefined();
 
   await act(async () => {
     fireEvent.keyDown(dialog, { code: "Escape", key: "Escape" });

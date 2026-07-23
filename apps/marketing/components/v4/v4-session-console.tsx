@@ -61,7 +61,10 @@ export function V4SessionConsole() {
         <Modal.Backdrop className="v4-console-modal-backdrop" variant="blur">
           <Modal.Container className="v4-console-modal-container" size="md">
             <Modal.Dialog className="v4-console-modal-dialog">
-              <Modal.CloseTrigger className="v4-console-modal-close" />
+              <Modal.CloseTrigger
+                aria-label="Fermer l’aperçu"
+                className="v4-console-modal-close"
+              />
               <Modal.Header className="v4-console-modal-header">
                 <Modal.Heading className="v4-console-modal-heading">
                   Compte rendu propriétaire — Luma
