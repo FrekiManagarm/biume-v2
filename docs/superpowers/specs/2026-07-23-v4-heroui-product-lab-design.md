@@ -81,11 +81,13 @@ lavande et la bande bleu → lavande de V3 ne sont pas réutilisées.
 
 ## Intégration HeroUI
 
-La V4 utilisera HeroUI v3, pas la génération v2. Elle requiert `@heroui/react`
-et `@heroui/styles`. Les styles HeroUI sont importés uniquement depuis la feuille
-de styles de route V4 `app/v4/v4.css`, jamais depuis `app/globals.css`, afin de
-ne pas les charger sur les routes marketing existantes ou V3. HeroUI v3 ne
-nécessite pas de provider global ni Framer Motion.
+La V4 utilisera HeroUI v3, pas la génération v2. Elle requiert uniquement
+`@heroui/react` pour le comportement accessible de ses primitives ;
+`@heroui/styles` n’est ni déclaré comme dépendance directe ni importé. Toute l’apparence est définie dans
+la feuille de styles locale de route V4 `app/v4/v4.css`, avec des sélecteurs
+préfixés `.v4`, y compris les overrides locaux des classes BEM générées par
+HeroUI. Cette isolation évite toute fuite vers les routes marketing existantes
+ou V3. HeroUI v3 ne nécessite pas de provider global ni Framer Motion.
 
 Les primitives sont limitées à : `Button`, `Chip`, `Tabs`, `Modal`, `Card` et
 `Accordion`. Elles sont personnalisées avec les tokens V4 : l’objectif est de
@@ -115,8 +117,9 @@ tester une interface HeroUI crédible, non son thème de démonstration.
 ## Critères de validation
 
 - `/v4` compile, reste privée des moteurs et ne modifie pas `/v3`.
-- HeroUI est installé uniquement pour `@biume/marketing` et ses styles sont
-  chargés dans l’ordre compatible avec Tailwind v4.
+- Seul `@heroui/react` est déclaré comme dépendance directe de
+  `@biume/marketing` ; aucun style HeroUI global n’est chargé et les overrides
+  V4 restent préfixés `.v4`.
 - Le changement d’onglet et l’ouverture/fermeture du modal sont testés au
   clavier ; les liens de conversion sont testés en rendu serveur.
 - La variante reste sans défilement horizontal à 375 px, 768 px, 1024 px et
