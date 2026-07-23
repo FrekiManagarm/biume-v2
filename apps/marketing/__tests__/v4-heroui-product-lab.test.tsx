@@ -1,8 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "bun:test";
+import { afterEach, expect, test } from "bun:test";
 
 import { webAppPath } from "../lib/web-app-url";
+import { act, cleanup, fireEvent, render, within } from "./dom-test-utils";
 import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
 
 const marketingRoot = join(import.meta.dir, "..");
@@ -72,6 +73,11 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
 });
 
 const { default: V4Page, metadata } = await import("../app/v4/page");
+const { V4SessionConsole } = await import(
+  "../components/v4/v4-session-console"
+);
+
+afterEach(cleanup);
 
 test("V4 Product Lab exposes the private practitioner landing shell", () => {
   const html = renderWithLandingImageConfig(<V4Page />);
@@ -93,4 +99,50 @@ test("V4 Product Lab exposes the private practitioner landing shell", () => {
   expect(content).toContain("24,99 € / mois");
   expect(content).not.toContain("diagnostic");
   expect(content).not.toContain("guéri");
+});
+
+test("moves through the three review stages with keyboard-accessible tabs", async () => {
+  const { container } = render(<V4SessionConsole />);
+  const consoleUi = within(container);
+
+  const preparation = consoleUi.getByRole("tab", { name: "Préparation" });
+  expect(
+    consoleUi.getByRole("tab", { name: "Consultation" }),
+  ).not.toBeNull();
+  expect(
+    consoleUi.getByRole("tab", { name: "Compte rendu" }),
+  ).not.toBeNull();
+  await act(async () => {
+    fireEvent.click(preparation);
+    await Promise.resolve();
+  });
+
+  expect(preparation.getAttribute("aria-selected")).toBe("true");
+  expect(
+    consoleUi.getByText("Une version claire attend votre relecture."),
+  ).not.toBeNull();
+});
+
+test("opens and dismisses the read-only owner report preview", async () => {
+  const { container } = render(<V4SessionConsole />);
+  const consoleUi = within(container);
+
+  await act(async () => {
+    fireEvent.click(
+      consoleUi.getByRole("button", { name: "Prévisualiser le compte rendu" }),
+    );
+    await Promise.resolve();
+  });
+
+  const dialog = within(document.body).getByRole("dialog");
+  expect(dialog).not.toBeNull();
+  expect(
+    within(dialog).getByText("Compte rendu propriétaire — Luma"),
+  ).not.toBeNull();
+
+  await act(async () => {
+    fireEvent.keyDown(dialog, { code: "Escape", key: "Escape" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(within(document.body).queryByRole("dialog")).toBeNull();
 });

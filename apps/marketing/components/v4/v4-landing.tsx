@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { webAppPath } from "../../lib/web-app-url";
 
+import { V4SessionConsole } from "./v4-session-console";
+
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
 
 const pricingInclusions = [
@@ -71,9 +73,7 @@ function V4Hero() {
             </a>
           </div>
         </div>
-        <div className="v4-console-slot" aria-label="Aperçu de séance">
-          Aperçu de séance bientôt disponible.
-        </div>
+        <V4SessionConsole />
       </div>
     </section>
   );
