@@ -70,12 +70,12 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(globalsCss).not.toContain('@import "@heroui/styles";');
   expect(v4Css).toContain('@import "@heroui/styles";');
   expect(existsSync(v4CssPath)).toBeTrue();
-  expect(v4Css).toContain("--background: #f8f8fb;");
-  expect(v4Css).toContain("--accent: #6b5ac8;");
-  expect(v4Css).toContain("--success: #2e9866;");
+  expect(v4Css).toContain('--background: oklch(0% 0 0);');
+  expect(v4Css).toContain('--accent: oklch(0.6 0.16 294);');
+  expect(v4Css).toContain('--success: oklch(0.72 0.14 157);');
   expect(v4Css).toContain("@theme inline");
-  expect(modalPortalTokens).toContain("--accent: #6b5ac8;");
-  expect(modalPortalTokens).toContain("--success: #2e9866;");
+  expect(modalPortalTokens).toContain("--accent: oklch(0.6 0.16 294);");
+  expect(modalPortalTokens).toContain("--success: oklch(0.72 0.14 157);");
   expect(modalPortalTokens).toContain("--v4-ink: var(--foreground);");
   expect(sourceFilesReferencingHeroUIStyles).toEqual(["app/v4/v4.css"]);
 });
@@ -97,9 +97,8 @@ test("V4 Product Lab exposes the private practitioner landing shell", () => {
   expect(metadata.description).toBe(
     "Biume aide les ostéopathes animaliers à préparer, relire et décider de leurs comptes rendus de séance avant de les partager.",
   );
-  expect(content).toContain(
-    "De vos notes au propriétaire, sans perdre votre regard métier.",
-  );
+  expect(content).toContain("De vos notes au propriétaire");
+  expect(content).toContain("sans perdre votre regard métier.");
   expect(content).toContain("Préparez. Relisez. Décidez.");
   expect(content).toContain("15 jours gratuits, sans carte bancaire.");
   expect(html).toContain('data-v4-section="hero"');
@@ -173,7 +172,7 @@ test("keeps the proof grid, plan inclusions and HeroUI FAQ in the rendered page"
   const html = renderWithLandingImageConfig(<V4Page />);
   const content = textOnly(html);
 
-  expect(content).toContain("Votre note reste la source. Le reste devient partageable.");
+  expect(content).toContain("Votre note reste la source. Le reste devient partageable");
   expect(content).toContain("Biume propose. Vous validez chaque passage.");
   expect(content).toContain("Suivi et rappel après séance");
   expect(content).toContain("Questions fréquentes");
@@ -215,18 +214,18 @@ test("opens a V4 FAQ answer from its accessible HeroUI trigger", async () => {
   ).not.toBeNull();
 });
 
-test("keeps the V4 HeroUI light atelier visual contract", async () => {
+test("keeps the V4 HeroUI editorial night visual contract", async () => {
   const v4Css = await Bun.file(
     new URL("../app/v4/v4.css", import.meta.url),
   ).text();
   const modalPortalTokens =
     v4Css.match(/\.v4-console-modal-backdrop\s*\{[^}]*\}/)?.[0] ?? "";
 
-  expect(v4Css).toContain("--background: #f8f8fb;");
-  expect(v4Css).toContain("--foreground: #17151f;");
-  expect(v4Css).toContain("--surface: #ffffff;");
-  expect(v4Css).toContain("--accent: #6b5ac8;");
-  expect(v4Css).toContain("--success: #2e9866;");
+  expect(v4Css).toContain('--background: oklch(0% 0 0);');
+  expect(v4Css).toContain("--foreground: var(--snow);");
+  expect(v4Css).toContain('--surface: oklch(0.075 0 0);');
+  expect(v4Css).toContain('--accent: oklch(0.6 0.16 294);');
+  expect(v4Css).toContain('--success: oklch(0.72 0.14 157);');
   expect(v4Css).toContain("--v4-violet: var(--accent);");
   expect(v4Css).toContain("--v4-green: var(--success);");
   expect(v4Css).toContain(".v4-hero-image");
@@ -235,8 +234,8 @@ test("keeps the V4 HeroUI light atelier visual contract", async () => {
   expect(v4Css).toContain("@keyframes v4-image-breathe");
   expect(v4Css).toContain("@supports (animation-timeline: view())");
   expect(v4Css).toContain("@media (max-width: 767px)");
-  expect(modalPortalTokens).toContain("--accent: #6b5ac8;");
-  expect(modalPortalTokens).toContain("--success: #2e9866;");
+  expect(modalPortalTokens).toContain("--accent: oklch(0.6 0.16 294);");
+  expect(modalPortalTokens).toContain("--success: oklch(0.72 0.14 157);");
   expect(v4Css).toContain('@import "@heroui/styles";');
   expect(v4Css).not.toContain("--v4-glass");
 });
@@ -271,8 +270,8 @@ test("keeps V4 distinct from the Visitors-first V3 grammar", async () => {
   expect(v4Source).toContain("Accordion");
   expect(v4Source).toContain("V4SessionConsole");
   expect(v4Source).toContain("next/image");
-  expect(v4Css).toContain("--accent: #6b5ac8;");
-  expect(v4Css).toContain("--success: #2e9866;");
+  expect(v4Css).toContain('--accent: oklch(0.6 0.16 294);');
+  expect(v4Css).toContain('--success: oklch(0.72 0.14 157);');
   expect(v4Css).toContain(
     "grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr)",
   );

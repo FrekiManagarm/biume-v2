@@ -51,7 +51,10 @@ function V4Header() {
       </a>
       <div className="v4-header-inner">
         <Link aria-label="Biume, accueil" className="v4-brand v4-focus-ring" href="/">
-          Biume
+          <span aria-hidden="true" className="v4-brand-mark">
+            <span />
+          </span>
+          <span>Biume</span>
         </Link>
         <nav aria-label="Navigation principale" className="v4-nav">
           <a className="v4-focus-ring" href="#parcours">
@@ -62,6 +65,9 @@ function V4Header() {
           </a>
           <a className="v4-focus-ring" href="#tarifs">
             Tarifs
+          </a>
+          <a className="v4-focus-ring" href="#questions">
+            Questions
           </a>
         </nav>
         <div className="v4-header-actions">
@@ -86,8 +92,12 @@ function V4Hero() {
     >
       <div className="v4-hero-grid">
         <div className="v4-hero-copy">
-          <p className="v4-kicker">Landing v4 · atelier HeroUI</p>
-          <h1 id="v4-hero-title">De vos notes au propriétaire, sans perdre votre regard métier.</h1>
+          <p className="v4-kicker">Biume · studio de séance</p>
+          <h1 id="v4-hero-title">
+            {"De vos notes au "}
+            <em>propriétaire</em>
+            {", sans perdre votre regard métier."}
+          </h1>
           <p className="v4-hero-line">Préparez. Relisez. Décidez.</p>
           <p className="v4-hero-description">
             Biume accompagne les ostéopathes animaliers dans le passage délicat
@@ -136,7 +146,11 @@ function V4Journey() {
     >
       <div className="v4-section-intro">
         <p className="v4-kicker">Un récit de séance</p>
-        <h2 id="v4-proof-title">Votre note reste la source. Le reste devient partageable.</h2>
+        <h2 id="v4-proof-title">
+          {"Votre note reste la source. Le reste devient "}
+          <em>partageable</em>
+          {"."}
+        </h2>
         <p>
           La page suit le même trajet que votre fin de séance: une trace précise,
           une reformulation contrôlée, puis une continuité claire pour le propriétaire.
@@ -301,6 +315,7 @@ const faqItems = [
 function V4Faq() {
   return (
     <section
+      id="questions"
       aria-labelledby="v4-faq-kicker"
       className="v4-faq"
     >
@@ -389,7 +404,7 @@ function V4Footer() {
 
 export function V4Landing() {
   return (
-    <div className="v4 light" data-theme="biume-heroui">
+    <div className="v4" data-theme="biume-night">
       <V4Header />
       <main id="contenu" tabIndex={-1}>
         <V4Hero />
