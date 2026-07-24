@@ -1,3 +1,6 @@
+/* HeroUI v3 base theme and component styles must precede V4 overrides. */
+@import "@heroui/styles";
+
 .v4 {
   --background: #f8f8fb;
   --foreground: #17151f;

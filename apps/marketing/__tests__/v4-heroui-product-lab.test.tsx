@@ -67,8 +67,8 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(packageJson.dependencies?.["@heroui/react"]).toBe("^3.2.2");
   expect(packageJson.dependencies?.["@heroui/styles"]).toBe("^3.2.2");
   expect(prohibitedDirectDependencies).toEqual([]);
-  expect(globalsCss).toContain('@import "@heroui/styles";');
-  expect(v4Css).not.toContain('@import "@heroui/styles";');
+  expect(globalsCss).not.toContain('@import "@heroui/styles";');
+  expect(v4Css).toContain('@import "@heroui/styles";');
   expect(existsSync(v4CssPath)).toBeTrue();
   expect(v4Css).toContain("--background: #f8f8fb;");
   expect(v4Css).toContain("--accent: #6b5ac8;");
@@ -77,7 +77,7 @@ test("V4 Product Lab has the HeroUI foundation", async () => {
   expect(modalPortalTokens).toContain("--accent: #6b5ac8;");
   expect(modalPortalTokens).toContain("--success: #2e9866;");
   expect(modalPortalTokens).toContain("--v4-ink: var(--foreground);");
-  expect(sourceFilesReferencingHeroUIStyles).toEqual(["app/globals.css"]);
+  expect(sourceFilesReferencingHeroUIStyles).toEqual(["app/v4/v4.css"]);
 });
 
 const { default: V4Page, metadata } = await import("../app/v4/page");
@@ -237,7 +237,7 @@ test("keeps the V4 HeroUI light atelier visual contract", async () => {
   expect(v4Css).toContain("@media (max-width: 767px)");
   expect(modalPortalTokens).toContain("--accent: #6b5ac8;");
   expect(modalPortalTokens).toContain("--success: #2e9866;");
-  expect(v4Css).not.toContain("@heroui/styles");
+  expect(v4Css).toContain('@import "@heroui/styles";');
   expect(v4Css).not.toContain("--v4-glass");
 });
 
