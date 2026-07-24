@@ -203,7 +203,7 @@ describe("Biume atelier precision homepage", () => {
       Bun.file(new URL("../next.config.ts", import.meta.url)).text(),
     ]);
 
-    expect(sharedCss).toContain('@import "tailwindcss" source(none)');
+    expect(sharedCss).toContain('@import "tailwindcss";');
     expect(marketingCss).toContain('@source "../**/*.{ts,tsx,mdx}"');
     expect(webCss).toContain('@source "./**/*.{ts,tsx}"');
     expect(config).toContain("inlineCss: true");

@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@heroui/styles": "^3.2.2",
     "@heroui/react": "^3.2.2",
     "fumadocs-core": "^16.7.4",
     "fumadocs-mdx": "^14.2.11",
