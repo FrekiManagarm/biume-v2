@@ -88,6 +88,7 @@ export const Route = createFileRoute("/dashboard/clients")({
       },
     ],
   }),
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): ClientsSearch => ({
     search: typeof search.search === "string" ? search.search : "",
     status: typeof search.status === "string" ? search.status : "tous",
@@ -270,7 +271,7 @@ export function ClientsPage() {
                 updateSearch({ status: value, page: 1 })
               }
             >
-              <SelectTrigger className="h-11 w-full bg-white lg:w-[220px]">
+              <SelectTrigger className="h-11 w-full bg-white lg:w-55">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -509,20 +510,20 @@ function ClientFormDialog({
       } catch (error) {
         const wasStale = client
           ? await handleClientEditError({
-              clientId: client.id,
-              error,
-              onStale: async (clientId) => {
-                if (onStale) {
-                  await onStale(clientId);
-                  return;
-                }
+            clientId: client.id,
+            error,
+            onStale: async (clientId) => {
+              if (onStale) {
+                await onStale(clientId);
+                return;
+              }
 
-                await invalidateClientLists((queryKey) =>
-                  queryClient.invalidateQueries({ queryKey }),
-                );
-                onOpenChange(false);
-              },
-            })
+              await invalidateClientLists((queryKey) =>
+                queryClient.invalidateQueries({ queryKey }),
+              );
+              onOpenChange(false);
+            },
+          })
           : false;
 
         if (wasStale) {
@@ -843,7 +844,7 @@ function ClientDetailsDialog({
             <div className="flex min-w-0 items-start gap-4 pr-8">
               <InitialsBadge name={getClientDisplayName(client.name)} />
               <CredenzaHeader className="min-w-0 flex-1 gap-1 text-left">
-                <CredenzaTitle className="min-w-0 break-words text-xl font-semibold tracking-tight text-slate-950">
+                <CredenzaTitle className="min-w-0 wrap-break-word text-xl font-semibold tracking-tight text-slate-950">
                   {getClientDisplayName(client.name)}
                 </CredenzaTitle>
                 <CredenzaDescription className="text-sm leading-relaxed text-slate-600">
@@ -860,7 +861,7 @@ function ClientDetailsDialog({
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Email
                 </dt>
-                <dd className="min-w-0 break-words text-sm text-slate-800">
+                <dd className="min-w-0 wrap-break-word text-sm text-slate-800">
                   {client.email || "Email non renseigné"}
                 </dd>
               </div>
@@ -868,7 +869,7 @@ function ClientDetailsDialog({
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Téléphone
                 </dt>
-                <dd className="min-w-0 break-words text-sm text-slate-800">
+                <dd className="min-w-0 wrap-break-word text-sm text-slate-800">
                   {client.phone || "Téléphone non renseigné"}
                 </dd>
               </div>
@@ -876,7 +877,7 @@ function ClientDetailsDialog({
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Adresse
                 </dt>
-                <dd className="min-w-0 break-words text-sm leading-6 text-slate-800">
+                <dd className="min-w-0 wrap-break-word text-sm leading-6 text-slate-800">
                   {address || "Adresse non renseignée"}
                 </dd>
               </div>
@@ -897,7 +898,7 @@ function ClientDetailsDialog({
                       className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800"
                     >
                       <PawPrint className="size-4 shrink-0 text-emerald-700" />
-                      <span className="min-w-0 break-words">{pet.name}</span>
+                      <span className="min-w-0 wrap-break-word">{pet.name}</span>
                     </li>
                   ))}
                 </ul>
@@ -958,7 +959,7 @@ function getFieldError(errors: unknown[]) {
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
       {children}
     </section>
   );
@@ -1005,7 +1006,7 @@ function MetricCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -1018,7 +1019,7 @@ function MetricCard({
           className={cn(
             "flex size-11 shrink-0 items-center justify-center rounded-xl border",
             tone === "emerald" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-800",
+            "border-emerald-200 bg-emerald-50 text-emerald-800",
             tone === "sky" && "border-sky-200 bg-sky-50 text-sky-800",
             tone === "amber" && "border-amber-200 bg-amber-50 text-amber-800",
             tone === "slate" && "border-slate-200 bg-slate-50 text-slate-600",

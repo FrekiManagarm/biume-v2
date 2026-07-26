@@ -74,25 +74,25 @@ const tabs: Array<{
   description: string;
   icon: typeof Building2;
 }> = [
-  {
-    id: "organization",
-    title: "Organisation",
-    description: "Identité, langue et IA",
-    icon: Building2,
-  },
-  {
-    id: "notifications",
-    title: "Notifications",
-    description: "Préférences de contact",
-    icon: Bell,
-  },
-  {
-    id: "billing",
-    title: "Facturation",
-    description: "Plan et abonnement",
-    icon: CreditCard,
-  },
-];
+    {
+      id: "organization",
+      title: "Organisation",
+      description: "Identité, langue et IA",
+      icon: Building2,
+    },
+    {
+      id: "notifications",
+      title: "Notifications",
+      description: "Préférences de contact",
+      icon: Bell,
+    },
+    {
+      id: "billing",
+      title: "Facturation",
+      description: "Plan et abonnement",
+      icon: CreditCard,
+    },
+  ];
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({
@@ -104,6 +104,7 @@ export const Route = createFileRoute("/dashboard/settings")({
       },
     ],
   }),
+  ssr: true,
   loader: async () => {
     const [session, organization] = await Promise.all([
       getSession(),
@@ -213,7 +214,7 @@ function SettingsPage() {
       <div className="grid w-full gap-6">
         <div className="grid gap-6 lg:grid-cols-[19rem_1fr]">
           <aside className="lg:sticky lg:top-20 lg:self-start">
-            <nav className="divide-y divide-slate-200 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]">
+            <nav className="divide-y divide-slate-200 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -649,7 +650,7 @@ function NotificationsTab({ form }: { form: SettingsFormApi }) {
         <form.Field
           name="emailNotifications"
           children={(field: SettingsFieldApi) => (
-            <div className="mt-6 flex flex-col gap-4 rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200">
                   <Mail className="size-4" />
@@ -893,7 +894,7 @@ function Panel({
   return (
     <div
       className={cn(
-        "rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6",
+        "rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6",
         className,
       )}
     >
@@ -983,7 +984,7 @@ function StatusPill({
       className={cn(
         "inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold",
         tone === "success" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-800",
+        "border-emerald-200 bg-emerald-50 text-emerald-800",
         tone === "warning" && "border-amber-200 bg-amber-50 text-amber-800",
         tone === "danger" && "border-red-200 bg-red-50 text-red-700",
         tone === "neutral" && "border-slate-200 bg-slate-50 text-slate-600",
@@ -1042,8 +1043,8 @@ function formatDate(value: number | string | Date) {
 function getSubscriptionStatus(
   subscription:
     | NonNullable<
-        ReturnType<typeof useCustomer>["data"]
-      >["subscriptions"][number]
+      ReturnType<typeof useCustomer>["data"]
+    >["subscriptions"][number]
     | undefined,
 ): {
   label: string;

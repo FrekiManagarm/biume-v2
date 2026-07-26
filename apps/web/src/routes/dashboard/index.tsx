@@ -23,6 +23,7 @@ export const Route = createFileRoute("/dashboard/")({
       },
     ],
   }),
+  ssr: true,
   loaderDeps: () => ({
     selectedDate: getDashboardOverviewDate(),
   }),
@@ -63,8 +64,8 @@ function DashboardOverviewPending() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <Skeleton className="h-[28rem] rounded-lg" />
-        <Skeleton className="h-[28rem] rounded-lg" />
+        <Skeleton className="h-112 rounded-lg" />
+        <Skeleton className="h-112 rounded-lg" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">

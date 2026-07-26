@@ -16,7 +16,7 @@ export const Route = createFileRoute("/dashboard/reports_/$id")({
       },
     ],
   }),
-  ssr: "data-only",
+  ssr: true,
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(reportQueryOptions(params.id)),
   component: RouteComponent,

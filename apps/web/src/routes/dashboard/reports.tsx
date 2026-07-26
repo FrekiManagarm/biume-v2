@@ -28,6 +28,7 @@ export const Route = createFileRoute("/dashboard/reports")({
         ? search.page
         : Number(search.page ?? 1) || 1,
   }),
+  ssr: true,
   loaderDeps: ({ search }) => ({
     search: search.search ?? "",
     status: search.status ?? "tous",
