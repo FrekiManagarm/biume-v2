@@ -14,13 +14,13 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * propriété transformée sur un même nœud se remplacent l'une l'autre à
  * chaque frame. Tout passe donc par GSAP ici — plus de `motion/react`.
  *
- * Les garde d'accessibilité liées au mouvement réduit sont délibérément
- * **écarté**es de cette landing, sur demande explicite et répétée, après
+ * Les gardes d'accessibilité liées au mouvement réduit sont délibérément
+ * **écartées** de cette landing, sur demande explicite et répétée, après
  * que la conséquence a été signalée : les personnes sujettes au mal des
  * transports subiront la page en plein mouvement. Ne pas réintroduire la
  * garde sans redemander.
  *
- * Ce qui reste, et qui n'est pas de l'accessibilité mais de la robustesse :
+ * Ce qui reste, et qui ne relève pas du mouvement réduit mais de la robustesse :
  * aucun état de départ n'est posé en CSS. Si le script échoue, la page
  * est complète et lisible — `/` est indexée.
  */
@@ -96,8 +96,12 @@ export function V2MotionRoot({ children }: { children: ReactNode }) {
 
       event.preventDefault();
       lenis.scrollTo(target, { offset: ANCHOR_OFFSET, duration: 1.3 });
-      // Le lien d'évitement doit déplacer le focus, pas seulement la vue.
-      target.focus({ preventScroll: true });
+      // Une cible non focusable ignorerait `focus()` en silence : seul
+      // le lien d'évitement, qui porte `tabindex="-1"`, déplace vraiment
+      // le focus. Pour les autres ancres, seule la vue se déplace.
+      if (target.hasAttribute("tabindex")) {
+        target.focus({ preventScroll: true });
+      }
     };
 
     document.addEventListener("click", onAnchorClick);
