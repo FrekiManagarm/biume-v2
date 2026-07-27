@@ -1,0 +1,751 @@
+/* ============================================================
+   Biume — Landing v4 · « La chambre noire »
+   ------------------------------------------------------------
+   Système entièrement isolé sous `.lv4`. Ne touche ni `.v2`
+   (accueil + pages SEO), ni `.lv2`, ni `.lv3`.
+
+   ── La direction ──────────────────────────────────────────────
+   La page est un volume, pas une feuille. Un plan profond teinté
+   d'encre violette, traversé de lumières lentes, dans lequel les
+   surfaces produit flottent et prennent le jour. On n'y lit pas un
+   document : on y entre.
+
+   ── Les couleurs ──────────────────────────────────────────────
+   Les trois couleurs de Biume ne sont pas des remplissages ici,
+   ce sont des sources lumineuses, et elles gardent leurs rôles :
+
+     violet  décide   — l'action, la marque du praticien
+     bleu    relie    — la continuité, le suivi, le fil
+     vert    confirme — la validation, l'état abouti
+
+   Aucune autre teinte n'entre dans le système.
+
+   ── Le mouvement ──────────────────────────────────────────────
+   Le mouvement est permanent et assumé : dérive des lumières de
+   fond, parallaxe, encrage mot à mot, pulsations d'état. Il n'est
+   jamais désarmé — décision produit explicite.
+   ============================================================ */
+
+/* Position de la lumière qui suit le curseur sur une surface. */
+@property --lv4-mx {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --lv4-my {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+.lv4 {
+  /* ---- Profondeurs ---- */
+  --lv4-void: #0b0910; /* le fond du volume */
+  --lv4-plane: #100d18; /* plan de section */
+  --lv4-surface: #171327; /* surface produit posée dans le volume */
+  --lv4-surface-2: #1f1a33; /* surface en second plan */
+
+  /* ---- Encres ---- */
+  /* Les ratios sont mesurés sur la SURFACE (#171327), pas sur le fond
+     du volume : c'est le plan le plus clair de la page, donc le pire
+     cas. Calibrer sur le fond ferait passer les annotations posées sur
+     les surfaces sous le seuil. */
+  --lv4-text: #f3f1f9; /* 12.5:1 sur la surface */
+  --lv4-text-2: #a9a4bc; /*  6.0:1 sur la surface — AA corps */
+  --lv4-text-3: #8a84a3; /*  5.1:1 sur la surface — AA corps */
+
+  /* ---- Filets ---- */
+  --lv4-line: rgb(255 255 255 / 0.09);
+  --lv4-line-2: rgb(255 255 255 / 0.17);
+
+  /* ---- Les trois lumières de Biume ---- */
+  --lv4-violet: #9a8ce9; /*  6.5:1 — décide */
+  --lv4-violet-core: #6b5ac8; /* la teinte de marque, en aplat */
+  --lv4-violet-deep: #57489f;
+  --lv4-blue: #77b6d4; /*  7.0:1 — relie */
+  --lv4-blue-core: #5d9bb8;
+  --lv4-green: #48bb7d; /*  6.9:1 — confirme */
+  --lv4-green-core: #2e9866;
+
+  /* ---- Mesures ---- */
+  --lv4-gutter: 1.25rem;
+  --lv4-page: 1320px;
+  --lv4-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Couches ---- */
+  --lv4-z-atmosphere: -1;
+  --lv4-z-masthead: 40;
+  --lv4-z-overlay: 45;
+
+  position: relative;
+  background-color: var(--lv4-void);
+  color: var(--lv4-text);
+  font-family: var(--font-lv4-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv01", "ss01";
+  color-scheme: dark;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+
+  /* Pas d'`overflow-x: clip` ici : dans Chromium, une coupure sur un
+     axe fait de l'élément le scrollport de référence des descendants
+     `sticky`, et le panneau du relevé cesse de tenir. Chaque section
+     qui déborde porte sa propre coupure. */
+}
+
+@media (min-width: 768px) {
+  .lv4 {
+    --lv4-gutter: 2rem;
+  }
+}
+
+/* ============================================================
+   L'atmosphère
+   ------------------------------------------------------------
+   Trois lumières de marque dérivent lentement derrière la page, et
+   une trame de colonnes donne l'échelle du volume.
+
+   La couche est `fixed`, en `z-index: -1` sous `isolation: isolate`,
+   et `pointer-events: none`. Elle n'anime que `transform` : aucune
+   repeinte pendant le scroll, quel que soit le contenu au-dessus.
+   ============================================================ */
+
+.lv4-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: var(--lv4-z-atmosphere);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lv4-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  will-change: transform;
+}
+
+.lv4-glow-violet {
+  top: -18vh;
+  left: -8vw;
+  width: 62vw;
+  height: 62vw;
+  background: radial-gradient(
+    circle,
+    rgb(107 90 200 / 0.5) 0%,
+    rgb(107 90 200 / 0.14) 45%,
+    transparent 70%
+  );
+  animation: lv4-drift-a 34s ease-in-out infinite alternate;
+}
+
+.lv4-glow-blue {
+  top: 24vh;
+  right: -16vw;
+  width: 54vw;
+  height: 54vw;
+  background: radial-gradient(
+    circle,
+    rgb(93 155 184 / 0.38) 0%,
+    rgb(93 155 184 / 0.1) 48%,
+    transparent 70%
+  );
+  animation: lv4-drift-b 44s ease-in-out infinite alternate;
+}
+
+.lv4-glow-green {
+  bottom: -24vh;
+  left: 22vw;
+  width: 46vw;
+  height: 46vw;
+  background: radial-gradient(
+    circle,
+    rgb(46 152 102 / 0.3) 0%,
+    rgb(46 152 102 / 0.08) 48%,
+    transparent 70%
+  );
+  animation: lv4-drift-c 52s ease-in-out infinite alternate;
+}
+
+@keyframes lv4-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(14vw, 12vh, 0) scale(1.18);
+  }
+}
+
+@keyframes lv4-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-12vw, -14vh, 0) scale(0.92);
+  }
+}
+
+@keyframes lv4-drift-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(10vw, -10vh, 0) scale(1.22);
+  }
+}
+
+/* La trame de colonnes : l'échelle du volume, pas une décoration.
+   Douze colonnes, exactement celles sur lesquelles la page s'aligne. */
+.lv4-mesh {
+  position: absolute;
+  inset: 0;
+  display: none;
+  margin: 0 auto;
+  max-width: var(--lv4-page);
+  grid-template-columns: repeat(12, 1fr);
+  padding: 0 var(--lv4-gutter);
+}
+
+@media (min-width: 1024px) {
+  .lv4-mesh {
+    display: grid;
+  }
+}
+
+.lv4-mesh > span {
+  border-left: 1px solid rgb(255 255 255 / 0.045);
+}
+
+.lv4-mesh > span:last-child {
+  border-right: 1px solid rgb(255 255 255 / 0.045);
+}
+
+/* Voile de lisibilité : sans lui, une lumière qui passe sous un
+   paragraphe ferait chuter le contraste sous le seuil. */
+.lv4-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(11 9 16 / 0.42) 0%,
+    rgb(11 9 16 / 0.72) 42%,
+    rgb(11 9 16 / 0.86) 100%
+  );
+}
+
+/* ============================================================
+   La nappe
+   ------------------------------------------------------------
+   Le geste de motion signature : une lumière large et floue
+   traverse la page de haut en bas au rythme du scroll, en passant
+   du violet au bleu puis au vert — l'ordre du parcours produit.
+   Elle ne réagit pas à un déclencheur, elle accompagne : c'est une
+   respiration, pas un effet.
+   ============================================================ */
+
+.lv4-sheet {
+  position: absolute;
+  left: -20vw;
+  right: -20vw;
+  top: 0;
+  height: 58vh;
+  border-radius: 50%;
+  background-color: rgb(107 90 200 / 0.42);
+  filter: blur(90px);
+  will-change: transform;
+}
+
+/* ============================================================
+   Le grain
+   ------------------------------------------------------------
+   Posé sur une couche fixe et `pointer-events: none`, jamais sur un
+   conteneur qui défile : un filtre sur du contenu en mouvement
+   force une repeinte GPU continue et effondre le framerate mobile.
+   ============================================================ */
+
+.lv4-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.055;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Les plans photographiques
+   ------------------------------------------------------------
+   La photo n'est jamais un fond décoratif : c'est une scène de
+   soin. Elle est donc traitée comme telle — recadrage serré,
+   vignettage sombre, dérive lente, et le texte posé en marge
+   plutôt qu'au centre par-dessus le sujet.
+   ============================================================ */
+
+/* Le cadrage est piloté par GSAP au scroll. Aucune keyframe CSS ici :
+   une animation déclarative et une timeline qui écrivent toutes deux
+   `transform` sur le même nœud se remplacent l'une l'autre à chaque
+   frame. */
+.lv4-plate-img {
+  will-change: transform;
+}
+
+/* Vignettage : ramène le regard au centre du geste et garantit que
+   le texte posé en bas garde son contraste quelle que soit l'image. */
+.lv4-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 90% at 50% 45%,
+      transparent 30%,
+      rgb(11 9 16 / 0.55) 78%,
+      rgb(11 9 16 / 0.85) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgb(11 9 16 / 0.95) 0%,
+      rgb(11 9 16 / 0.55) 34%,
+      rgb(11 9 16 / 0.2) 62%,
+      rgb(11 9 16 / 0.45) 100%
+    );
+}
+
+/* Teinte aubergine posée sur la photo : elle raccorde l'image au
+   volume de la page au lieu de la laisser flotter comme une vignette
+   rapportée. */
+.lv4-tint {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: soft-light;
+  background: linear-gradient(
+    150deg,
+    rgb(107 90 200 / 0.55) 0%,
+    rgb(93 155 184 / 0.28) 52%,
+    rgb(46 152 102 / 0.3) 100%
+  );
+}
+
+/* ============================================================
+   Typographie
+   ============================================================ */
+
+.lv4-display {
+  font-size: clamp(2.4rem, 1.1rem + 4.4vw, 4.6rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.038em;
+  font-stretch: 96%;
+  text-wrap: balance;
+}
+
+.lv4-h2 {
+  font-size: clamp(1.9rem, 1.1rem + 2.4vw, 3.1rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lv4-h3 {
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.lv4-lead {
+  font-size: clamp(1.02rem, 0.96rem + 0.3vw, 1.2rem);
+  line-height: 1.62;
+  max-width: 62ch;
+}
+
+.lv4-body {
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 66ch;
+}
+
+/* L'annotation : cotes, numéros, étiquettes de champ. Rien d'autre. */
+.lv4-note {
+  font-family: var(--font-lv4-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.lv4-raw {
+  font-family: var(--font-lv4-mono), ui-monospace, monospace;
+  font-size: 0.82rem;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+}
+
+.lv4-num {
+  font-family: var(--font-lv4-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Les grands chiffres restent dans le caractère de labeur : en
+   monospace, « 24,99 € » se lirait « 24 , 99 € », la virgule et le
+   symbole occupant une chasse pleine. */
+.lv4-figure {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+
+/* Amorce de cote qui ouvre chaque section. */
+.lv4-tick {
+  display: inline-block;
+  width: 1.75rem;
+  border-top: 2px solid currentColor;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   Surfaces
+   ------------------------------------------------------------
+   Une surface n'est pas une carte : c'est un plan qui prend le jour.
+   Filet intérieur clair en haut (l'arête éclairée), ombre portée
+   teintée du volume, jamais un halo néon posé autour.
+   ============================================================ */
+
+.lv4-surface {
+  position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.045) 0%,
+      rgb(255 255 255 / 0) 38%
+    ),
+    var(--lv4-surface);
+  border: 1px solid var(--lv4-line);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 32px 80px -40px rgb(0 0 0 / 0.9);
+}
+
+/* Surface qui s'éclaire là où passe le curseur. La lumière est un
+   pseudo-élément en `opacity` : le contenu ne repeint jamais. */
+.lv4-lit::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    340px circle at var(--lv4-mx) var(--lv4-my),
+    rgb(154 140 233 / 0.16),
+    transparent 62%
+  );
+  transition: opacity 320ms ease;
+}
+
+.lv4-lit:hover::after,
+.lv4-lit:focus-within::after {
+  opacity: 1;
+}
+
+/* ============================================================
+   Actions
+   ============================================================ */
+
+.lv4-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1.35rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 260ms ease;
+}
+
+.lv4-btn:focus-visible {
+  outline: 2px solid var(--lv4-violet);
+  outline-offset: 3px;
+}
+
+.lv4-btn-primary {
+  background-color: var(--lv4-violet-core);
+  border-color: rgb(255 255 255 / 0.14);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.24),
+    0 10px 30px -14px rgb(107 90 200 / 0.85);
+}
+
+.lv4-btn-primary:hover {
+  background-color: #7767d6;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 14px 40px -14px rgb(107 90 200 / 0.95);
+}
+
+/* Le lustre qui traverse l'action principale. Perpétuel et lent :
+   il signale la surface active sans réclamer l'attention. */
+.lv4-btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    rgb(255 255 255 / 0.22) 50%,
+    transparent 68%
+  );
+  transform: translateX(-100%);
+  animation: lv4-sheen 5.5s ease-in-out infinite;
+}
+
+@keyframes lv4-sheen {
+  0%,
+  62% {
+    transform: translateX(-100%);
+  }
+  92%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.lv4-btn-ghost {
+  background-color: rgb(255 255 255 / 0.03);
+  border-color: var(--lv4-line-2);
+  color: var(--lv4-text);
+}
+
+.lv4-btn-ghost:hover {
+  background-color: rgb(255 255 255 / 0.07);
+  border-color: rgb(255 255 255 / 0.28);
+}
+
+.lv4-btn-sm {
+  min-height: 2.375rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+}
+
+.lv4-link {
+  color: var(--lv4-text-2);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.28em;
+  text-decoration-thickness: 1px;
+  transition:
+    color 200ms ease,
+    text-decoration-color 200ms ease,
+    text-underline-offset 200ms var(--lv4-ease);
+}
+
+.lv4-link:hover {
+  color: var(--lv4-text);
+  text-decoration-color: var(--lv4-violet);
+  text-underline-offset: 0.18em;
+}
+
+.lv4-link:focus-visible {
+  outline: 2px solid var(--lv4-violet);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* ============================================================
+   Révélations
+   ------------------------------------------------------------
+   Aucun état masqué n'est déclaré ici. GSAP pose l'état de départ
+   dans `useGSAP`, c'est-à-dire dans un `useLayoutEffect`, donc avant
+   la première peinture — il n'y a ni clignotement, ni règle CSS qui
+   pourrait laisser un bloc invisible si le script ne s'exécute pas.
+
+   Le rendu serveur est par construction complet : sans JavaScript, la
+   page est entièrement lisible et immobile.
+   ============================================================ */
+
+/* SplitText pose ses propres masques de ligne. La seule chose à
+   garantir ici est que les lignes restent des blocs : sur un élément
+   en ligne, la translation verticale ne rend pas. */
+.lv4-line {
+  display: block;
+}
+
+/* ============================================================
+   Le relevé
+   ============================================================ */
+
+/* La couleur du mot est pilotée par GSAP à l'allumage. Seule la
+   couleur au repos est déclarée ici : sans JavaScript, la phrase est
+   lisible d'emblée, à pleine encre. */
+.lv4-word {
+  color: var(--lv4-text);
+}
+
+/* Le pas actif s'allume par son filet, pas par un halo autour du bloc :
+   une `box-shadow` sur l'élément entier dessinerait une carte
+   lumineuse, ce que cette page n'a nulle part. La lueur est donc
+   portée par un trait d'un pixel, où elle se lit comme une arête
+   éclairée. */
+.lv4-step {
+  position: relative;
+  border-left: 1px solid var(--lv4-line);
+}
+
+.lv4-step::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--lv4-violet);
+  box-shadow: 0 0 16px 1px rgb(154 140 233 / 0.5);
+  opacity: 0;
+  transition: opacity 520ms var(--lv4-ease);
+}
+
+.lv4-step[data-active="true"]::before {
+  opacity: 1;
+}
+
+.lv4-step-label {
+  color: var(--lv4-text-3);
+  transition: color 420ms ease;
+}
+
+.lv4-step[data-active="true"] .lv4-step-label {
+  color: var(--lv4-violet);
+}
+
+/* Volets superposés : ils se croisent en opacité et en échelle, deux
+   propriétés composées par le GPU. Aucune mise en page n'est animée. */
+.lv4-pane {
+  opacity: 0;
+  transform: scale(0.985);
+  transition:
+    opacity 420ms var(--lv4-ease),
+    transform 620ms var(--lv4-ease);
+}
+
+.lv4-pane[data-active="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   États vivants
+   ============================================================ */
+
+/* Le point qui respire. Employé uniquement là où quelque chose est
+   réellement en cours côté produit. */
+.lv4-pulse {
+  position: relative;
+}
+
+.lv4-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: lv4-pulse 2.6s var(--lv4-ease) var(--lv4-pulse-delay, 0ms)
+    infinite;
+}
+
+@keyframes lv4-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+/* Le tracé du fil est piloté par DrawSVGPlugin, qui écrit lui-même
+   `stroke-dasharray` et `stroke-dashoffset`. Rien à déclarer ici :
+   une valeur CSS concurrente serait écrasée à la première frame. */
+
+/* Bande de chargement du brouillon : la relecture en cours. */
+.lv4-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--lv4-violet-deep) 0%,
+    var(--lv4-violet) 42%,
+    var(--lv4-violet-deep) 84%
+  );
+  background-size: 240% 100%;
+  animation: lv4-shimmer 3.2s linear infinite;
+}
+
+@keyframes lv4-shimmer {
+  from {
+    background-position: 140% 0;
+  }
+  to {
+    background-position: -140% 0;
+  }
+}
+
+/* ============================================================
+   Questions
+   ============================================================ */
+
+@supports selector(details::details-content) {
+  .lv4 details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 420ms var(--lv4-ease),
+      content-visibility 420ms allow-discrete,
+      opacity 280ms ease;
+  }
+
+  .lv4 details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+.lv4 summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.lv4 summary::-webkit-details-marker {
+  display: none;
+}
+
+.lv4 summary:focus-visible {
+  outline: 2px solid var(--lv4-violet);
+  outline-offset: 2px;
+}
+
+.lv4-faq-sign {
+  transition: transform 420ms var(--lv4-ease);
+}
+
+.lv4 details[open] .lv4-faq-sign {
+  transform: rotate(135deg);
+}
