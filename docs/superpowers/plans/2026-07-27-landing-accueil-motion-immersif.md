@@ -865,7 +865,10 @@ describe("atelier de l'accueil", () => {
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
     for (const section of REPORT_TRANSFORMATION_DEMO.sections) {
-      expect(text).toContain(section.label.toUpperCase());
+      // Les libellés sont mis en capitales par CSS (`uppercase`), donc le
+      // texte du document les porte tels quels. Ne pas asserter sur une
+      // version majuscule : elle n'existe qu'à l'écran.
+      expect(text).toContain(section.label);
       expect(text).toContain(section.value);
     }
     expect(text).toContain("Validé par vous");
@@ -896,10 +899,12 @@ describe("atelier de l'accueil", () => {
 
   test("laisse les décors hors de l'arbre d'accessibilité", () => {
     const html = renderToStaticMarkup(<V2Atelier />);
-    const rail = html.match(/<svg\b[^>]*data-rail-progress[\s\S]*?<\/svg>/)?.[0];
-    const railHost = html.match(/<div\b[^>]*data-rail\b[^>]*>/)?.[0];
+    // Le rail, ses pastilles et le sceau sont du décor : ils redisent
+    // visuellement ce que le texte porte déjà.
+    const railHost = html.match(/<div\b[^>]*\sdata-rail="[^"]*"[^>]*>/)?.[0];
 
-    expect(railHost ?? rail).toContain('aria-hidden="true"');
+    expect(railHost).toBeDefined();
+    expect(railHost).toContain('aria-hidden="true"');
   });
 });
 ```
@@ -978,7 +983,7 @@ export function V2Atelier() {
           calcule ses quatre temps ; en dessous, elle n'a pas de hauteur
           propre et la démonstration se lit au fil du scroll normal. */}
       <div data-atelier-track className="relative">
-        <div data-atelier-stage className="">
+        <div data-atelier-stage>
           <div className="mx-auto w-full max-w-[1200px] px-5 py-14 md:px-8 md:py-16">
             <div
               ref={root}
