@@ -1,15 +1,9 @@
-import {
-  Check,
-  FileSearch,
-  FileText,
-  Mic,
-} from "lucide-react";
+import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
-import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
 import { Reveal } from "./reveal";
 
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
@@ -72,65 +66,6 @@ function SectionIntro({
         </div>
       ) : null}
     </Reveal>
-  );
-}
-
-/* ---------- Transformation — les contenus validés de l'accueil ---------- */
-
-const transformationStages = [
-  {
-    icon: Mic,
-    title: "Notes de séance",
-    body: REPORT_TRANSFORMATION_DEMO.note,
-  },
-  {
-    icon: FileSearch,
-    title: "Reformulation proposée",
-    body: REPORT_TRANSFORMATION_DEMO.sections
-      .map((section) => `${section.label} : ${section.value}`)
-      .join(" · "),
-  },
-  {
-    icon: FileText,
-    title: "Compte rendu à valider",
-    body: REPORT_TRANSFORMATION_DEMO.ownerSummary,
-  },
-] as const;
-
-export function V2Features() {
-  return (
-    <SectionShell id="produit" ariaLabelledBy="v2-features-title">
-      <SectionIntro
-        eyebrow="Le parcours"
-        title="Ce que vous notez reste précis. Ce que le propriétaire lit devient clair."
-        id="v2-features-title"
-      >
-        <p>
-          Biume organise vos observations sans les appauvrir. Vous retrouvez
-          chaque information, puis vous relisez la version destinée au
-          propriétaire.
-        </p>
-      </SectionIntro>
-      <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {transformationStages.map((stage) => (
-          <Reveal key={stage.title}>
-            <article className="v2-card h-full p-8">
-              <stage.icon
-                aria-hidden="true"
-                className="size-6 text-[color:var(--v2-violet-ink)]"
-                strokeWidth={1.5}
-              />
-              <h3 className="mt-5 text-[1.15rem] font-medium tracking-[-0.01em] text-[color:var(--v2-ink)]">
-                {stage.title}
-              </h3>
-              <p className="mt-2.5 text-[0.95rem] leading-[1.6] text-[color:var(--v2-ink-soft)]">
-                {stage.body}
-              </p>
-            </article>
-          </Reveal>
-        ))}
-      </div>
-    </SectionShell>
   );
 }
 

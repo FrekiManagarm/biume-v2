@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import { V2Atelier } from "../components/v2/atelier";
 import {
   DECIDING_SENTENCE,
   MANIFESTO,
@@ -45,5 +47,59 @@ describe("manifeste de l'accueil", () => {
     // donc sans être remarquée.
     expect(MANIFESTO.endsWith(DECIDING_SENTENCE)).toBe(true);
     expect(DECIDING_SENTENCE.split(" ")).toHaveLength(4);
+  });
+});
+
+describe("atelier de l'accueil", () => {
+  test("rend la démonstration entière et validée avant toute hydratation", () => {
+    const html = renderToStaticMarkup(<V2Atelier />);
+    const text = textOnly(html);
+
+    // L'état de repos est l'état final : sans script, la démonstration
+    // se lit d'un coup, complète. L'animation ne conditionne jamais la
+    // compréhension.
+    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
+    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
+    for (const section of REPORT_TRANSFORMATION_DEMO.sections) {
+      // Les libellés sont mis en capitales par CSS (`uppercase`), donc le
+      // texte du document les porte tels quels. Ne pas asserter sur une
+      // version majuscule : elle n'existe qu'à l'écran.
+      expect(text).toContain(section.label);
+      expect(text).toContain(section.value);
+    }
+    expect(text).toContain("Validé par vous");
+    expect(html).not.toMatch(exactZeroOpacity);
+  });
+
+  test("porte l'ancre produit et la mention de démonstration", () => {
+    const html = renderToStaticMarkup(<V2Atelier />);
+
+    expect(html).toContain('id="produit"');
+    expect(textOnly(html)).toContain(
+      "Démonstration à partir d'un exemple de séance.",
+    );
+  });
+
+  test("expose les accroches que la séquence ira chercher", () => {
+    const html = renderToStaticMarkup(<V2Atelier />);
+
+    expect(html.match(/data-fragment="\d"/g)).toHaveLength(3);
+    expect(html.match(/data-slot="\d"/g)).toHaveLength(3);
+    expect(html.match(/data-value="\d"/g)).toHaveLength(3);
+    expect(html.match(/data-rail-node="\d"/g)).toHaveLength(3);
+    expect(html).toContain("data-atelier-root");
+    expect(html).toContain("data-rail-progress");
+    expect(html).toContain("data-seal");
+    expect(html).toContain("data-owner");
+  });
+
+  test("laisse les décors hors de l'arbre d'accessibilité", () => {
+    const html = renderToStaticMarkup(<V2Atelier />);
+    // Le rail, ses pastilles et le sceau sont du décor : ils redisent
+    // visuellement ce que le texte porte déjà.
+    const railHost = html.match(/<div\b[^>]*\sdata-rail="[^"]*"[^>]*>/)?.[0];
+
+    expect(railHost).toBeDefined();
+    expect(railHost).toContain('aria-hidden="true"');
   });
 });

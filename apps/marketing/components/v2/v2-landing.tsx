@@ -1,5 +1,6 @@
 import "./landing.css";
 
+import { V2Atelier } from "./atelier";
 import { v2FontVariables } from "./fonts";
 import { V2Hero } from "./hero";
 import { V2Manifesto } from "./manifesto";
@@ -10,7 +11,6 @@ import {
   V2Control,
   V2FieldStories,
   V2Faq,
-  V2Features,
   V2FollowUp,
   V2Footer,
   V2Pricing,
@@ -24,7 +24,7 @@ export function V2Landing() {
         <main id="contenu" tabIndex={-1}>
           <V2Hero />
           <V2Manifesto />
-          <V2Features />
+          <V2Atelier />
           <V2Control />
           <V2FollowUp />
           <V2FieldStories />
