@@ -3,12 +3,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { V2Atelier } from "../components/v2/atelier";
+import { V2Control } from "../components/v2/sections";
 import {
   DECIDING_SENTENCE,
   MANIFESTO,
   V2Manifesto,
 } from "../components/v2/manifesto";
-import { exactZeroOpacity, textOnly } from "./landing-test-utils";
+import {
+  exactZeroOpacity,
+  renderWithLandingImageConfig,
+  textOnly,
+} from "./landing-test-utils";
 
 const MANIFESTO_TEXT =
   "Vous notez « restriction thoracique gauche ». Le propriétaire lit « la mobilité du thorax a été travaillée pendant la séance ». Même observation, deux lecteurs. Biume écrit la seconde phrase. Vous gardez la première.";
@@ -134,5 +139,21 @@ describe("séquence de l'atelier", () => {
     // Le texte est déjà lu deux fois dans l'arbre — dans la note et dans
     // le champ. Le double ne doit pas le faire lire une troisième fois.
     expect(source).toContain('setAttribute("aria-hidden", "true")');
+  });
+});
+
+describe("contrôle du praticien", () => {
+  test("montre le compte rendu relu, jamais une capture générique", () => {
+    const html = renderWithLandingImageConfig(<V2Control />);
+    const text = textOnly(html);
+
+    // Biume n'a aucune preuve sociale : la crédibilité ne repose que sur
+    // des démonstrations fidèles du produit. Une photo stock de
+    // dashboard analytique n'en est pas une.
+    expect(html).not.toContain("dashboard-image");
+    expect(text).toContain("Biume prépare. Vous gardez la main.");
+    expect(text).toContain("Rien n’est partagé automatiquement");
+    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.sections[0]!.value);
+    expect(html).toContain('data-control-panel="true"');
   });
 });

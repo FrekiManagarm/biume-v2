@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
 import { webAppPath } from "../../lib/web-app-url";
 import { Reveal } from "./reveal";
 
@@ -114,14 +115,43 @@ export function V2Control() {
           </Reveal>
         </div>
         <Reveal>
-          <div className="v2-panel overflow-hidden p-2.5">
-            <Image
-              src="/assets/images/dashboard-image.jpg"
-              alt="Interface de relecture Biume : le compte rendu proposé, prêt à être validé passage par passage."
-              width={1920}
-              height={1282}
-              className="h-auto w-full rounded-[18px]"
-            />
+          <div data-control-panel="true" className="v2-panel p-6 md:p-8">
+            <header className="flex items-baseline justify-between gap-4 border-b border-[color:var(--v2-line)] pb-4">
+              <h3 className="text-[1.05rem] font-medium text-[color:var(--v2-ink)]">
+                Relecture du compte rendu
+              </h3>
+              <p className="v2-mono text-[0.72rem] uppercase tracking-[0.12em] text-[color:var(--v2-ink-faint)]">
+                Brouillon
+              </p>
+            </header>
+
+            <dl className="mt-6 space-y-5">
+              {REPORT_TRANSFORMATION_DEMO.sections.map((section) => (
+                <div
+                  key={section.label}
+                  className="border-l border-[color:var(--v2-line-strong)] pl-4"
+                >
+                  <dt className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[color:var(--v2-ink-faint)]">
+                    {section.label}
+                  </dt>
+                  <dd className="mt-1.5 text-[1rem] leading-[1.55] text-[color:var(--v2-ink)]">
+                    {section.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="mt-7 flex flex-wrap items-center gap-2.5 border-t border-[color:var(--v2-line)] pt-6">
+              <span className="v2-btn v2-btn-primary v2-btn-sm">
+                Valider ce passage
+              </span>
+              <span className="v2-btn v2-btn-secondary v2-btn-sm">
+                Reformuler
+              </span>
+              <p className="ml-auto text-[0.82rem] text-[color:var(--v2-ink-faint)]">
+                Aucun envoi tant que vous n&apos;avez pas validé.
+              </p>
+            </div>
           </div>
         </Reveal>
       </div>
