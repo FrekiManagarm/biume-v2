@@ -157,3 +157,33 @@ describe("contrôle du praticien", () => {
     expect(html).toContain('data-control-panel="true"');
   });
 });
+
+describe("mouvement du reste de la page", () => {
+  test("le masthead n'ouvre pas son propre écouteur de scroll", async () => {
+    const source = await Bun.file(
+      new URL("../components/v2/masthead.tsx", import.meta.url),
+    ).text();
+
+    // Un seul observateur du défilement sur la page : celui de
+    // ScrollTrigger, alimenté par Lenis.
+    expect(source).not.toMatch(/window\.addEventListener\(\s*["']scroll/);
+    expect(source).toContain("ScrollTrigger");
+    expect(source).not.toContain("prefers-reduced-motion");
+  });
+
+  test("les CTA ne sont jamais retenus par une entrée animée", async () => {
+    const source = await Bun.file(
+      new URL("../components/v2/sections.tsx", import.meta.url),
+    ).text();
+
+    // Un bouton qui apparaît en retard est un bouton qu'on ne clique
+    // pas. Les blocs de conversion ne sont pas enveloppés d'un Reveal.
+    const closeBlock = source.slice(source.indexOf("export function V2Close"));
+    const ctaIndex = closeBlock.indexOf('data-conversion="close-signup"');
+    const revealBefore = closeBlock.lastIndexOf("<Reveal", ctaIndex);
+    const revealClosed = closeBlock.lastIndexOf("</Reveal>", ctaIndex);
+
+    expect(ctaIndex).toBeGreaterThan(0);
+    expect(revealClosed).toBeGreaterThan(revealBefore);
+  });
+});

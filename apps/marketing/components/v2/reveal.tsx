@@ -172,10 +172,12 @@ export function Reveal({
  */
 export function CutLines({
   as: Tag = "div",
+  id,
   className,
   children,
 }: {
   as?: ElementType;
+  id?: string;
   className?: string;
   children: ReactNode;
 }) {
@@ -209,7 +211,7 @@ export function CutLines({
   );
 
   return (
-    <Tag ref={host} className={className}>
+    <Tag ref={host} id={id} className={className}>
       {children}
     </Tag>
   );
