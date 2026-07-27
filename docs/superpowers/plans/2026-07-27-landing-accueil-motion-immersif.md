@@ -1802,23 +1802,64 @@ export function V2Masthead() {
     <header
       ref={host}
       data-scrolled="false"
-      className="v2-masthead fixed inset-x-0 top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter,height] duration-300 data-[scrolled=true]:border-[color:var(--v2-line)] data-[scrolled=true]:bg-[color:var(--v2-canvas)]/95 data-[scrolled=true]:backdrop-blur-md"
+      className="group fixed inset-x-0 top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-300 data-[scrolled=true]:border-[color:var(--v2-line)] data-[scrolled=true]:bg-[color:var(--v2-canvas)]/95 data-[scrolled=true]:backdrop-blur-md"
     >
-      {/* … le reste du balisage est inchangé, à ceci près : */}
-      {/* - la hauteur passe de h-[72px] à */}
-      {/*   h-[72px] transition-[height] data-[scrolled=true]:h-14, */}
-      {/*   portée par le conteneur interne */}
-      {/* - les liens de nav perdent la ternaire sur isScrolled et */}
-      {/*   utilisent text-[color:var(--v2-ink)] */}
-      {/*   group-data-[scrolled=true]:text-[color:var(--v2-ink-soft)] */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-[color:var(--v2-espresso)] focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+      >
+        Aller au contenu
+      </a>
+      <div className="relative mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 transition-[height] duration-300 group-data-[scrolled=true]:h-14 md:px-8">
+        <Link
+          href="/"
+          className="v2-display flex min-h-11 items-center gap-2 text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
+        >
+          <Image
+            src="/brand/biume-logo.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8"
+          />
+          Biume<span className="text-[color:var(--v2-accent)]">.</span>
+        </Link>
+
+        <nav
+          aria-label="Navigation principale"
+          className="absolute left-1/2 hidden -translate-x-1/2 md:block"
+        >
+          <ul className="flex items-center gap-8">
+            {anchorLinks.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  className="v2-link text-[0.88rem] text-[color:var(--v2-ink)] group-data-[scrolled=true]:text-[color:var(--v2-ink-soft)]"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <Link
+          href={webAppPath("/signup")}
+          prefetch={false}
+          data-conversion="masthead-signup"
+          className="v2-btn v2-btn-primary v2-btn-sm"
+        >
+          Essayer gratuitement
+        </Link>
+      </div>
     </header>
   );
 }
 ```
 
-Reprendre intégralement le balisage interne existant (lien d'évitement, logo, nav, CTA) sans le modifier autrement que sur les deux points listés en commentaire. Le lien d'évitement `#contenu` doit rester le **premier** élément focusable : `__tests__/home-landing.test.tsx` l'assert.
+Deux invariants que `__tests__/home-landing.test.tsx` assert et qu'il ne faut pas casser : le lien d'évitement `#contenu` reste le **premier** élément focusable de la page, et il précède `aria-label="Navigation principale"` dans le document.
 
-Pour que `group-data-[scrolled=true]` fonctionne, ajouter `group` à la classe du `<header>`.
+La contraction de hauteur est portée par le conteneur interne via `group-data-[scrolled=true]:h-14` — pas par le `<header>`, dont la hauteur doit rester dictée par son contenu.
 
 - [ ] **Step 4 : Instrumenter les sections restantes**
 
