@@ -15,12 +15,17 @@ import { WIDE, ensureGsapPlugins } from "./reveal";
  * Le contenu est la démonstration elle-même, pas une accroche.
  * Direction reprise de /v3, recomposée dans la DA de l'accueil.
  */
-const MANIFESTO =
-  "Vous notez « restriction thoracique gauche ». Le propriétaire lit « la mobilité du thorax a été travaillée pendant la séance ». Même observation, deux lecteurs. Biume écrit la seconde phrase. Vous gardez la première.";
+const MANIFESTO_BODY =
+  "Vous notez « restriction thoracique gauche ». Le propriétaire lit « la mobilité du thorax a été travaillée pendant la séance ». Même observation, deux lecteurs. Biume écrit la seconde phrase.";
 
 /** La phrase qui porte l'argument arrive en violet : le violet décide,
  *  et c'est elle qui affirme que le praticien garde ses mots. */
-const DECIDING_SENTENCE = "Vous gardez la première.";
+export const DECIDING_SENTENCE = "Vous gardez la première.";
+
+/** Composé à partir de ses parties : la phrase décisive reste
+ *  structurellement le suffixe du manifeste, le pivot du calcul de
+ *  couleur ne peut donc pas se désynchroniser du texte affiché. */
+export const MANIFESTO = `${MANIFESTO_BODY} ${DECIDING_SENTENCE}`;
 
 export function V2Manifesto() {
   const host = useRef<HTMLDivElement | null>(null);
@@ -93,7 +98,7 @@ export function V2Manifesto() {
   return (
     <section
       aria-labelledby="v2-manifeste-title"
-      className="v2-manifeste border-t border-[color:var(--v2-line)]"
+      className="border-t border-[color:var(--v2-line)]"
     >
       <div
         ref={host}

@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { V2Manifesto } from "../components/v2/manifesto";
+import {
+  DECIDING_SENTENCE,
+  MANIFESTO,
+  V2Manifesto,
+} from "../components/v2/manifesto";
 import { exactZeroOpacity, textOnly } from "./landing-test-utils";
 
 const MANIFESTO_TEXT =
@@ -32,5 +36,14 @@ describe("manifeste de l'accueil", () => {
     expect(source).toContain('type: "words,lines"');
     expect(source).not.toContain("chars");
     expect(source).not.toContain("prefers-reduced-motion");
+  });
+
+  test("garde la phrase décisive rattachée au texte qu'elle termine", () => {
+    // Le pivot violet se calcule en comptant les mots de la fin. Si la
+    // phrase décisive cesse d'être le suffixe exact du manifeste, la
+    // coloration part sur les mauvais mots — sans rien casser d'autre,
+    // donc sans être remarquée.
+    expect(MANIFESTO.endsWith(DECIDING_SENTENCE)).toBe(true);
+    expect(DECIDING_SENTENCE.split(" ")).toHaveLength(4);
   });
 });
