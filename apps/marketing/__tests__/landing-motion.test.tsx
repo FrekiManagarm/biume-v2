@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { JSDOM } from "jsdom";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
 import { V2Atelier } from "../components/v2/atelier";
-import { V2Control } from "../components/v2/sections";
+import { V2Close, V2Control, V2Pricing } from "../components/v2/sections";
 import {
   DECIDING_SENTENCE,
   MANIFESTO,
@@ -170,20 +171,37 @@ describe("mouvement du reste de la page", () => {
     expect(source).toContain("ScrollTrigger");
     expect(source).not.toContain("prefers-reduced-motion");
   });
+});
 
-  test("les CTA ne sont jamais retenus par une entrée animée", async () => {
-    const source = await Bun.file(
-      new URL("../components/v2/sections.tsx", import.meta.url),
-    ).text();
+/** Remonte l'arbre rendu : un CTA sous un `[data-reveal]` est un CTA
+ *  qui attend une animation avant d'être cliquable. */
+function conversionsUnderReveal(markup: string) {
+  const { document } = new JSDOM(markup).window;
 
-    // Un bouton qui apparaît en retard est un bouton qu'on ne clique
-    // pas. Les blocs de conversion ne sont pas enveloppés d'un Reveal.
-    const closeBlock = source.slice(source.indexOf("export function V2Close"));
-    const ctaIndex = closeBlock.indexOf('data-conversion="close-signup"');
-    const revealBefore = closeBlock.lastIndexOf("<Reveal", ctaIndex);
-    const revealClosed = closeBlock.lastIndexOf("</Reveal>", ctaIndex);
+  return [...document.querySelectorAll("[data-conversion]")]
+    .filter((node) => node.closest("[data-reveal]") !== null)
+    .map((node) => node.getAttribute("data-conversion"));
+}
 
-    expect(ctaIndex).toBeGreaterThan(0);
-    expect(revealClosed).toBeGreaterThan(revealBefore);
+describe("les CTA ne sont jamais retenus par une entrée animée", () => {
+  // Un bouton qui apparaît en retard est un bouton qu'on ne clique pas.
+  // La page doit convertir : les blocs de conversion restent hors de la
+  // volée de reveals, et le test le vérifie sur l'arbre rendu — pas sur
+  // une position de chaîne dans le source, qui ne dit rien de
+  // l'imbrication réelle.
+  test("dans la carte tarifs", () => {
+    const html = renderWithLandingImageConfig(<V2Pricing />);
+
+    expect(html).toContain('data-conversion="pricing-signup"');
+    expect(html).toContain('data-conversion="pricing-demo"');
+    expect(conversionsUnderReveal(html)).toEqual([]);
+  });
+
+  test("dans la clôture", () => {
+    const html = renderWithLandingImageConfig(<V2Close />);
+
+    expect(html).toContain('data-conversion="close-signup"');
+    expect(html).toContain('data-conversion="close-demo"');
+    expect(conversionsUnderReveal(html)).toEqual([]);
   });
 });

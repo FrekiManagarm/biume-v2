@@ -24,6 +24,11 @@ export function V2Masthead() {
     const node = host.current;
     if (!node) return;
 
+    // ScrollTrigger n'appelle pas forcément `onRefresh` après la
+    // restauration de scroll du navigateur. Une lecture ponctuelle au
+    // montage évite un masthead transparent posé sur du contenu.
+    node.dataset.scrolled = window.scrollY > 16 ? "true" : "false";
+
     // Un seul observateur du défilement sur la page. Le masthead
     // n'ouvre plus le sien : il lit celui de ScrollTrigger.
     const trigger = ScrollTrigger.create({
