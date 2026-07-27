@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { webAppPath } from "../../lib/web-app-url";
-import { HeroItem, HeroReveal } from "./reveal";
+import { Drift, HeroItem, HeroReveal } from "./reveal";
 
 export function V2Hero() {
   return (
@@ -11,15 +11,19 @@ export function V2Hero() {
       className="relative flex min-h-[92svh] items-center justify-center overflow-hidden"
     >
       {/* Paysage full-bleed — le seul moment de couleur de la page */}
-      <div aria-hidden="true" className="absolute inset-0">
-        <Image
-          src="/assets/images/landing/atelier-hero.webp"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+        <Drift distance={30} className="absolute inset-0">
+          <div className="absolute inset-[-4%]">
+            <Image
+              src="/assets/images/landing/atelier-hero.webp"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        </Drift>
         {/* Lavis chaud aux couleurs de marque — violet et vert équilibrés */}
         <div
           className="absolute inset-0"

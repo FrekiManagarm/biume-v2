@@ -1,10 +1,13 @@
 "use client";
 
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 
 import { webAppPath } from "../../lib/web-app-url";
+import { ensureGsapPlugins } from "./reveal";
 
 const anchorLinks = [
   { href: "#produit", label: "Produit" },
@@ -14,24 +17,38 @@ const anchorLinks = [
 ] as const;
 
 export function V2Masthead() {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const host = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    const updateScrolledState = () => setIsScrolled(window.scrollY > 16);
+  useGSAP(() => {
+    ensureGsapPlugins();
+    const node = host.current;
+    if (!node) return;
 
-    updateScrolledState();
-    window.addEventListener("scroll", updateScrolledState, { passive: true });
+    // ScrollTrigger n'appelle pas forcément `onRefresh` après la
+    // restauration de scroll du navigateur. Une lecture ponctuelle au
+    // montage évite un masthead transparent posé sur du contenu.
+    node.dataset.scrolled = window.scrollY > 16 ? "true" : "false";
 
-    return () => window.removeEventListener("scroll", updateScrolledState);
-  }, []);
+    // Un seul observateur du défilement sur la page. Le masthead
+    // n'ouvre plus le sien : il lit celui de ScrollTrigger.
+    const trigger = ScrollTrigger.create({
+      start: 16,
+      onUpdate: (self) => {
+        node.dataset.scrolled = self.scroll() > 16 ? "true" : "false";
+      },
+      onRefresh: (self) => {
+        node.dataset.scrolled = self.scroll() > 16 ? "true" : "false";
+      },
+    });
+
+    return () => trigger.kill();
+  });
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-40 border-b transition-[background-color,border-color,backdrop-filter] duration-300 ${
-        isScrolled
-          ? "border-[color:var(--v2-line)] bg-[color:var(--v2-canvas)]/95 backdrop-blur-md"
-          : "border-transparent bg-transparent"
-      }`}
+      ref={host}
+      data-scrolled="false"
+      className="group fixed inset-x-0 top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-300 data-[scrolled=true]:border-[color:var(--v2-line)] data-[scrolled=true]:bg-[color:var(--v2-canvas)]/95 data-[scrolled=true]:backdrop-blur-md"
     >
       <a
         href="#contenu"
@@ -39,7 +56,7 @@ export function V2Masthead() {
       >
         Aller au contenu
       </a>
-      <div className="relative mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 md:px-8">
+      <div className="relative mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 transition-[height] duration-300 group-data-[scrolled=true]:h-14 md:px-8">
         <Link
           href="/"
           className="v2-display flex min-h-11 items-center gap-2 text-[1.3rem] font-semibold tracking-[-0.02em] text-[color:var(--v2-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--v2-accent)]"
@@ -63,11 +80,7 @@ export function V2Masthead() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className={`v2-link text-[0.88rem] ${
-                    isScrolled
-                      ? "text-[color:var(--v2-ink-soft)]"
-                      : "text-[color:var(--v2-ink)]"
-                  }`}
+                  className="v2-link text-[0.88rem] text-[color:var(--v2-ink)] group-data-[scrolled=true]:text-[color:var(--v2-ink-soft)]"
                 >
                   {link.label}
                 </a>

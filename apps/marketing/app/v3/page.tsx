@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { LandingV2 } from "../../components/landing-v2";
-import "../../components/landing-v2/landing-v2.css";
+import { LandingV3 } from "../../components/landing-v3";
+import "../../components/landing-v3/landing-v3.css";
 
 export const metadata: Metadata = {
   title: "Biume — De vos notes au propriétaire, sans perdre votre regard métier",
@@ -19,6 +19,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function V2Page() {
-  return <LandingV2 />;
+export default function V3Page() {
+  return <LandingV3 />;
 }
