@@ -1606,7 +1606,9 @@ describe("contrôle du praticien", () => {
     // dashboard analytique n'en est pas une.
     expect(html).not.toContain("dashboard-image");
     expect(text).toContain("Biume prépare. Vous gardez la main.");
-    expect(text).toContain("Rien n'est partagé automatiquement");
+    // Apostrophe courbe (U+2019) : c'est celle du fichier source, et
+    // `textOnly` ne normalise pas la ponctuation.
+    expect(text).toContain("Rien n’est partagé automatiquement");
     expect(text).toContain(REPORT_TRANSFORMATION_DEMO.sections[0]!.value);
     expect(html).toContain('data-control-panel="true"');
   });
