@@ -1,5 +1,8 @@
+import "./landing.css";
+
 import { v2FontVariables } from "./fonts";
 import { V2Hero } from "./hero";
+import { V2Manifesto } from "./manifesto";
 import { V2Masthead } from "./masthead";
 import { V2MotionRoot } from "./reveal";
 import {
@@ -16,10 +19,11 @@ import {
 export function V2Landing() {
   return (
     <V2MotionRoot>
-      <div className={`v2 ${v2FontVariables} min-h-screen antialiased`}>
+      <div className={`v2 v2-landing ${v2FontVariables} min-h-screen antialiased`}>
         <V2Masthead />
         <main id="contenu" tabIndex={-1}>
           <V2Hero />
+          <V2Manifesto />
           <V2Features />
           <V2Control />
           <V2FollowUp />
