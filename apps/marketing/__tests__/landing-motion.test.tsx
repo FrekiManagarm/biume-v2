@@ -103,3 +103,36 @@ describe("atelier de l'accueil", () => {
     expect(railHost).toContain('aria-hidden="true"');
   });
 });
+
+describe("séquence de l'atelier", () => {
+  test("réserve les gestes lourds aux écrans larges et ne rejoue pas à l'envers", async () => {
+    const source = await Bun.file(
+      new URL("../components/v2/atelier-sequence.ts", import.meta.url),
+    ).text();
+
+    // Le pinning et Flip ne se montent qu'au-dessus de 1024px : sur
+    // petit écran le scroll n'est jamais capturé.
+    expect(source).toContain("WIDE");
+    expect(source).toContain("Flip.getState");
+    expect(source).toContain("Flip.from");
+
+    // Au scroll inverse, les états sont reposés instantanément. Une
+    // animation jouée à l'envers pendant qu'on remonte donne le mal de
+    // mer et brouille la lecture.
+    expect(source).toContain("direction");
+
+    // Aucune garde reduced-motion, aucun second observateur du scroll.
+    expect(source).not.toContain("prefers-reduced-motion");
+    expect(source).not.toMatch(/window\.addEventListener\(\s*["']scroll/);
+  });
+
+  test("le double en vol reste hors de l'arbre d'accessibilité", async () => {
+    const source = await Bun.file(
+      new URL("../components/v2/atelier-sequence.ts", import.meta.url),
+    ).text();
+
+    // Le texte est déjà lu deux fois dans l'arbre — dans la note et dans
+    // le champ. Le double ne doit pas le faire lire une troisième fois.
+    expect(source).toContain('setAttribute("aria-hidden", "true")');
+  });
+});

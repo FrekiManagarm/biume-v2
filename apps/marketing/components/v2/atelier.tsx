@@ -3,6 +3,7 @@
 import { useRef } from "react";
 
 import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
+import { useAtelierSequence } from "./atelier-sequence";
 import { Reveal } from "./reveal";
 
 /**
@@ -32,6 +33,9 @@ const SECTIONS = REPORT_TRANSFORMATION_DEMO.sections;
 
 export function V2Atelier() {
   const root = useRef<HTMLDivElement | null>(null);
+  const track = useRef<HTMLDivElement | null>(null);
+
+  useAtelierSequence(root, track);
 
   return (
     <section
@@ -60,7 +64,7 @@ export function V2Atelier() {
       {/* Piste de défilement. Sur écran large, la séquence la pin et y
           calcule ses quatre temps ; en dessous, elle n'a pas de hauteur
           propre et la démonstration se lit au fil du scroll normal. */}
-      <div data-atelier-track className="relative">
+      <div ref={track} data-atelier-track className="relative">
         <div data-atelier-stage>
           <div className="mx-auto w-full max-w-[1200px] px-5 py-14 md:px-8 md:py-16">
             <div
