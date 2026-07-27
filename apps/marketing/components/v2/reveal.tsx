@@ -4,7 +4,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useRef, type ReactNode } from "react";
+import Lenis from "lenis";
+import { useEffect, useRef, type ElementType, type ReactNode } from "react";
 
 /**
  * Scope de motion de la landing d'accueil.
@@ -13,76 +14,126 @@ import { useRef, type ReactNode } from "react";
  * propriété transformée sur un même nœud se remplacent l'une l'autre à
  * chaque frame. Tout passe donc par GSAP ici — plus de `motion/react`.
  *
- * L'enregistrement se fait au chargement du module, une seule fois,
- * jamais dans le corps d'un composant qui se re-rend.
- */
-/**
- * `ScrollTrigger.register` touche `requestAnimationFrame` dès
- * l'enregistrement. Le faire au chargement du module casserait le rendu
- * serveur, et tout environnement DOM partiel avec lui.
+ * Les garde d'accessibilité liées au mouvement réduit sont délibérément
+ * **écarté**es de cette landing, sur demande explicite et répétée, après
+ * que la conséquence a été signalée : les personnes sujettes au mal des
+ * transports subiront la page en plein mouvement. Ne pas réintroduire la
+ * garde sans redemander.
  *
- * L'enregistrement se fait donc à la première exécution d'un effet, qui
- * ne tourne que dans un vrai navigateur. Idempotent, appelé en tête de
- * chaque `useGSAP`.
+ * Ce qui reste, et qui n'est pas de l'accessibilité mais de la robustesse :
+ * aucun état de départ n'est posé en CSS. Si le script échoue, la page
+ * est complète et lisible — `/` est indexée.
+ */
+
+/**
+ * `registerPlugin` touche `requestAnimationFrame` dès l'appel. Le faire
+ * au chargement du module casserait le rendu serveur, et tout
+ * environnement DOM partiel avec lui. L'enregistrement se fait donc à la
+ * première exécution d'un effet, qui ne tourne que dans un vrai
+ * navigateur. Idempotent, appelé en tête de chaque `useGSAP`.
  */
 let pluginsReady = false;
 
-function ensureGsapPlugins() {
+export function ensureGsapPlugins() {
   if (pluginsReady) return;
   gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
   pluginsReady = true;
 }
 
-const EASE = "power3.out";
+/** L'ease de la maison : sortie franche, pose longue. */
+export const EASE = "power3.out";
 
-/**
- * Tout le mouvement est monté sous cette seule requête média.
- *
- * C'est le remplaçant direct du `reducedMotion="user"` de Framer : si
- * l'utilisateur demande moins de mouvement, `gsap.matchMedia` n'exécute
- * jamais le bloc, donc aucun état de départ n'est posé et la page
- * s'affiche complète et immobile. Même chose sans JavaScript.
- */
-const MOTION_OK = "(prefers-reduced-motion: no-preference)";
+/** Au-dessus, les gestes lourds — pinning, Flip. En dessous, le même
+ *  récit sans capture du scroll. */
+export const WIDE = "(min-width: 1024px)";
 
-/**
- * Scope de motion pour la landing.
- * - entrées groupées par volée, une seule fois, jamais de boucle
- * - mouvement réduit : rendu final immédiat, sans animation
- */
+/** Hauteur du masthead, retranchée quand une ancre est visée. */
+const ANCHOR_OFFSET = -88;
+
 export function V2MotionRoot({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    ensureGsapPlugins();
+
+    // Lenis anime le scroll natif de la fenêtre plutôt que de translater
+    // un conteneur : `position: sticky` et le pinning de ScrollTrigger
+    // restent intacts. ScrollSmoother ferait l'inverse.
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      // Le tactile garde son inertie système : la surcharger donne une
+      // sensation de latence sur mobile, jamais de douceur.
+      touchMultiplier: 1.6,
+    });
+
+    // Sans cet accrochage, les deux horloges dérivent et les
+    // déclenchements arrivent avec un cran de retard.
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
+
+    // Les ancres passent par Lenis : un saut natif entrerait en conflit
+    // avec l'amortissement et la page tremblerait en fin de course.
+    // `scroll-mt-*` ne s'applique pas non plus, d'où l'offset explicite.
+    const onAnchorClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const anchor = (event.target as HTMLElement | null)?.closest?.(
+        'a[href^="#"]',
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      const id = anchor.getAttribute("href")?.slice(1);
+      const target = id ? document.getElementById(id) : null;
+      if (!target) return;
+
+      event.preventDefault();
+      lenis.scrollTo(target, { offset: ANCHOR_OFFSET, duration: 1.3 });
+      // Le lien d'évitement doit déplacer le focus, pas seulement la vue.
+      target.focus({ preventScroll: true });
+    };
+
+    document.addEventListener("click", onAnchorClick);
+
+    return () => {
+      document.removeEventListener("click", onAnchorClick);
+      gsap.ticker.remove(tick);
+      lenis.destroy();
+    };
+  }, []);
 
   useGSAP(
     () => {
       ensureGsapPlugins();
-      const mm = gsap.matchMedia();
 
-      mm.add(MOTION_OK, () => {
-        // Le hero est exclu : il orchestre sa propre ouverture, et deux
-        // animations écriraient la même opacité sur les mêmes nœuds.
-        const selector = "[data-reveal]:not([data-hero-item])";
-        gsap.set(selector, { autoAlpha: 0, y: 24 });
+      // Le hero orchestre sa propre ouverture : l'exclure, sinon deux
+      // animations écriraient la même opacité sur les mêmes nœuds.
+      const selector = "[data-reveal]:not([data-hero-item])";
+      gsap.set(selector, { autoAlpha: 0, y: 24 });
 
-        // Une volée rassemble tout ce qui franchit le seuil dans le même
-        // intervalle et le libère en cascade. Une entrée isolée n'a pas
-        // de rythme ; un groupe en a un.
-        ScrollTrigger.batch(selector, {
-          start: "top 88%",
-          once: true,
-          onEnter: (batch) =>
-            gsap.to(batch, {
-              autoAlpha: 1,
-              y: 0,
-              duration: 1,
-              ease: EASE,
-              stagger: { each: 0.08, from: "start" },
-              overwrite: "auto",
-            }),
-        });
+      // Une volée rassemble tout ce qui franchit le seuil dans le même
+      // intervalle et le libère en cascade. Une entrée isolée n'a pas de
+      // rythme ; un groupe en a un.
+      ScrollTrigger.batch(selector, {
+        start: "top 88%",
+        once: true,
+        onEnter: (batch) =>
+          gsap.to(batch, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 1,
+            ease: EASE,
+            stagger: { each: 0.08, from: "start" },
+            overwrite: "auto",
+          }),
       });
-
-      return () => mm.revert();
     },
     { scope: root },
   );
@@ -106,16 +157,63 @@ export function Reveal({
 }
 
 /**
- * Orchestrateur du hero.
+ * Titre découpé par lignes, chaque ligne montant depuis sa propre
+ * gouttière au franchissement du seuil.
  *
- * Le `h1` présent dans l'arbre est découpé **par ligne**, chaque ligne
- * montant depuis sa propre gouttière. Le découpage n'est jamais fait par
- * caractère : cela casserait la sélection du texte et ferait vocaliser
- * le titre lettre à lettre. `autoSplit` refait la coupe quand la police
- * finit de charger ou que la largeur change.
- *
- * Le bloc qui contient le titre est retiré de la cascade des autres
- * items : sans cela, son opacité serait écrite deux fois.
+ * Jamais par caractère : un titre éclaté en lettres casse la sélection
+ * du texte et se fait vocaliser lettre à lettre. `autoSplit` refait la
+ * coupe quand la police finit de charger ou que la largeur change —
+ * sans lui, les lignes se figent sur les métriques de la police de
+ * secours.
+ */
+export function CutLines({
+  as: Tag = "div",
+  className,
+  children,
+}: {
+  as?: ElementType;
+  className?: string;
+  children: ReactNode;
+}) {
+  const host = useRef<HTMLElement | null>(null);
+
+  useGSAP(
+    () => {
+      ensureGsapPlugins();
+      const node = host.current;
+      if (!node) return;
+
+      SplitText.create(node, {
+        type: "lines",
+        mask: "lines",
+        autoSplit: true,
+        onSplit(self) {
+          // L'animation vit dans `onSplit` pour viser les lignes qui
+          // viennent d'être créées, et elle est retournée pour que
+          // SplitText la rejoue à l'identique après une recoupe.
+          return gsap.from(self.lines, {
+            yPercent: 110,
+            duration: 1.15,
+            ease: EASE,
+            stagger: 0.08,
+            scrollTrigger: { trigger: node, start: "top 86%", once: true },
+          });
+        },
+      });
+    },
+    { scope: host },
+  );
+
+  return (
+    <Tag ref={host} className={className}>
+      {children}
+    </Tag>
+  );
+}
+
+/**
+ * Orchestrateur du hero : le titre découpé par lignes, puis les blocs
+ * qui le suivent, sur une timeline unique jouée au chargement.
  */
 export function HeroReveal({
   children,
@@ -129,49 +227,40 @@ export function HeroReveal({
   useGSAP(
     () => {
       ensureGsapPlugins();
-      const mm = gsap.matchMedia();
+      const scope = host.current;
+      if (!scope) return;
 
-      mm.add(MOTION_OK, () => {
-        const scope = host.current;
-        if (!scope) return;
+      const title = scope.querySelector<HTMLElement>("h1");
+      const titleHolder = title?.closest("[data-hero-item]");
 
-        const title = scope.querySelector<HTMLElement>("h1");
-        const titleHolder = title?.closest("[data-hero-item]");
+      const items = gsap.utils
+        .toArray<HTMLElement>("[data-hero-item]")
+        .filter((item) => item !== titleHolder);
 
-        const items = gsap.utils
-          .toArray<HTMLElement>("[data-hero-item]")
-          .filter((item) => item !== titleHolder);
+      gsap.set(items, { autoAlpha: 0, y: 22 });
 
-        gsap.set(items, { autoAlpha: 0, y: 22 });
+      const tl = gsap.timeline();
 
-        const tl = gsap.timeline();
+      if (title) {
+        SplitText.create(title, {
+          type: "lines",
+          mask: "lines",
+          autoSplit: true,
+          onSplit(self) {
+            return tl.from(
+              self.lines,
+              { yPercent: 112, duration: 1.2, ease: EASE, stagger: 0.085 },
+              0.1,
+            );
+          },
+        });
+      }
 
-        if (title) {
-          SplitText.create(title, {
-            type: "lines",
-            mask: "lines",
-            autoSplit: true,
-            // L'animation vit dans `onSplit` pour viser les lignes qui
-            // viennent d'être créées, et elle est retournée pour que
-            // SplitText la rejoue à l'identique après une recoupe.
-            onSplit(self) {
-              return tl.from(
-                self.lines,
-                { yPercent: 112, duration: 1.2, ease: EASE, stagger: 0.085 },
-                0.1,
-              );
-            },
-          });
-        }
-
-        tl.to(
-          items,
-          { autoAlpha: 1, y: 0, duration: 0.9, ease: EASE, stagger: 0.09 },
-          0.4,
-        );
-      });
-
-      return () => mm.revert();
+      tl.to(
+        items,
+        { autoAlpha: 1, y: 0, duration: 0.9, ease: EASE, stagger: 0.09 },
+        0.4,
+      );
     },
     { scope: host },
   );
@@ -199,12 +288,9 @@ export function HeroItem({
 }
 
 /**
- * Dérive lente d'un élément au scroll : il traverse moins de distance
- * que la page, ce qui lui donne une profondeur propre.
- *
- * C'est le retard du `scrub`, et non l'amplitude, qui produit la
- * douceur. Réservé au paysage du hero — le reste de la page ne bouge
- * pas au scroll.
+ * Dérive lente au scroll : l'élément traverse moins de distance que la
+ * page, ce qui lui donne une profondeur propre. C'est le retard du
+ * `scrub`, et non l'amplitude, qui produit la douceur.
  */
 export function Drift({
   distance = 36,
@@ -220,29 +306,23 @@ export function Drift({
   useGSAP(
     () => {
       ensureGsapPlugins();
-      const mm = gsap.matchMedia();
+      const node = host.current?.firstElementChild;
+      if (!node) return;
 
-      mm.add(MOTION_OK, () => {
-        const node = host.current?.firstElementChild;
-        if (!node) return;
-
-        gsap.fromTo(
-          node,
-          { y: distance },
-          {
-            y: -distance,
-            ease: "none",
-            scrollTrigger: {
-              trigger: host.current,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: 0.4,
-            },
+      gsap.fromTo(
+        node,
+        { y: distance },
+        {
+          y: -distance,
+          ease: "none",
+          scrollTrigger: {
+            trigger: host.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.4,
           },
-        );
-      });
-
-      return () => mm.revert();
+        },
+      );
     },
     { scope: host, dependencies: [distance] },
   );

@@ -9,27 +9,41 @@ describe("V2 landing foundation", () => {
     expect(page).not.toContain("carnet-theme");
   });
 
-  test("defines V2 semantic colors, restrained radii and reduced motion", async () => {
+  test("keeps the V2 tokens untouched and locks the motion decisions", async () => {
     const [css, motion] = await Promise.all([
       Bun.file(new URL("../app/v2/v2.css", import.meta.url)).text(),
       Bun.file(new URL("../components/v2/reveal.tsx", import.meta.url)).text(),
     ]);
 
+    // La feuille du namespace `.v2` sert aussi les pages SEO : elle ne
+    // bouge pas.
     expect(css).toMatch(/--v2-violet-ink:\s*#6b5ac8;/i);
     expect(css).toMatch(/--v2-green:\s*hsl\(148 71% 45%\);/i);
     expect(css).toMatch(/--v2-canvas:\s*#f7f6f2;/i);
     expect(css).toMatch(/border-radius:\s*24px;/);
-
-    // Le mouvement réduit reste respecté, mais le mécanisme a changé :
-    // l'animation passe de Framer Motion à GSAP. Tout est désormais monté
-    // sous `gsap.matchMedia`, donc si l'utilisateur demande moins de
-    // mouvement, aucun état de départ n'est posé et la page s'affiche
-    // complète et immobile.
-    expect(motion).toContain("gsap.matchMedia()");
-    expect(motion).toContain("(prefers-reduced-motion: no-preference)");
-    expect(motion).not.toMatch(/from\s+["']motion\/react["']/);
     expect(css).not.toContain("background-clip: text");
     expect(css).not.toContain("repeating-linear-gradient");
+
+    // `prefers-reduced-motion` est écarté sur demande explicite de
+    // Mathieu, deux fois : une première sur /v4, reconduite ici après que
+    // la conséquence a été signalée. Le test verrouille la décision ET sa
+    // trace écrite, pour qu'une réintroduction distraite échoue.
+    expect(motion).not.toContain("prefers-reduced-motion");
+    expect(motion).toContain("écarté");
+
+    // Un seul moteur d'animation dans cet arbre.
+    expect(motion).not.toMatch(/from\s+["']motion\/react["']/);
+
+    // Un seul observateur du défilement : celui de ScrollTrigger,
+    // alimenté par Lenis.
+    expect(motion).toContain('lenis.on("scroll", ScrollTrigger.update)');
+    expect(motion).toContain("gsap.ticker.add");
+    expect(motion).toContain("lagSmoothing(0)");
+    expect(motion).not.toMatch(/window\.addEventListener\(\s*["']scroll/);
+
+    // Les états de départ sont posés en JS, jamais en CSS : sans script,
+    // la page reste complète. `/` est indexée.
+    expect(motion).toContain("gsap.set");
   });
 
   test("loads the V2 fonts through its dedicated landing component", async () => {
