@@ -187,7 +187,7 @@ export function V2Atelier() {
                   <div
                     data-pending
                     aria-hidden="true"
-                    className="absolute inset-0 rounded-[10px] bg-[color:var(--v2-bone)] p-5 opacity-0"
+                    className="pointer-events-none absolute inset-0 rounded-[10px] bg-[color:var(--v2-bone)] p-5 opacity-0"
                   >
                     <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[color:var(--v2-ink-faint)]">
                       Ce que lit le propriétaire
