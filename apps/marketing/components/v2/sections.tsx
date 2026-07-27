@@ -112,8 +112,8 @@ export function V2Features() {
         </p>
       </SectionIntro>
       <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {transformationStages.map((stage, i) => (
-          <Reveal key={stage.title} delay={i * 0.08}>
+        {transformationStages.map((stage) => (
+          <Reveal key={stage.title}>
             <article className="v2-card h-full p-8">
               <stage.icon
                 aria-hidden="true"
@@ -157,7 +157,7 @@ export function V2Control() {
               automatiquement.
             </p>
           </SectionIntro>
-          <Reveal delay={0.1}>
+          <Reveal>
             <ul className="mt-8 space-y-3.5">
               {[
                 "Vous relisez et validez chaque passage",
@@ -178,7 +178,7 @@ export function V2Control() {
             </ul>
           </Reveal>
         </div>
-        <Reveal delay={0.15}>
+        <Reveal>
           <div className="v2-panel overflow-hidden p-2.5">
             <Image
               src="/assets/images/dashboard-image.jpg"
@@ -227,7 +227,7 @@ export function V2FollowUp() {
               confirmez le rappel à la date choisie.
             </p>
           </SectionIntro>
-          <Reveal delay={0.1}>
+          <Reveal>
             <ul className="mt-8 space-y-3.5">
               {[
                 "Vous relisez et finalisez le document après la séance.",
@@ -273,7 +273,7 @@ export function V2FieldStories() {
             l’envoi, puis maintenir le contact.
           </p>
         </SectionIntro>
-        <Reveal delay={0.12}>
+        <Reveal>
           <div className="grid grid-cols-[1.14fr_0.86fr] items-end gap-4 md:gap-6">
             <Image
               src="/assets/images/landing/atelier-practice.webp"
@@ -323,7 +323,7 @@ export function V2Pricing() {
           être arrêté depuis les paramètres.
         </p>
       </SectionIntro>
-      <Reveal delay={0.1}>
+      <Reveal>
         <div className="v2-panel mx-auto mt-14 max-w-[640px] p-8 md:p-12">
           <p className="v2-eyebrow v2-eyebrow-green">Formule Indépendant</p>
           <p className="mt-6 flex items-baseline gap-2">
@@ -435,7 +435,7 @@ export function V2Faq() {
         />
         <div>
           {faqItems.map((item, i) => (
-            <Reveal key={item.question} delay={i * 0.05}>
+            <Reveal key={item.question}>
               <details
                 data-v2-faq-item={item.question}
                 className="group border-b border-[color:var(--v2-line)] first:border-t"
@@ -490,7 +490,7 @@ export function V2Close() {
             15 jours pour découvrir tout le parcours, sans carte bancaire.
           </p>
         </Reveal>
-        <Reveal delay={0.1}>
+        <Reveal>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={webAppPath("/signup")}

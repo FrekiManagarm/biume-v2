@@ -19,8 +19,15 @@ describe("V2 landing foundation", () => {
     expect(css).toMatch(/--v2-green:\s*hsl\(148 71% 45%\);/i);
     expect(css).toMatch(/--v2-canvas:\s*#f7f6f2;/i);
     expect(css).toMatch(/border-radius:\s*24px;/);
-    expect(motion).toContain('reducedMotion="user"');
-    expect(motion).toContain("useReducedMotion");
+
+    // Le mouvement réduit reste respecté, mais le mécanisme a changé :
+    // l'animation passe de Framer Motion à GSAP. Tout est désormais monté
+    // sous `gsap.matchMedia`, donc si l'utilisateur demande moins de
+    // mouvement, aucun état de départ n'est posé et la page s'affiche
+    // complète et immobile.
+    expect(motion).toContain("gsap.matchMedia()");
+    expect(motion).toContain("(prefers-reduced-motion: no-preference)");
+    expect(motion).not.toMatch(/from\s+["']motion\/react["']/);
     expect(css).not.toContain("background-clip: text");
     expect(css).not.toContain("repeating-linear-gradient");
   });
