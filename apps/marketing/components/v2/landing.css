@@ -35,6 +35,11 @@
 /* ---------- Atelier ---------- */
 
 .v2-fragment {
+  /* Bloc conteneur du double : sans elle, `.v2-flyer` se positionne par
+     rapport à `[data-atelier-root]` et atterrit à la position statique —
+     juste après ce texte, en bout de ligne — au lieu de se superposer
+     dessus. */
+  position: relative;
   border-radius: 4px;
   padding: 0 2px;
   /* Au repos — sans script — le fragment est en encre pleine, non
@@ -44,6 +49,9 @@
 
 .v2-flyer {
   position: absolute;
+  /* `top`/`left` explicites : sans eux, `left/top: auto` retombe sur la
+     position statique de l'élément plutôt que sur l'origine du fragment. */
+  inset: 0 auto auto 0;
   z-index: 2;
   margin: 0;
   pointer-events: none;

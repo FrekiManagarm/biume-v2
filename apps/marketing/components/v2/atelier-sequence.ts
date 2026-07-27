@@ -48,15 +48,30 @@ export function useAtelierSequence(
         if (!root || !track) return;
 
         const q = gsap.utils.selector(root);
-        const fragments = q("[data-fragment]") as HTMLElement[];
-        const slots = q("[data-slot]") as HTMLElement[];
-        const values = q("[data-value]") as HTMLElement[];
-        const nodes = q("[data-rail-node]") as unknown as SVGCircleElement[];
-        const progress = q("[data-rail-progress]")[0] as unknown as SVGLineElement;
-        const seal = q("[data-seal]")[0] as HTMLElement;
-        const sealCheck = q("[data-seal-check]")[0] as unknown as SVGPathElement;
-        const owner = q("[data-owner]")[0] as HTMLElement;
-        const pending = q("[data-pending]")[0] as HTMLElement;
+        const fragments = q<HTMLElement>("[data-fragment]");
+        const slots = q<HTMLElement>("[data-slot]");
+        const values = q<HTMLElement>("[data-value]");
+        const nodes = q<SVGCircleElement>("[data-rail-node]");
+        const progress = q<SVGLineElement>("[data-rail-progress]")[0];
+        const seal = q<HTMLElement>("[data-seal]")[0];
+        const sealCheck = q<SVGPathElement>("[data-seal-check]")[0];
+        const owner = q<HTMLElement>("[data-owner]")[0];
+        const pending = q<HTMLElement>("[data-pending]")[0];
+
+        // Un attribut renommé demain ne doit pas échouer en silence :
+        // sans cette garde, GSAP logue « target undefined not found » et
+        // toute la séquence s'arrête sans bruit. Même coût, échec bruyant.
+        if (!progress || !sealCheck || !seal || !owner || !pending) return;
+
+        const totalFragments = fragments.length;
+
+        // GSAP interpole une couleur en la décomposant en canaux
+        // numériques ; un jeton `var(--…)` n'expose rien à décomposer. Une
+        // interpolation vers ce jeton ne produit donc rien d'utilisable —
+        // on résout la valeur une fois, avant toute animation.
+        const inkColor = getComputedStyle(root)
+          .getPropertyValue("--v2-ink")
+          .trim();
 
         // Chaque valeur est découpée par mots une fois pour toutes : la
         // révélation se joue ensuite sur des nœuds stables.
@@ -64,16 +79,26 @@ export function useAtelierSequence(
           SplitText.create(value, { type: "words", wordsClass: "v2-word" }),
         );
 
+        // La timeline en cours — celle d'un vol ou celle de la validation.
+        // Sans ce handle, `mm.revert()` ne peut pas la tuer : elle n'a été
+        // enregistrée dans le contexte qu'à la création du ScrollTrigger,
+        // pas à chaque `onUpdate`.
+        let activeTimeline: gsap.core.Timeline | undefined;
+
         /** Repose l'état d'un temps sans l'animer. Sert au montage et à
          *  toute remontée : rejouer une timeline à l'envers pendant que
          *  le lecteur remonte donne le mal de mer. */
         const settle = (beat: number) => {
+          activeTimeline?.kill();
+          activeTimeline = undefined;
+
           gsap.killTweensOf([
             ...values,
             ...splits.flatMap((split) => split.words),
             ...nodes,
             progress,
             seal,
+            sealCheck,
             owner,
             pending,
             ...fragments,
@@ -84,8 +109,7 @@ export function useAtelierSequence(
             gsap.set(fragment, {
               backgroundColor:
                 beat === index + 1 ? "var(--v2-mark)" : "transparent",
-              color:
-                beat > index ? "var(--v2-ink)" : "var(--v2-ink-soft)",
+              color: beat > index ? "var(--v2-ink)" : "var(--v2-ink-soft)",
             });
           });
 
@@ -98,7 +122,7 @@ export function useAtelierSequence(
           });
 
           gsap.set(progress, {
-            drawSVG: `0% ${(Math.min(beat, 3) / 3) * 100}%`,
+            drawSVG: `0% ${(Math.min(beat, totalFragments) / totalFragments) * 100}%`,
           });
           gsap.set(sealCheck, { drawSVG: beat === LAST_BEAT ? "100%" : "0%" });
           gsap.set(seal, { autoAlpha: beat === LAST_BEAT ? 1 : 0.25 });
@@ -114,23 +138,45 @@ export function useAtelierSequence(
           const node = nodes[index];
           if (!fragment || !slot || !split || !node) return;
 
+          // Le surlignage désigne le passage en cours de traitement : le
+          // vol qui commence l'allume sur son propre fragment, et c'est
+          // le vol suivant (ou la validation, pour le dernier) qui
+          // l'éteindra. Il ne s'éteint jamais sur son propre fragment ici
+          // — sinon il ne serait jamais visible pendant la descente.
+          const previous = fragments[index - 1];
+
           // Le double naît **dans** le fragment : il est donc exactement
           // à sa place, à son corps de texte, sans aucune mesure
           // manuelle. Flip fera le reste.
+          //
+          // Le déplacement que Flip calcule et l'arc qui le fait
+          // « sauter » vivent sur deux nœuds distincts. Les écrire tous
+          // les deux sur le même `y` ne marcherait que par ordre
+          // d'insertion des tweens dans la timeline — un détail
+          // d'implémentation, pas une garantie.
           const flyer = document.createElement("span");
           flyer.dataset.flyer = "";
           flyer.className = "v2-flyer";
-          flyer.textContent = fragment.textContent ?? "";
           // Le texte est déjà lu deux fois dans l'arbre — dans la note et
           // dans le champ. Le double ne doit pas le faire lire une
           // troisième fois.
           flyer.setAttribute("aria-hidden", "true");
+
+          const arc = document.createElement("span");
+          arc.style.display = "inline-block";
+          arc.textContent = fragment.textContent ?? "";
+          flyer.appendChild(arc);
           fragment.appendChild(flyer);
 
           const state = Flip.getState(flyer);
           slot.appendChild(flyer);
 
           const tl = gsap.timeline();
+
+          if (previous) {
+            tl.set(previous, { backgroundColor: "transparent" }, 0);
+          }
+          tl.set(fragment, { backgroundColor: "var(--v2-mark)" }, 0);
 
           tl.add(
             Flip.from(state, {
@@ -139,24 +185,17 @@ export function useAtelierSequence(
               scale: true,
               absolute: true,
             }),
+            0,
           )
             // Flip n'interpole pas de courbe. Sans cet arc, la
             // translation lit comme un glissement, pas comme un passage.
-            .to(
-              flyer,
-              { y: -18, duration: 0.42, ease: "power2.out" },
-              0,
-            )
-            .to(flyer, { y: 0, duration: 0.43, ease: "power2.in" }, 0.42)
-            .to(
-              node,
-              { attr: { "data-lit": "true" }, duration: 0 },
-              0.5,
-            )
+            .to(arc, { y: -18, duration: 0.42, ease: "power2.out" }, 0)
+            .to(arc, { y: 0, duration: 0.43, ease: "power2.in" }, 0.42)
+            .call(() => node.setAttribute("data-lit", "true"), undefined, 0.5)
             .to(
               progress,
               {
-                drawSVG: `0% ${((index + 1) / 3) * 100}%`,
+                drawSVG: `0% ${((index + 1) / totalFragments) * 100}%`,
                 duration: 0.7,
                 ease: EASE,
               },
@@ -174,20 +213,25 @@ export function useAtelierSequence(
               },
               0.75,
             )
-            .to(
-              fragment,
-              { backgroundColor: "transparent", color: "var(--v2-ink)", duration: 0.4 },
-              0.85,
-            );
+            // Le fragment d'origine reste marqué : c'est le vol suivant
+            // (ou la validation) qui l'éteindra, jamais lui-même.
+            .to(fragment, { color: inkColor, duration: 0.4 }, 0.85);
 
           return tl;
         };
 
         /** Le dernier temps : le sceau se trace, le document se pose. */
-        const validate = () =>
-          gsap
-            .timeline()
-            .to(seal, { autoAlpha: 1, duration: 0.3 })
+        const validate = () => {
+          const tl = gsap.timeline();
+          const last = fragments[totalFragments - 1];
+
+          // Le dernier fragment flottait encore en surbrillance : plus
+          // aucun vol ne suit pour l'éteindre, la validation s'en charge.
+          if (last) {
+            tl.set(last, { backgroundColor: "transparent" }, 0);
+          }
+
+          tl.to(seal, { autoAlpha: 1, duration: 0.3 }, 0)
             .to(sealCheck, { drawSVG: "100%", duration: 0.45, ease: EASE }, 0)
             .to(pending, { autoAlpha: 0, duration: 0.3 }, 0.1)
             .fromTo(
@@ -197,8 +241,16 @@ export function useAtelierSequence(
               0.25,
             );
 
+          return tl;
+        };
+
+        /** Même calcul que côté `onUpdate` : dérive le temps courant à
+         *  partir d'une progression 0-1. Factorisé pour ne pas se
+         *  décorréler entre l'appel initial et les mises à jour. */
+        const beatFromProgress = (value: number) =>
+          Math.min(LAST_BEAT, Math.floor(value * (LAST_BEAT + 0.4)));
+
         let current = 0;
-        settle(0);
 
         const trigger = ScrollTrigger.create({
           trigger: track,
@@ -213,17 +265,13 @@ export function useAtelierSequence(
             ease: "power2.inOut",
           },
           onUpdate: (self) => {
-            const next = Math.min(
-              LAST_BEAT,
-              Math.floor(self.progress * (LAST_BEAT + 0.4)),
-            );
+            const next = beatFromProgress(self.progress);
             if (next === current) return;
 
             // En descente on joue le geste, temps par temps. En remontée
             // on repose l'état, sans animation.
             if (self.direction === 1 && next === current + 1) {
-              if (next === LAST_BEAT) validate();
-              else fly(next - 1);
+              activeTimeline = next === LAST_BEAT ? validate() : fly(next - 1);
             } else {
               settle(next);
             }
@@ -232,14 +280,26 @@ export function useAtelierSequence(
           },
         });
 
+        // ScrollTrigger n'appelle jamais `onUpdate` à sa propre création
+        // (les deux déclenchements internes sont gardés par
+        // `!_refreshing`) : seul un geste de scroll le fait. Un
+        // rechargement avec restauration de position, un retour en
+        // arrière depuis le bas de page, ou une ancre `#produit` qui
+        // atterrit dans la piste laisseraient donc la section épinglée au
+        // temps 0 jusqu'au premier geste. On dérive l'état réel dès la
+        // création du trigger plutôt que de supposer un départ à zéro.
+        current = beatFromProgress(trigger.progress);
+        settle(current);
+
         return () => {
           trigger.kill();
-          splits.forEach((split) => split.revert());
-          root.querySelectorAll("[data-flyer]").forEach((node) => node.remove());
           // L'état de repos est l'état final : si la mécanique est
           // démontée — redimensionnement sous 1024px — la démonstration
-          // reste complète.
+          // reste complète. Reposer l'état avant de rendre la main aux
+          // `SplitText` : après leur `revert()`, `split.words` est vide
+          // et `settle()` ne viserait plus rien.
           settle(LAST_BEAT);
+          splits.forEach((split) => split.revert());
         };
       });
 
