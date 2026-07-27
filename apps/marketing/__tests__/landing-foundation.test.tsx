@@ -41,8 +41,10 @@ describe("V2 landing foundation", () => {
     expect(motion).toContain("lagSmoothing(0)");
     expect(motion).not.toMatch(/window\.addEventListener\(\s*["']scroll/);
 
-    // Les états de départ sont posés en JS, jamais en CSS : sans script,
-    // la page reste complète. `/` est indexée.
+    // Les états de visibilité sont posés en JS, jamais en CSS : sans
+    // script, aucun contenu n'est masqué et la page reste lisible, `/`
+    // est indexée. Seule exception, assumée : la teinte « pas encore
+    // lue » du manifeste, écartée par `landing.css`, reste lisible.
     expect(motion).toContain("gsap.set");
   });
 

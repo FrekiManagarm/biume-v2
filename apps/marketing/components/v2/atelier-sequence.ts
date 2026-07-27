@@ -63,6 +63,17 @@ export function useAtelierSequence(
         // toute la séquence s'arrête sans bruit. Même coût, échec bruyant.
         if (!progress || !sealCheck || !seal || !owner || !pending) return;
 
+        // Les collections aussi : sans elles, la séquence épingle trois
+        // écrans et demi de vide au lieu d'échouer.
+        if (
+          !fragments.length ||
+          slots.length !== fragments.length ||
+          values.length !== fragments.length ||
+          nodes.length !== fragments.length
+        ) {
+          return;
+        }
+
         const totalFragments = fragments.length;
 
         // GSAP interpole une couleur en la décomposant en canaux
@@ -76,7 +87,10 @@ export function useAtelierSequence(
         // Chaque valeur est découpée par mots une fois pour toutes : la
         // révélation se joue ensuite sur des nœuds stables.
         const splits = values.map((value) =>
-          SplitText.create(value, { type: "words", wordsClass: "v2-word" }),
+          SplitText.create(value, {
+            type: "words",
+            wordsClass: "v2-report-word",
+          }),
         );
 
         // La timeline en cours — celle d'un vol ou celle de la validation.

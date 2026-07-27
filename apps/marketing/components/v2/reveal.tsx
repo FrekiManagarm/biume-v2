@@ -21,8 +21,11 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * garde sans redemander.
  *
  * Ce qui reste, et qui ne relève pas du mouvement réduit mais de la robustesse :
- * aucun état de départ n'est posé en CSS. Si le script échoue, la page
- * est complète et lisible — `/` est indexée.
+ * les états de **visibilité** sont posés en JS, jamais en CSS — si le
+ * script échoue, aucun contenu n'est masqué et la page reste lisible,
+ * `/` est indexée. Seule exception, assumée : la teinte « pas encore
+ * lue » du manifeste, écartée par `landing.css`, reste au-dessus du
+ * seuil de contraste sans script.
  */
 
 /**
@@ -46,6 +49,11 @@ export const EASE = "power3.out";
 /** Au-dessus, les gestes lourds — pinning, Flip. En dessous, le même
  *  récit sans capture du scroll. */
 export const WIDE = "(min-width: 1024px)";
+
+/** Le complément exact de WIDE. Écrit ici et pas au point d'appel :
+ *  deux seuils dans deux fichiers finissent toujours par diverger, et
+ *  une largeur fractionnaire tomberait dans le trou entre les deux. */
+export const NARROW = "(max-width: 1023.98px)";
 
 /** Hauteur du masthead, retranchée quand une ancre est visée. */
 const ANCHOR_OFFSET = -88;
@@ -109,6 +117,9 @@ export function V2MotionRoot({ children }: { children: ReactNode }) {
     return () => {
       document.removeEventListener("click", onAnchorClick);
       gsap.ticker.remove(tick);
+      // Réglage global : sans le restaurer, une navigation client depuis
+      // `/` laisse tout le GSAP du reste de la session sans lissage.
+      gsap.ticker.lagSmoothing(1000, 33);
       lenis.destroy();
     };
   }, []);
@@ -253,11 +264,18 @@ export function HeroReveal({
           mask: "lines",
           autoSplit: true,
           onSplit(self) {
-            return tl.from(
-              self.lines,
-              { yPercent: 112, duration: 1.2, ease: EASE, stagger: 0.085 },
-              0.1,
-            );
+            // Retourner le tween, jamais la timeline : SplitText appelle
+            // `revert()` sur la valeur retournée à chaque recoupe, et
+            // reverter la timeline entière remettrait les blocs du hero —
+            // dont les CTA — à `autoAlpha: 0` sans jamais les rejouer.
+            const lines = gsap.from(self.lines, {
+              yPercent: 112,
+              duration: 1.2,
+              ease: EASE,
+              stagger: 0.085,
+            });
+            tl.add(lines, 0.1);
+            return lines;
           },
         });
       }
@@ -335,7 +353,13 @@ export function Drift({
 
   return (
     <div ref={host} className={className}>
-      <div>{children}</div>
+      {/* GSAP transforme ce bloc, ce qui en fait le bloc conteneur des
+          descendants absolus. Sans hauteur, un enfant en `inset-*` se
+          résout à zéro — c'est ce qui effaçait la photographie du hero.
+          Ne pas retirer : `h-full` retombe sur `auto` quand l'hôte n'a
+          pas de hauteur définie, donc les photos de section ne bougent
+          pas. */}
+      <div className="h-full">{children}</div>
     </div>
   );
 }

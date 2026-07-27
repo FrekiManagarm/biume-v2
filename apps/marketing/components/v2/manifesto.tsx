@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
 import { useRef } from "react";
 
-import { WIDE, ensureGsapPlugins } from "./reveal";
+import { NARROW, WIDE, ensureGsapPlugins } from "./reveal";
 
 /**
  * Le geste signature de la page : le texte passe de l'encre « pas
@@ -42,7 +42,7 @@ export function V2Manifesto() {
       // Les deux requêtes sont déclarées ensemble : `conditions` n'est
       // peuplé qu'à l'intérieur du callback d'un `mm.add`, et il est
       // rejoué à chaque bascule — resize géré sans code supplémentaire.
-      mm.add({ wide: WIDE, narrow: "(max-width: 1023px)" }, (context) => {
+      mm.add({ wide: WIDE, narrow: NARROW }, (context) => {
         const { wide } = context.conditions as { wide: boolean };
 
         // Découpage par mots (et par lignes, pour que la coupe suive la

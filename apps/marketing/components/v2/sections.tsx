@@ -143,10 +143,10 @@ export function V2Control() {
             </dl>
 
             <div className="mt-7 flex flex-wrap items-center gap-2.5 border-t border-[color:var(--v2-line)] pt-6">
-              <span className="v2-btn v2-btn-primary v2-btn-sm">
+              <span className="v2-btn v2-btn-primary v2-btn-sm pointer-events-none">
                 Valider ce passage
               </span>
-              <span className="v2-btn v2-btn-secondary v2-btn-sm">
+              <span className="v2-btn v2-btn-secondary v2-btn-sm pointer-events-none">
                 Reformuler
               </span>
               <p className="ml-auto text-[0.82rem] text-[color:var(--v2-ink-faint)]">
