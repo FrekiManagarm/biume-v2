@@ -104,6 +104,8 @@ export function buildQuickReportRows({
     organizationId,
     ownerId: ids.ownerId,
     name: input.animalName.trim(),
+    type: input.animalType?.trim() || null,
+    breed: input.animalBreed?.trim() || null,
     createdAt: now,
   };
   const report = {

@@ -32,6 +32,7 @@ import {
   getAllPatients,
   getPatientById,
 } from "@/lib/api/actions/patients.action";
+import { animalsQueryOptions } from "@/lib/api/queries/patients.query";
 import {
   createQuickReport,
   createReport,
@@ -78,14 +79,22 @@ export function InitializationDialog({
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [animalName, setAnimalName] = useState("");
+  const [animalType, setAnimalType] = useState("");
+  const [animalBreed, setAnimalBreed] = useState("");
   const [clientRequestId] = useState(() => crypto.randomUUID());
   const [isPetSelectOpen, setIsPetSelectOpen] = useState(false);
   const [isAppointmentSelectOpen, setIsAppointmentSelectOpen] = useState(false);
+  const [isSpeciesSelectOpen, setIsSpeciesSelectOpen] = useState(false);
 
   const { data: allPetsData, isLoading: isLoadingPets } = useQuery({
     queryKey: ["pro-patients"],
     queryFn: () => getAllPatients(),
   });
+
+  const { data: animalsData, isLoading: isLoadingAnimals } = useQuery(
+    animalsQueryOptions(),
+  );
+  const species = animalsData ?? [];
 
   const pets: PetListItem[] = (allPetsData ?? []) as PetListItem[];
   const filteredPets = pets.filter(
@@ -144,6 +153,8 @@ export function InitializationDialog({
               ownerName,
               ownerEmail,
               animalName,
+              animalType,
+              animalBreed,
               title: title.trim() || "Nouveau rapport",
               consultationReason: consultationReason.trim(),
             })
@@ -167,7 +178,8 @@ export function InitializationDialog({
     }
   };
 
-  const isSelectOpen = isPetSelectOpen || isAppointmentSelectOpen;
+  const isSelectOpen =
+    isPetSelectOpen || isAppointmentSelectOpen || isSpeciesSelectOpen;
 
   return (
     <>
@@ -410,6 +422,53 @@ export function InitializationDialog({
                     placeholder="Nom de l’animal"
                   />
                 </FieldGroup>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <FieldGroup
+                    label="Espèce (optionnel)"
+                    htmlFor="quick-animal-type"
+                  >
+                    <Select
+                      open={isSpeciesSelectOpen}
+                      onOpenChange={setIsSpeciesSelectOpen}
+                      value={animalType}
+                      onValueChange={setAnimalType}
+                      disabled={isLoadingAnimals || species.length === 0}
+                    >
+                      <SelectTrigger
+                        id="quick-animal-type"
+                        className="h-10 w-full"
+                      >
+                        {isLoadingAnimals ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2Icon className="size-4 animate-spin" />
+                            <span>Chargement des espèces...</span>
+                          </div>
+                        ) : (
+                          <SelectValue placeholder="Choisir une espèce" />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {species.map((animal) => (
+                          <SelectItem key={animal.id} value={animal.id}>
+                            {animal.name ?? animal.code ?? "Espèce"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldGroup>
+                  <FieldGroup
+                    label="Race (optionnel)"
+                    htmlFor="quick-animal-breed"
+                  >
+                    <Input
+                      id="quick-animal-breed"
+                      value={animalBreed}
+                      onChange={(event) => setAnimalBreed(event.target.value)}
+                      placeholder="Berger australien"
+                      className="h-10"
+                    />
+                  </FieldGroup>
+                </div>
               </>
             )}
 

@@ -105,4 +105,22 @@ describe("idempotent quick report creation", () => {
       createQuickReportFingerprint({ ...input, animalName: "Moka" }),
     ).resolves.not.toBe(await createQuickReportFingerprint(input));
   });
+
+  it("separates two requests that differ only by species or breed", async () => {
+    await expect(
+      createQuickReportFingerprint({ ...input, animalType: "species-dog" }),
+    ).resolves.not.toBe(await createQuickReportFingerprint(input));
+    await expect(
+      createQuickReportFingerprint({
+        ...input,
+        animalBreed: "Berger australien",
+      }),
+    ).resolves.not.toBe(await createQuickReportFingerprint(input));
+  });
+
+  it("treats an omitted and a whitespace-only breed as the same request", async () => {
+    await expect(
+      createQuickReportFingerprint({ ...input, animalBreed: "   " }),
+    ).resolves.toBe(await createQuickReportFingerprint(input));
+  });
 });

@@ -6,6 +6,8 @@ type QuickReportInput = {
   ownerName: string;
   ownerEmail?: string;
   animalName: string;
+  animalType?: string;
+  animalBreed?: string;
   title: string;
   consultationReason: string;
 };
@@ -53,6 +55,8 @@ export async function createQuickReportFingerprint(input: QuickReportInput) {
     ownerName: input.ownerName.trim(),
     ownerEmail: input.ownerEmail?.trim() || null,
     animalName: input.animalName.trim(),
+    animalType: input.animalType?.trim() || null,
+    animalBreed: input.animalBreed?.trim() || null,
     title: input.title.trim(),
     consultationReason: input.consultationReason.trim(),
   });

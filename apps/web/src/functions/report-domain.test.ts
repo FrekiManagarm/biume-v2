@@ -87,6 +87,48 @@ it("builds owner, animal, report, and four decisions from minimum input", () => 
   expect(rows.sectionStates).toHaveLength(4);
 });
 
+it("carries the chosen species and breed onto the created animal", () => {
+  const rows = buildQuickReportRows({
+    organizationId: "org-1",
+    input: {
+      clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+      ownerName: "Camille",
+      animalName: "Nox",
+      animalType: "species-dog",
+      animalBreed: " Berger australien ",
+      title: "Nouveau rapport",
+      consultationReason: "",
+    },
+    ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    requestFingerprint: "fingerprint-1",
+    now: new Date("2026-07-18T10:00:00.000Z"),
+  });
+
+  expect(rows.animal).toMatchObject({
+    type: "species-dog",
+    breed: "Berger australien",
+  });
+});
+
+it("stores an unspecified species and breed as null", () => {
+  const rows = buildQuickReportRows({
+    organizationId: "org-1",
+    input: quickReportSchema.parse({
+      clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+      ownerName: "Camille",
+      animalName: "Nox",
+      animalType: "",
+      animalBreed: "   ",
+    }),
+    ids: { ownerId: "owner-1", animalId: "pet-1", reportId: "report-1" },
+    requestFingerprint: "fingerprint-1",
+    now: new Date("2026-07-18T10:00:00.000Z"),
+  });
+
+  expect(rows.animal.type).toBeNull();
+  expect(rows.animal.breed).toBeNull();
+});
+
 it("stores an omitted quick-create email as null", () => {
   const rows = buildQuickReportRows({
     organizationId: "org-1",

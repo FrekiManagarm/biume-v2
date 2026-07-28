@@ -115,6 +115,28 @@ describe("report contracts", () => {
     });
   });
 
+  it("keeps species and breed optional and trimmed on a quick create", () => {
+    expect(
+      quickReportSchema.parse({
+        clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+        ownerName: "Camille",
+        animalName: "Nox",
+        animalType: "species-dog",
+        animalBreed: "  Berger australien  ",
+      }),
+    ).toMatchObject({
+      animalType: "species-dog",
+      animalBreed: "Berger australien",
+    });
+    expect(
+      quickReportSchema.parse({
+        clientRequestId: "123e4567-e89b-42d3-a456-426614174000",
+        ownerName: "Camille",
+        animalName: "Nox",
+      }).animalBreed,
+    ).toBeUndefined();
+  });
+
   it("requires a client-generated idempotency key", () => {
     expect(
       quickReportSchema.safeParse({ ownerName: "Camille", animalName: "Nox" })

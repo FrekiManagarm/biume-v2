@@ -177,6 +177,8 @@ export const quickReportSchema = z.object({
     .pipe(z.union([z.literal(""), z.string().email()]))
     .optional(),
   animalName: z.string().trim().min(1, "Le nom de l’animal est requis"),
+  animalType: z.string().trim().optional(),
+  animalBreed: z.string().trim().optional(),
   title: z.string().trim().min(1).default("Nouveau rapport"),
   consultationReason: z.string().trim().default(""),
 });
