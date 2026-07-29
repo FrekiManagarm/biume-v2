@@ -35,6 +35,7 @@ export const Route = createFileRoute("/select-organization")({
       },
     ],
   }),
+  ssr: true,
   beforeLoad: async () => {
     const session = await getSession();
 

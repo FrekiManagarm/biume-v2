@@ -13,6 +13,7 @@ export const Route = createFileRoute("/dashboard/agenda")({
       },
     ],
   }),
+  ssr: true,
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(appointmentsQueryOptions()),
   component: AgendaPage,

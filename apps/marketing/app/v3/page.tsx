@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 
-import { V3Landing } from "../../components/v3/v3-landing";
-
-import "./v3.css";
+import { LandingV3 } from "../../components/landing-v3";
+import "../../components/landing-v3/landing-v3.css";
 
 export const metadata: Metadata = {
-  title: "Biume — De vos notes au propriétaire",
+  title: "Biume — De vos notes au propriétaire, sans perdre votre regard métier",
   description:
-    "Une variante de landing Biume : un compte rendu clair, préparé à partir de vos observations et validé par vous.",
+    "Après la séance, écrivez vos notes comme d'habitude. Biume les met en forme pour le propriétaire : vous relisez, vous ajustez, et rien ne part avant votre validation.",
+  keywords: [
+    "ostéopathe animalier",
+    "compte rendu ostéopathie animale",
+    "compte rendu propriétaire",
+    "logiciel ostéopathe animalier",
+    "suivi post-séance",
+  ],
+  // Route de prévisualisation : elle double la page d'accueil et ne doit
+  // pas entrer en concurrence avec elle dans l'index.
   robots: { index: false, follow: false },
 };
 
 export default function V3Page() {
-  return <V3Landing />;
+  return <LandingV3 />;
 }

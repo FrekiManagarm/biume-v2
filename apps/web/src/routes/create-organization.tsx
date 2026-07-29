@@ -39,6 +39,7 @@ export const Route = createFileRoute("/create-organization")({
       },
     ],
   }),
+  ssr: true,
   beforeLoad: async () => {
     const session = await getSession();
 
@@ -162,7 +163,7 @@ function CreateOrganization() {
     if (result.error) {
       setError(
         result.error.message ||
-          "Impossible de créer cette organisation pour le moment.",
+        "Impossible de créer cette organisation pour le moment.",
       );
       setIsPending(false);
       return;

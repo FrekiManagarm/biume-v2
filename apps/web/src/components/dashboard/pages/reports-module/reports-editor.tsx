@@ -225,6 +225,7 @@ export function AdvancedReportEditor({
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isOwnerWarningOpen, setIsOwnerWarningOpen] = useState(false);
+  const isAddDialogOpen = isAddSheetOpen || isAddAnatomicalIssueOpen;
 
   const ownerSources = useMemo(
     () =>
@@ -419,7 +420,9 @@ export function AdvancedReportEditor({
     },
     {
       description: "Ouvrir la modale d'ajout d'élément (Shift+N)",
-      enabled: canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData),
+      enabled:
+        !isAddDialogOpen &&
+        canOpenAnatomicalEntryShortcut(activeTab, entryAnimalData),
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -435,7 +438,7 @@ export function AdvancedReportEditor({
     },
     {
       description: "Basculer vers la vue gauche (Shift+1)",
-      enabled: activeTab === "anatomical",
+      enabled: !isAddDialogOpen && activeTab === "anatomical",
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -451,7 +454,7 @@ export function AdvancedReportEditor({
     },
     {
       description: "Basculer vers la vue droite (Shift+2)",
-      enabled: activeTab === "anatomical",
+      enabled: !isAddDialogOpen && activeTab === "anatomical",
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -470,7 +473,10 @@ export function AdvancedReportEditor({
     },
     {
       description: "Supprimer le dernier élément ajouté",
-      enabled: activeTab === "anatomical" && anatomicalIssues.length > 0,
+      enabled:
+        !isAddDialogOpen &&
+        activeTab === "anatomical" &&
+        anatomicalIssues.length > 0,
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -486,23 +492,10 @@ export function AdvancedReportEditor({
     },
     {
       description: "Effacer tous les éléments",
-      enabled: activeTab === "anatomical" && anatomicalIssues.length > 0,
-      preventDefault: true,
-      enableOnFormTags: true,
-      enableOnContentEditable: true,
-    },
-  );
-
-  useHotkeys(
-    "escape",
-    () => {
-      if (activeTab === "anatomical" && isAddAnatomicalIssueOpen) {
-        setIsAddAnatomicalIssueOpen(false);
-      }
-    },
-    {
-      description: "Fermer la modale d'ajout",
-      enabled: activeTab === "anatomical" && isAddAnatomicalIssueOpen,
+      enabled:
+        !isAddDialogOpen &&
+        activeTab === "anatomical" &&
+        anatomicalIssues.length > 0,
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,
@@ -516,6 +509,7 @@ export function AdvancedReportEditor({
     },
     {
       description: "Sauvegarder le rapport (Cmd/Ctrl+S)",
+      enabled: !isAddDialogOpen,
       preventDefault: true,
       enableOnFormTags: true,
       enableOnContentEditable: true,

@@ -119,6 +119,7 @@ export const Route = createFileRoute("/dashboard/patients")({
     search: search.search ?? "",
     type: search.type ?? "tous",
   }),
+  ssr: true,
   loader: ({ context, deps }) =>
     Promise.all([
       context.queryClient.ensureQueryData(
@@ -329,7 +330,7 @@ export function PatientsPage() {
               value={typeFilter}
               onValueChange={(value) => updateSearch({ type: value, page: 1 })}
             >
-              <SelectTrigger className="h-11 w-full bg-white lg:w-[220px]">
+              <SelectTrigger className="h-11 w-full bg-white lg:w-55">
                 <SelectValue placeholder="Espèce" />
               </SelectTrigger>
               <SelectContent>
@@ -346,7 +347,7 @@ export function PatientsPage() {
           {currentPatients.length > 0 ? (
             <>
               <div className="overflow-x-auto rounded-[1.25rem] border border-slate-200 bg-white">
-                <Table className="min-w-[860px]">
+                <Table className="min-w-215">
                   <TableHeader className="bg-slate-50">
                     <TableRow className="hover:bg-slate-50">
                       <TableHead className="h-11 text-xs font-semibold uppercase text-slate-500">
@@ -589,21 +590,21 @@ function PatientFormDialog({
       } catch (error) {
         const wasStale = patient
           ? await handleEntityEditError({
-              entityId: patient.id,
-              error,
-              isStaleError: isStalePatientError,
-              onStale: async (patientId) => {
-                if (onStale) {
-                  await onStale(patientId);
-                  return;
-                }
+            entityId: patient.id,
+            error,
+            isStaleError: isStalePatientError,
+            onStale: async (patientId) => {
+              if (onStale) {
+                await onStale(patientId);
+                return;
+              }
 
-                await invalidateEntityLists((queryKey) =>
-                  queryClient.invalidateQueries({ queryKey }),
-                );
-                onOpenChange(false);
-              },
-            })
+              await invalidateEntityLists((queryKey) =>
+                queryClient.invalidateQueries({ queryKey }),
+              );
+              onOpenChange(false);
+            },
+          })
           : false;
 
         if (wasStale) {
@@ -1030,7 +1031,7 @@ function getFieldError(errors: unknown[]) {
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
       {children}
     </section>
   );
@@ -1077,7 +1078,7 @@ function MetricCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -1090,7 +1091,7 @@ function MetricCard({
           className={cn(
             "flex size-11 shrink-0 items-center justify-center rounded-xl border",
             tone === "emerald" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-800",
+            "border-emerald-200 bg-emerald-50 text-emerald-800",
             tone === "sky" && "border-sky-200 bg-sky-50 text-sky-800",
             tone === "amber" && "border-amber-200 bg-amber-50 text-amber-800",
             tone === "slate" && "border-slate-200 bg-slate-50 text-slate-600",

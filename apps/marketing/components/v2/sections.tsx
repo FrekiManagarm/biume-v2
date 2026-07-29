@@ -1,16 +1,11 @@
-import {
-  Check,
-  FileSearch,
-  FileText,
-  Mic,
-} from "lucide-react";
+import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { webAppPath } from "../../lib/web-app-url";
 import { REPORT_TRANSFORMATION_DEMO } from "../landing/report-transformation-demo";
-import { Reveal } from "./reveal";
+import { webAppPath } from "../../lib/web-app-url";
+import { CutLines, Drift, Reveal } from "./reveal";
 
 const DEMO_URL = "https://cal.com/mathieu-chambaud-biume";
 
@@ -58,12 +53,13 @@ function SectionIntro({
       <p className={eyebrowTone === "green" ? "v2-eyebrow v2-eyebrow-green" : "v2-eyebrow"}>
         {eyebrow}
       </p>
-      <h2
+      <CutLines
+        as="h2"
         id={id}
         className={`v2-display mt-5 max-w-[22ch] text-[clamp(1.9rem,3.6vw,3rem)] font-medium leading-[1.08] tracking-[-0.04em] text-[color:var(--v2-ink)] [text-wrap:balance] ${center ? "mx-auto" : ""}`}
       >
         {title}
-      </h2>
+      </CutLines>
       {children ? (
         <div
           className={`mt-5 max-w-[56ch] text-[1rem] leading-[1.65] text-[color:var(--v2-ink-soft)] [text-wrap:pretty] ${center ? "mx-auto" : ""}`}
@@ -72,65 +68,6 @@ function SectionIntro({
         </div>
       ) : null}
     </Reveal>
-  );
-}
-
-/* ---------- Transformation — les contenus validés de l'accueil ---------- */
-
-const transformationStages = [
-  {
-    icon: Mic,
-    title: "Notes de séance",
-    body: REPORT_TRANSFORMATION_DEMO.note,
-  },
-  {
-    icon: FileSearch,
-    title: "Reformulation proposée",
-    body: REPORT_TRANSFORMATION_DEMO.sections
-      .map((section) => `${section.label} : ${section.value}`)
-      .join(" · "),
-  },
-  {
-    icon: FileText,
-    title: "Compte rendu à valider",
-    body: REPORT_TRANSFORMATION_DEMO.ownerSummary,
-  },
-] as const;
-
-export function V2Features() {
-  return (
-    <SectionShell id="produit" ariaLabelledBy="v2-features-title">
-      <SectionIntro
-        eyebrow="Le parcours"
-        title="Ce que vous notez reste précis. Ce que le propriétaire lit devient clair."
-        id="v2-features-title"
-      >
-        <p>
-          Biume organise vos observations sans les appauvrir. Vous retrouvez
-          chaque information, puis vous relisez la version destinée au
-          propriétaire.
-        </p>
-      </SectionIntro>
-      <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {transformationStages.map((stage, i) => (
-          <Reveal key={stage.title} delay={i * 0.08}>
-            <article className="v2-card h-full p-8">
-              <stage.icon
-                aria-hidden="true"
-                className="size-6 text-[color:var(--v2-violet-ink)]"
-                strokeWidth={1.5}
-              />
-              <h3 className="mt-5 text-[1.15rem] font-medium tracking-[-0.01em] text-[color:var(--v2-ink)]">
-                {stage.title}
-              </h3>
-              <p className="mt-2.5 text-[0.95rem] leading-[1.6] text-[color:var(--v2-ink-soft)]">
-                {stage.body}
-              </p>
-            </article>
-          </Reveal>
-        ))}
-      </div>
-    </SectionShell>
   );
 }
 
@@ -157,7 +94,7 @@ export function V2Control() {
               automatiquement.
             </p>
           </SectionIntro>
-          <Reveal delay={0.1}>
+          <Reveal>
             <ul className="mt-8 space-y-3.5">
               {[
                 "Vous relisez et validez chaque passage",
@@ -178,15 +115,44 @@ export function V2Control() {
             </ul>
           </Reveal>
         </div>
-        <Reveal delay={0.15}>
-          <div className="v2-panel overflow-hidden p-2.5">
-            <Image
-              src="/assets/images/dashboard-image.jpg"
-              alt="Interface de relecture Biume : le compte rendu proposé, prêt à être validé passage par passage."
-              width={1920}
-              height={1282}
-              className="h-auto w-full rounded-[18px]"
-            />
+        <Reveal>
+          <div data-control-panel="true" className="v2-panel p-6 md:p-8">
+            <header className="flex items-baseline justify-between gap-4 border-b border-[color:var(--v2-line)] pb-4">
+              <h3 className="text-[1.05rem] font-medium text-[color:var(--v2-ink)]">
+                Relecture du compte rendu
+              </h3>
+              <p className="v2-mono text-[0.72rem] uppercase tracking-[0.12em] text-[color:var(--v2-ink-faint)]">
+                Brouillon
+              </p>
+            </header>
+
+            <dl className="mt-6 space-y-5">
+              {REPORT_TRANSFORMATION_DEMO.sections.map((section) => (
+                <div
+                  key={section.label}
+                  className="border-l border-[color:var(--v2-line-strong)] pl-4"
+                >
+                  <dt className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[color:var(--v2-ink-faint)]">
+                    {section.label}
+                  </dt>
+                  <dd className="mt-1.5 text-[1rem] leading-[1.55] text-[color:var(--v2-ink)]">
+                    {section.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="mt-7 flex flex-wrap items-center gap-2.5 border-t border-[color:var(--v2-line)] pt-6">
+              <span className="v2-btn v2-btn-primary v2-btn-sm pointer-events-none">
+                Valider ce passage
+              </span>
+              <span className="v2-btn v2-btn-secondary v2-btn-sm pointer-events-none">
+                Reformuler
+              </span>
+              <p className="ml-auto text-[0.82rem] text-[color:var(--v2-ink-faint)]">
+                Aucun envoi tant que vous n&apos;avez pas validé.
+              </p>
+            </div>
           </div>
         </Reveal>
       </div>
@@ -206,13 +172,15 @@ export function V2FollowUp() {
       <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
         <Reveal className="order-last lg:order-first">
           <div className="v2-panel overflow-hidden p-2.5">
-            <Image
-              src="/assets/images/landing/atelier-practice.webp"
-              alt="Ostéopathe animalier en séance, prenant de courtes notes entre deux gestes."
-              width={1122}
-              height={1402}
-              className="h-auto w-full rounded-[18px]"
-            />
+            <Drift distance={18}>
+              <Image
+                src="/assets/images/landing/atelier-practice.webp"
+                alt="Ostéopathe animalier en séance, prenant de courtes notes entre deux gestes."
+                width={1122}
+                height={1402}
+                className="h-auto w-full rounded-[18px]"
+              />
+            </Drift>
           </div>
         </Reveal>
         <div>
@@ -227,7 +195,7 @@ export function V2FollowUp() {
               confirmez le rappel à la date choisie.
             </p>
           </SectionIntro>
-          <Reveal delay={0.1}>
+          <Reveal>
             <ul className="mt-8 space-y-3.5">
               {[
                 "Vous relisez et finalisez le document après la séance.",
@@ -273,22 +241,26 @@ export function V2FieldStories() {
             l’envoi, puis maintenir le contact.
           </p>
         </SectionIntro>
-        <Reveal delay={0.12}>
+        <Reveal>
           <div className="grid grid-cols-[1.14fr_0.86fr] items-end gap-4 md:gap-6">
-            <Image
-              src="/assets/images/landing/atelier-practice.webp"
-              alt="Les mains d’une ostéopathe animalière palpant l’épaule d’un chien calme"
-              width={1122}
-              height={1402}
-              className="w-full rounded-[24px]"
-            />
-            <Image
-              src="/assets/images/landing/atelier-owner.webp"
-              alt="Une ostéopathe animalière échangeant avec la propriétaire d’un chien après la séance"
-              width={1122}
-              height={1402}
-              className="mb-[12%] w-full rounded-[24px]"
-            />
+            <Drift distance={18}>
+              <Image
+                src="/assets/images/landing/atelier-practice.webp"
+                alt="Les mains d’une ostéopathe animalière palpant l’épaule d’un chien calme"
+                width={1122}
+                height={1402}
+                className="w-full rounded-[24px]"
+              />
+            </Drift>
+            <Drift distance={30}>
+              <Image
+                src="/assets/images/landing/atelier-owner.webp"
+                alt="Une ostéopathe animalière échangeant avec la propriétaire d’un chien après la séance"
+                width={1122}
+                height={1402}
+                className="mb-[12%] w-full rounded-[24px]"
+              />
+            </Drift>
           </div>
         </Reveal>
       </div>
@@ -323,8 +295,8 @@ export function V2Pricing() {
           être arrêté depuis les paramètres.
         </p>
       </SectionIntro>
-      <Reveal delay={0.1}>
-        <div className="v2-panel mx-auto mt-14 max-w-[640px] p-8 md:p-12">
+      <div className="v2-panel mx-auto mt-14 max-w-[640px] p-8 md:p-12">
+        <Reveal>
           <p className="v2-eyebrow v2-eyebrow-green">Formule Indépendant</p>
           <p className="mt-6 flex items-baseline gap-2">
             <span className="v2-display text-[2.9rem] font-medium leading-none tracking-[-0.04em] text-[color:var(--v2-ink)]">
@@ -337,6 +309,8 @@ export function V2Pricing() {
           <p className="mt-2 text-[0.88rem] text-[color:var(--v2-ink-faint)]">
             299,88 € facturés une fois par an
           </p>
+        </Reveal>
+        <Reveal>
           <ul className="mt-8 space-y-3.5 border-t border-[color:var(--v2-line)] pt-8">
             {included.map((item) => (
               <li key={item} className="flex items-start gap-3">
@@ -351,6 +325,8 @@ export function V2Pricing() {
               </li>
             ))}
           </ul>
+        </Reveal>
+        <Reveal>
           <div className="mt-6 border-t border-[color:var(--v2-line)] pt-6">
             <p className="v2-display text-[1.6rem] font-medium leading-none tracking-[-0.04em] text-[color:var(--v2-ink)]">
               29,99 €{" "}
@@ -362,30 +338,30 @@ export function V2Pricing() {
               Facturation mensuelle, résiliable en fin de période
             </p>
           </div>
-          <div className="mt-9 flex flex-col gap-3">
-            <Link
-              href={webAppPath("/signup")}
-              prefetch={false}
-              data-conversion="pricing-signup"
-              className="v2-btn v2-btn-primary v2-btn-lg w-full"
-            >
-              Essayer gratuitement
-            </Link>
-            <a
-              href={DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-conversion="pricing-demo"
-              className="v2-btn v2-btn-secondary w-full"
-            >
-              Demander une démo
-            </a>
-          </div>
-          <p className="mt-5 text-center text-[0.84rem] text-[color:var(--v2-ink-faint)]">
-            15 jours d’essai · Sans carte bancaire
-          </p>
+        </Reveal>
+        <div className="mt-9 flex flex-col gap-3">
+          <Link
+            href={webAppPath("/signup")}
+            prefetch={false}
+            data-conversion="pricing-signup"
+            className="v2-btn v2-btn-primary v2-btn-lg w-full"
+          >
+            Essayer gratuitement
+          </Link>
+          <a
+            href={DEMO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-conversion="pricing-demo"
+            className="v2-btn v2-btn-secondary w-full"
+          >
+            Demander une démo
+          </a>
         </div>
-      </Reveal>
+        <p className="mt-5 text-center text-[0.84rem] text-[color:var(--v2-ink-faint)]">
+          15 jours d’essai · Sans carte bancaire
+        </p>
+      </div>
     </SectionShell>
   );
 }
@@ -435,7 +411,7 @@ export function V2Faq() {
         />
         <div>
           {faqItems.map((item, i) => (
-            <Reveal key={item.question} delay={i * 0.05}>
+            <Reveal key={item.question}>
               <details
                 data-v2-faq-item={item.question}
                 className="group border-b border-[color:var(--v2-line)] first:border-t"
@@ -490,30 +466,28 @@ export function V2Close() {
             15 jours pour découvrir tout le parcours, sans carte bancaire.
           </p>
         </Reveal>
-        <Reveal delay={0.1}>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href={webAppPath("/signup")}
-              prefetch={false}
-              data-conversion="close-signup"
-              className="v2-btn v2-btn-primary v2-btn-lg w-full sm:w-auto"
-            >
-              Essayer gratuitement
-            </Link>
-            <a
-              href={DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-conversion="close-demo"
-              className="v2-btn v2-btn-secondary v2-btn-lg w-full sm:w-auto"
-            >
-              Demander une démo
-            </a>
-          </div>
-          <p className="mt-6 text-[0.84rem] text-[color:var(--v2-ink-faint)]">
-            15 jours d’essai · Sans carte bancaire
-          </p>
-        </Reveal>
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href={webAppPath("/signup")}
+            prefetch={false}
+            data-conversion="close-signup"
+            className="v2-btn v2-btn-primary v2-btn-lg w-full sm:w-auto"
+          >
+            Essayer gratuitement
+          </Link>
+          <a
+            href={DEMO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-conversion="close-demo"
+            className="v2-btn v2-btn-secondary v2-btn-lg w-full sm:w-auto"
+          >
+            Demander une démo
+          </a>
+        </div>
+        <p className="mt-6 text-[0.84rem] text-[color:var(--v2-ink-faint)]">
+          15 jours d’essai · Sans carte bancaire
+        </p>
       </div>
     </section>
   );
