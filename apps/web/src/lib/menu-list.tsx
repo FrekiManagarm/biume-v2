@@ -52,14 +52,18 @@ export function proMenuList(pathname: string): Group[] {
           active: pathname === `/dashboard/agenda`,
           icon: CalendarDays,
         },
-        {
-          href: `/dashboard/assistant`,
-          label: "Assistant",
-          active: pathname.startsWith(`/dashboard/assistant`),
-          icon: Sparkles,
-          variant: "assistant",
-          badge: "IA",
-        },
+        ...(import.meta.env.DEV
+          ? [
+              {
+                href: `/dashboard/assistant`,
+                label: "Assistant",
+                active: pathname.startsWith(`/dashboard/assistant`),
+                icon: Sparkles,
+                variant: "assistant" as const,
+                badge: "IA",
+              },
+            ]
+          : []),
       ],
     },
     {

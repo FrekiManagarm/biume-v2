@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { AssistantPage } from "#/components/dashboard/assistant/assistant-page";
 
@@ -13,5 +13,10 @@ export const Route = createFileRoute("/dashboard/assistant")({
       },
     ],
   }),
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) {
+      throw notFound();
+    }
+  },
   component: AssistantPage,
 });
