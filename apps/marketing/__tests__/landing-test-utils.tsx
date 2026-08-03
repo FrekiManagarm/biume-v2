@@ -14,6 +14,8 @@ export function textOnly(html: string) {
     .replaceAll("&apos;", "'")
     .replaceAll("&quot;", '"')
     .replaceAll("&nbsp;", " ")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&lt;", "<")
     .replaceAll("&amp;", "&")
     .replace(/\s+/g, " ")
     .trim();
