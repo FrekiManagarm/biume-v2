@@ -25,7 +25,7 @@ export function LandingV5Faq() {
           </h2>
         </Reveal>
         <Reveal delay={90} className="min-w-[300px] flex-1 basis-[480px]">
-          <Accordion className="border-t border-[color:var(--lv5-line)]">
+          <Accordion hiddenUntilFound className="border-t border-[color:var(--lv5-line)]">
             {FAQ.map((item) => (
               <AccordionItem key={item.q} value={item.q} className="border-[color:var(--lv5-line)]">
                 <AccordionTrigger className="min-h-14 text-[1.08rem] font-semibold leading-[1.35] text-[color:var(--lv5-ink)] **:data-[slot=accordion-trigger-icon]:text-[color:var(--lv5-violet)]">
