@@ -1,6 +1,15 @@
+// apps/marketing/__tests__/home-landing.test.tsx
 import { describe, expect, mock, test } from "bun:test";
 
-import { REPORT_TRANSFORMATION_DEMO } from "../components/landing/report-transformation-demo";
+import {
+  CLOSE_TITLE,
+  CONTROL_LEAD,
+  CONTROL_TITLE,
+  FAQ,
+  FOLLOW_UP_TITLE,
+  HERO_TITLE,
+  SPECIMEN_NOTE,
+} from "../components/landing-v5/content";
 import { webAppPath } from "../lib/web-app-url";
 import {
   conversionAnchors,
@@ -22,12 +31,12 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
-describe("Biume V2 homepage", () => {
-  test("uses the V2 composition for the approved homepage story", () => {
+describe("Biume homepage (landing-v5)", () => {
+  test("uses the landing-v5 composition for the approved homepage story", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
-    const markers = ["produit", "controle", "methode", "tarifs", "questions"];
+    const markers = ["produit", "controle", "suivi", "proprietaire", "tarifs", "questions"];
 
-    expect(html).toContain('class="v2 ');
+    expect(html).toContain('class="landing-v5 ');
     for (const marker of markers) {
       expect(html.match(new RegExp(`id="${marker}"`, "g"))).toHaveLength(1);
     }
@@ -37,42 +46,35 @@ describe("Biume V2 homepage", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain("Votre regard métier, jusqu’au propriétaire.");
-    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.note);
-    expect(text).toContain(REPORT_TRANSFORMATION_DEMO.ownerSummary);
-    expect(text).toContain("Biume prépare. Vous gardez la main.");
-    expect(text).toContain("Rien n’est partagé automatiquement");
-    expect(text).toContain("Le compte rendu ouvre la suite.");
+    expect(text).toContain(HERO_TITLE);
+    expect(text).toContain(SPECIMEN_NOTE);
+    expect(text).toContain(CONTROL_TITLE);
+    expect(text).toContain(CONTROL_LEAD);
+    expect(text).toContain(FOLLOW_UP_TITLE);
     expect(html).toContain("atelier-practice.webp");
     expect(html).toContain("atelier-owner.webp");
-    expect(html).toContain("24,99 €");
+    // Le prix annuel n'apparaît qu'après bascule du sélecteur côté client
+    // (voir landing-v5-pricing.test.tsx) ; seul le mensuel est rendu ici.
     expect(html).toContain("29,99 €");
-    expect(html.match(/<details/g)).toHaveLength(5);
-    expect(text).toContain("Préparez votre prochain compte rendu.");
+    expect(html.match(/data-slot="accordion-item"/g)).toHaveLength(FAQ.length);
+    expect(text).toContain(CLOSE_TITLE);
 
     const finalSignup = conversionAnchors(html, "close-signup");
-    const finalDemo = conversionAnchors(html, "close-demo");
     expect(finalSignup).toHaveLength(1);
-    expect(finalDemo).toHaveLength(1);
     expect(finalSignup[0]).toContain(`href="${webAppPath("/signup")}"`);
-    expect(finalDemo[0]).toContain(
-      'href="https://cal.com/mathieu-chambaud-biume"',
-    );
   });
 
   test("keeps homepage ids unique and every navigation anchor live", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
-    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(
-      (match) => match[1]!,
-    );
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!);
     const navigationTargets = [...html.matchAll(/\shref="#([^"]+)"/g)].map(
       (match) => match[1]!,
     );
 
     expect(new Set(ids).size).toBe(ids.length);
-    expect(navigationTargets).toContain("produit");
-    expect(navigationTargets).toContain("methode");
-    expect(navigationTargets).toContain("tarifs");
+    for (const target of ["produit", "suivi", "proprietaire", "tarifs", "questions"]) {
+      expect(navigationTargets).toContain(target);
+    }
     for (const target of new Set(navigationTargets)) {
       expect(ids.filter((id) => id === target)).toHaveLength(1);
     }
@@ -88,50 +90,27 @@ describe("Biume V2 homepage", () => {
     expect(firstAnchor).toContain('href="#contenu"');
     expect(firstAnchor).toContain("sr-only");
     expect(firstAnchor).toContain("focus:not-sr-only");
-    expect(firstAnchor).toContain("focus:bg-[color:var(--v2-espresso)]");
+    expect(firstAnchor).toContain("focus:bg-[color:var(--lv5-violet)]");
     expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
     expect(navigationIndex).toBeGreaterThan(skipLinkIndex);
     expect(mainTarget).toBeDefined();
     expect(mainTarget).toContain('tabindex="-1"');
   });
 
-  test("keeps the homepage free of superseded UI and unsupported claims", () => {
+  test("never promises an elapsed time and never invents social proof", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const normalized = textOnly(html).toLowerCase();
-    const approvedAutomaticStatement = "rien n’est partagé automatiquement";
-    const normalizedWithoutApprovedAutomatic = normalized.replace(
-      approvedAutomaticStatement,
-      "",
-    );
 
+    expect(normalized).not.toMatch(/moins de cinq minutes/);
+    expect(normalized).not.toMatch(/témoignage|avis client|utilisateurs actifs/);
     expect(html).not.toContain("carnet-theme");
-    expect(html).not.toContain(["Product", "Proof"].join(""));
-    expect(html).not.toContain("data-product-output=");
-    expect(normalized).not.toMatch(/\b\d(?:[,.]\d)?\s*\/\s*5\b/);
-    expect(normalized).not.toMatch(/\b\d+(?:[,.]\d+)?\s*%\b/);
-    expect(
-      normalized.match(new RegExp(approvedAutomaticStatement, "g")),
-    ).toHaveLength(1);
-    expect(normalizedWithoutApprovedAutomatic).not.toContain("automatique");
-    for (const forbidden of [
-      "hébergé en france",
-      "conforme au rgpd",
-      "naya va mieux depuis la séance",
-      "réponse propriétaire centralisée",
-      "questionnaire",
-      "retour à j+7",
-      "timeline enrichie",
-      "suivi ajouté à la timeline",
-      "tableau de bord connecté",
-    ]) {
-      expect(normalized).not.toContain(forbidden);
-    }
   });
 
-  test("keeps the unchanged factual Service schema", () => {
+  test("keeps the unchanged factual Service schema and adds the FAQPage schema", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const schemas = getJsonLdSchemas(html);
     const service = schemas.find((schema) => schema["@type"] === "Service");
+    const faqPage = schemas.find((schema) => schema["@type"] === "FAQPage");
 
     expect(service).toEqual({
       "@context": "https://schema.org",
@@ -150,6 +129,8 @@ describe("Biume V2 homepage", () => {
     expect(
       schemas.some((schema) => schema["@type"] === "SoftwareApplication"),
     ).toBe(false);
+    expect(faqPage).toBeDefined();
+    expect((faqPage?.mainEntity as unknown[] | undefined)?.length).toBe(FAQ.length);
   });
 
   test("removes the superseded proof and temporary Carnet compatibility layer", async () => {
