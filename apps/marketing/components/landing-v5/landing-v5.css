@@ -29,8 +29,11 @@
   --lv5-shadow-manipulation: 0 4px 8px rgba(29, 29, 33, .14);
   --lv5-shadow-focus: 0 6px 8px rgba(107, 90, 200, .16);
 
+  --lv5-font-sans: var(--font-landing-v5-sans), ui-sans-serif, system-ui, sans-serif;
+
   background: var(--lv5-canvas);
   color: var(--lv5-ink);
+  font-family: var(--lv5-font-sans);
 }
 
 /* Indice de défilement du hero. */

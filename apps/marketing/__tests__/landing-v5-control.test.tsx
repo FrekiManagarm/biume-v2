@@ -35,9 +35,11 @@ describe("landing-v5 control", () => {
 
     expect(passages.every((p) => p.tagName === "BUTTON")).toBe(true);
     expect(sendButton.disabled).toBe(true);
+    expect(passages[0]!.getAttribute("aria-pressed")).toBe("false");
 
     fireEvent.click(passages[0]!);
     expect(passages[0]!.dataset.state).toBe("valide");
+    expect(passages[0]!.getAttribute("aria-pressed")).toBe("true");
     expect(within(container).getByText("2 passages attendent votre relecture.")).not.toBeNull();
 
     fireEvent.click(passages[1]!);
@@ -47,7 +49,11 @@ describe("landing-v5 control", () => {
 
     fireEvent.click(passages[0]!);
     expect(passages[0]!.dataset.state).toBe("attente");
+    expect(passages[0]!.getAttribute("aria-pressed")).toBe("false");
     expect(sendButton.disabled).toBe(true);
     expect(within(container).getByText("1 passage attend votre relecture.")).not.toBeNull();
+
+    const counter = within(container).getByText("1 passage attend votre relecture.");
+    expect(counter.getAttribute("aria-live")).toBe("polite");
   });
 });

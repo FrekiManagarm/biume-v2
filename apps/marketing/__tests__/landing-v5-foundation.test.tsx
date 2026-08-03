@@ -28,6 +28,7 @@ describe("landing-v5 foundation", () => {
     expect(css).toContain("@keyframes biume-pulse");
     expect(css).toContain("@keyframes biume-volet");
     expect(css).not.toContain("prefers-reduced-motion");
+    expect(css).toMatch(/font-family:\s*var\(--lv5-font-sans\)/);
   });
 
   test("fonts.ts loads Hanken Grotesk through next/font/google", async () => {

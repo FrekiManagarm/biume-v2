@@ -63,6 +63,7 @@ export function LandingV5Control() {
                 key={passage.id}
                 type="button"
                 onClick={() => toggle(index)}
+                aria-pressed={isValidated}
                 data-control-passage={passage.id}
                 data-state={isValidated ? "valide" : "attente"}
                 className={`min-h-11 mt-3 block w-full rounded-[10px] border p-4 text-left transition-[border-color,background-color] duration-[400ms] first:mt-0 ${
@@ -94,6 +95,8 @@ export function LandingV5Control() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--lv5-line)] pt-[18px]">
             <span
+              aria-live="polite"
+              aria-atomic="true"
               className={`text-[0.84rem] ${
                 allValidated ? "text-[color:var(--lv5-green-ink)]" : "text-[color:var(--lv5-ink-soft)]"
               }`}
