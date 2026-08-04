@@ -1,5 +1,6 @@
 import type { LocalCaptureStatus } from '@biume/contracts/capture';
 import type {
+  CaptureBindValue,
   CapturePatch,
   CaptureRepository,
   CaptureSqliteDatabase,
@@ -124,6 +125,7 @@ async function migrate(database: CaptureSqliteDatabase): Promise<void> {
 
   const applied = await database.getFirstAsync<{ version: number | null }>(
     'SELECT MAX(version) AS version FROM mobile_schema_migrations',
+    [],
   );
   const current = applied?.version ?? 0;
 
@@ -175,7 +177,10 @@ export async function createSqliteCaptureRepository(
      * synchronizers racing for the same row cannot both believe they own it.
      */
     async transition(id, from, patch: CapturePatch) {
-      const entries = Object.entries(patch) as [keyof LocalCapture, unknown][];
+      const entries = Object.entries(patch) as [
+        keyof LocalCapture,
+        CaptureBindValue,
+      ][];
       if (entries.length === 0) return false;
 
       const assignments = entries
@@ -206,6 +211,7 @@ export async function createSqliteCaptureRepository(
     async list() {
       const rows = await database.getAllAsync<CaptureRow>(
         `${selectAll} ORDER BY created_at DESC, id DESC`,
+        [],
       );
       return rows.map(toLocalCapture);
     },

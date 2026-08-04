@@ -3,16 +3,26 @@ import type { LocalCapture } from './local-capture';
 
 export type CapturePatch = Partial<Omit<LocalCapture, 'id'>>;
 
+/** The value kinds both `expo-sqlite` and `node:sqlite` accept as bindings. */
+export type CaptureBindValue = string | number | boolean | null | Uint8Array;
+
 /**
  * Minimal async surface mirroring `expo-sqlite`, so the repository can be
- * exercised against a real SQL engine in tests without a simulator.
+ * exercised against a real SQL engine in tests without a simulator. Parameters
+ * are required rather than optional, which is what `expo-sqlite` declares.
  */
 export interface CaptureSqliteDatabase {
   execAsync(source: string): Promise<void>;
   /** Both `expo-sqlite` and `node:sqlite` report the affected row count here. */
-  runAsync(source: string, params?: unknown[]): Promise<{ changes: number }>;
-  getFirstAsync<T>(source: string, params?: unknown[]): Promise<T | null>;
-  getAllAsync<T>(source: string, params?: unknown[]): Promise<T[]>;
+  runAsync(
+    source: string,
+    params: CaptureBindValue[],
+  ): Promise<{ changes: number }>;
+  getFirstAsync<T>(
+    source: string,
+    params: CaptureBindValue[],
+  ): Promise<T | null>;
+  getAllAsync<T>(source: string, params: CaptureBindValue[]): Promise<T[]>;
 }
 
 export interface CaptureRepository {
