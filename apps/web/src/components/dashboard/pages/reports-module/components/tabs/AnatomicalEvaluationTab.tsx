@@ -344,7 +344,7 @@ export function AnatomicalEvaluationTab({
             className={cn(
               "h-9 rounded-xl px-3 text-sm font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground",
               anatomicalView === "gauche" &&
-                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
             )}
             onClick={() => setAnatomicalView("gauche")}
           >
@@ -353,7 +353,7 @@ export function AnatomicalEvaluationTab({
               className={cn(
                 "ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
                 anatomicalView === "gauche" &&
-                  "bg-primary-foreground/15 text-primary-foreground/80",
+                "bg-primary-foreground/15 text-primary-foreground/80",
               )}
             >
               1
@@ -366,7 +366,7 @@ export function AnatomicalEvaluationTab({
             className={cn(
               "h-9 rounded-xl px-3 text-sm font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground",
               anatomicalView === "droite" &&
-                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
             )}
             onClick={() => setAnatomicalView("droite")}
           >
@@ -375,7 +375,7 @@ export function AnatomicalEvaluationTab({
               className={cn(
                 "ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground",
                 anatomicalView === "droite" &&
-                  "bg-primary-foreground/15 text-primary-foreground/80",
+                "bg-primary-foreground/15 text-primary-foreground/80",
               )}
             >
               2
@@ -550,22 +550,22 @@ export function AnatomicalEvaluationTab({
                                 <span className="font-medium truncate">
                                   {isTestMode
                                     ? // En mode test, utiliser les données selon le type d'animal
-                                      (() => {
-                                        return (
-                                          testRegionCategories
-                                            .find((r) =>
-                                              r.items.find(
-                                                (i) => i.value === issue.region,
-                                              ),
-                                            )
-                                            ?.items.find(
+                                    (() => {
+                                      return (
+                                        testRegionCategories
+                                          .find((r) =>
+                                            r.items.find(
                                               (i) => i.value === issue.region,
-                                            )?.label || "Région inconnue"
-                                        );
-                                      })()
+                                            ),
+                                          )
+                                          ?.items.find(
+                                            (i) => i.value === issue.region,
+                                          )?.label || "Région inconnue"
+                                      );
+                                    })()
                                     : // Mode normal : utiliser les données de l'API avec anatomicalPart
-                                      issue.anatomicalPart?.name ||
-                                      "Région inconnue"}
+                                    issue.anatomicalPart?.name ||
+                                    "Région inconnue"}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {getLateralityLabel(issue.laterality)}

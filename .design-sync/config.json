@@ -1,0 +1,20 @@
+{
+  "projectId": "02a07d41-c43e-4f3c-8419-139198c03d62",
+  "shape": "package",
+  "pkg": "@biume/ui",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": ".ds-generated/globals.compiled.css",
+  "componentSrcMap": {
+    "DirectionProvider": null
+  },
+  "overrides": {
+    "Dialog": { "cardMode": "single", "viewport": "420x420", "primaryStory": "Default" },
+    "AlertDialog": { "cardMode": "single", "viewport": "420x400", "primaryStory": "Default" },
+    "Credenza": { "cardMode": "single", "viewport": "820x520", "primaryStory": "Default" },
+    "Drawer": { "cardMode": "single", "viewport": "480x460", "primaryStory": "Default" },
+    "HoverCard": { "cardMode": "single", "viewport": "320x220", "primaryStory": "Default" },
+    "Popover": { "cardMode": "single", "viewport": "360x260", "primaryStory": "Default" },
+    "Sheet": { "cardMode": "single", "viewport": "560x520", "primaryStory": "Default" },
+    "Tooltip": { "cardMode": "single", "viewport": "280x160", "primaryStory": "Default" }
+  }
+}

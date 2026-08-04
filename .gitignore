@@ -45,3 +45,11 @@ next-env.d.ts
 .kilocode/
 .gstack/
 .superpowers/
+
+# design-sync
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+packages/ui/.ds-generated/
