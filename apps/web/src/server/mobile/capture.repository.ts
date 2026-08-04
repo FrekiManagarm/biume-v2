@@ -4,7 +4,14 @@ import {
   appointments,
   audioCapture,
 } from "@biume/db/schema/index";
-import { and, eq, inArray } from "drizzle-orm";
+import {
+  and,
+  eq,
+  inArray,
+  isNull,
+  lte,
+  notInArray,
+} from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type { CaptureRepository } from "./capture.service";
 
@@ -88,6 +95,74 @@ export function createCaptureRepository(
         )
         .returning();
       return updated ?? null;
+    },
+  };
+}
+
+/**
+ * Ports for the retention sweep. Kept beside the capture repository because
+ * they share the same tenancy rule: no statement touches a row by id alone.
+ */
+export function createCapturePurgeRepository(
+  database: CaptureDatabase = defaultDatabase,
+) {
+  return {
+    async findExpired({ now, limit }: { now: Date; limit: number }) {
+      return database
+        .select({
+          id: audioCapture.id,
+          organizationId: audioCapture.organizationId,
+          objectKey: audioCapture.objectKey,
+        })
+        .from(audioCapture)
+        .where(
+          and(
+            lte(audioCapture.expiresAt, now),
+            isNull(audioCapture.purgedAt),
+          ),
+        )
+        .limit(limit);
+    },
+
+    async markExpired(
+      refs: Array<{ id: string; organizationId: string }>,
+      now: Date,
+    ) {
+      if (refs.length === 0) return;
+      await database
+        .update(audioCapture)
+        .set({ status: "expired", updatedAt: now })
+        .where(
+          and(
+            inArray(
+              audioCapture.id,
+              refs.map((ref) => ref.id),
+            ),
+            notInArray(audioCapture.status, ["expired", "cancelled"]),
+          ),
+        );
+    },
+
+    async markPurged(
+      ref: { id: string; organizationId: string },
+      now: Date,
+    ) {
+      await database
+        .update(audioCapture)
+        .set({
+          purgedAt: now,
+          // Neutralized per row rather than blanked: the unique index on
+          // object_key must still hold, and the remaining metadata must not be
+          // able to locate audio that no longer exists.
+          objectKey: `purged:${ref.id}`,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(audioCapture.id, ref.id),
+            eq(audioCapture.organizationId, ref.organizationId),
+          ),
+        );
     },
   };
 }

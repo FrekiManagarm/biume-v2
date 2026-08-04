@@ -65,3 +65,30 @@ Ne jamais coller d'URL signée ni d'identifiant clinique dans ce document.
 |------|------------|------------|----------|-------|----------|--------|
 | — | iOS | — | — | — | non exécuté | — |
 | — | Android | — | — | — | non exécuté | — |
+
+## Matrice d'acceptation sur appareil physique
+
+**Non exécutée.** L'alpha n'est pas acceptée tant que les deux colonnes de
+plateforme ne sont pas signées et datées. Un appareil iOS réel et un appareil
+Android réel sont requis ; aucun compte store n'est nécessaire pour cette
+vérification locale, mais la distribution iOS externe attend l'inscription
+Apple Developer.
+
+La purge des 24 heures se vérifie avec une horloge non production injectée.
+
+| # | Critère | iOS | Android |
+|---|---------|-----|---------|
+| 1 | Connexion e-mail / mot de passe et organisation active | — | — |
+| 2 | Rendez-vous utile et capture libre | — | — |
+| 3 | Permission micro refusée puis accordée | — | — |
+| 4 | Hors ligne : enregistrer, arrêter, relire, refaire, valider | — | — |
+| 5 | Arrêt automatique à dix minutes | — | — |
+| 6 | Fermeture forcée après validation, récupération à la réouverture | — | — |
+| 7 | Retour réseau, un seul envoi à la fois | — | — |
+| 8 | `PUT` interrompu, URL signée renouvelée, reprise du fichier complet | — | — |
+| 9 | Session expirée : fichier chiffré conservé, reprise après connexion | — | — |
+| 10 | Cinq échecs menant à un « Action requise » visible | — | — |
+| 11 | Annulation pendant l'envoi, sans complétion tardive | — | — |
+| 12 | Purge locale et R2 à 24 h (horloge injectée) | — | — |
+| 13 | Reprises répétées : une seule ligne en base, un seul objet | — | — |
+| 14 | Inspection télémétrie : aucune donnée personnelle ni clinique | — | — |
