@@ -30,6 +30,7 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settin
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
+import { Route as ApiMobileV1SplatRouteImport } from './routes/api/mobile/v1/$'
 import { Route as DashboardReportsIdEditRouteImport } from './routes/dashboard_.reports_.$id_.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -137,6 +138,11 @@ const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
   path: '/reports/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ApiMobileV1SplatRoute = ApiMobileV1SplatRouteImport.update({
+  id: '/api/mobile/v1/$',
+  path: '/api/mobile/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardReportsIdEditRoute = DashboardReportsIdEditRouteImport.update({
   id: '/dashboard_/reports_/$id_/edit',
   path: '/dashboard/reports/$id/edit',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRoute
+  '/api/mobile/v1/$': typeof ApiMobileV1SplatRoute
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports/$id': typeof DashboardReportsIdRoute
+  '/api/mobile/v1/$': typeof ApiMobileV1SplatRoute
   '/dashboard/reports/$id/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRoutesById {
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/dashboard/reports_/$id': typeof DashboardReportsIdRoute
+  '/api/mobile/v1/$': typeof ApiMobileV1SplatRoute
   '/dashboard_/reports_/$id_/edit': typeof DashboardReportsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/reports/$id'
+    | '/api/mobile/v1/$'
     | '/dashboard/reports/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/reports/$id'
+    | '/api/mobile/v1/$'
     | '/dashboard/reports/$id/edit'
   id:
     | '__root__'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/dashboard/reports_/$id'
+    | '/api/mobile/v1/$'
     | '/dashboard_/reports_/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -303,6 +315,7 @@ export interface RootRouteChildren {
   ApiVulgarisationRoute: typeof ApiVulgarisationRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
+  ApiMobileV1SplatRoute: typeof ApiMobileV1SplatRoute
   DashboardReportsIdEditRoute: typeof DashboardReportsIdEditRoute
 }
 
@@ -455,6 +468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReportsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/mobile/v1/$': {
+      id: '/api/mobile/v1/$'
+      path: '/api/mobile/v1/$'
+      fullPath: '/api/mobile/v1/$'
+      preLoaderRoute: typeof ApiMobileV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard_/reports_/$id_/edit': {
       id: '/dashboard_/reports_/$id_/edit'
       path: '/dashboard/reports/$id/edit'
@@ -505,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVulgarisationRoute: ApiVulgarisationRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAutumnSplatRoute: ApiAutumnSplatRoute,
+  ApiMobileV1SplatRoute: ApiMobileV1SplatRoute,
   DashboardReportsIdEditRoute: DashboardReportsIdEditRoute,
 }
 export const routeTree = rootRouteImport

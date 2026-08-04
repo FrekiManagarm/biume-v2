@@ -202,6 +202,25 @@ describe("mobile appointment", () => {
     ).toBe(false);
   });
 
+  it.each(["DOG", "CAT", "HORSE", "RABBIT", "NAC", "COW", "OTHER"] as const)(
+    "carries a %s patient, not only the species the anatomical atlas covers",
+    (animalType) => {
+      expect(
+        mobileAppointmentSchema.safeParse({ ...validAppointment, animalType })
+          .success,
+      ).toBe(true);
+    },
+  );
+
+  it("rejects a species the catalogue does not define", () => {
+    expect(
+      mobileAppointmentSchema.safeParse({
+        ...validAppointment,
+        animalType: "DRAGON",
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects an unknown appointment status", () => {
     expect(
       mobileAppointmentSchema.safeParse({
@@ -232,6 +251,26 @@ describe("mobile api error", () => {
         ownerEmail: "x@y.fr",
       }).success,
     ).toBe(false);
+  });
+
+  it("names the missing active organization as its own condition", () => {
+    expect(
+      mobileApiErrorSchema.safeParse({
+        code: "active_organization_required",
+        message: "Selectionnez une organisation",
+        retryable: false,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("names an unsupported method as its own condition", () => {
+    expect(
+      mobileApiErrorSchema.safeParse({
+        code: "method_not_allowed",
+        message: "Methode non supportee",
+        retryable: false,
+      }).success,
+    ).toBe(true);
   });
 
   it("rejects an unknown error code", () => {

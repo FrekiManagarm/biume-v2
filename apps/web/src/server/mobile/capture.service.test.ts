@@ -76,14 +76,16 @@ function createRepository(seed: AudioCapture[] = []) {
       return inserted;
     }),
     findAppointmentContext: vi.fn(async () => null),
-    transitionCapture: vi.fn(async ({ id, organizationId, from, to, patch }) => {
-      const row = rows.get(id);
-      if (!row || row.organizationId !== organizationId) return null;
-      if (!from.some((status) => status === row.status)) return null;
-      const next = { ...row, ...patch, status: to };
-      rows.set(id, next);
-      return next;
-    }),
+    transitionCapture: vi.fn<CaptureRepository["transitionCapture"]>(
+      async ({ id, organizationId, from, to, patch }) => {
+        const row = rows.get(id);
+        if (!row || row.organizationId !== organizationId) return null;
+        if (!from.some((status) => status === row.status)) return null;
+        const next = { ...row, ...patch, status: to };
+        rows.set(id, next);
+        return next;
+      },
+    ),
   };
 
   return { repository, rows };

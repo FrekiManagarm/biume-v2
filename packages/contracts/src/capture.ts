@@ -1,5 +1,23 @@
 import { z } from "zod";
-import { animalTypes } from "./report";
+
+/**
+ * The species a patient can actually be, mirroring the `animals.code`
+ * catalogue. This is deliberately not `animalTypes` from `./report`: that enum
+ * describes the three species the anatomical atlas covers, which is a narrower
+ * and unrelated concept. Using it here would reject a rabbit or a cow from the
+ * agenda.
+ */
+export const patientSpeciesCodes = [
+  "DOG",
+  "CAT",
+  "HORSE",
+  "RABBIT",
+  "NAC",
+  "COW",
+  "OTHER",
+] as const;
+export const patientSpeciesSchema = z.enum(patientSpeciesCodes);
+export type PatientSpecies = z.infer<typeof patientSpeciesSchema>;
 
 export const captureMimeType = "audio/mp4" as const;
 export const captureMaxDurationMs = 600_000;
@@ -35,7 +53,9 @@ export type LocalCaptureStatus = z.infer<typeof localCaptureStatusSchema>;
 export const captureErrorCodes = [
   "validation",
   "unauthorized",
+  "active_organization_required",
   "forbidden",
+  "method_not_allowed",
   "not_found",
   "conflict",
   "rate_limited",
@@ -147,7 +167,7 @@ export const mobileAppointmentSchema = z
     id: z.string().min(1),
     patientId: z.string().min(1),
     patientName: z.string().min(1),
-    animalType: z.enum(animalTypes),
+    animalType: patientSpeciesSchema,
     beginAt: isoDateTimeSchema,
     endAt: isoDateTimeSchema,
     status: z.enum(mobileAppointmentStatuses),

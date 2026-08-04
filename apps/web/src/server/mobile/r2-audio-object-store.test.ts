@@ -46,7 +46,7 @@ describe("signed upload", () => {
       expiresInSeconds: captureUploadUrlTtlSeconds,
     });
 
-    const [, command, options] = getSignedUrl.mock.calls[0] as [
+    const [, command, options] = getSignedUrl.mock.calls[0] as unknown as [
       unknown,
       PutObjectCommand,
       { expiresIn: number },
@@ -71,7 +71,7 @@ describe("signed upload", () => {
       expiresInSeconds: captureUploadUrlTtlSeconds,
     });
 
-    const [, command] = getSignedUrl.mock.calls[0] as [unknown, PutObjectCommand];
+    const [, command] = getSignedUrl.mock.calls[0] as unknown as [unknown, PutObjectCommand];
     expect(command.input).not.toHaveProperty("ACL");
     expect(Object.keys(command.input)).not.toContain("GrantRead");
   });

@@ -7,6 +7,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { autumn } from "autumn-js/better-auth";
 import { organization } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./roles";
+import { resolveTrustedOrigins } from "./trusted-origins";
 
 export function createAuth() {
   const db = createDb();
@@ -17,7 +18,10 @@ export function createAuth() {
       provider: "pg",
       schema: schema,
     }),
-    trustedOrigins: [env.CORS_ORIGIN],
+    trustedOrigins: resolveTrustedOrigins({
+      corsOrigin: env.CORS_ORIGIN,
+      mobileTrustedOrigins: env.MOBILE_TRUSTED_ORIGINS,
+    }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     account: {
