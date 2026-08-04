@@ -241,7 +241,8 @@ expect(createCaptureRequestSchema.safeParse(validCapture).success).toBe(true);
 expect(createCaptureRequestSchema.safeParse({ ...validCapture, durationMs: 600_001 }).success).toBe(false);
 expect(createCaptureRequestSchema.safeParse({ ...validCapture, byteSize: 16 * 1024 * 1024 + 1 }).success).toBe(false);
 expect(createCaptureRequestSchema.safeParse({ ...validCapture, organizationId: "attacker-org" }).success).toBe(false);
-expect(canTransitionServerCapture("pending_upload", "uploaded")).toBe(true);
+expect(canTransitionServerCapture("pending_upload", "uploading")).toBe(true);
+expect(canTransitionServerCapture("pending_upload", "uploaded")).toBe(false);
 expect(canTransitionServerCapture("cancelled", "uploaded")).toBe(false);
 expect(mobileApiErrorSchema.safeParse({ code: "network", message: "x", ownerEmail: "x@y.fr" }).success).toBe(false);
 ```
@@ -312,6 +313,8 @@ const allowedServerTransitions = {
   expired: [],
 } as const;
 ```
+
+A capture reaches `uploaded` only through `uploading`, so the server never confirms an object for which it did not issue an upload session. This matches the linear server chain in section 6.2 of the design. An earlier draft of Step 1 asserted `pending_upload -> uploaded`, which contradicted this table; the transition table is authoritative.
 
 Export `./capture` from `packages/contracts/package.json` and `src/index.ts`.
 

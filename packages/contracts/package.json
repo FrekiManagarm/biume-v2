@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./capture": "./src/capture.ts",
     "./report": "./src/report.ts",
     "./product-events": "./src/product-events.ts"
   },
