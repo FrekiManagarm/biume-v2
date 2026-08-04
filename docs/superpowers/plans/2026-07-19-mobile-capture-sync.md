@@ -55,13 +55,15 @@ Expected: Expo creates an app that is detected by the existing `apps/*` workspac
 
 **Step 2: Install the platform and test dependencies with Expo-aware resolution**
 
+Run these from `apps/mobile`. Bun 1.2.x does not support `bun --cwd <dir> x`, so invoke `bunx` inside the package directory rather than from the repository root.
+
 ```bash
-bun --cwd apps/mobile x expo install expo-audio expo-crypto expo-file-system expo-network expo-secure-store expo-sqlite expo-background-task expo-task-manager
-bun add --cwd apps/mobile @better-auth/expo better-auth@1.6.9 '@biume/contracts@workspace:*' zod@^4.1.13 @noble/ciphers
-bun add --cwd apps/mobile --dev jest-expo @testing-library/react-native @types/jest
+bunx expo install expo-audio expo-crypto expo-file-system expo-network expo-secure-store expo-sqlite expo-background-task expo-task-manager
+bun add @better-auth/expo@1.6.9 better-auth@1.6.9 '@biume/contracts@workspace:*' zod@^4.1.13 @noble/ciphers
+bun add --dev jest@^29.7.0 jest-expo @testing-library/react-native @types/jest@^29.5.14
 ```
 
-Expected: `bun.lock` changes once, no npm or pnpm lockfile appears, and Expo resolves compatible SDK 57 native packages.
+Expected: `bun.lock` changes once, no npm or pnpm lockfile appears, and Expo resolves compatible SDK 57 native packages. `expo install` will report that `expo-sqlite` and `expo-background-task` need plugin entries it cannot add to a dynamic config; add them by hand in Step 4.
 
 **Step 3: Declare the mobile package and root commands**
 
@@ -187,7 +189,18 @@ export const mobileRuntime = {
 } as const;
 ```
 
-Configure `jest-expo` in `jest.config.cjs`, import `@testing-library/react-native/extend-expect` in `jest.setup.ts`, and exclude `.worktrees` from Expo/Metro watch roots if the generated configuration needs an explicit Metro file.
+Configure `jest-expo` in `jest.config.cjs`, keep `jest.setup.ts` as the single global setup file, and exclude `.worktrees` from Expo/Metro watch roots if the generated configuration needs an explicit Metro file.
+
+**Toolchain constraints verified while executing this task. Do not relitigate them in later tasks:**
+
+- Pin `jest` to `^29.7.0`. `jest-expo@57` depends on the Jest 29 packages (`@jest/globals`, `babel-jest`, `jest-snapshot`, `jest-environment-jsdom` at `^29.2.1`). Installing Jest 30 mixes runtimes and every suite fails to run with `this._moduleMocker.clearMocksOnScope is not a function`.
+- `@testing-library/react-native` v14 removed the `extend-expect` entry point. Its matchers register automatically when a test file imports the library, so `jest.setup.ts` needs no import for them.
+- `@testing-library/react-native` v14 made `render` **asynchronous**. Every component test in Tasks 7, 8, and 9 must `await render(...)` and then query through `screen`; the v13 style of destructuring queries from the `render` return value no longer works.
+- Pin `@better-auth/expo` to the same `1.6.9` as `better-auth`. Later `@better-auth/expo` releases declare a peer on a newer `better-auth` than the root catalog provides.
+- Add `"expo/types"` to `compilerOptions.types` in `apps/mobile/tsconfig.json`. `expo-env.d.ts` supplies the `*.css` module declaration needed by `src/constants/theme.ts`, but it is generated and git-ignored, so `check-types` fails in a clean checkout without the explicit reference.
+- `expo-sqlite` and `expo-background-task` must be listed in the `plugins` array of `app.config.ts`; `expo install` reports this and cannot write it to a dynamic config itself.
+- No `metro.config.js` is required. Expo SDK 57's default Metro config resolves this Bun workspace on its own, confirmed by a successful `expo export --platform ios`.
+- `expo-doctor` reports one expected failure: `react` and `react-dom` resolve to `19.2.3` under `apps/mobile` and `19.2.7` at the repository root. That is the direct result of the rule forbidding a root catalog change, and `react-native` still resolves to exactly one runtime. Do not "fix" it by touching the catalog.
 
 **Step 7: Verify SDK and Better Auth compatibility before continuing**
 

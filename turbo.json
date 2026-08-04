@@ -44,7 +44,12 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "OPENAI_API_KEY"]
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "OPENAI_API_KEY",
+        "EXPO_PUBLIC_API_URL"
+      ]
     },
     "db:push": {
       "cache": false
