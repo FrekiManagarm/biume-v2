@@ -25,6 +25,7 @@ mock.module("next/font/google", () => ({
   Geist_Mono: () => ({ variable: "font-geist-mono" }),
   Manrope: () => ({ variable: "font-manrope" }),
   Newsreader: () => ({ variable: "font-newsreader" }),
+  Hanken_Grotesk: () => ({ variable: "font-landing-v5-sans" }),
 }));
 
 const { default: HomePage } = await import("../app/page");

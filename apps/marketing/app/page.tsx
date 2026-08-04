@@ -1,5 +1,6 @@
-import { V2Landing } from "../components/v2/v2-landing";
-import { JsonLd, siteName, siteUrl } from "../lib/seo";
+import { LandingV5 } from "../components/landing-v5";
+import { FAQ } from "../components/landing-v5/content";
+import { JsonLd, faqJsonLd, siteName, siteUrl } from "../lib/seo";
 
 const serviceSchema = {
   "@context": "https://schema.org",
@@ -20,7 +21,8 @@ export default function Home() {
   return (
     <>
       <JsonLd data={serviceSchema} />
-      <V2Landing />
+      <JsonLd data={faqJsonLd(FAQ)} />
+      <LandingV5 />
     </>
   );
 }
