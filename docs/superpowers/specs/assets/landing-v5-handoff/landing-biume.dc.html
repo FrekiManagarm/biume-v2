@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap"><style>
+html{scroll-behavior:smooth}
+body{margin:0;background:#F7F7F4;color:#1D1D21;font-family:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#6B5AC8;text-decoration:none}
+a:hover{color:#4E3FA3}
+::selection{background:#EEEBFB}
+@keyframes biume-cue{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(7px);opacity:1}}
+@keyframes biume-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+summary{list-style:none}
+summary::-webkit-details-marker{display:none}
+@keyframes biume-volet{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+[data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+[data-reveal][data-seen="1"]{opacity:1;transform:none}
+</style></helmet>
+
+<div style="position:relative;overflow-x:clip">
+
+<header data-masthead style="position:fixed;inset:0 0 auto 0;z-index:60;border-bottom:1px solid transparent;transition:background-color .35s ease,border-color .35s ease,backdrop-filter .35s ease">
+  <div style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,34px);height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+    <a href="#contenu" style="display:flex;align-items:center;gap:9px;font-size:1.28rem;font-weight:600;letter-spacing:-.02em;color:#1D1D21">
+      <img src="apps/marketing/public/brand/biume-logo.svg" alt="" width="30" height="30" style="width:30px;height:30px;border-radius:8px">Biume<span style="color:#6B5AC8">.</span>
+    </a>
+    <nav data-nav aria-label="Navigation principale" style="display:flex;align-items:center;gap:clamp(14px,2.4vw,30px);font-size:.88rem">
+      <a href="#produit" style="color:#696970">Le parcours</a>
+      <a href="#suivi" style="color:#696970">Le suivi</a>
+      <a href="#proprietaire" style="color:#696970">Le propriétaire</a>
+      <a href="#tarifs" style="color:#696970">Tarifs</a>
+      <a href="#questions" style="color:#696970">Questions</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px">
+      <a data-cta-mast href="#tarifs" style="display:inline-flex;align-items:center;height:42px;padding:0 20px;border-radius:9999px;background:#6B5AC8;color:#fff;font-size:.88rem;font-weight:600;white-space:nowrap">Essayer gratuitement</a>
+      <span data-burger onClick="{{ toggleMenu }}" role="button" tabIndex="0" aria-label="Ouvrir le menu" aria-expanded="false" style="display:none;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid #DEDED7;background:rgba(253,253,251,.9);cursor:pointer">
+        <span aria-hidden="true" style="display:flex;flex-direction:column;gap:4px">
+          <span style="display:block;width:17px;height:1.5px;background:#1D1D21;border-radius:2px"></span>
+          <span style="display:block;width:17px;height:1.5px;background:#1D1D21;border-radius:2px"></span>
+        </span>
+      </span>
+    </div>
+  </div>
+  <div data-menu style="display:none;border-top:1px solid #DEDED7;background:#F7F7F4">
+    <nav aria-label="Navigation mobile" style="max-width:1200px;margin:0 auto;padding:10px clamp(18px,4vw,34px) 22px;display:flex;flex-direction:column">
+      <a href="#produit" onClick="{{ closeMenu }}" style="display:flex;align-items:center;min-height:48px;font-size:1.02rem;font-weight:600;color:#1D1D21;border-bottom:1px solid #DEDED7">Le parcours</a>
+      <a href="#suivi" onClick="{{ closeMenu }}" style="display:flex;align-items:center;min-height:48px;font-size:1.02rem;font-weight:600;color:#1D1D21;border-bottom:1px solid #DEDED7">Le suivi</a>
+      <a href="#proprietaire" onClick="{{ closeMenu }}" style="display:flex;align-items:center;min-height:48px;font-size:1.02rem;font-weight:600;color:#1D1D21;border-bottom:1px solid #DEDED7">Le propriétaire</a>
+      <a href="#tarifs" onClick="{{ closeMenu }}" style="display:flex;align-items:center;min-height:48px;font-size:1.02rem;font-weight:600;color:#1D1D21;border-bottom:1px solid #DEDED7">Tarifs</a>
+      <a href="#questions" onClick="{{ closeMenu }}" style="display:flex;align-items:center;min-height:48px;font-size:1.02rem;font-weight:600;color:#1D1D21">Questions</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenu">
+
+<section aria-labelledby="hero-title" style="position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;inset:0;overflow:hidden">
+    <div data-parallax="0.28" style="position:absolute;inset:-8% 0;will-change:transform">
+      <img src="apps/marketing/public/assets/images/landing/atelier-hero.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:64% 50%">
+    </div>
+    <div style="position:absolute;inset:0;background:radial-gradient(72% 58% at 18% 78%, rgba(107,90,200,.46) 0%, transparent 62%),radial-gradient(60% 52% at 82% 16%, rgba(46,152,102,.28) 0%, transparent 60%)"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(247,247,244,.72) 0%, rgba(247,247,244,.32) 26%, rgba(247,247,244,.30) 52%, rgba(247,247,244,.86) 84%, #F7F7F4 100%)"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(247,247,244,.93) 0%, rgba(247,247,244,.86) 32%, rgba(247,247,244,.5) 54%, rgba(247,247,244,0) 82%)"></div>
+  </div>
+
+  <div style="position:relative;width:100%;max-width:1200px;margin:0 auto;padding:120px clamp(18px,4vw,34px) 104px">
+   <div style="display:flex;flex-wrap:wrap;gap:clamp(30px,4vw,60px);align-items:center">
+    <div style="flex:1 1 460px;min-width:290px">
+    <p data-reveal style="display:inline-flex;align-items:center;gap:8px;margin:0;padding:7px 14px 7px 12px;border-radius:9999px;background:rgba(253,253,251,.82);border:1px solid #DEDED7;backdrop-filter:blur(6px);font-size:.78rem;font-weight:600;color:#1D1D21">
+      <span aria-hidden="true" style="width:7px;height:7px;border-radius:9999px;background:#6B5AC8;animation:biume-pulse 2.6s ease-in-out infinite"></span>Pour les ostéopathes et praticiens animaliers
+    </p>
+    <h1 id="hero-title" data-reveal data-delay="90" style="max-width:19ch;margin:22px 0 0;font-size:clamp(2.7rem,6.2vw,5.4rem);font-weight:650;line-height:.94;letter-spacing:-.035em;text-wrap:balance">Vos notes de séance, lisibles par le propriétaire.</h1>
+    <p data-reveal data-delay="180" style="max-width:56ch;margin:26px 0 0;font-size:clamp(1.02rem,1.35vw,1.2rem);line-height:1.6;color:#1D1D21;text-wrap:pretty">Vous écrivez comme vous avez toujours écrit&nbsp;: abrégé, technique, rapide. Biume le met en forme pour le propriétaire. Vous relisez passage par passage, vous corrigez, et rien ne part avant que vous l'ayez décidé.</p>
+    <div data-reveal data-delay="270" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:34px">
+      <a href="#tarifs" style="display:inline-flex;align-items:center;height:48px;padding:0 26px;border-radius:9999px;background:#6B5AC8;color:#fff;font-size:.98rem;font-weight:600;box-shadow:0 6px 8px rgba(107,90,200,.16)">Préparer mon premier compte rendu</a>
+      <a href="#produit" style="display:inline-flex;align-items:center;height:48px;padding:0 26px;border-radius:9999px;background:rgba(253,253,251,.9);border:1px solid #DEDED7;color:#1D1D21;font-size:.98rem;font-weight:600;backdrop-filter:blur(6px)">Voir le parcours</a>
+    </div>
+    <p data-reveal data-delay="340" style="margin:20px 0 0;font-size:.84rem;font-weight:600;color:#1D1D21">15 jours d'essai, sans carte bancaire</p>
+    </div>
+
+    <div data-reveal data-delay="220" style="flex:1 1 380px;min-width:290px;max-width:520px;padding:clamp(16px,1.8vw,22px);border-radius:24px;background:rgba(253,253,251,.72);border:1px solid rgba(255,255,255,.6);backdrop-filter:blur(14px);box-shadow:0 6px 8px rgba(107,90,200,.16)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#696970">Nashira · séance du 12 mars</span>
+        <span style="padding:5px 10px;border-radius:9999px;background:#E7F3ED;color:#21734D;font-size:.7rem;font-weight:600">Validé par vous</span>
+      </div>
+      <div style="padding:13px 14px;border-radius:10px;background:#ECECE7">
+        <p style="margin:0 0 7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#696970">Vos notes</p>
+        <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;line-height:1.6;color:#4a4a52">palp : tension chaîne thoraco-lombaire G&gt;D, restriction D14-L1 · suites : repos actif 48 h, revoir J+21</p>
+      </div>
+      <div aria-hidden="true" style="display:flex;align-items:center;gap:10px;padding:10px 2px">
+        <span style="flex:1;height:1px;background:#DEDED7"></span>
+        <span style="font-size:.78rem;font-weight:600;color:#6B5AC8">Biume met en forme</span>
+        <span style="flex:1;height:1px;background:#DEDED7"></span>
+      </div>
+      <div style="padding:16px;border-radius:12px;background:#FDFDFB;border:1px solid #DEDED7">
+        <p style="margin:0 0 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#696970">Compte rendu propriétaire</p>
+        <p style="margin:0 0 10px;font-size:.96rem;line-height:1.6">J'ai trouvé une zone de tension le long du dos, plus marquée à gauche, ainsi qu'une articulation du bas du dos qui bougeait moins bien que la normale.</p>
+        <p style="margin:0;font-size:.96rem;line-height:1.6">Pendant 48 heures, laissez-la bouger librement au pré, sans travail monté. Je la revois dans trois semaines.</p>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <div aria-hidden="true" style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#696970;animation:biume-cue 2.8s ease-in-out infinite">
+    <span>Faites défiler</span>
+    <span style="width:1px;height:26px;background:linear-gradient(180deg,#696970,transparent)"></span>
+  </div>
+</section>
+
+<section aria-labelledby="constat-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">
+      <h2 id="constat-title" data-reveal style="max-width:20ch;margin:0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">La séance finit dans la voiture.</h2>
+      <p data-reveal data-delay="80" style="max-width:38ch;margin:0;font-size:1.02rem;line-height:1.65;color:#696970;text-wrap:pretty">Ce n'est pas un problème d'organisation. C'est la forme du métier — et c'est là que le temps part.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(18px,2.4vw,30px);margin-top:clamp(38px,5vw,64px)">
+      <article data-reveal data-delay="60" style="flex:1 1 260px;min-width:250px;padding:26px 24px 28px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#6B5AC8">01</span>
+        <h3 style="margin:14px 0 10px;font-size:1.3rem;font-weight:600;line-height:1.2;letter-spacing:-.01em">Le compte rendu se rédige le soir.</h3>
+        <p style="margin:0;font-size:.98rem;line-height:1.6;color:#696970;text-wrap:pretty">Entre deux rendez-vous, sur un téléphone, après la dernière séance. Jamais au moment où le geste est encore frais.</p>
+      </article>
+      <article data-reveal data-delay="150" style="flex:1 1 260px;min-width:250px;padding:26px 24px 28px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#6B5AC8">02</span>
+        <h3 style="margin:14px 0 10px;font-size:1.3rem;font-weight:600;line-height:1.2;letter-spacing:-.01em">Vos notes ne sont pas faites pour être lues.</h3>
+        <p style="margin:0;font-size:.98rem;line-height:1.6;color:#696970;text-wrap:pretty">Elles sont faites pour être écrites vite et vous servir à vous. Envoyées telles quelles, le propriétaire ne peut pas les interpréter.</p>
+      </article>
+      <article data-reveal data-delay="240" style="flex:1 1 260px;min-width:250px;padding:26px 24px 28px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#6B5AC8">03</span>
+        <h3 style="margin:14px 0 10px;font-size:1.3rem;font-weight:600;line-height:1.2;letter-spacing:-.01em">Les reformuler prend le temps d'une séance.</h3>
+        <p style="margin:0;font-size:.98rem;line-height:1.6;color:#696970;text-wrap:pretty">Traduire vingt lignes techniques en un document lisible demande vingt à trente minutes. Multipliées par la semaine.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="produit" aria-labelledby="demo-title" style="position:relative;background:#202024;color:#FDFDFB">
+  <div style="max-width:1200px;margin:0 auto;padding:clamp(72px,9vw,116px) clamp(18px,4vw,34px) 0">
+    <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#8E82E8">Le relevé · démonstration</p>
+    <h2 id="demo-title" data-reveal data-delay="80" style="max-width:24ch;margin:18px 0 0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Le même relevé, écrit deux fois.</h2>
+    <p data-reveal data-delay="150" style="max-width:52ch;margin:20px 0 0;font-size:1.02rem;line-height:1.65;color:rgba(253,253,251,.66);text-wrap:pretty">À gauche, vos notes. À droite, ce que le propriétaire reçoit. Faites défiler pour traverser les quatre temps du compte rendu.</p>
+  </div>
+
+  <div data-demo-track style="position:relative;height:440vh;margin-top:clamp(32px,4vw,54px)">
+    <div style="position:sticky;top:0;min-height:100svh;display:flex;align-items:center;padding:88px 0 44px">
+      <div style="width:100%;max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,34px)">
+        <div style="display:flex;flex-wrap:wrap;gap:clamp(20px,3vw,44px);align-items:flex-start">
+
+          <div style="flex:0 0 auto;width:min(210px,100%);display:flex;flex-direction:column;gap:4px">
+            <p style="margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.06em;color:rgba(253,253,251,.42);text-transform:uppercase">Nashira · jument · 11 ans</p>
+            <div data-rail-item="0" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;transition:background-color .5s ease,color .5s ease">
+              <span data-rail-dot style="width:7px;height:7px;border-radius:9999px;background:#6B5AC8;transition:transform .5s ease,opacity .5s ease"></span>
+              <span style="font-size:.95rem;font-weight:600">Motif</span>
+            </div>
+            <div data-rail-item="1" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;transition:background-color .5s ease,color .5s ease">
+              <span data-rail-dot style="width:7px;height:7px;border-radius:9999px;background:#6B5AC8;transition:transform .5s ease,opacity .5s ease"></span>
+              <span style="font-size:.95rem;font-weight:600">Examen</span>
+            </div>
+            <div data-rail-item="2" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;transition:background-color .5s ease,color .5s ease">
+              <span data-rail-dot style="width:7px;height:7px;border-radius:9999px;background:#6B5AC8;transition:transform .5s ease,opacity .5s ease"></span>
+              <span style="font-size:.95rem;font-weight:600">Traitement</span>
+            </div>
+            <div data-rail-item="3" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;transition:background-color .5s ease,color .5s ease">
+              <span data-rail-dot style="width:7px;height:7px;border-radius:9999px;background:#6B5AC8;transition:transform .5s ease,opacity .5s ease"></span>
+              <span style="font-size:.95rem;font-weight:600">Suites</span>
+            </div>
+            <div style="margin-top:16px;height:2px;background:rgba(253,253,251,.14);border-radius:2px;overflow:hidden">
+              <div data-demo-progress style="height:100%;width:0%;background:#6B5AC8;transition:width .25s linear"></div>
+            </div>
+          </div>
+
+          <div style="flex:1 1 460px;min-width:280px;display:grid;align-items:start">
+            <div data-panel="0" style="grid-area:1/1;display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,26px);transition:opacity .34s ease-out,transform .44s cubic-bezier(.16,1,.3,1)">
+              <div style="flex:1 1 240px;min-width:220px;padding:20px;border-radius:16px;background:rgba(253,253,251,.05);border:1px solid rgba(253,253,251,.12)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.44)">Vos notes</p>
+                <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;line-height:1.7;color:rgba(253,253,251,.82)">mot : raideur post-transport, refus incurvation D, prop. signale gêne dep. 3 sem</p>
+              </div>
+              <div style="flex:1 1 260px;min-width:240px;padding:22px;border-radius:16px;background:#FDFDFB;color:#1D1D21;box-shadow:0 6px 8px rgba(107,90,200,.16)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#696970">Compte rendu propriétaire</p>
+                <h3 style="margin:0 0 12px;font-size:1.16rem;font-weight:600;letter-spacing:-.01em">Ce que vous notez en arrivant.</h3>
+                <p style="margin:0 0 14px;font-size:1rem;line-height:1.62">Vous m'avez appelé parce que Nashira semblait gênée depuis environ trois semaines, en particulier depuis son dernier transport. À l'examen, elle avait effectivement du mal à s'incurver du côté droit.</p>
+                <p style="margin:0;font-size:.9rem;line-height:1.55;color:#696970">Biume repart de votre formulation, pas d'un formulaire. Les abréviations et l'ordre dans lequel vous écrivez restent les vôtres.</p>
+              </div>
+            </div>
+            <div data-panel="1" style="grid-area:1/1;display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,26px);transition:opacity .34s ease-out,transform .44s cubic-bezier(.16,1,.3,1)">
+              <div style="flex:1 1 240px;min-width:220px;padding:20px;border-radius:16px;background:rgba(253,253,251,.05);border:1px solid rgba(253,253,251,.12)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.44)">Vos notes</p>
+                <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;line-height:1.7;color:rgba(253,253,251,.82)">palp : tension chaîne thoraco-lombaire G&gt;D, restriction D14-L1, sacro-iliaque D sensible</p>
+              </div>
+              <div style="flex:1 1 260px;min-width:240px;padding:22px;border-radius:16px;background:#FDFDFB;color:#1D1D21;box-shadow:0 6px 8px rgba(107,90,200,.16)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#696970">Compte rendu propriétaire</p>
+                <h3 style="margin:0 0 12px;font-size:1.16rem;font-weight:600;letter-spacing:-.01em">Le vocabulaire technique est traduit, pas effacé.</h3>
+                <p style="margin:0 0 14px;font-size:1rem;line-height:1.62">J'ai trouvé une zone de tension le long du dos, plus marquée à gauche, ainsi qu'une articulation du bas du dos et le bassin droit qui bougeaient moins bien que la normale.</p>
+                <p style="margin:0;font-size:.9rem;line-height:1.55;color:#696970">La localisation reste exacte : rien n'est arrondi pour simplifier la phrase.</p>
+              </div>
+            </div>
+            <div data-panel="2" style="grid-area:1/1;display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,26px);transition:opacity .34s ease-out,transform .44s cubic-bezier(.16,1,.3,1)">
+              <div style="flex:1 1 240px;min-width:220px;padding:20px;border-radius:16px;background:rgba(253,253,251,.05);border:1px solid rgba(253,253,251,.12)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.44)">Vos notes</p>
+                <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;line-height:1.7;color:rgba(253,253,251,.82)">ttt : tech. myotensives chaîne dorsale, mobilisation SI D, relâchement diaphragme</p>
+              </div>
+              <div style="flex:1 1 260px;min-width:240px;padding:22px;border-radius:16px;background:#FDFDFB;color:#1D1D21;box-shadow:0 6px 8px rgba(107,90,200,.16)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#696970">Compte rendu propriétaire</p>
+                <h3 style="margin:0 0 12px;font-size:1.16rem;font-weight:600;letter-spacing:-.01em">Ce que vous avez fait, dit en clair.</h3>
+                <p style="margin:0 0 14px;font-size:1rem;line-height:1.62">J'ai travaillé en douceur sur les muscles du dos, remis en mouvement le bassin droit, puis relâché le diaphragme qui participait à la raideur.</p>
+                <p style="margin:0;font-size:.9rem;line-height:1.55;color:#696970">Le propriétaire comprend le geste et sa raison. C'est ce qui lui permet d'expliquer la séance à son entourage.</p>
+              </div>
+            </div>
+            <div data-panel="3" style="grid-area:1/1;display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,26px);transition:opacity .34s ease-out,transform .44s cubic-bezier(.16,1,.3,1)">
+              <div style="flex:1 1 240px;min-width:220px;padding:20px;border-radius:16px;background:rgba(253,253,251,.05);border:1px solid rgba(253,253,251,.12)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.44)">Vos notes</p>
+                <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;line-height:1.7;color:rgba(253,253,251,.82)">suites : repos actif 48 h, pas de cercle 5 j, revoir J+21</p>
+              </div>
+              <div style="flex:1 1 260px;min-width:240px;padding:22px;border-radius:16px;background:#FDFDFB;color:#1D1D21;box-shadow:0 6px 8px rgba(107,90,200,.16)">
+                <p style="margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#696970">Compte rendu propriétaire</p>
+                <h3 style="margin:0 0 12px;font-size:1.16rem;font-weight:600;letter-spacing:-.01em">Les consignes deviennent des dates.</h3>
+                <p style="margin:0 0 14px;font-size:1rem;line-height:1.62">Pendant 48 heures, laissez-la bouger librement au pré, sans travail monté. Évitez le travail en cercle pendant cinq jours. Je la revois dans trois semaines.</p>
+                <p style="margin:0;font-size:.9rem;line-height:1.55;color:#696970">Les suites sortent du paragraphe et deviennent des repères datés, que le propriétaire retrouve après votre départ.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p style="max-width:60ch;margin:clamp(20px,3vw,34px) 0 0;font-size:.8rem;line-height:1.5;color:rgba(253,253,251,.44)">Séance fictive, écrite pour la démonstration. Aucun dossier réel n'est utilisé sur cette page.</p>
+      </div>
+    </div>
+  </div>
+  <div style="height:clamp(56px,7vw,96px)"></div>
+</section>
+
+<section aria-label="Le geste" style="position:relative;height:min(74svh,620px);overflow:hidden">
+  <div data-parallax="0.2" style="position:absolute;inset:-10% 0">
+    <img src="apps/marketing/public/assets/images/landing/atelier-practice.webp" alt="Une ostéopathe animalière, les deux mains posées sur le dos d'un chien." style="width:100%;height:100%;object-fit:cover;object-position:38% 42%">
+  </div>
+  <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(32,32,36,.78) 0%, rgba(32,32,36,.42) 46%, rgba(32,32,36,.08) 100%)"></div>
+  <div style="position:relative;height:100%;max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,34px);display:flex;flex-direction:column;justify-content:center;gap:14px">
+    <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.62)">Ce que vos notes racontent</p>
+    <p data-reveal data-delay="90" style="max-width:22ch;margin:0;font-size:clamp(1.9rem,3.6vw,3.2rem);font-weight:650;line-height:1.04;letter-spacing:-.03em;color:#FDFDFB">Vingt minutes de gestes tiennent en huit lignes d'abréviations.</p>
+    <p data-reveal data-delay="170" style="max-width:34ch;margin:0;font-size:1rem;line-height:1.6;color:rgba(253,253,251,.72)">Le propriétaire, lui, n'était pas dans la pièce.</p>
+  </div>
+</section>
+
+<section id="controle" aria-labelledby="controle-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(28px,5vw,72px);align-items:flex-start">
+    <div style="flex:1 1 340px;min-width:290px;position:sticky;top:110px">
+      <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#6B5AC8">Le contrôle</p>
+      <h2 id="controle-title" data-reveal data-delay="70" style="max-width:18ch;margin:18px 0 0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Rien ne part avant que vous l'ayez validé.</h2>
+      <p data-reveal data-delay="140" style="max-width:46ch;margin:20px 0 0;font-size:1.02rem;line-height:1.65;color:#696970;text-wrap:pretty">Chaque passage est relu séparément, et reste modifiable jusqu'à l'envoi. Le bouton d'envoi reste fermé tant qu'un passage attend votre regard.</p>
+      <p data-reveal data-delay="200" style="margin:22px 0 0;font-size:.86rem;font-weight:600;color:#6B5AC8">Essayez : validez les trois passages.</p>
+    </div>
+
+    <div style="flex:1 1 420px;min-width:300px;padding:clamp(18px,2.4vw,28px);background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+      <div data-passage="0" data-state="attente" onClick="{{ togglePassage }}" role="button" tabIndex="0" style="padding:16px;border-radius:10px;border:1px solid #DEDED7;cursor:pointer;transition:border-color .4s ease,background-color .4s ease">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#696970">Motif de la séance</span>
+          <span data-badge style="flex:0 0 auto;padding:5px 11px;border-radius:9999px;background:#ECECE7;color:#696970;font-size:.72rem;font-weight:600;transition:background-color .4s ease,color .4s ease">En attente</span>
+        </div>
+        <p style="margin:11px 0 0;font-size:.98rem;line-height:1.6">Vous m'avez appelé parce que Nashira semblait gênée depuis environ trois semaines, en particulier depuis son dernier transport.</p>
+      </div>
+      <div data-passage="1" data-state="attente" onClick="{{ togglePassage }}" role="button" tabIndex="0" style="margin-top:12px;padding:16px;border-radius:10px;border:1px solid #DEDED7;cursor:pointer;transition:border-color .4s ease,background-color .4s ease">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#696970">Examen</span>
+          <span data-badge style="flex:0 0 auto;padding:5px 11px;border-radius:9999px;background:#ECECE7;color:#696970;font-size:.72rem;font-weight:600;transition:background-color .4s ease,color .4s ease">En attente</span>
+        </div>
+        <p style="margin:11px 0 0;font-size:.98rem;line-height:1.6">J'ai trouvé une zone de tension le long du dos, plus marquée à gauche, ainsi qu'une articulation du bas du dos et le bassin droit qui bougeaient moins bien que la normale.</p>
+      </div>
+      <div data-passage="2" data-state="attente" onClick="{{ togglePassage }}" role="button" tabIndex="0" style="margin-top:12px;padding:16px;border-radius:10px;border:1px solid #DEDED7;cursor:pointer;transition:border-color .4s ease,background-color .4s ease">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#696970">Suites de séance</span>
+          <span data-badge style="flex:0 0 auto;padding:5px 11px;border-radius:9999px;background:#ECECE7;color:#696970;font-size:.72rem;font-weight:600;transition:background-color .4s ease,color .4s ease">En attente</span>
+        </div>
+        <p style="margin:11px 0 0;font-size:.98rem;line-height:1.6">Pendant 48 heures, laissez-la bouger librement au pré, sans travail monté. Évitez le travail en cercle pendant cinq jours.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid #DEDED7">
+        <span data-send-note style="font-size:.84rem;color:#696970">3 passages attendent votre relecture.</span>
+        <span data-send-btn style="display:inline-flex;align-items:center;height:44px;padding:0 22px;border-radius:9999px;background:#ECECE7;color:#696970;font-size:.92rem;font-weight:600;transition:background-color .45s ease,color .45s ease,box-shadow .45s ease">Envoyer au propriétaire</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-label="Le propriétaire" style="position:relative;height:min(70svh,580px);overflow:hidden">
+  <div data-parallax="0.18" style="position:absolute;inset:-10% 0">
+    <img src="apps/marketing/public/assets/images/landing/atelier-owner.webp" alt="Une ostéopathe animalière assise au sol explique la séance à la propriétaire, le chien allongé entre elles." style="width:100%;height:100%;object-fit:cover;object-position:50% 34%">
+  </div>
+  <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(247,247,244,.92) 0%, rgba(247,247,244,.6) 42%, rgba(247,247,244,.05) 100%)"></div>
+  <div style="position:relative;height:100%;max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,34px);display:flex;flex-direction:column;justify-content:center;gap:14px">
+    <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#696970">Ce que le propriétaire retient</p>
+    <p data-reveal data-delay="90" style="max-width:22ch;margin:0;font-size:clamp(1.9rem,3.6vw,3.2rem);font-weight:650;line-height:1.04;letter-spacing:-.03em">Ce que vous expliquez en partant, il l'aura oublié le soir.</p>
+    <p data-reveal data-delay="170" style="max-width:32ch;margin:0;font-size:1rem;line-height:1.6;color:#696970">Le compte rendu prend le relais.</p>
+  </div>
+</section>
+
+<section id="suivi" aria-labelledby="suivi-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px);background:#E8F1F5">
+  <div style="max-width:1200px;margin:0 auto">
+    <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#5D9BB8">Le suivi</p>
+    <h2 id="suivi-title" data-reveal data-delay="70" style="max-width:24ch;margin:18px 0 0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">La séance continue sans que vous y pensiez.</h2>
+    <div data-thread-host style="position:relative;margin-top:clamp(38px,5vw,64px);display:flex;flex-direction:column;gap:clamp(18px,2.4vw,28px)">
+      <div aria-hidden="true" style="position:absolute;left:19px;top:14px;bottom:14px;width:2px;background:rgba(93,155,184,.24);border-radius:2px;overflow:hidden">
+        <div data-thread style="width:100%;height:0%;background:#5D9BB8;transition:height .18s linear"></div>
+      </div>
+      <article data-reveal style="position:relative;display:flex;flex-wrap:wrap;gap:clamp(16px,2.6vw,34px);align-items:baseline;padding-left:52px">
+        <span aria-hidden="true" style="position:absolute;left:12px;top:6px;width:16px;height:16px;border-radius:9999px;background:#E8F1F5;border:2px solid #5D9BB8"></span>
+        <span style="flex:0 0 auto;width:60px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;font-weight:600;color:#5D9BB8">J+0</span>
+        <div style="flex:1 1 320px;min-width:260px">
+          <h3 style="margin:0 0 8px;font-size:1.32rem;font-weight:600;letter-spacing:-.01em">Le compte rendu part</h3>
+          <p style="margin:0;font-size:1rem;line-height:1.6;color:#4a4a52;text-wrap:pretty">Une fois que vous l'avez validé, et pas avant. Le propriétaire le reçoit en PDF, mis en page pour être lu sur un téléphone.</p>
+        </div>
+      </article>
+      <article data-reveal data-delay="100" style="position:relative;display:flex;flex-wrap:wrap;gap:clamp(16px,2.6vw,34px);align-items:baseline;padding-left:52px">
+        <span aria-hidden="true" style="position:absolute;left:12px;top:6px;width:16px;height:16px;border-radius:9999px;background:#E8F1F5;border:2px solid #5D9BB8"></span>
+        <span style="flex:0 0 auto;width:60px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;font-weight:600;color:#5D9BB8">J+2</span>
+        <div style="flex:1 1 320px;min-width:260px">
+          <h3 style="margin:0 0 8px;font-size:1.32rem;font-weight:600;letter-spacing:-.01em">Vous demandez des nouvelles</h3>
+          <p style="margin:0;font-size:1rem;line-height:1.6;color:#4a4a52;text-wrap:pretty">Un questionnaire court, préparé à partir des suites que vous avez écrites : comment l'animal a évolué, ce qui a été observé, si le propriétaire souhaite être recontacté.</p>
+        </div>
+      </article>
+      <article data-reveal data-delay="200" style="position:relative;display:flex;flex-wrap:wrap;gap:clamp(16px,2.6vw,34px);align-items:baseline;padding-left:52px">
+        <span aria-hidden="true" style="position:absolute;left:12px;top:6px;width:16px;height:16px;border-radius:9999px;background:#E8F1F5;border:2px solid #5D9BB8"></span>
+        <span style="flex:0 0 auto;width:60px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;font-weight:600;color:#5D9BB8">J+21</span>
+        <div style="flex:1 1 320px;min-width:260px">
+          <h3 style="margin:0 0 8px;font-size:1.32rem;font-weight:600;letter-spacing:-.01em">Le contrôle revient dans votre semaine</h3>
+          <p style="margin:0;font-size:1rem;line-height:1.6;color:#4a4a52;text-wrap:pretty">La date notée en fin de séance ressort d'elle-même, avec le compte rendu attaché. Et seules les réponses qui demandent une action vous sont signalées.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="proprietaire" aria-labelledby="proprietaire-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(28px,5vw,72px);align-items:center">
+    <div style="flex:1 1 400px;min-width:290px">
+      <p data-reveal style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#5D9BB8">Côté propriétaire</p>
+      <h2 id="proprietaire-title" data-reveal data-delay="70" style="max-width:18ch;margin:18px 0 0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Il n'installe rien, il ne crée pas de compte.</h2>
+      <p data-reveal data-delay="140" style="max-width:46ch;margin:20px 0 0;font-size:1.02rem;line-height:1.65;color:#696970;text-wrap:pretty">Le propriétaire ouvre un lien sécurisé depuis son téléphone. Il confirme son identité par un code à usage unique la première fois, puis reste connecté trente jours sur cet appareil.</p>
+      <ul data-reveal data-delay="200" style="margin:24px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px;font-size:1rem;line-height:1.5">
+        <li style="display:flex;gap:11px"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#5D9BB8"></span>Il lit le compte rendu, mis en page pour un écran de téléphone.</li>
+        <li style="display:flex;gap:11px"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#5D9BB8"></span>Il répond au questionnaire de suivi en trois questions.</li>
+        <li style="display:flex;gap:11px"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#5D9BB8"></span>Il demande explicitement à être recontacté, s'il le souhaite.</li>
+      </ul>
+    </div>
+
+    <div data-reveal data-delay="120" style="flex:1 1 340px;min-width:280px;display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,20px);justify-content:center">
+      <div style="width:min(216px,100%);padding:12px 10px 16px;border-radius:26px;border:1px solid #DEDED7;background:#FDFDFB;box-shadow:0 4px 8px rgba(29,29,33,.14)">
+        <div style="width:48px;height:4px;border-radius:9999px;background:#DEDED7;margin:0 auto 12px"></div>
+        <div style="padding:12px;border-radius:10px;background:#E8F1F5">
+          <p style="margin:0;font-size:.7rem;font-weight:600;color:#3d738c">Lien sécurisé</p>
+          <p style="margin:6px 0 0;font-size:.84rem;line-height:1.45">Le compte rendu de Nashira est disponible.</p>
+        </div>
+        <p style="margin:14px 0 8px;font-size:.7rem;font-weight:600;color:#696970">Code reçu par SMS</p>
+        <div style="display:flex;gap:6px">
+          <span style="flex:1;height:34px;border-radius:8px;border:1px solid #DEDED7;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.9rem">4</span>
+          <span style="flex:1;height:34px;border-radius:8px;border:1px solid #DEDED7;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.9rem">1</span>
+          <span style="flex:1;height:34px;border-radius:8px;border:1px solid #6B5AC8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.9rem">8</span>
+          <span style="flex:1;height:34px;border-radius:8px;border:1px solid #DEDED7;background:#F7F7F4"></span>
+        </div>
+      </div>
+      <div style="width:min(216px,100%);padding:16px;border-radius:26px;border:1px solid #DEDED7;background:#FDFDFB;box-shadow:0 4px 8px rgba(29,29,33,.14)">
+        <p style="margin:0;font-size:.7rem;font-weight:600;color:#696970">Suivi · J+2</p>
+        <p style="margin:8px 0 12px;font-size:.9rem;font-weight:600;line-height:1.35">Comment va Nashira depuis la séance ?</p>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="padding:9px 11px;border-radius:9px;border:1px solid #DEDED7;font-size:.8rem">Mieux qu'avant</span>
+          <span style="padding:9px 11px;border-radius:9px;border:1px solid #2E9866;background:#E7F3ED;color:#21734D;font-size:.8rem;font-weight:600">Nettement mieux</span>
+          <span style="padding:9px 11px;border-radius:9px;border:1px solid #DEDED7;font-size:.8rem">Sans changement</span>
+        </div>
+        <p style="margin:12px 0 0;font-size:.72rem;line-height:1.45;color:#696970">Seules les réponses qui demandent une action vous sont signalées.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="surfaces-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">
+      <h2 id="surfaces-title" data-reveal style="max-width:20ch;margin:0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Le terrain dans la poche, l'atelier au bureau.</h2>
+      <p data-reveal data-delay="80" style="max-width:36ch;margin:0;font-size:1.02rem;line-height:1.65;color:#696970;text-wrap:pretty">Le même rapport, le même dossier. Deux endroits pour le travailler, selon le moment de votre journée.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(20px,3vw,40px);margin-top:clamp(38px,5vw,64px);align-items:stretch">
+
+      <div data-reveal style="flex:1 1 300px;min-width:280px;display:flex;flex-direction:column;gap:22px;padding:clamp(22px,2.6vw,32px);background:#FDFDFB;border:1px solid #DEDED7;border-radius:24px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="padding:5px 11px;border-radius:9999px;background:#EEEBFB;color:#4E3FA3;font-size:.72rem;font-weight:600">Mobile</span>
+          <span style="font-size:.84rem;color:#696970">Sur place, entre deux rendez-vous</span>
+        </div>
+        <div style="align-self:center;width:min(232px,100%);border-radius:26px;border:1px solid #DEDED7;background:#F7F7F4;padding:12px 10px 16px;box-shadow:0 4px 8px rgba(29,29,33,.14)">
+          <div style="width:52px;height:4px;border-radius:9999px;background:#DEDED7;margin:0 auto 12px"></div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div style="padding:11px 12px;border-radius:10px;background:#FDFDFB;border:1px solid #DEDED7">
+              <p style="margin:0;font-size:.7rem;font-weight:600;color:#696970">10:30 · Nashira</p>
+              <p style="margin:5px 0 0;font-size:.84rem;font-weight:600">Séance terminée</p>
+            </div>
+            <div style="padding:11px 12px;border-radius:10px;background:#EEEBFB">
+              <p style="margin:0;font-size:.7rem;font-weight:600;color:#4E3FA3">Brouillon prêt</p>
+              <p style="margin:5px 0 0;font-size:.84rem;line-height:1.4">4 sections préremplies, 1 à vérifier</p>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-radius:10px;background:#E7F3ED">
+              <p style="margin:0;font-size:.78rem;font-weight:600;color:#21734D">Envoyé · 14:02</p>
+              <span style="width:8px;height:8px;border-radius:9999px;background:#2E9866"></span>
+            </div>
+          </div>
+        </div>
+        <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:.96rem;line-height:1.5;color:#4a4a52">
+          <li>Les rendez-vous du jour, la séance à clôturer</li>
+          <li>Créer un propriétaire et un animal en deux champs</li>
+          <li>Valider et partager les cas simples</li>
+        </ul>
+      </div>
+
+      <div data-reveal data-delay="120" style="flex:1 1 380px;min-width:300px;display:flex;flex-direction:column;gap:22px;padding:clamp(22px,2.6vw,32px);background:#FDFDFB;border:1px solid #DEDED7;border-radius:24px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="padding:5px 11px;border-radius:9999px;background:#E8F1F5;color:#3d738c;font-size:.72rem;font-weight:600">Web</span>
+          <span style="font-size:.84rem;color:#696970">Au calme, pour les cas complexes</span>
+        </div>
+        <div style="border-radius:14px;border:1px solid #DEDED7;background:#F7F7F4;overflow:hidden;box-shadow:0 4px 8px rgba(29,29,33,.14)">
+          <div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid #DEDED7">
+            <span style="width:9px;height:9px;border-radius:9999px;background:#DEDED7"></span>
+            <span style="width:9px;height:9px;border-radius:9999px;background:#DEDED7"></span>
+            <span style="width:9px;height:9px;border-radius:9999px;background:#DEDED7"></span>
+            <span style="margin-left:8px;font-size:.72rem;color:#696970">Compte rendu · Nashira</span>
+          </div>
+          <div style="display:flex;gap:12px;padding:14px">
+            <div style="flex:0 0 96px;display:flex;flex-direction:column;gap:7px">
+              <div style="height:9px;border-radius:3px;background:#6B5AC8;width:70%"></div>
+              <div style="height:9px;border-radius:3px;background:#DEDED7"></div>
+              <div style="height:9px;border-radius:3px;background:#DEDED7;width:80%"></div>
+              <div style="height:9px;border-radius:3px;background:#DEDED7;width:60%"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:8px;background:#FDFDFB;border:1px solid #DEDED7">
+              <div style="height:8px;border-radius:3px;background:#ECECE7;width:92%"></div>
+              <div style="height:8px;border-radius:3px;background:#ECECE7"></div>
+              <div style="height:8px;border-radius:3px;background:#ECECE7;width:78%"></div>
+              <div style="height:8px;border-radius:3px;background:#EEEBFB;width:54%"></div>
+              <div style="height:8px;border-radius:3px;background:#ECECE7;width:86%"></div>
+              <div style="height:8px;border-radius:3px;background:#E7F3ED;width:42%"></div>
+            </div>
+          </div>
+        </div>
+        <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:.96rem;line-height:1.5;color:#4a4a52">
+          <li>L'anatomie détaillée et les corrections fines</li>
+          <li>La mise en page du document et sa prévisualisation</li>
+          <li>L'historique complet du dossier, l'administration</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="autour-title" style="position:relative;padding:0 clamp(18px,4vw,34px) clamp(72px,10vw,120px)">
+  <div style="max-width:1200px;margin:0 auto;padding-top:clamp(30px,4vw,52px);border-top:1px solid #DEDED7">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px">
+      <h2 id="autour-title" data-reveal style="margin:0;font-size:clamp(1.5rem,2.4vw,2.1rem);font-weight:600;letter-spacing:-.02em">Autour du compte rendu, ce qui est déjà là.</h2>
+      <p data-reveal data-delay="70" style="max-width:34ch;margin:0;font-size:.98rem;line-height:1.6;color:#696970">Tout ce qui sert le compte rendu et le suivi. Rien de plus.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(14px,2vw,22px);margin-top:clamp(24px,3vw,36px)">
+      <div data-reveal data-delay="40" style="flex:1 1 210px;min-width:200px;padding:20px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <h3 style="margin:0 0 8px;font-size:1.06rem;font-weight:600">Agenda et rendez-vous</h3>
+        <p style="margin:0;font-size:.92rem;line-height:1.55;color:#696970">Les séances du jour, à déplacer ou à clôturer.</p>
+      </div>
+      <div data-reveal data-delay="110" style="flex:1 1 210px;min-width:200px;padding:20px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <h3 style="margin:0 0 8px;font-size:1.06rem;font-weight:600">Dossiers propriétaires et animaux</h3>
+        <p style="margin:0;font-size:.92rem;line-height:1.55;color:#696970">Créés en deux champs, complétés au fil des séances.</p>
+      </div>
+      <div data-reveal data-delay="180" style="flex:1 1 210px;min-width:200px;padding:20px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <h3 style="margin:0 0 8px;font-size:1.06rem;font-weight:600">Historique de l'animal</h3>
+        <p style="margin:0;font-size:.92rem;line-height:1.55;color:#696970">Les comptes rendus précédents, disponibles pendant la séance.</p>
+      </div>
+      <div data-reveal data-delay="250" style="flex:1 1 210px;min-width:200px;padding:20px;background:#FDFDFB;border:1px solid #DEDED7;border-radius:16px">
+        <h3 style="margin:0 0 8px;font-size:1.06rem;font-weight:600">PDF et envoi par e-mail</h3>
+        <p style="margin:0;font-size:.92rem;line-height:1.55;color:#696970">Le document part à votre nom, avec votre mise en page.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="limites-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px);background:#ECECE7">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(28px,5vw,72px);align-items:flex-start">
+    <div style="flex:1 1 300px;min-width:280px">
+      <h2 id="limites-title" data-reveal style="max-width:16ch;margin:0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Ce que Biume ne fait pas.</h2>
+    </div>
+    <ul data-reveal data-delay="90" style="flex:1 1 440px;min-width:300px;margin:0;padding:0;list-style:none;display:flex;flex-direction:column">
+      <li style="padding:18px 0;border-top:1px solid #DEDED7;font-size:1.06rem;line-height:1.55;text-wrap:pretty">Biume ne pose aucun diagnostic et ne propose aucun protocole de traitement.</li>
+      <li style="padding:18px 0;border-top:1px solid #DEDED7;font-size:1.06rem;line-height:1.55;text-wrap:pretty">Biume n'écrit aucune observation qui ne soit pas déjà dans vos notes.</li>
+      <li style="padding:18px 0;border-top:1px solid #DEDED7;font-size:1.06rem;line-height:1.55;text-wrap:pretty">Aucun document ne part sans que vous ayez cliqué sur envoyer.</li>
+      <li style="padding:18px 0;border-top:1px solid #DEDED7;font-size:1.06rem;line-height:1.55;text-wrap:pretty">Biume ne remplace ni votre logiciel de gestion, ni votre facturation.</li>
+      <li style="padding:18px 0;border-top:1px solid #DEDED7;border-bottom:1px solid #DEDED7;font-size:1.06rem;line-height:1.55;text-wrap:pretty">Vos dossiers vous appartiennent : export complet, à tout moment, sans conditions.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="tarifs" aria-labelledby="tarifs-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">
+      <h2 id="tarifs-title" data-reveal style="max-width:18ch;margin:0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Une formule, deux rythmes.</h2>
+      <p data-reveal data-delay="80" style="max-width:32ch;margin:0;font-size:1.02rem;line-height:1.65;color:#696970">Facturé par praticien. Pas par compte rendu, pas par message envoyé.</p>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(20px,3vw,36px);margin-top:clamp(38px,5vw,64px);align-items:stretch">
+      <div data-reveal style="flex:1 1 400px;min-width:300px;padding:clamp(24px,3vw,38px);background:#FDFDFB;border:1px solid #6B5AC8;border-radius:16px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:inline-flex;align-self:flex-start;padding:4px;border-radius:9999px;background:#ECECE7">
+          <span data-plan="mois" onClick="{{ selectPlan }}" role="button" tabIndex="0" style="padding:8px 16px;border-radius:9999px;background:#FDFDFB;color:#1D1D21;font-size:.84rem;font-weight:600;cursor:pointer;transition:background-color .35s ease,color .35s ease">Mensuel</span>
+          <span data-plan="an" onClick="{{ selectPlan }}" role="button" tabIndex="0" style="padding:8px 16px;border-radius:9999px;background:transparent;color:#696970;font-size:.84rem;font-weight:600;cursor:pointer;transition:background-color .35s ease,color .35s ease">Annuel</span>
+        </div>
+        <div>
+          <p style="margin:0;display:flex;align-items:flex-end;gap:9px">
+            <span data-price style="font-size:clamp(2.6rem,5vw,4rem);font-weight:650;line-height:1;letter-spacing:-.035em">29,99 €</span>
+            <span style="font-size:1rem;font-weight:500;color:#696970;padding-bottom:6px">par mois</span>
+          </p>
+          <p data-price-note style="margin:10px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;font-weight:600;letter-spacing:.02em;color:#696970">Sans engagement · résiliable à tout moment</p>
+        </div>
+        <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px">
+          <li style="display:flex;gap:11px;font-size:1rem;line-height:1.5"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#2E9866"></span>Compte rendu propriétaire à partir de vos notes</li>
+          <li style="display:flex;gap:11px;font-size:1rem;line-height:1.5"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#2E9866"></span>Relecture et validation passage par passage</li>
+          <li style="display:flex;gap:11px;font-size:1rem;line-height:1.5"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#2E9866"></span>Export PDF, mis en page pour la lecture mobile</li>
+          <li style="display:flex;gap:11px;font-size:1rem;line-height:1.5"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#2E9866"></span>Questionnaire de suivi et rappels de contrôle</li>
+          <li style="display:flex;gap:11px;font-size:1rem;line-height:1.5"><span aria-hidden="true" style="flex:0 0 auto;margin-top:7px;width:7px;height:7px;border-radius:9999px;background:#2E9866"></span>Dossiers illimités, export complet à tout moment</li>
+        </ul>
+        <a href="#contenu" style="display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 26px;border-radius:9999px;background:#6B5AC8;color:#fff;font-size:.98rem;font-weight:600;box-shadow:0 6px 8px rgba(107,90,200,.16)">Commencer les 15 jours d'essai</a>
+        <p style="margin:0;font-size:.84rem;color:#696970">Sans carte bancaire. Rien à résilier si vous ne faites rien.</p>
+      </div>
+
+      <div data-reveal data-delay="120" style="flex:1 1 300px;min-width:280px;padding:clamp(24px,3vw,38px);background:#EEEBFB;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+        <h3 style="margin:0;font-size:1.4rem;font-weight:600;letter-spacing:-.015em">Vous préférez qu'on le fasse ensemble ?</h3>
+        <p style="margin:0;font-size:1rem;line-height:1.6;color:#4a4a52;text-wrap:pretty">Trente minutes, votre dernière séance comme exemple, et vous repartez avec un compte rendu prêt à envoyer.</p>
+        <a href="https://cal.com/mathieu-chambaud-biume" style="display:inline-flex;align-self:flex-start;align-items:center;height:48px;padding:0 24px;border-radius:9999px;background:#FDFDFB;border:1px solid #DEDED7;color:#1D1D21;font-size:.96rem;font-weight:600">Réserver une démonstration</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="questions" aria-labelledby="faq-title" style="position:relative;padding:clamp(72px,10vw,128px) clamp(18px,4vw,34px)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(28px,5vw,72px);align-items:flex-start">
+    <h2 id="faq-title" data-reveal style="flex:1 1 280px;min-width:260px;max-width:14ch;margin:0;font-size:clamp(2rem,4vw,3.6rem);font-weight:650;line-height:1.02;letter-spacing:-.03em">Questions.</h2>
+    <div data-reveal data-delay="90" style="flex:1 1 480px;min-width:300px">
+      <details style="border-top:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Est-ce que Biume écrit à ma place ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">Non. Biume reformule ce que vous avez écrit pour le rendre lisible par le propriétaire. Il n'ajoute aucune observation, aucun constat et aucune recommandation qui ne soit pas dans vos notes. Vous relisez chaque passage avant que le document existe.</p>
+      </details>
+      <details style="border-top:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Que se passe-t-il si la reformulation est inexacte ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">Vous la corrigez sur place, passage par passage. Le texte reste éditable jusqu'à l'envoi, et le compte rendu ne quitte jamais votre écran tant que vous ne l'avez pas validé.</p>
+      </details>
+      <details style="border-top:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Faut-il changer ma façon de prendre des notes ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">Non, et c'est le point de départ du produit. Abréviations, sigles, syntaxe télégraphique, ordre libre : Biume est fait pour partir de ça. Si vos notes vous suffisent aujourd'hui, elles suffiront à Biume.</p>
+      </details>
+      <details style="border-top:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Biume remplace-t-il mon logiciel de gestion ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">Non. Biume s'occupe du compte rendu propriétaire et de ce qui vient après la séance. Votre agenda, votre facturation et votre comptabilité restent où ils sont.</p>
+      </details>
+      <details style="border-top:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Où sont hébergées les données ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">En Europe. Vous pouvez exporter l'intégralité de vos dossiers à tout moment depuis les paramètres, et la suppression du compte supprime les données associées.</p>
+      </details>
+      <details style="border-top:1px solid #DEDED7;border-bottom:1px solid #DEDED7">
+        <summary style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;font-size:1.08rem;font-weight:600;line-height:1.35;cursor:pointer">Comment se passe l'essai ?<span data-chev aria-hidden="true" style="flex:0 0 auto;width:11px;height:11px;border-right:1.5px solid #6B5AC8;border-bottom:1.5px solid #6B5AC8;transform:rotate(45deg);transition:transform .3s ease"></span></summary>
+        <p style="margin:0;padding:0 0 20px;max-width:62ch;font-size:1rem;line-height:1.65;color:#696970;text-wrap:pretty">Quinze jours, sans carte bancaire, avec toutes les fonctionnalités. À la fin, vous choisissez de continuer ou non — il n'y a rien à résilier si vous ne faites rien.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="cloture-title" style="position:relative;padding:clamp(84px,11vw,152px) clamp(18px,4vw,34px);background:#202024;color:#FDFDFB;overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;inset:0;background:radial-gradient(58% 62% at 22% 84%, rgba(107,90,200,.5) 0%, transparent 66%),radial-gradient(48% 54% at 88% 12%, rgba(93,155,184,.28) 0%, transparent 62%)"></div>
+  <div style="position:relative;max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(26px,4vw,60px);align-items:flex-end;justify-content:space-between">
+    <div>
+      <h2 id="cloture-title" data-reveal style="max-width:20ch;margin:0;font-size:clamp(2.2rem,5vw,4.4rem);font-weight:650;line-height:.98;letter-spacing:-.035em">Votre prochaine séance peut être la première.</h2>
+      <p data-reveal data-delay="90" style="max-width:44ch;margin:22px 0 0;font-size:1.06rem;line-height:1.6;color:rgba(253,253,251,.7);text-wrap:pretty">Prenez vos notes comme d'habitude. Regardez ce que Biume en fait. Décidez ensuite.</p>
+    </div>
+    <div data-reveal data-delay="170" style="display:flex;flex-direction:column;gap:12px">
+      <a href="#contenu" style="display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 28px;border-radius:9999px;background:#6B5AC8;color:#fff;font-size:.98rem;font-weight:600">Préparer mon premier compte rendu</a>
+      <span style="font-size:.84rem;color:rgba(253,253,251,.6)">15 jours d'essai, sans carte bancaire</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer style="padding:clamp(40px,5vw,64px) clamp(18px,4vw,34px);background:#202024;color:rgba(253,253,251,.6);border-top:1px solid rgba(253,253,251,.1)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;color:#FDFDFB;font-size:1.1rem;font-weight:600;letter-spacing:-.02em">
+      <img src="apps/marketing/public/brand/biume-logo.svg" alt="" width="26" height="26" style="width:26px;height:26px;border-radius:7px">Biume
+    </div>
+    <nav aria-label="Pied de page" style="display:flex;flex-wrap:wrap;gap:clamp(24px,4vw,64px);font-size:.9rem">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:150px">
+        <span style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.4)">La page</span>
+        <a href="#produit" style="color:rgba(253,253,251,.62)">Le parcours</a>
+        <a href="#proprietaire" style="color:rgba(253,253,251,.62)">Le propriétaire</a>
+        <a href="#tarifs" style="color:rgba(253,253,251,.62)">Tarifs</a>
+        <a href="#questions" style="color:rgba(253,253,251,.62)">Questions</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:190px">
+        <span style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.4)">Le métier</span>
+        <a href="/logiciel-osteopathe-animalier" style="color:rgba(253,253,251,.62)">Logiciel ostéopathe animalier</a>
+        <a href="/modele-compte-rendu-osteopathe-animalier" style="color:rgba(253,253,251,.62)">Modèle de compte rendu</a>
+        <a href="/exemple-compte-rendu-osteopathie-animale" style="color:rgba(253,253,251,.62)">Exemple de compte rendu</a>
+        <a href="/suivi-post-seance-animal" style="color:rgba(253,253,251,.62)">Suivi post-séance</a>
+        <a href="/relance-client-osteopathe-animalier" style="color:rgba(253,253,251,.62)">Relance client</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:150px">
+        <span style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.4)">Comparer</span>
+        <a href="/comparatifs" style="color:rgba(253,253,251,.62)">Tous les comparatifs</a>
+        <a href="/comparatifs/neovoice-vs-biume" style="color:rgba(253,253,251,.62)">Neovoice vs Biume</a>
+        <a href="/alternatives/kiwiappli" style="color:rgba(253,253,251,.62)">Alternative à Kiwiappli</a>
+        <a href="/alternatives/animalib" style="color:rgba(253,253,251,.62)">Alternative à Animalib</a>
+        <a href="/blog" style="color:rgba(253,253,251,.62)">Blog</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:130px">
+        <span style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(253,253,251,.4)">Biume</span>
+        <a href="/about" style="color:rgba(253,253,251,.62)">À propos</a>
+        <a href="/tarifs" style="color:rgba(253,253,251,.62)">Tarifs</a>
+        <a href="/cgu" style="color:rgba(253,253,251,.62)">CGU</a>
+        <a href="/privacy" style="color:rgba(253,253,251,.62)">Confidentialité</a>
+      </div>
+    </nav>
+    <p style="flex:1 1 100%;margin:0;padding-top:26px;border-top:1px solid rgba(253,253,251,.1);font-size:.8rem">Compte rendu et suivi post-séance pour ostéopathes et praticiens animaliers. Données hébergées en Europe.</p>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    this.root = document.body;
+    this.states = [false, false, false];
+    this.plan = "mois";
+    this.lastStep = -1;
+    this.revealCache = [];
+    this.cacheAt = 0;
+    this.tick = this.tick.bind(this);
+    this.onScroll = () => {
+      if (!this.queued) { this.queued = true; requestAnimationFrame(this.tick); }
+    };
+    window.addEventListener("scroll", this.onScroll, { passive: true });
+    window.addEventListener("resize", this.onScroll);
+    // Le chevron est piloté ici : une règle `details[open]` en feuille de
+    // style ne prend pas la main sur le style inline du span.
+    this.onToggle = (e) => {
+      const d = e.target;
+      if (!d || d.tagName !== "DETAILS") return;
+      const chev = d.querySelector("[data-chev]");
+      if (chev) chev.style.transform = d.open ? "rotate(225deg)" : "rotate(45deg)";
+    };
+    document.addEventListener("toggle", this.onToggle, true);
+    this.setStep(0, true);
+    this.tick();
+    setTimeout(this.tick, 240);
+    setTimeout(this.tick, 900);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("resize", this.onScroll);
+    document.removeEventListener("toggle", this.onToggle, true);
+  }
+
+  q(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+
+  tick() {
+    this.queued = false;
+    const vh = window.innerHeight;
+    const y = window.scrollY || window.pageYOffset;
+
+    const mast = document.querySelector("[data-masthead]");
+    if (mast) {
+      const on = y > 16;
+      mast.style.background = on ? "rgba(247,247,244,.94)" : "transparent";
+      mast.style.borderBottomColor = on ? "#DEDED7" : "transparent";
+      mast.style.backdropFilter = on ? "blur(10px)" : "none";
+    }
+
+    // Bascule de navigation : pas de media query possible en style inline,
+    // la largeur est donc lue ici.
+    const narrow = window.innerWidth < 900;
+    if (narrow !== this.narrow) {
+      this.narrow = narrow;
+      const nav = document.querySelector("[data-nav]");
+      const burger = document.querySelector("[data-burger]");
+      const cta = document.querySelector("[data-cta-mast]");
+      if (nav) nav.style.display = narrow ? "none" : "flex";
+      if (burger) burger.style.display = narrow ? "inline-flex" : "none";
+      if (cta) cta.style.display = window.innerWidth < 520 ? "none" : "inline-flex";
+      if (!narrow) this.setMenu(false);
+    }
+
+    const now = Date.now();
+    if (now - this.cacheAt > 600) {
+      this.revealCache = this.q('[data-reveal]:not([data-seen="1"])');
+      this.cacheAt = now;
+    }
+    this.revealCache.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 0.9 && r.bottom > -80) {
+        const d = parseInt(el.getAttribute("data-delay") || "0", 10);
+        el.style.transitionDelay = d + "ms";
+        el.setAttribute("data-seen", "1");
+      }
+    });
+
+    this.q("[data-parallax]").forEach((el) => {
+      const host = el.parentElement;
+      if (!host) return;
+      const r = host.getBoundingClientRect();
+      if (r.bottom < -100 || r.top > vh + 100) return;
+      const amp = parseFloat(el.getAttribute("data-parallax")) || 0.2;
+      const centre = r.top + r.height / 2 - vh / 2;
+      el.style.transform = "translate3d(0," + (-centre * amp).toFixed(1) + "px,0)";
+    });
+
+    const track = document.querySelector("[data-demo-track]");
+    if (track) {
+      const r = track.getBoundingClientRect();
+      const span = r.height - vh;
+      let p = span > 0 ? (-r.top) / span : 0;
+      p = Math.max(0, Math.min(1, p));
+      const bar = document.querySelector("[data-demo-progress]");
+      if (bar) bar.style.width = (p * 100).toFixed(1) + "%";
+      this.setStep(Math.min(3, Math.floor(p * 3.999)));
+    }
+
+    const host = document.querySelector("[data-thread-host]");
+    const thread = document.querySelector("[data-thread]");
+    if (host && thread) {
+      const r = host.getBoundingClientRect();
+      let p = (vh * 0.78 - r.top) / (r.height * 0.86);
+      p = Math.max(0, Math.min(1, p));
+      thread.style.height = (p * 100).toFixed(1) + "%";
+    }
+  }
+
+  setStep(step, force) {
+    if (step === this.lastStep && !force) return;
+    this.lastStep = step;
+    this.q("[data-panel]").forEach((el) => {
+      const i = parseInt(el.getAttribute("data-panel"), 10);
+      const on = i === step;
+      // Échange d'affichage plutôt qu'un fondu croisé : le volet actif est
+      // toujours opaque au repos, aucune transition ne peut le laisser vide.
+      el.style.transition = "none";
+      el.style.opacity = "";
+      el.style.transform = "";
+      el.style.display = on ? "flex" : "none";
+      if (on) {
+        el.style.animation = "none";
+        void el.offsetWidth;
+        el.style.animation = "biume-volet .42s cubic-bezier(.16,1,.3,1) both";
+      }
+    });
+    this.q("[data-rail-item]").forEach((el) => {
+      const i = parseInt(el.getAttribute("data-rail-item"), 10);
+      const on = i === step;
+      el.style.background = on ? "rgba(107,90,200,.22)" : "transparent";
+      el.style.color = on ? "#FDFDFB" : "rgba(253,253,251,.45)";
+      const dot = el.querySelector("[data-rail-dot]");
+      if (dot) {
+        dot.style.transform = on ? "scale(1.5)" : "scale(1)";
+        dot.style.opacity = i <= step ? "1" : ".3";
+      }
+    });
+  }
+
+  setMenu(open) {
+    this.menuOpen = open;
+    const menu = document.querySelector("[data-menu]");
+    const burger = document.querySelector("[data-burger]");
+    if (menu) menu.style.display = open ? "block" : "none";
+    if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  renderVals() {
+    const paint = (row, ok) => {
+      const badge = row.querySelector("[data-badge]");
+      row.setAttribute("data-state", ok ? "valide" : "attente");
+      row.style.borderColor = ok ? "#2E9866" : "#DEDED7";
+      row.style.background = ok ? "#E7F3ED" : "transparent";
+      if (badge) {
+        badge.textContent = ok ? "Validé" : "En attente";
+        badge.style.background = ok ? "#FDFDFB" : "#ECECE7";
+        badge.style.color = ok ? "#21734D" : "#696970";
+      }
+    };
+
+    return {
+      toggleMenu: () => this.setMenu(!this.menuOpen),
+      closeMenu: () => this.setMenu(false),
+      togglePassage: (e) => {
+        const row = e.currentTarget;
+        const i = parseInt(row.getAttribute("data-passage"), 10);
+        this.states[i] = !this.states[i];
+        paint(row, this.states[i]);
+        const left = this.states.filter((s) => !s).length;
+        const note = document.querySelector("[data-send-note]");
+        const btn = document.querySelector("[data-send-btn]");
+        if (note) {
+          note.textContent = left === 0
+            ? "Les trois passages sont validés."
+            : left + (left === 1 ? " passage attend" : " passages attendent") + " votre relecture.";
+          note.style.color = left === 0 ? "#21734D" : "#696970";
+        }
+        if (btn) {
+          const open = left === 0;
+          btn.style.background = open ? "#6B5AC8" : "#ECECE7";
+          btn.style.color = open ? "#fff" : "#696970";
+          btn.style.boxShadow = open ? "0 6px 8px rgba(107,90,200,.16)" : "none";
+          btn.style.cursor = open ? "pointer" : "default";
+        }
+      },
+      selectPlan: (e) => {
+        const key = e.currentTarget.getAttribute("data-plan");
+        if (key === this.plan) return;
+        this.plan = key;
+        this.q("[data-plan]").forEach((el) => {
+          const on = el.getAttribute("data-plan") === key;
+          el.style.background = on ? "#FDFDFB" : "transparent";
+          el.style.color = on ? "#1D1D21" : "#696970";
+        });
+        const price = document.querySelector("[data-price]");
+        const note = document.querySelector("[data-price-note]");
+        if (price) price.textContent = key === "an" ? "24,99 €" : "29,99 €";
+        if (note) note.textContent = key === "an"
+          ? "Facturé annuellement · 299,88 € par an"
+          : "Sans engagement · résiliable à tout moment";
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,14 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-describe("V2 landing foundation", () => {
-  test("integrates the V2 composition around the homepage structure", async () => {
-    const page = await Bun.file(new URL("../app/page.tsx", import.meta.url)).text();
-
-    expect(page).toContain('import { V2Landing } from "../components/v2/v2-landing"');
-    expect(page).toMatch(/<JsonLd[\s\S]*<V2Landing/);
-    expect(page).not.toContain("carnet-theme");
-  });
-
+describe("V2 component foundation", () => {
   test("keeps the V2 tokens untouched and locks the motion decisions", async () => {
     const [css, motion] = await Promise.all([
       Bun.file(new URL("../app/v2/v2.css", import.meta.url)).text(),

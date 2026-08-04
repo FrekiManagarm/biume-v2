@@ -43,6 +43,8 @@ next-env.d.ts
 .superpowers/
 .openclaude/
 .kilocode/
+.claude/
+.codex/
 .gstack/
 .superpowers/
 
