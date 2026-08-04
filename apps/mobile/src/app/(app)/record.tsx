@@ -182,6 +182,9 @@ export default function RecordRoute() {
             validatedAt: at,
             updatedAt: at,
           });
+          // Validation is local; this only asks the coordinator to look, and it
+          // is a no-op while offline.
+          void ports.requestSync('validation');
           router.replace('/(app)/captures');
         })();
       }}

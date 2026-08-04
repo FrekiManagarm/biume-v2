@@ -17,6 +17,11 @@ export const localOnlyCaptureErrorCodes = [
   'local_file_missing',
   'local_storage_full',
   'microphone_denied',
+  // Distinct from the contract's `expired`, which means the capture itself is
+  // past its retention window and is terminal. A signed URL that lapsed
+  // mid-upload is the opposite: the capture is fine and the authorization is
+  // simply renewed on the next attempt.
+  'upload_url_expired',
 ] as const;
 
 export type LocalCaptureErrorCode =
@@ -122,18 +127,23 @@ export function computeBackoffMs(
  * Failures that no amount of retrying will fix on its own. They stop the
  * automatic loop immediately and never consume an attempt.
  */
-const manualInterventionCodes = new Set<CaptureErrorCode>([
+const manualInterventionCodes = new Set<LocalCaptureErrorCode>([
   'unauthorized',
   'active_organization_required',
   'forbidden',
   'conflict',
   'validation',
+  'not_found',
   'expired',
+  // Retrying cannot conjure back an audio file the device no longer has, nor
+  // free space on a full disk.
+  'local_file_missing',
+  'local_storage_full',
 ]);
 
 export function registerUploadFailure(
   capture: LocalCapture,
-  errorCode: CaptureErrorCode,
+  errorCode: LocalCaptureErrorCode,
   now: Date,
   random: () => number,
 ): LocalCapture {

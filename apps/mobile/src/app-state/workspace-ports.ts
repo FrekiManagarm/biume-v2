@@ -2,15 +2,22 @@ import * as SQLite from 'expo-sqlite';
 import { useEffect, useMemo, useState } from 'react';
 import { createMobileApiClient } from '../api/mobile-api-client';
 import { getSessionCookie } from '../auth/auth-session';
+import { openCaptureAudio } from '../capture/capture-files';
 import type { CaptureAction } from '../capture/capture-list-view';
 import type { CaptureRepository } from '../capture/capture-repository';
+import { createExpoCaptureFileAdapters } from '../capture/expo-capture-files';
+import type { LocalCaptureErrorCode } from '../capture/local-capture';
 import { createSqliteCaptureRepository } from '../capture/sqlite-capture-repository';
+import { createSyncCoordinator } from '../sync/sync-coordinator';
+import { createSyncEngine } from '../sync/sync-engine';
+import { createUploadClient } from '../sync/upload-client';
 import type { CaptureWorkspacePorts } from './capture-workspace';
 
 const databaseName = 'biume-captures.db';
 
 export type WorkspacePorts = CaptureWorkspacePorts & {
   runCaptureAction(captureId: string, action: CaptureAction): Promise<void>;
+  requestSync(trigger: 'validation' | 'foreground' | 'network'): Promise<void>;
 };
 
 let repositoryPromise: Promise<CaptureRepository> | undefined;
@@ -28,6 +35,22 @@ const api = createMobileApiClient({
   getCookie: getSessionCookie,
 });
 
+const uploader = createUploadClient({ fetch: globalThis.fetch });
+
+/**
+ * Codes a retry can actually resolve. Everything else needs the practitioner to
+ * do something first — sign in again, or record the dictation anew.
+ */
+const retryableCodes = new Set<LocalCaptureErrorCode>([
+  'network',
+  'rate_limited',
+  'server_error',
+  'storage_unavailable',
+  'object_incomplete',
+  'upload_url_expired',
+  'unknown',
+]);
+
 /**
  * Composes the ports the workspace screens depend on. Screens receive view
  * models and actions; none of them opens a database, signs a request, or
@@ -35,6 +58,7 @@ const api = createMobileApiClient({
  */
 export function useWorkspacePorts(organizationId = ''): WorkspacePorts {
   const [repository, setRepository] = useState<CaptureRepository | null>(null);
+  const adapters = useMemo(() => createExpoCaptureFileAdapters(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,44 +70,78 @@ export function useWorkspacePorts(organizationId = ''): WorkspacePorts {
     };
   }, []);
 
-  return useMemo<WorkspacePorts>(
-    () => ({
-      repository: repository ?? pendingRepository,
+  return useMemo<WorkspacePorts>(() => {
+    const resolvedRepository = repository ?? pendingRepository;
+
+    const coordinator = createSyncCoordinator({
+      engine: createSyncEngine({
+        repository: resolvedRepository,
+        api,
+        uploader,
+        openAudio: (capture) =>
+          openCaptureAudio(
+            {
+              captureId: capture.id,
+              encryptedFileUri: capture.encryptedFileUri,
+            },
+            adapters,
+          ),
+        isOnline: () => true,
+        now: () => new Date(),
+        random: () => Math.random(),
+      }),
+    });
+
+    return {
+      repository: resolvedRepository,
       api,
       organizationId,
       now: () => new Date(),
+
+      requestSync: (trigger) => coordinator.request(trigger),
+
       async runCaptureAction(captureId, action) {
         const resolved = repository ?? (await openRepository());
+        const capture = await resolved.get(captureId);
+        if (!capture) return;
+        const at = new Date().toISOString();
 
         if (action === 'retry') {
-          // Returning to the queue resets the backoff window; the attempt
-          // counter is deliberately kept so the automatic threshold still
-          // reflects how much this capture has already cost.
+          // Only recoverable codes go back to the queue. The attempt counter is
+          // deliberately kept, so the automatic threshold still reflects what
+          // this capture has already cost.
+          const code = capture.lastErrorCode;
+          if (code !== null && !retryableCodes.has(code)) return;
           await resolved.transition(captureId, ['needs_action'], {
             status: 'queued',
             nextAttemptAt: null,
-            updatedAt: new Date().toISOString(),
+            updatedAt: at,
           });
+          await coordinator.request('validation');
           return;
         }
 
         if (action === 'delete') {
-          const capture = await resolved.get(captureId);
-          if (capture) {
-            await resolved.transition(
-              captureId,
-              ['queued', 'needs_action', 'expired', 'uploaded'],
-              { status: 'cancelled', updatedAt: new Date().toISOString() },
-            );
-            // The remote purge is best effort here; the expiry sweep is the
-            // guarantee that nothing outlives its window.
-            await api.cancelCapture(captureId).catch(() => undefined);
-          }
+          // Cancel locally first: once that is durably recorded the capture can
+          // never be resurrected, whatever happens to the server call or the
+          // file deletion below.
+          const cancelled = await resolved.transition(
+            captureId,
+            ['queued', 'needs_action', 'expired', 'uploaded'],
+            { status: 'cancelled', updatedAt: at },
+          );
+          if (!cancelled) return;
+
+          // A failed server cancellation stays a pending cleanup; it must not
+          // bring the capture back into the list.
+          await api.cancelCapture(captureId).catch(() => undefined);
+          await adapters.fileSystem
+            .deleteFile(capture.encryptedFileUri)
+            .catch(() => undefined);
         }
       },
-    }),
-    [organizationId, repository],
-  );
+    };
+  }, [adapters, organizationId, repository]);
 }
 
 /**

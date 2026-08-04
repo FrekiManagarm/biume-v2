@@ -45,3 +45,23 @@ production.
 |------|------------|------------|----------|-------|-----------|----------|--------|
 | — | iOS | — | — | — | — | non exécuté | — |
 | — | Android | — | — | — | — | non exécuté | — |
+
+## Scénario d'envoi interrompu
+
+À exécuter contre l'API web locale et un bucket R2 privé **non production**.
+Ne jamais coller d'URL signée ni d'identifiant clinique dans ce document.
+
+1. mettre un rendez-vous en cache ;
+2. passer hors ligne ;
+3. enregistrer et valider une dictée ;
+4. fermer l'application de force, puis la rouvrir ;
+5. rétablir le réseau ;
+6. interrompre le premier `PUT` ;
+7. laisser les déclencheurs de premier plan et de réseau reprendre ;
+8. vérifier **une seule** ligne locale `uploaded`, **une seule** ligne en base,
+   et **une seule** clé d'objet dans R2.
+
+| Date | Plateforme | Version OS | Appareil | Build | Résultat | Preuve |
+|------|------------|------------|----------|-------|----------|--------|
+| — | iOS | — | — | — | non exécuté | — |
+| — | Android | — | — | — | non exécuté | — |
