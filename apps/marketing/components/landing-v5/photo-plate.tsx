@@ -36,7 +36,7 @@ export function PhotoPlate({
     tone === "dark" ? "text-[#FDFDFB]/72" : "text-[color:var(--lv5-ink-soft)]";
 
   return (
-    <section aria-label={ariaLabel} className={`relative overflow-hidden ${heightClass}`}>
+    <section aria-label={ariaLabel} className={`relative flex overflow-hidden ${heightClass}`}>
       <Parallax factor={parallaxFactor} className="absolute -top-[10%] -bottom-[10%] inset-x-0">
         <div className="relative h-full w-full">
           <Image
@@ -50,7 +50,7 @@ export function PhotoPlate({
         </div>
       </Parallax>
       <div aria-hidden="true" className="absolute inset-0" style={{ backgroundImage: overlay }} />
-      <div className="relative mx-auto flex h-full max-w-[1200px] flex-col justify-center gap-3.5 px-[clamp(18px,4vw,34px)]">
+      <div className="relative mx-auto flex w-full max-w-[1200px] flex-col justify-center gap-3.5 px-[clamp(18px,4vw,34px)] py-[clamp(48px,8vh,96px)]">
         <Reveal>
           <p
             className={`font-[ui-monospace,SFMono-Regular,Menlo,monospace] text-[0.72rem] font-semibold tracking-[0.08em] uppercase ${eyebrowClass}`}
