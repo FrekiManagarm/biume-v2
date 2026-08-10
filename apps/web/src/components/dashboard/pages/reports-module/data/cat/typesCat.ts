@@ -128,7 +128,6 @@ export const anatomicalRegionsCat = [
     {value: "intestinGrele", label: "Intestin grêle"},
     {value: "duodenum", label: "Duodenum"},
     {value: "uretre", label: "Urètre"},
-    {value: "grosIntestin", label: "Gros intestin"},
     {value: "vesiculeBiliaire", label: "Vésicule biliaire"},
     {value: "oesophage", label: "Oesophage"},
     {value: "fasciaAntebrachial", label: "Fascia antebrachial"},
@@ -325,7 +324,6 @@ export const anatomicalRegionsByCategoryCat = [
             {value: "intestinGrele", label: "Intestin grêle"},
             {value: "duodenum", label: "Duodenum"},
             {value: "uretre", label: "Urètre"},
-            {value: "grosIntestin", label: "Gros intestin"},
             {value: "vesiculeBiliaire", label: "Vésicule biliaire"},
             {value: "oesophage", label: "Oesophage"},
             {value: "foie", label: "Foie"}
