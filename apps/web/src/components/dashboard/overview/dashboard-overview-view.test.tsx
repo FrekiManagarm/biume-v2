@@ -58,7 +58,17 @@ describe("DashboardOverviewView", () => {
             endAt: new Date(2026, 6, 2, 11, 0),
             status: "COMPLETED",
             atHome: false,
-            reports: [{ id: "report-1", status: "draft", updatedAt: null }],
+            reports: [
+              {
+                id: "report-1",
+                status: "draft",
+                updatedAt: null,
+                consultationReason: "",
+                notes: null,
+                anatomicalIssueCount: 0,
+                recommendationCount: 0,
+              },
+            ],
             patient: {
               id: "patient-2",
               name: "Orka",
@@ -100,16 +110,22 @@ describe("DashboardOverviewView", () => {
     expect(screen.getByText("Chien · Border Collie")).toBeTruthy();
     expect(screen.getByText("Suivi locomoteur")).toBeTruthy();
     expect(screen.getByText("À traiter")).toBeTruthy();
-    expect(screen.getByText("Finaliser · Orka")).toBeTruthy();
+    expect(screen.getByText("Remplir le compte rendu · Orka")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Ouvrir l'agenda/ })).toBeTruthy();
-    expect(screen.getAllByText("Préparer").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Finaliser").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: "Préparer" })).toBeNull();
-    expect(screen.getAllByText("Annulée").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: "Annulée" })).toBeNull();
+    expect(
+      screen.getAllByText("Préparer le compte rendu").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Remplir le compte rendu").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: "Préparer le compte rendu" }),
+    ).toBeNull();
+    expect(screen.getAllByText("Annulé").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Annulé" })).toBeNull();
     expect(
       screen
-        .getAllByRole("link", { name: "Finaliser" })
+        .getAllByRole("link", { name: "Remplir le compte rendu" })
         .every((link) =>
           link
             .getAttribute("href")
@@ -137,7 +153,15 @@ describe("DashboardOverviewView", () => {
             status: "COMPLETED",
             atHome: false,
             reports: [
-              { id: "report-priority", status: "draft", updatedAt: null },
+              {
+                id: "report-priority",
+                status: "draft",
+                updatedAt: null,
+                consultationReason: "",
+                notes: null,
+                anatomicalIssueCount: 0,
+                recommendationCount: 0,
+              },
             ],
             patient: {
               id: "patient-priority",
@@ -157,7 +181,7 @@ describe("DashboardOverviewView", () => {
     expect(within(agenda).getByText("10:30")).toBeTruthy();
     expect(within(agenda).getByText("Tao")).toBeTruthy();
     expect(
-      within(agenda).getByRole("link", { name: "Finaliser" }),
+      within(agenda).getByRole("link", { name: "Remplir le compte rendu" }),
     ).toBeTruthy();
   });
 });

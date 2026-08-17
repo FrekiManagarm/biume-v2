@@ -10,7 +10,7 @@ import {
 
 import { Button } from "#/components/ui/button";
 import type {
-  AgendaReportStatus,
+  AgendaReportState,
   DayAgendaAppointment,
 } from "#/lib/dashboard/day-agenda";
 import { cn } from "#/lib/utils";
@@ -21,25 +21,25 @@ type DashboardAgendaPreviewProps = {
 };
 
 const reportStatusConfig: Record<
-  AgendaReportStatus,
+  AgendaReportState,
   { label: string; indicatorClassName: string; labelClassName: string }
 > = {
-  none: {
+  absent: {
     label: "À préparer",
     indicatorClassName: "bg-slate-400",
     labelClassName: "text-slate-500",
   },
-  to_create: {
-    label: "Compte rendu à créer",
+  empty: {
+    label: "Compte rendu à remplir",
     indicatorClassName: "bg-sky-500",
     labelClassName: "text-sky-700",
   },
-  draft: {
+  started: {
     label: "Brouillon",
     indicatorClassName: "bg-amber-500",
     labelClassName: "text-amber-700",
   },
-  ready_to_send: {
+  finalized: {
     label: "Prêt à envoyer",
     indicatorClassName: "bg-emerald-500",
     labelClassName: "text-emerald-700",
@@ -119,7 +119,7 @@ function AgendaPreviewRow({
   const status =
     appointment.status === "CANCELLED"
       ? cancelledStatusConfig
-      : reportStatusConfig[appointment.reportStatus];
+      : reportStatusConfig[appointment.reportState];
 
   return (
     <li className="group relative grid gap-x-4 gap-y-3 px-4 py-4 transition-colors duration-200 hover:bg-slate-50/80 sm:grid-cols-[4.75rem_minmax(0,1fr)_auto] sm:items-center sm:px-5">
@@ -187,7 +187,10 @@ function AgendaPreviewRow({
 
 function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   const reportId = appointment.primaryAction.reportId;
-  if (appointment.primaryAction.kind === "cancelled") {
+  if (
+    appointment.primaryAction.kind === "cancelled" ||
+    appointment.primaryAction.kind === "upcoming"
+  ) {
     return (
       <span className="text-sm font-medium text-slate-500 md:text-right">
         {appointment.primaryAction.label}
@@ -196,9 +199,7 @@ function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   }
 
   const shouldEditReport =
-    reportId &&
-    (appointment.primaryAction.kind === "finalize_report" ||
-      appointment.primaryAction.kind === "send_report");
+    reportId && appointment.primaryAction.kind !== "view_report";
 
   if (shouldEditReport) {
     return (

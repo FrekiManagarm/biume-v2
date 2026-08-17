@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { toneSoftClassName } from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
@@ -17,10 +18,10 @@ type DashboardPrioritiesPanelProps = {
   priorities: DashboardPriorityItem[];
 };
 
-const toneClassName: Record<DashboardPriorityItem["tone"], string> = {
-  neutral: "border-slate-200 bg-white text-slate-600",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-700",
+const toneMap: Record<DashboardPriorityItem["tone"], "neutral" | "done" | "attention"> = {
+  neutral: "neutral",
+  success: "done",
+  warning: "attention",
 };
 
 export function DashboardPrioritiesPanel({
@@ -61,7 +62,7 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
       <div
         className={cn(
           "flex size-9 items-center justify-center rounded-lg border",
-          toneClassName[priority.tone],
+          toneSoftClassName(toneMap[priority.tone]),
         )}
       >
         <Icon className="size-4" />
@@ -81,25 +82,18 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
 
 function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   if (
-    priority.reportId &&
-    (priority.actionKind === "finalize_report" ||
-      priority.actionKind === "send_report")
+    priority.actionKind === "cancelled" ||
+    priority.actionKind === "upcoming"
   ) {
-    return (
-      <Button
-        asChild
-        size="sm"
-        variant="outline"
-        className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
-      >
-        <Link to="/dashboard/reports/$id/edit" params={{ id: priority.reportId }}>
-          {priority.actionLabel}
-        </Link>
-      </Button>
-    );
+    return null;
   }
 
-  if (priority.reportId && priority.actionKind === "view_report") {
+  const to =
+    priority.actionKind === "view_report" && priority.reportId
+      ? "/dashboard/reports/$id"
+      : "/dashboard/reports/$id/edit";
+
+  if (priority.reportId) {
     return (
       <Button
         asChild
@@ -107,7 +101,7 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
         variant="outline"
         className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
       >
-        <Link to="/dashboard/reports/$id" params={{ id: priority.reportId }}>
+        <Link to={to} params={{ id: priority.reportId }}>
           {priority.actionLabel}
         </Link>
       </Button>
@@ -115,9 +109,19 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   }
 
   return (
-    <span className="mt-3 inline-flex text-xs font-medium text-slate-500">
-      {priority.actionLabel}
-    </span>
+    <Button
+      asChild
+      size="sm"
+      variant="outline"
+      className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
+    >
+      <Link
+        to="/dashboard/agenda"
+        search={{ appointmentId: priority.appointmentId }}
+      >
+        {priority.actionLabel}
+      </Link>
+    </Button>
   );
 }
 
