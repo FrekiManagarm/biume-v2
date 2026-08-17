@@ -45,8 +45,13 @@ export const advancedReport = pgTable(
     patientId: text("patientId").references(() => pets.id, {
       onDelete: "cascade",
     }),
+    /**
+     * Un compte rendu survit à son rendez-vous. En cascade, nettoyer son agenda
+     * détruisait l'historique médical de l'animal — y compris un compte rendu
+     * finalisé et déjà envoyé au propriétaire.
+     */
     appointmentId: text("appointmentId").references(() => appointments.id, {
-      onDelete: "cascade",
+      onDelete: "set null",
     }),
     notes: text("notes").default(""),
     status: reportStatus("status").notNull().default("draft"),
