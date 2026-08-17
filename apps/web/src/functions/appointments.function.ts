@@ -10,6 +10,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
 
+const appointmentWindowSchema = z.object({
+  fromISO: z.string(),
+  toISO: z.string(),
+});
+
 const appointmentDateRangeSchema = z.object({
   beginAt: z.coerce.date(),
   endAt: z.coerce.date(),
@@ -47,13 +52,18 @@ const patientIdSchema = z.object({
   patientId: z.string(),
 });
 
-export const getAppointments = createServerFn({ method: "GET" }).handler(
-  async () => {
+export const getAppointments = createServerFn({ method: "GET" })
+  .validator(appointmentWindowSchema)
+  .handler(async ({ data }) => {
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
     const results = await db.query.appointments.findMany({
-      where: eq(appointments.organizationId, organization.id),
+      where: and(
+        eq(appointments.organizationId, organization.id),
+        gte(appointments.beginAt, new Date(data.fromISO)),
+        lte(appointments.beginAt, new Date(data.toISO)),
+      ),
       with: {
         patient: {
           with: {
@@ -66,21 +76,41 @@ export const getAppointments = createServerFn({ method: "GET" }).handler(
                 phone: true,
               },
             },
-            animal: {
-              columns: {
-                code: true,
-                name: true,
-              },
-            },
+            animal: { columns: { code: true, name: true } },
           },
         },
         organization: true,
+        // Assez pour appliquer `isReportEmpty` sans ramener le contenu :
+        // seuls les identifiants des lignes filles sont comptés.
+        reports: {
+          columns: {
+            id: true,
+            status: true,
+            updatedAt: true,
+            consultationReason: true,
+            notes: true,
+          },
+          with: {
+            anatomicalIssues: { columns: { id: true } },
+            recommendations: { columns: { id: true } },
+          },
+        },
       },
     });
 
-    return results as Appointment[];
-  },
-);
+    return results.map((appointment) => ({
+      ...appointment,
+      reports: appointment.reports.map((report) => ({
+        id: report.id,
+        status: report.status,
+        updatedAt: report.updatedAt,
+        consultationReason: report.consultationReason,
+        notes: report.notes,
+        anatomicalIssueCount: report.anatomicalIssues.length,
+        recommendationCount: report.recommendations.length,
+      })),
+    }));
+  });
 
 /**
  * Vérifie si un créneau horaire chevauche des rendez-vous existants

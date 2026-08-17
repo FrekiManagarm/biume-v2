@@ -3,7 +3,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { Appointment } from "@biume/db/schema/index";
 import {
   CalendarDays,
   ChevronLeft,
@@ -18,16 +17,27 @@ import {
 import { useMemo, useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { createAppointment } from "#/lib/api/actions/appointments.action";
-import { appointmentsQueryOptions } from "#/lib/api/queries/appointments.query";
+import {
+  createAppointment,
+  type getAppointments as getAppointmentsFn,
+} from "#/lib/api/actions/appointments.action";
+import {
+  appointmentsQueryOptions,
+  defaultAppointmentWindow,
+} from "#/lib/api/queries/appointments.query";
 import { patientsQueryOptions } from "#/lib/api/queries/patients.query";
 import { cn } from "#/lib/utils";
 
 import { NewAppointmentDialog } from "./new-appointment-dialog";
 
+type AgendaAppointment = Awaited<ReturnType<typeof getAppointmentsFn>>[number];
+
 export function AgendaPage() {
   const queryClient = useQueryClient();
-  const { data: appointments } = useSuspenseQuery(appointmentsQueryOptions());
+  const appointmentWindow = useMemo(() => defaultAppointmentWindow(), []);
+  const { data: appointments } = useSuspenseQuery(
+    appointmentsQueryOptions(appointmentWindow),
+  );
   const { data: patients } = useSuspenseQuery(patientsQueryOptions());
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(new Date()),
@@ -40,7 +50,7 @@ export function AgendaPage() {
     mutationFn: createAppointment,
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: appointmentsQueryOptions().queryKey,
+        queryKey: appointmentsQueryOptions(appointmentWindow).queryKey,
       }),
   });
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
@@ -296,7 +306,7 @@ export function AgendaPage() {
   );
 }
 
-function AppointmentCard({ appointment }: { appointment: Appointment }) {
+function AppointmentCard({ appointment }: { appointment: AgendaAppointment }) {
   return (
     <article className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.5)]">
       <div className="flex items-start justify-between gap-3">
