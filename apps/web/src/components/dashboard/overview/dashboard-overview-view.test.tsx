@@ -10,17 +10,26 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({
     children,
     params,
+    search,
     to,
     ...props
   }: {
     children: ReactNode;
     params?: Record<string, string>;
+    search?: Record<string, string>;
     to: string;
-  }) => (
-    <a href={params?.id ? to.replace("$id", params.id) : to} {...props}>
-      {children}
-    </a>
-  ),
+  }) => {
+    const base = params?.id ? to.replace("$id", params.id) : to;
+    const query = search
+      ? `?${new URLSearchParams(search).toString()}`
+      : "";
+
+    return (
+      <a href={`${base}${query}`} {...props}>
+        {children}
+      </a>
+    );
+  },
 }));
 
 describe("DashboardOverviewView", () => {
@@ -183,5 +192,47 @@ describe("DashboardOverviewView", () => {
     expect(
       within(agenda).getByRole("link", { name: "Remplir le compte rendu" }),
     ).toBeTruthy();
+  });
+
+  test("renders the create_report action as a clickable link, not inert text", () => {
+    cleanup();
+
+    render(
+      <DashboardOverviewView
+        selectedDate={new Date(2026, 6, 2, 0, 0)}
+        now={new Date(2026, 6, 2, 12, 0)}
+        metrics={{ newAnimals: 0, newOwners: 0, sentReports: 0 }}
+        appointments={[
+          {
+            id: "appointment-no-report",
+            beginAt: new Date(2026, 6, 2, 9, 0),
+            endAt: new Date(2026, 6, 2, 10, 0),
+            status: "COMPLETED",
+            atHome: false,
+            reports: [],
+            patient: {
+              id: "patient-no-report",
+              name: "Iggy",
+              owner: { id: "owner-no-report", name: "Sacha Petit" },
+            },
+          },
+        ]}
+        recentActivity={[]}
+      />,
+    );
+
+    expect(screen.getAllByText("Créer le compte rendu").length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      screen.queryByRole("button", { name: "Créer le compte rendu" }),
+    ).toBeNull();
+
+    const link = screen.getByRole("link", { name: "Créer le compte rendu" });
+
+    expect(link).toBeTruthy();
+    expect(link.getAttribute("href")).toBe(
+      "/dashboard/agenda?appointmentId=appointment-no-report",
+    );
   });
 });

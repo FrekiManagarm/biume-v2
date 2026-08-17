@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { toneSoftClassName } from "#/components/dashboard/kit";
+import { toneIconClassName, toneSoftClassName } from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
@@ -31,10 +31,12 @@ export function DashboardPrioritiesPanel({
   const visiblePriorities = priorities.slice(0, 8);
 
   return (
-    <aside className="grid self-start rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
+    <aside className="grid self-start rounded-xl border border-border bg-white p-4 shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
       <div>
-        <p className="text-sm font-medium text-emerald-700">Priorités</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+        <p className={cn("text-sm font-medium", toneIconClassName("done"))}>
+          Priorités
+        </p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
           À traiter
         </h2>
       </div>
@@ -45,7 +47,7 @@ export function DashboardPrioritiesPanel({
             <PriorityRow key={priority.id} priority={priority} />
           ))
         ) : (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-500">
+          <p className="rounded-lg border border-dashed border-border bg-muted px-4 py-8 text-sm text-muted-foreground">
             {emptyLabel}
           </p>
         )}
@@ -58,7 +60,7 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
   const Icon = getPriorityIcon(priority);
 
   return (
-    <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3">
+    <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-border bg-muted/60 px-3 py-3">
       <div
         className={cn(
           "flex size-9 items-center justify-center rounded-lg border",
@@ -68,10 +70,10 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-950">
+        <p className="truncate text-sm font-semibold text-foreground">
           {priority.title}
         </p>
-        <p className="mt-1 truncate text-xs text-slate-500">
+        <p className="mt-1 truncate text-xs text-muted-foreground">
           {priority.timeLabel} · {priority.description}
         </p>
         <PriorityAction priority={priority} />
