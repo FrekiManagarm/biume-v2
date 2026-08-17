@@ -3,6 +3,7 @@
 import { db } from "@biume/db";
 import {
   createInitialReportSectionStates,
+  isReportEmpty,
   quickReportSchema,
   type ReportSectionStates,
 } from "@biume/contracts/report";
@@ -94,7 +95,7 @@ async function loadAllReportRows({
     if (searchCondition) conditions.push(searchCondition);
   }
 
-  return db.query.advancedReport.findMany({
+  const rows = await db.query.advancedReport.findMany({
     where: and(...conditions),
     with: {
       organization: true,
@@ -109,6 +110,22 @@ async function loadAllReportRows({
     },
     orderBy: [desc(advancedReport.createdAt)],
   });
+
+  /**
+   * Un compte rendu créé automatiquement avec son rendez-vous n'a encore rien
+   * dedans. Il vit sur son rendez-vous dans l'agenda et n'entre dans cette
+   * liste que lorsque le praticien y a écrit quelque chose — sinon la liste se
+   * remplirait d'une coquille par séance planifiée.
+   */
+  return rows.filter(
+    (row) =>
+      !isReportEmpty({
+        consultationReason: row.consultationReason,
+        notes: row.notes,
+        anatomicalIssueCount: row.anatomicalIssues.length,
+        recommendationCount: row.recommendations.length,
+      }),
+  );
 }
 
 export type AdvancedReportListItem = Awaited<
