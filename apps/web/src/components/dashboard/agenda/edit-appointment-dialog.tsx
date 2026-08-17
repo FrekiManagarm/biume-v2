@@ -20,6 +20,21 @@ import {
   formatTimeInput,
 } from "./appointment-form-fields";
 
+/**
+ * Normalise la valeur soumise pour la note à partir du `FormData` brut.
+ *
+ * Renvoie toujours une chaîne — jamais `undefined` — même quand le champ est
+ * vidé : `updateAppointment` fait un `.set({...values})` Drizzle qui ignore
+ * silencieusement les clés `undefined` (`mapUpdateSet`), donc envoyer
+ * `undefined` ici laisserait l'ancienne note intacte en base alors que
+ * l'interface l'affiche comme effacée.
+ */
+export function resolveNoteForSubmit(
+  rawNote: FormDataEntryValue | null,
+): string {
+  return String(rawNote ?? "").trim();
+}
+
 export type EditAppointmentDialogProps = {
   appointment: DayAgendaAppointment | null;
   open: boolean;
@@ -58,7 +73,6 @@ export function EditAppointmentDialog({
     const date = String(formData.get("date") ?? "");
     const startTime = String(formData.get("startTime") ?? "");
     const endTime = String(formData.get("endTime") ?? "");
-    const note = String(formData.get("note") ?? "").trim();
 
     if (!date || !startTime || !endTime) {
       return;
@@ -69,7 +83,7 @@ export function EditAppointmentDialog({
       atHome: formData.get("atHome") === "on",
       beginAt: buildLocalDate(date, startTime),
       endAt: buildLocalDate(date, endTime),
-      note: note.length > 0 ? note : undefined,
+      note: resolveNoteForSubmit(formData.get("note")),
     });
 
     onOpenChange(false);

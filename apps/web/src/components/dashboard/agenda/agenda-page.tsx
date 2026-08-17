@@ -6,6 +6,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
+  CalendarX2,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -13,7 +14,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { DeleteEntityDialog } from "#/components/dashboard/lists/entity-row-actions";
+import {
+  ConfirmActionDialog,
+  DeleteEntityDialog,
+} from "#/components/dashboard/lists/entity-row-actions";
 import {
   EmptyState,
   ListRow,
@@ -38,6 +42,7 @@ import {
   buildDayAgendaModel,
   type DayAgendaAppointment,
 } from "#/lib/dashboard/day-agenda";
+import { buildReportCreationInput } from "#/lib/dashboard/report-creation";
 import { cn } from "#/lib/utils";
 
 import { AppointmentActionsMenu } from "./appointment-actions-menu";
@@ -77,6 +82,8 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
     useState<DayAgendaAppointment | null>(null);
   const [deletingAppointment, setDeletingAppointment] =
     useState<DayAgendaAppointment | null>(null);
+  const [cancellingAppointment, setCancellingAppointment] =
+    useState<DayAgendaAppointment | null>(null);
 
   function invalidateAppointments() {
     return queryClient.invalidateQueries({
@@ -90,7 +97,10 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
   });
   const updateAppointmentMutation = useMutation({
     mutationFn: updateAppointment,
-    onSuccess: invalidateAppointments,
+    onSuccess: () => {
+      invalidateAppointments();
+      setCancellingAppointment(null);
+    },
   });
   const deleteAppointmentMutation = useMutation({
     mutationFn: deleteAppointment,
@@ -99,7 +109,10 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
       setDeletingAppointment(null);
     },
   });
-  const createReportMutation = useMutation({ mutationFn: createReport });
+  const createReportMutation = useMutation({
+    mutationFn: createReport,
+    onSuccess: invalidateAppointments,
+  });
 
   const dayModel = useMemo(
     () => buildDayAgendaModel({ appointments, now: new Date(), selectedDate }),
@@ -161,20 +174,17 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
     // avant ce rendu (souris rapide, tests, etc.) doit être ignoré ici aussi.
     if (createReportMutation.isPending) return;
 
-    const petId = appointment.patient?.id;
-    if (!petId) return;
+    const reportCreationInput = buildReportCreationInput(appointment);
+    if (!reportCreationInput) return;
 
-    createReportMutation.mutate(
-      { petId, appointmentId: appointment.id, status: "draft" },
-      {
-        onSuccess: (result) => {
-          navigate({
-            to: "/dashboard/reports/$id/edit",
-            params: { id: result.reportId },
-          });
-        },
+    createReportMutation.mutate(reportCreationInput, {
+      onSuccess: (result) => {
+        navigate({
+          to: "/dashboard/reports/$id/edit",
+          params: { id: result.reportId },
+        });
       },
-    );
+    });
   }
 
   return (
@@ -310,12 +320,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
                           updateAppointmentMutation.isPending ||
                           deleteAppointmentMutation.isPending
                         }
-                        onCancel={() =>
-                          updateAppointmentMutation.mutate({
-                            appointmentId: appointment.id,
-                            status: "CANCELLED",
-                          })
-                        }
+                        onCancel={() => setCancellingAppointment(appointment)}
                         onDelete={() => setDeletingAppointment(appointment)}
                         onEdit={() => setEditingAppointment(appointment)}
                       />
@@ -404,6 +409,31 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
         }}
         onOpenChange={(open) => {
           if (!open) setDeletingAppointment(null);
+        }}
+      />
+
+      <ConfirmActionDialog
+        icon={CalendarX2}
+        title="Annuler ce rendez-vous ?"
+        description={
+          cancellingAppointment
+            ? `Le rendez-vous du ${formatLongDate(cancellingAppointment.beginAt)} à ${formatTime(cancellingAppointment.beginAt)} sera marqué comme annulé et sortira du planning actif. Il n'existe pas de geste, dans l'agenda, pour revenir en arrière ensuite.`
+            : ""
+        }
+        confirmLabel="Annuler la séance"
+        pendingLabel="Annulation…"
+        cancelLabel="Retour"
+        isPending={updateAppointmentMutation.isPending}
+        open={cancellingAppointment !== null}
+        onConfirm={() => {
+          if (!cancellingAppointment) return;
+          updateAppointmentMutation.mutate({
+            appointmentId: cancellingAppointment.id,
+            status: "CANCELLED",
+          });
+        }}
+        onOpenChange={(open) => {
+          if (!open) setCancellingAppointment(null);
         }}
       />
     </div>

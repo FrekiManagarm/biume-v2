@@ -138,7 +138,13 @@ vi.mock("#/components/ui/alert-dialog", () => {
   };
 });
 
-import { DeleteEntityDialog, EntityRowActions } from "./entity-row-actions";
+import { CalendarX2 } from "lucide-react";
+
+import {
+  ConfirmActionDialog,
+  DeleteEntityDialog,
+  EntityRowActions,
+} from "./entity-row-actions";
 
 afterEach(cleanup);
 
@@ -221,6 +227,70 @@ describe("DeleteEntityDialog", () => {
       (
         screen.getByRole("button", {
           name: "Suppression…",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+});
+
+describe("ConfirmActionDialog", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  test("un mis-clic sur « Annuler la séance » demande confirmation avant de rien faire d'irréversible", () => {
+    // Régression : « Annuler la séance » déclenchait la mutation directement
+    // depuis le menu, sans étape de confirmation, alors qu'il n'existe aucun
+    // moyen dans l'interface de revenir sur une annulation.
+    const onConfirm = vi.fn();
+    const onOpenChange = vi.fn();
+    render(
+      <ConfirmActionDialog
+        open
+        onOpenChange={onOpenChange}
+        icon={CalendarX2}
+        title="Annuler ce rendez-vous ?"
+        description="Le rendez-vous du 17 août à 09:00 sera marqué comme annulé."
+        confirmLabel="Annuler la séance"
+        pendingLabel="Annulation…"
+        cancelLabel="Retour"
+        onConfirm={onConfirm}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Le rendez-vous du 17 août à 09:00 sera marqué comme annulé.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Retour" })).toBeTruthy();
+
+    // Rien ne s'est encore produit tant que le praticien n'a pas confirmé.
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Annuler la séance" }));
+
+    expect(onConfirm).toHaveBeenCalledOnce();
+  });
+
+  test("affiche le libellé d'attente propre à l'appelant, pas celui de la suppression", () => {
+    render(
+      <ConfirmActionDialog
+        open
+        onOpenChange={vi.fn()}
+        icon={CalendarX2}
+        title="Annuler ce rendez-vous ?"
+        description="Description."
+        confirmLabel="Annuler la séance"
+        pendingLabel="Annulation…"
+        isPending
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Suppression…" })).toBeNull();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Annulation…",
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
