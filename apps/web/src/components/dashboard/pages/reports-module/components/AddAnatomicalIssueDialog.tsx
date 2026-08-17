@@ -106,8 +106,8 @@ const severityOptions = [
   {
     value: 5,
     label: "Critique",
-    dot: "bg-rose-600",
-    selected: "border-rose-300 bg-rose-50 text-rose-800",
+    dot: "bg-purple-500",
+    selected: "border-purple-300 bg-purple-50 text-purple-800",
   },
 ];
 

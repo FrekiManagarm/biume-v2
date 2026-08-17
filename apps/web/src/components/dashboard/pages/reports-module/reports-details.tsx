@@ -95,7 +95,7 @@ const getSeverityColor = (severity: number) => {
     case 4:
       return "bg-rose-500";
     case 5:
-      return "bg-red-700";
+      return "bg-purple-500";
     default:
       return "bg-slate-400";
   }

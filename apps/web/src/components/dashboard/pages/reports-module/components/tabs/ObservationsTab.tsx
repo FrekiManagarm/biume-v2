@@ -53,10 +53,10 @@ const getSeverityConfig = (severity: number) => {
       label: "Sévère",
     },
     5: {
-      color: "bg-rose-600",
-      textColor: "text-rose-700",
-      bgColor: "bg-rose-50/80",
-      borderColor: "border-rose-200/80",
+      color: "bg-purple-500",
+      textColor: "text-purple-700",
+      bgColor: "bg-purple-50/80",
+      borderColor: "border-purple-200/80",
       label: "Critique",
     },
   };
