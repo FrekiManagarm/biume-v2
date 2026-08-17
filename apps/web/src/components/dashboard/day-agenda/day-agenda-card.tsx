@@ -10,7 +10,7 @@ import {
 
 import { Button } from "#/components/ui/button";
 import type {
-  AgendaReportStatus,
+  AgendaReportState,
   DayAgendaAppointment,
 } from "#/lib/dashboard/day-agenda";
 import { cn } from "#/lib/utils";
@@ -20,22 +20,22 @@ type DayAgendaCardProps = {
 };
 
 const reportStatusConfig: Record<
-  AgendaReportStatus,
+  AgendaReportState,
   { label: string; className: string }
 > = {
-  none: {
+  absent: {
     label: "À préparer",
     className: "border-slate-200 bg-white text-slate-600",
   },
-  to_create: {
-    label: "Compte rendu à créer",
+  empty: {
+    label: "Compte rendu à remplir",
     className: "border-blue-200 bg-blue-50 text-blue-800",
   },
-  draft: {
+  started: {
     label: "Brouillon",
     className: "border-amber-200 bg-amber-50 text-amber-800",
   },
-  ready_to_send: {
+  finalized: {
     label: "Prêt à envoyer",
     className: "border-emerald-200 bg-emerald-50 text-emerald-800",
   },
@@ -58,13 +58,13 @@ export function DayAgendaCard({ appointment }: DayAgendaCardProps) {
   const reportStatus =
     appointment.status === "CANCELLED"
       ? cancelledStatusConfig
-      : reportStatusConfig[appointment.reportStatus];
+      : reportStatusConfig[appointment.reportState];
 
   return (
     <article
       className={cn(
         "grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-44px_rgba(15,23,42,0.45)] md:grid-cols-[minmax(0,1fr)_auto]",
-        appointment.reportStatus === "ready_to_send" &&
+        appointment.reportState === "finalized" &&
           "border-emerald-200 bg-emerald-50/40",
       )}
     >
@@ -114,7 +114,8 @@ export function DayAgendaCard({ appointment }: DayAgendaCardProps) {
       </div>
 
       <div className="flex items-center justify-start md:justify-end">
-        {appointment.primaryAction.kind === "cancelled" ? (
+        {appointment.primaryAction.kind === "cancelled" ||
+        appointment.primaryAction.kind === "upcoming" ? (
           <span className="text-sm font-medium text-slate-500">
             {appointment.primaryAction.label}
           </span>

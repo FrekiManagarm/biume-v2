@@ -1,14 +1,32 @@
 import { db } from "@biume/db";
-import { and, eq, or, lte, gte, ne } from "drizzle-orm";
+import { and, eq, or, lte, gte, ne, inArray } from "drizzle-orm";
 import { getCurrentOrganization } from "#/functions/auth.function";
 import {
   createAppointmentWithPatientIsolation,
   updateAppointmentWithTenantIsolation,
 } from "#/functions/tenant-mutation-isolation";
-import { type Appointment, appointments, pets } from "@biume/db/schema/index";
+import {
+  type Appointment,
+  advancedReport,
+  appointments,
+  pets,
+  reportSectionState,
+} from "@biume/db/schema/index";
+import { createInitialReportSectionStates } from "@biume/contracts/report";
 import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
+
+import { buildReportSectionStateRows } from "./report-domain";
+import {
+  createSessionReport,
+  resolveReportsOnAppointmentDeletion,
+} from "./appointment-report.service";
+
+const appointmentWindowSchema = z.object({
+  fromISO: z.string(),
+  toISO: z.string(),
+});
 
 const appointmentDateRangeSchema = z.object({
   beginAt: z.coerce.date(),
@@ -23,6 +41,7 @@ const createAppointmentSchema = z.object({
   atHome: z.boolean().optional(),
   note: z.string().optional(),
   notifyOwner: z.boolean().optional(),
+  withReport: z.boolean().optional().default(true),
 });
 
 const updateAppointmentSchema = z.object({
@@ -47,13 +66,18 @@ const patientIdSchema = z.object({
   patientId: z.string(),
 });
 
-export const getAppointments = createServerFn({ method: "GET" }).handler(
-  async () => {
+export const getAppointments = createServerFn({ method: "GET" })
+  .validator(appointmentWindowSchema)
+  .handler(async ({ data }) => {
     const organization = await getCurrentOrganization();
     if (!organization) throw new Error("Organization not found");
 
     const results = await db.query.appointments.findMany({
-      where: eq(appointments.organizationId, organization.id),
+      where: and(
+        eq(appointments.organizationId, organization.id),
+        gte(appointments.beginAt, new Date(data.fromISO)),
+        lte(appointments.beginAt, new Date(data.toISO)),
+      ),
       with: {
         patient: {
           with: {
@@ -66,21 +90,41 @@ export const getAppointments = createServerFn({ method: "GET" }).handler(
                 phone: true,
               },
             },
-            animal: {
-              columns: {
-                code: true,
-                name: true,
-              },
-            },
+            animal: { columns: { code: true, name: true } },
           },
         },
         organization: true,
+        // Assez pour appliquer `isReportEmpty` sans ramener le contenu :
+        // seuls les identifiants des lignes filles sont comptés.
+        reports: {
+          columns: {
+            id: true,
+            status: true,
+            updatedAt: true,
+            consultationReason: true,
+            notes: true,
+          },
+          with: {
+            anatomicalIssues: { columns: { id: true } },
+            recommendations: { columns: { id: true } },
+          },
+        },
       },
     });
 
-    return results as Appointment[];
-  },
-);
+    return results.map((appointment) => ({
+      ...appointment,
+      reports: appointment.reports.map((report) => ({
+        id: report.id,
+        status: report.status,
+        updatedAt: report.updatedAt,
+        consultationReason: report.consultationReason,
+        notes: report.notes,
+        anatomicalIssueCount: report.anatomicalIssues.length,
+        recommendationCount: report.recommendations.length,
+      })),
+    }));
+  });
 
 /**
  * Vérifie si un créneau horaire chevauche des rendez-vous existants
@@ -165,6 +209,48 @@ export const createAppointment = createServerFn({ method: "POST" })
           })
           .returning();
 
+        const animal = await db.query.pets.findFirst({
+          where: eq(pets.id, data.patientId),
+          columns: { name: true },
+        });
+
+        await createSessionReport(
+          {
+            insertReport: async (values) => {
+              const reportId = crypto.randomUUID();
+              await db.batch([
+                db.insert(advancedReport).values({
+                  id: reportId,
+                  title: values.title,
+                  consultationReason: values.consultationReason,
+                  patientId: values.patientId,
+                  appointmentId: values.appointmentId,
+                  notes: "",
+                  status: "draft",
+                  createdBy: organization.id,
+                  createdAt: new Date(),
+                }),
+                db.insert(reportSectionState).values(
+                  buildReportSectionStateRows(
+                    reportId,
+                    createInitialReportSectionStates(),
+                  ),
+                ),
+              ]);
+
+              return reportId;
+            },
+          },
+          {
+            appointmentId: newAppointment.id,
+            patientId: data.patientId,
+            animalName: animal?.name ?? null,
+            beginAt: data.beginAt,
+            note: data.note ?? null,
+            withReport: data.withReport,
+          },
+        );
+
         return newAppointment;
       },
     });
@@ -231,6 +317,40 @@ export const deleteAppointment = createServerFn({ method: "POST" })
     try {
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
+
+      const linkedReports = await db.query.advancedReport.findMany({
+        where: and(
+          eq(advancedReport.appointmentId, data.appointmentId),
+          eq(advancedReport.createdBy, organization.id),
+        ),
+        columns: {
+          id: true,
+          consultationReason: true,
+          notes: true,
+        },
+        with: {
+          anatomicalIssues: { columns: { id: true } },
+          recommendations: { columns: { id: true } },
+        },
+      });
+
+      const { deleteIds } = resolveReportsOnAppointmentDeletion(
+        linkedReports.map((report) => ({
+          id: report.id,
+          consultationReason: report.consultationReason,
+          notes: report.notes,
+          anatomicalIssueCount: report.anatomicalIssues.length,
+          recommendationCount: report.recommendations.length,
+        })),
+      );
+
+      // Les comptes rendus non vides sont détachés par la contrainte
+      // `ON DELETE set null` posée à la tâche 4.
+      if (deleteIds.length > 0) {
+        await db
+          .delete(advancedReport)
+          .where(inArray(advancedReport.id, deleteIds));
+      }
 
       const [deletedAppointment] = await db
         .delete(appointments)

@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { toneIconClassName, toneSoftClassName } from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
@@ -17,10 +18,10 @@ type DashboardPrioritiesPanelProps = {
   priorities: DashboardPriorityItem[];
 };
 
-const toneClassName: Record<DashboardPriorityItem["tone"], string> = {
-  neutral: "border-slate-200 bg-white text-slate-600",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-700",
+const toneMap: Record<DashboardPriorityItem["tone"], "neutral" | "done" | "attention"> = {
+  neutral: "neutral",
+  success: "done",
+  warning: "attention",
 };
 
 export function DashboardPrioritiesPanel({
@@ -30,10 +31,12 @@ export function DashboardPrioritiesPanel({
   const visiblePriorities = priorities.slice(0, 8);
 
   return (
-    <aside className="grid self-start rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
+    <aside className="grid self-start rounded-xl border border-border bg-white p-4 shadow-[0_18px_50px_-46px_rgba(15,23,42,0.45)]">
       <div>
-        <p className="text-sm font-medium text-emerald-700">Priorités</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+        <p className={cn("text-sm font-medium", toneIconClassName("done"))}>
+          Priorités
+        </p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
           À traiter
         </h2>
       </div>
@@ -44,7 +47,7 @@ export function DashboardPrioritiesPanel({
             <PriorityRow key={priority.id} priority={priority} />
           ))
         ) : (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-500">
+          <p className="rounded-lg border border-dashed border-border bg-muted px-4 py-8 text-sm text-muted-foreground">
             {emptyLabel}
           </p>
         )}
@@ -57,20 +60,20 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
   const Icon = getPriorityIcon(priority);
 
   return (
-    <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3">
+    <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-border bg-muted/60 px-3 py-3">
       <div
         className={cn(
           "flex size-9 items-center justify-center rounded-lg border",
-          toneClassName[priority.tone],
+          toneSoftClassName(toneMap[priority.tone]),
         )}
       >
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-950">
+        <p className="truncate text-sm font-semibold text-foreground">
           {priority.title}
         </p>
-        <p className="mt-1 truncate text-xs text-slate-500">
+        <p className="mt-1 truncate text-xs text-muted-foreground">
           {priority.timeLabel} · {priority.description}
         </p>
         <PriorityAction priority={priority} />
@@ -81,25 +84,18 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
 
 function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   if (
-    priority.reportId &&
-    (priority.actionKind === "finalize_report" ||
-      priority.actionKind === "send_report")
+    priority.actionKind === "cancelled" ||
+    priority.actionKind === "upcoming"
   ) {
-    return (
-      <Button
-        asChild
-        size="sm"
-        variant="outline"
-        className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
-      >
-        <Link to="/dashboard/reports/$id/edit" params={{ id: priority.reportId }}>
-          {priority.actionLabel}
-        </Link>
-      </Button>
-    );
+    return null;
   }
 
-  if (priority.reportId && priority.actionKind === "view_report") {
+  const to =
+    priority.actionKind === "view_report" && priority.reportId
+      ? "/dashboard/reports/$id"
+      : "/dashboard/reports/$id/edit";
+
+  if (priority.reportId) {
     return (
       <Button
         asChild
@@ -107,7 +103,7 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
         variant="outline"
         className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
       >
-        <Link to="/dashboard/reports/$id" params={{ id: priority.reportId }}>
+        <Link to={to} params={{ id: priority.reportId }}>
           {priority.actionLabel}
         </Link>
       </Button>
@@ -115,9 +111,19 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   }
 
   return (
-    <span className="mt-3 inline-flex text-xs font-medium text-slate-500">
-      {priority.actionLabel}
-    </span>
+    <Button
+      asChild
+      size="sm"
+      variant="outline"
+      className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
+    >
+      <Link
+        to="/dashboard/agenda"
+        search={{ appointmentId: priority.appointmentId }}
+      >
+        {priority.actionLabel}
+      </Link>
+    </Button>
   );
 }
 

@@ -60,6 +60,30 @@ export function canFinalizeReport(states: ReportSectionStates) {
 export const reportStatuses = ["draft", "finalized", "sent"] as const;
 export const reportStatusSchema = z.enum(reportStatuses);
 
+export type ReportContentSummary = {
+  consultationReason: string;
+  notes: string | null;
+  anatomicalIssueCount: number;
+  recommendationCount: number;
+};
+
+/**
+ * Un compte rendu créé en même temps que son rendez-vous n'a encore rien
+ * dedans. Il ne doit pas encombrer la liste des comptes rendus tant que le
+ * praticien n'a rien écrit : il vit sur son rendez-vous dans l'agenda.
+ *
+ * Le titre est exclu : il est généré automatiquement à la création et ne
+ * témoigne d'aucune saisie.
+ */
+export function isReportEmpty(report: ReportContentSummary): boolean {
+  return (
+    report.consultationReason.trim().length === 0 &&
+    (report.notes ?? "").trim().length === 0 &&
+    report.anatomicalIssueCount === 0 &&
+    report.recommendationCount === 0
+  );
+}
+
 export const lateralityValues = ["left", "right", "bilateral"] as const;
 export const observationTypeValues = [
   "dynamic",

@@ -1,13 +1,15 @@
 import {
   createAppointment as createAppointmentFn,
+  deleteAppointment as deleteAppointmentFn,
   getAppointments as getAppointmentsFn,
   getAppointmentsByPatientId as getAppointmentsByPatientIdFn,
   getAppointmentsWithoutReport as getAppointmentsWithoutReportFn,
   getTodayAppointments as getTodayAppointmentsFn,
+  updateAppointment as updateAppointmentFn,
 } from "#/functions/appointments.function";
 
-export function getAppointments() {
-  return getAppointmentsFn();
+export function getAppointments(range: { fromISO: string; toISO: string }) {
+  return getAppointmentsFn({ data: range });
 }
 
 export function createAppointment(input: {
@@ -17,8 +19,25 @@ export function createAppointment(input: {
   note?: string;
   notifyOwner?: boolean;
   patientId: string;
+  withReport?: boolean;
 }) {
   return createAppointmentFn({ data: input });
+}
+
+export function updateAppointment(input: {
+  appointmentId: string;
+  patientId?: string;
+  beginAt?: Date;
+  endAt?: Date;
+  atHome?: boolean;
+  note?: string;
+  status?: "CREATED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+}) {
+  return updateAppointmentFn({ data: input });
+}
+
+export function deleteAppointment(appointmentId: string) {
+  return deleteAppointmentFn({ data: { appointmentId } });
 }
 
 export function getAppointmentsByPatientId(patientId: string) {

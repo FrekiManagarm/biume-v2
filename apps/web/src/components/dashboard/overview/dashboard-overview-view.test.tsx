@@ -10,17 +10,26 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({
     children,
     params,
+    search,
     to,
     ...props
   }: {
     children: ReactNode;
     params?: Record<string, string>;
+    search?: Record<string, string>;
     to: string;
-  }) => (
-    <a href={params?.id ? to.replace("$id", params.id) : to} {...props}>
-      {children}
-    </a>
-  ),
+  }) => {
+    const base = params?.id ? to.replace("$id", params.id) : to;
+    const query = search
+      ? `?${new URLSearchParams(search).toString()}`
+      : "";
+
+    return (
+      <a href={`${base}${query}`} {...props}>
+        {children}
+      </a>
+    );
+  },
 }));
 
 describe("DashboardOverviewView", () => {
@@ -58,7 +67,17 @@ describe("DashboardOverviewView", () => {
             endAt: new Date(2026, 6, 2, 11, 0),
             status: "COMPLETED",
             atHome: false,
-            reports: [{ id: "report-1", status: "draft", updatedAt: null }],
+            reports: [
+              {
+                id: "report-1",
+                status: "draft",
+                updatedAt: null,
+                consultationReason: "",
+                notes: null,
+                anatomicalIssueCount: 0,
+                recommendationCount: 0,
+              },
+            ],
             patient: {
               id: "patient-2",
               name: "Orka",
@@ -100,16 +119,22 @@ describe("DashboardOverviewView", () => {
     expect(screen.getByText("Chien · Border Collie")).toBeTruthy();
     expect(screen.getByText("Suivi locomoteur")).toBeTruthy();
     expect(screen.getByText("À traiter")).toBeTruthy();
-    expect(screen.getByText("Finaliser · Orka")).toBeTruthy();
+    expect(screen.getByText("Remplir le compte rendu · Orka")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Ouvrir l'agenda/ })).toBeTruthy();
-    expect(screen.getAllByText("Préparer").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Finaliser").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: "Préparer" })).toBeNull();
-    expect(screen.getAllByText("Annulée").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: "Annulée" })).toBeNull();
+    expect(
+      screen.getAllByText("Préparer le compte rendu").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Remplir le compte rendu").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: "Préparer le compte rendu" }),
+    ).toBeNull();
+    expect(screen.getAllByText("Annulé").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Annulé" })).toBeNull();
     expect(
       screen
-        .getAllByRole("link", { name: "Finaliser" })
+        .getAllByRole("link", { name: "Remplir le compte rendu" })
         .every((link) =>
           link
             .getAttribute("href")
@@ -137,7 +162,15 @@ describe("DashboardOverviewView", () => {
             status: "COMPLETED",
             atHome: false,
             reports: [
-              { id: "report-priority", status: "draft", updatedAt: null },
+              {
+                id: "report-priority",
+                status: "draft",
+                updatedAt: null,
+                consultationReason: "",
+                notes: null,
+                anatomicalIssueCount: 0,
+                recommendationCount: 0,
+              },
             ],
             patient: {
               id: "patient-priority",
@@ -157,7 +190,49 @@ describe("DashboardOverviewView", () => {
     expect(within(agenda).getByText("10:30")).toBeTruthy();
     expect(within(agenda).getByText("Tao")).toBeTruthy();
     expect(
-      within(agenda).getByRole("link", { name: "Finaliser" }),
+      within(agenda).getByRole("link", { name: "Remplir le compte rendu" }),
     ).toBeTruthy();
+  });
+
+  test("renders the create_report action as a clickable link, not inert text", () => {
+    cleanup();
+
+    render(
+      <DashboardOverviewView
+        selectedDate={new Date(2026, 6, 2, 0, 0)}
+        now={new Date(2026, 6, 2, 12, 0)}
+        metrics={{ newAnimals: 0, newOwners: 0, sentReports: 0 }}
+        appointments={[
+          {
+            id: "appointment-no-report",
+            beginAt: new Date(2026, 6, 2, 9, 0),
+            endAt: new Date(2026, 6, 2, 10, 0),
+            status: "COMPLETED",
+            atHome: false,
+            reports: [],
+            patient: {
+              id: "patient-no-report",
+              name: "Iggy",
+              owner: { id: "owner-no-report", name: "Sacha Petit" },
+            },
+          },
+        ]}
+        recentActivity={[]}
+      />,
+    );
+
+    expect(screen.getAllByText("Créer le compte rendu").length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      screen.queryByRole("button", { name: "Créer le compte rendu" }),
+    ).toBeNull();
+
+    const link = screen.getByRole("link", { name: "Créer le compte rendu" });
+
+    expect(link).toBeTruthy();
+    expect(link.getAttribute("href")).toBe(
+      "/dashboard/agenda?appointmentId=appointment-no-report",
+    );
   });
 });

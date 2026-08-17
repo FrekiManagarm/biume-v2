@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, Home, MapPin, PawPrint } from "lucide-react";
+import { CalendarDays, NotepadText, PawPrint } from "lucide-react";
 import type { FormEvent } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -10,10 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
+
+import {
+  AppointmentFormFields,
+  buildLocalDate,
+} from "./appointment-form-fields";
 
 export type NewAppointmentDialogProps = {
   isSubmitting: boolean;
@@ -31,6 +35,7 @@ export type NewAppointmentDialogProps = {
     endAt: Date;
     note?: string;
     patientId: string;
+    withReport: boolean;
   }) => Promise<unknown> | unknown;
   onOpenChange: (open: boolean) => void;
 };
@@ -63,6 +68,7 @@ export function NewAppointmentDialog({
       endAt: buildLocalDate(date, endTime),
       note: note.length > 0 ? note : undefined,
       patientId,
+      withReport: formData.get("withReport") === "on",
     });
 
     onOpenChange(false);
@@ -74,10 +80,10 @@ export function NewAppointmentDialog({
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <div className="mb-1 flex size-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
+            <div className="mb-1 flex size-10 items-center justify-center rounded-xl border border-primary-border bg-primary-surface text-primary">
               <CalendarDays className="size-4" />
             </div>
-            <DialogTitle className="text-xl font-semibold tracking-tight text-slate-950">
+            <DialogTitle className="text-xl font-semibold tracking-tight text-foreground">
               Créer un rendez-vous
             </DialogTitle>
             <DialogDescription>
@@ -90,7 +96,7 @@ export function NewAppointmentDialog({
             <div className="grid gap-2">
               <Label htmlFor="appointment-patient">Patient</Label>
               <div className="relative">
-                <PawPrint className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <PawPrint className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <select
                   id="appointment-patient"
                   name="patientId"
@@ -110,58 +116,30 @@ export function NewAppointmentDialog({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-date">Date</Label>
-                <Input
-                  id="appointment-date"
-                  name="date"
-                  required
-                  type="date"
-                  defaultValue={formatDateInput(selectedDate)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-start-time">Début</Label>
-                <div className="relative">
-                  <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    id="appointment-start-time"
-                    name="startTime"
-                    required
-                    type="time"
-                    className="pl-9"
-                    defaultValue="09:00"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-end-time">Fin</Label>
-                <Input
-                  id="appointment-end-time"
-                  name="endTime"
-                  required
-                  type="time"
-                  defaultValue="10:00"
-                />
-              </div>
-            </div>
+            <AppointmentFormFields
+              defaultDate={selectedDate}
+              defaultStartTime="09:00"
+              defaultEndTime="10:00"
+            />
 
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted px-4 py-3">
               <div className="min-w-0">
                 <Label
-                  htmlFor="appointment-at-home"
+                  htmlFor="appointment-with-report"
                   className="flex items-center gap-2"
                 >
-                  <Home className="size-4 text-slate-500" />
-                  Rendez-vous à domicile
+                  <NotepadText className="size-4 text-muted-foreground" />
+                  Préparer le compte rendu de cette séance
                 </Label>
-                <p className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-                  <MapPin className="size-3.5" />
-                  Désactivez pour une séance au cabinet.
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Il vous attendra sur ce rendez-vous après la séance.
                 </p>
               </div>
-              <Switch id="appointment-at-home" name="atHome" />
+              <Switch
+                id="appointment-with-report"
+                name="withReport"
+                defaultChecked
+              />
             </div>
 
             <div className="grid gap-2">
@@ -206,19 +184,4 @@ function formatPatientOption(
   ].filter(Boolean);
 
   return segments.join(" · ");
-}
-
-function formatDateInput(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function buildLocalDate(date: string, time: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const [hours, minutes] = time.split(":").map(Number);
-
-  return new Date(year, month - 1, day, hours, minutes);
 }

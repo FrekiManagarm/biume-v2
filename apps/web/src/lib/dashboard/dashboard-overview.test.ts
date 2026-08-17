@@ -43,7 +43,17 @@ describe("buildDashboardOverviewModel", () => {
           beginAt: new Date("2026-07-02T07:00:00.000Z"),
           endAt: new Date("2026-07-02T08:00:00.000Z"),
           status: "COMPLETED",
-          reports: [{ id: "report-sent", status: "sent", updatedAt: null }],
+          reports: [
+            {
+              id: "report-sent",
+              status: "sent",
+              updatedAt: null,
+              consultationReason: "Boiterie",
+              notes: null,
+              anatomicalIssueCount: 1,
+              recommendationCount: 1,
+            },
+          ],
         }),
         appointment({
           id: "next",
@@ -56,7 +66,17 @@ describe("buildDashboardOverviewModel", () => {
           beginAt: new Date("2026-07-02T11:30:00.000Z"),
           endAt: new Date("2026-07-02T12:30:00.000Z"),
           status: "COMPLETED",
-          reports: [{ id: "report-draft", status: "draft", updatedAt: null }],
+          reports: [
+            {
+              id: "report-draft",
+              status: "draft",
+              updatedAt: null,
+              consultationReason: "",
+              notes: null,
+              anatomicalIssueCount: 0,
+              recommendationCount: 0,
+            },
+          ],
         }),
       ],
       metrics: {
