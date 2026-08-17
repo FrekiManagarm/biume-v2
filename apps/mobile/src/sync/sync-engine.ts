@@ -7,6 +7,8 @@ import type {
   LocalCaptureErrorCode,
 } from '../capture/local-capture';
 import { registerUploadFailure } from '../capture/local-capture';
+import { errorCategoryFor } from '../telemetry/capture-events';
+import type { CaptureTelemetry } from '../telemetry/capture-events';
 import type { UploadClient } from './upload-client';
 
 export type SyncEnginePorts = {
@@ -17,7 +19,13 @@ export type SyncEnginePorts = {
   isOnline(): boolean;
   now(): Date;
   random(): number;
+  /** Optional: telemetry never gates a transfer. */
+  telemetry?: CaptureTelemetry;
 };
+
+function journeyTypeOf(capture: LocalCapture): 'appointment' | 'free_capture' {
+  return capture.appointmentId === null ? 'free_capture' : 'appointment';
+}
 
 export type SyncOutcome =
   | { status: 'idle' }
@@ -63,6 +71,12 @@ export function createSyncEngine(ports: SyncEnginePorts) {
       nextAttemptAt: failed.nextAttemptAt,
       lastErrorCode: code,
       updatedAt: failed.updatedAt,
+    });
+
+    ports.telemetry?.emit('capture_queued_offline', {
+      captureId: capture.id,
+      journeyType: journeyTypeOf(capture),
+      errorCategory: errorCategoryFor(code),
     });
 
     return failed.status === 'needs_action'
@@ -131,6 +145,13 @@ export function createSyncEngine(ports: SyncEnginePorts) {
         lastErrorCode: null,
         nextAttemptAt: null,
         updatedAt: at,
+      });
+
+      ports.telemetry?.emit('capture_uploaded', {
+        captureId: capture.id,
+        journeyType: journeyTypeOf(capture),
+        durationMs: capture.durationMs,
+        byteSize: capture.byteSize,
       });
 
       return { status: 'uploaded', captureId: capture.id };

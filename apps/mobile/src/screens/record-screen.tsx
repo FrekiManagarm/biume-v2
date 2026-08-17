@@ -1,6 +1,16 @@
 import { captureMaxDurationMs } from '@biume/contracts/capture';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+
+import {
+  Button,
+  Card,
+  Clock,
+  Notice,
+  RecordingPulse,
+  Screen,
+  ScreenHeader,
+  spacing,
+} from '@/design';
 
 export type RecordScreenProps = {
   contextLabel: string | null;
@@ -19,6 +29,11 @@ export function formatClock(milliseconds: number): string {
   return `${minutes}:${seconds}`;
 }
 
+/**
+ * One screen, one job. The elapsed time is the interface, the stop button is
+ * where the thumb already is, and nothing else competes for attention while a
+ * practitioner is talking through a session.
+ */
 export function RecordScreen({
   contextLabel,
   elapsedMs,
@@ -31,83 +46,65 @@ export function RecordScreen({
   const remaining = formatClock(captureMaxDurationMs - elapsedMs);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text accessibilityRole="header" style={styles.context}>
-        {contextLabel ?? 'Dictée libre'}
-      </Text>
+    <Screen centered scroll>
+      <ScreenHeader align="center" title={contextLabel ?? 'Dictée libre'} />
 
       {microphoneReady ? null : (
-        <View style={styles.block}>
-          <Text style={styles.notice}>
-            Biume a besoin du microphone. Autorisez-le dans les réglages.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
+        <Card>
+          <Notice
+            alert
+            message="Biume a besoin du microphone. Autorisez-le dans les réglages."
+            tone="danger"
+          />
+          <Button
+            icon="secure"
+            label="Ouvrir les réglages"
             onPress={onOpenSettings}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>Ouvrir les réglages</Text>
-          </Pressable>
-        </View>
+            variant="secondary"
+          />
+        </Card>
       )}
 
-      <View
-        accessibilityLabel={`Enregistrement en cours, reste ${remaining}`}
-        accessible
-        style={styles.block}
-      >
-        <Text style={styles.elapsed}>{formatClock(elapsedMs)}</Text>
-        <Text style={styles.remaining}>{`Reste ${remaining}`}</Text>
+      <View style={styles.stage}>
+        {microphoneReady ? (
+          <RecordingPulse label="Enregistrement en cours" />
+        ) : null}
+
+        <View
+          accessibilityLabel={`Enregistrement en cours, reste ${remaining}`}
+          accessible
+        >
+          <Clock caption={`Reste ${remaining}`} value={formatClock(elapsedMs)} />
+        </View>
       </View>
 
       {online ? null : (
-        <Text style={styles.notice}>
-          Hors ligne : la dictée sera envoyée plus tard.
-        </Text>
+        <Notice
+          message="Hors ligne : la dictée sera envoyée plus tard."
+          tone="offline"
+        />
       )}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onStop}
-        style={styles.primary}
-      >
-        <Text style={styles.primaryLabel}>Arrêter</Text>
-      </Pressable>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={onCancel}
-        style={styles.button}
-      >
-        <Text style={styles.buttonLabel}>Annuler</Text>
-      </Pressable>
-    </SafeAreaView>
+      <View style={styles.actions}>
+        <Button
+          accessibilityHint="Termine la prise et ouvre la relecture"
+          icon="stop"
+          label="Arrêter"
+          onPress={onStop}
+          size="lg"
+        />
+        <Button
+          accessibilityHint="Supprime cette prise sans la conserver"
+          label="Annuler"
+          onPress={onCancel}
+          variant="ghost"
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 16, justifyContent: 'center', padding: 24 },
-  context: { fontSize: 22, fontWeight: '600', textAlign: 'center' },
-  block: { alignItems: 'center', gap: 8 },
-  elapsed: { fontSize: 48, fontVariant: ['tabular-nums'], fontWeight: '300' },
-  remaining: { fontSize: 15, opacity: 0.8 },
-  notice: { opacity: 0.8, textAlign: 'center' },
-  primary: {
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 2,
-    justifyContent: 'center',
-    minHeight: 64,
-    padding: 16,
-  },
-  primaryLabel: { fontSize: 18, fontWeight: '600' },
-  button: {
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 48,
-    padding: 12,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '500' },
+  stage: { alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.xl },
+  actions: { gap: spacing.sm },
 });

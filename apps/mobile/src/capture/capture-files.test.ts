@@ -89,7 +89,7 @@ describe('sealing a recording', () => {
     expect(sealed.sha256).toBe('b'.repeat(64));
   });
 
-  it('reports the size of the encrypted envelope actually written', async () => {
+  it('reports the size of the audio that will be uploaded', async () => {
     const adapters = createAdapters();
     adapters.files.set('file:///tmp/recording.m4a', plaintext);
 
@@ -98,7 +98,27 @@ describe('sealing a recording', () => {
       adapters,
     );
 
-    expect(sealed.byteSize).toBe(
+    // `byteSize` is declared to the server, signed into the upload
+    // authorization, and checked by `HEAD` against the stored object. The
+    // object is the decrypted audio, so this has to be the audio's size.
+    const uploaded = await openCaptureAudio(
+      { captureId, encryptedFileUri: sealed.encryptedFileUri },
+      adapters,
+    );
+    expect(sealed.byteSize).toBe(uploaded.length);
+  });
+
+  it('does not report the size of the envelope that wraps it', async () => {
+    const adapters = createAdapters();
+    adapters.files.set('file:///tmp/recording.m4a', plaintext);
+
+    const sealed = await sealRecording(
+      { captureId, plaintextUri: 'file:///tmp/recording.m4a' },
+      adapters,
+    );
+
+    // The version marker, nonce, and authentication tag never leave the device.
+    expect(sealed.byteSize).toBeLessThan(
       adapters.files.get(sealed.encryptedFileUri)!.length,
     );
   });

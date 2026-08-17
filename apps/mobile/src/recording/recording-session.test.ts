@@ -288,3 +288,73 @@ describe('recording capabilities', () => {
     });
   });
 });
+
+describe('telemetry', () => {
+  it('reports a dictation that started', async () => {
+    const emit = jest.fn();
+    const ports = createPorts({ telemetry: { emit } });
+
+    await createRecordingSession(ports).start({
+      appointmentId: 'appointment-1',
+      patientId: null,
+    });
+
+    expect(emit).toHaveBeenCalledWith('capture_started', {
+      captureId,
+      journeyType: 'appointment',
+    });
+  });
+
+  it('reports a dictation that reached review with its measurements', async () => {
+    const emit = jest.fn();
+    const ports = createPorts({ telemetry: { emit } });
+    const session = createRecordingSession(ports);
+
+    await session.start({ appointmentId: null, patientId: null });
+    await session.stop();
+
+    expect(emit).toHaveBeenCalledWith('capture_completed', {
+      captureId,
+      journeyType: 'free_capture',
+      durationMs: 120_000,
+      byteSize: 1_048_576,
+    });
+  });
+
+  it('reports nothing when the recording never started', async () => {
+    const emit = jest.fn();
+    const ports = createPorts({
+      telemetry: { emit },
+      recorder: {
+        requestPermission: jest.fn(async () => 'denied' as const),
+        start: jest.fn(async () => ({ uri: plaintextUri })),
+        stop: jest.fn(async () => ({ uri: plaintextUri, durationMs: 0 })),
+        cancel: jest.fn(async () => {}),
+      },
+    });
+
+    await createRecordingSession(ports).start({
+      appointmentId: null,
+      patientId: null,
+    });
+
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('reports nothing when sealing failed', async () => {
+    const emit = jest.fn();
+    const ports = createPorts({
+      telemetry: { emit },
+      seal: jest.fn(async () => {
+        throw new Error('no key');
+      }),
+    });
+    const session = createRecordingSession(ports);
+
+    await session.start({ appointmentId: null, patientId: null });
+    emit.mockClear();
+    await session.stop();
+
+    expect(emit).not.toHaveBeenCalled();
+  });
+});

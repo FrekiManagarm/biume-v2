@@ -1,6 +1,8 @@
+import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { CaptureListScreen } from '@/screens/capture-list-screen';
 import type { CaptureAction } from '@/capture/capture-list-view';
+import { useAppState } from '@/app-state/app-state';
 import { useWorkspacePorts } from '@/app-state/workspace-ports';
 import { useCaptureWorkspace } from '@/app-state/capture-workspace';
 
@@ -10,13 +12,26 @@ const confirmationMessages: Partial<Record<CaptureAction, string>> = {
 };
 
 export default function CapturesRoute() {
-  const ports = useWorkspacePorts();
+  const router = useRouter();
+  const { organizationId } = useAppState();
+  const ports = useWorkspacePorts(organizationId ?? '');
   const { rows, reload } = useCaptureWorkspace(ports);
 
   return (
     <CaptureListScreen
       onAction={(captureId, action) => {
-        void ports.runCaptureAction(captureId, action).then(reload);
+        void ports
+          .runCaptureAction(captureId, action, {
+            openSignIn: () => router.push('/(auth)/sign-in'),
+            restartRecording: (context) =>
+              router.replace({
+                pathname: '/(app)/record',
+                params: context.appointmentId
+                  ? { appointmentId: context.appointmentId }
+                  : {},
+              }),
+          })
+          .then(reload);
       }}
       onConfirm={(action) =>
         new Promise<boolean>((resolve) => {

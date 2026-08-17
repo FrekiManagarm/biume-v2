@@ -76,7 +76,9 @@ describePostgres("mobile capture persistence against PostgreSQL", () => {
       [practitionerB, `b-${suffix}@biume.test`],
     ]) {
       await client.query(
-        'INSERT INTO "users" ("id", "name", "email", "emailVerified") VALUES ($1, $2, $3, false)',
+        `INSERT INTO "users"
+           ("id", "name", "email", "email_verified", "created_at", "updated_at")
+         VALUES ($1, $2, $3, false, now(), now())`,
         [userId, "Praticien", email],
       );
     }

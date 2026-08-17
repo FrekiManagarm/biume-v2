@@ -28,13 +28,13 @@ function buildCapture(overrides: Partial<LocalCapture> = {}): LocalCapture {
   };
 }
 
-function createPorts(expired: LocalCapture[]) {
+function createPorts(expired: LocalCapture[], rows: LocalCapture[] = []) {
   const deleted: string[] = [];
   const repository: CaptureRepository = {
     insertReview: jest.fn(async () => {}),
     transition: jest.fn(async () => true),
     get: jest.fn(async () => null),
-    list: jest.fn(async () => []),
+    list: jest.fn(async () => rows),
     nextEligible: jest.fn(async () => null),
     markExpired: jest.fn(async () => expired),
     remove: jest.fn(async () => {}),
@@ -89,6 +89,38 @@ describe('local purge', () => {
     await expect(purgeExpiredLocalCaptures(ports)).resolves.toEqual({
       purged: 1,
     });
+  });
+
+  it('deletes the audio of a capture that was already marked expired', async () => {
+    // Startup recovery also sweeps the retention window, so by the time the
+    // purge runs the row can already be `expired` and `markExpired` returns
+    // nothing. The audio must go regardless of who marked it.
+    const ports = createPorts([], [buildCapture({ status: 'expired' })]);
+
+    const result = await purgeExpiredLocalCaptures(ports);
+
+    expect(ports.deleted).toEqual([
+      'file:///documents/captures/capture-1.biume',
+    ]);
+    expect(result).toEqual({ purged: 1 });
+  });
+
+  it('deletes the audio of an expired capture only once', async () => {
+    const capture = buildCapture();
+    const ports = createPorts([capture], [{ ...capture, status: 'expired' }]);
+
+    const result = await purgeExpiredLocalCaptures(ports);
+
+    expect(ports.deleted).toHaveLength(1);
+    expect(result).toEqual({ purged: 1 });
+  });
+
+  it('never touches the audio of a capture still inside its window', async () => {
+    const ports = createPorts([], [buildCapture({ status: 'queued' })]);
+
+    await purgeExpiredLocalCaptures(ports);
+
+    expect(ports.deleteFile).not.toHaveBeenCalled();
   });
 
   it('keeps the metadata row for technical audit', async () => {

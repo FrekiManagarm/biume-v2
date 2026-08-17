@@ -1,3 +1,10 @@
+const path = require('node:path');
+
+// Metro loads the ESM build of the icons; Jest transforms only `.js`/`.ts`, so
+// the same modules are resolved to the package's own CommonJS build instead of
+// teaching Babel about a second extension.
+const lucideCommonJs = path.dirname(require.resolve('lucide-react-native'));
+
 module.exports = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
@@ -9,10 +16,12 @@ module.exports = {
     '^react$': '<rootDir>/node_modules/react',
     '^react/(.*)$': '<rootDir>/node_modules/react/$1',
     '^react-dom$': '<rootDir>/node_modules/react-dom',
+    '^lucide-react-native/icons/(.*)$': path.join(lucideCommonJs, 'icons', '$1.js'),
+    '^lucide-react-native$': path.join(lucideCommonJs, 'lucide-react-native.js'),
   },
   transformIgnorePatterns: [
-    // `@noble/ciphers` ships ESM only, so it must be transformed rather than
-    // required as-is.
-    'node_modules/(?!(.bun|(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@noble/.*))',
+    // `@noble/ciphers` and `lucide-react-native` ship ESM only, so they must be
+    // transformed rather than required as-is.
+    'node_modules/(?!(.bun|(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|lucide-react-native|@noble/.*))',
   ],
 };

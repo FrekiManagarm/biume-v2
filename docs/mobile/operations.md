@@ -74,6 +74,42 @@ bun --filter @biume/db db:migrate
 - [ ] Vérifier la présence de la table `audio_capture`, de son index unique sur
       `object_key` et de ses contraintes `CHECK`.
 
+### Test de persistance contre un vrai PostgreSQL
+
+Ce test est désactivé tant que `MOBILE_CAPTURE_TEST_DATABASE_URL` n'est pas
+défini. Il prouve l'idempotence, le conflit d'empreinte, l'isolation entre
+organisations, le refus d'une complétion après annulation, et la sélection des
+expirations. **Ne jamais le pointer vers une base de production.**
+
+```bash
+# 1. base jetable
+docker run -d --name biume-capture-test \
+  -e POSTGRES_PASSWORD=test -e POSTGRES_DB=biume_test \
+  -p 55433:5432 postgres:16
+
+# 2. schéma, dans l'ordre du journal
+for f in packages/db/src/migrations/0*.sql; do
+  docker exec -i biume-capture-test \
+    psql -q -U postgres -d biume_test -v ON_ERROR_STOP=1 < "$f"
+done
+
+# 3. le test (les autres variables ne servent qu'à satisfaire packages/env)
+DB="postgresql://postgres:test@127.0.0.1:55433/biume_test"
+MOBILE_CAPTURE_TEST_DATABASE_URL="$DB" DATABASE_URL="$DB" NODE_ENV=test \
+BETTER_AUTH_SECRET=test BETTER_AUTH_URL=http://localhost:3000 \
+CORS_ORIGIN=http://localhost:3000 AUTUMN_SECRET_KEY=test OPENAI_API_KEY=test \
+RESEND_API_KEY=test APP_URL=http://localhost:3000 ENCRYPTION_KEY=test \
+GOOGLE_CLIENT_ID=test GOOGLE_CLIENT_SECRET=test UPLOADTHING_TOKEN=test \
+R2_ACCOUNT_ID=test R2_ACCESS_KEY_ID=test R2_SECRET_ACCESS_KEY=test \
+R2_AUDIO_BUCKET=test \
+  bun --filter @biume/web test -- src/server/mobile/capture.persistence.postgres.test.ts
+
+# 4. nettoyage
+docker rm -f biume-capture-test
+```
+
+- [x] Exécuté le 17 août 2026 : 6 tests passés contre PostgreSQL 16.
+
 ## 7. Purge à expiration
 
 - [ ] Déployer les tâches Trigger.

@@ -16,14 +16,27 @@ export type LocalPurgePorts = {
 export async function purgeExpiredLocalCaptures(
   ports: LocalPurgePorts,
 ): Promise<{ purged: number }> {
-  const expired = await ports.repository.markExpired(
+  const justExpired = await ports.repository.markExpired(
     ports.now().toISOString(),
   );
 
-  for (const capture of expired) {
-    // A file already gone is the desired end state, not a failure.
-    await ports.deleteFile(capture.encryptedFileUri).catch(() => undefined);
+  // `markExpired` reports only the rows this call transitioned. Startup
+  // recovery sweeps the same window, so a row can already be `expired` with its
+  // audio still on disk; sweeping every expired row makes the purge independent
+  // of who marked what, and of the order the two run in.
+  const alreadyExpired = (await ports.repository.list()).filter(
+    (capture) => capture.status === 'expired',
+  );
+
+  const captures = new Map<string, string>();
+  for (const capture of [...justExpired, ...alreadyExpired]) {
+    captures.set(capture.id, capture.encryptedFileUri);
   }
 
-  return { purged: expired.length };
+  for (const uri of captures.values()) {
+    // A file already gone is the desired end state, not a failure.
+    await ports.deleteFile(uri).catch(() => undefined);
+  }
+
+  return { purged: captures.size };
 }

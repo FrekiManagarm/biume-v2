@@ -14,12 +14,21 @@ import {
   signInWithEmail,
   signOut,
 } from '../auth/auth-session';
+import { requeueAfterSignIn } from '../capture/capture-actions';
+import {
+  bootstrapWorkspace,
+  networkMonitor,
+  openRepository,
+  requestSync,
+} from './workspace-ports';
+import { resolveSessionPhase, type AppPhase } from './session-phase';
 
-export type AppPhase = 'loading' | 'signed-out' | 'no-organization' | 'ready';
+export type { AppPhase };
 
 export type AppStateValue = {
   phase: AppPhase;
   online: boolean;
+  organizationId: string | null;
   organizations: Array<{ id: string; name: string }>;
   error: string | null;
   pending: boolean;
@@ -43,29 +52,42 @@ export type AppStateProviderProps = {
  */
 export function AppStateProvider({
   children,
-  bootstrap,
+  bootstrap = bootstrapWorkspace,
   isOnline,
 }: AppStateProviderProps) {
   const [phase, setPhase] = useState<AppPhase>('loading');
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<
     Array<{ id: string; name: string }>
   >([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const online = isOnline?.() ?? true;
+  const online = (isOnline ?? (() => networkMonitor.isOnline()))();
 
   const resolvePhase = useCallback(async () => {
-    const session = await refreshSession();
-    if (!session) {
-      setPhase('signed-out');
-      return;
-    }
-    if (!session.session.activeOrganizationId) {
+    const resolved = resolveSessionPhase(await refreshSession());
+
+    setOrganizationId(resolved.organizationId);
+    if (resolved.phase === 'no-organization') {
       setOrganizations(await listOrganizations());
-      setPhase('no-organization');
-      return;
     }
-    setPhase('ready');
+    setPhase(resolved.phase);
+
+    // The other half of the `reconnect` action: captures that were only ever
+    // blocked by an expired session go back to the queue as soon as there is a
+    // session again.
+    if (resolved.phase === 'ready') {
+      try {
+        const requeued = await requeueAfterSignIn(
+          await openRepository(),
+          new Date(),
+        );
+        if (requeued > 0) await requestSync('validation');
+      } catch {
+        // A queue that could not be revived is retried at the next launch;
+        // it must never block the practitioner from reaching the app.
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -75,7 +97,7 @@ export function AppStateProvider({
       try {
         // SQLite migrations and crash recovery run before any screen reads the
         // queue, so a restarted app never shows a half-recovered state.
-        await bootstrap?.();
+        await bootstrap();
         if (!cancelled) await resolvePhase();
       } catch {
         if (!cancelled) setPhase('signed-out');
@@ -91,6 +113,7 @@ export function AppStateProvider({
     () => ({
       phase,
       online,
+      organizationId,
       organizations,
       error,
       pending,
@@ -126,10 +149,11 @@ export function AppStateProvider({
       },
       async leave() {
         await signOut();
+        setOrganizationId(null);
         setPhase('signed-out');
       },
     }),
-    [error, online, organizations, pending, phase, resolvePhase],
+    [error, online, organizationId, organizations, pending, phase, resolvePhase],
   );
 
   return (

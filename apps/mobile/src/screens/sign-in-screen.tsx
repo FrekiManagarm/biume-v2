@@ -1,6 +1,15 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { StyleSheet, View, type TextInput } from 'react-native';
+
+import {
+  Badge,
+  Button,
+  Field,
+  Notice,
+  Screen,
+  ScreenHeader,
+  spacing,
+} from '@/design';
 
 export type SignInScreenProps = {
   onSignIn(input: { email: string; password: string }): void | Promise<void>;
@@ -17,76 +26,75 @@ export function SignInScreen({
 }: SignInScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const passwordRef = useRef<TextInput>(null);
   const disabled = pending || !online;
 
+  function submit() {
+    onSignIn({ email, password });
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text accessibilityRole="header" style={styles.title}>
-        Biume
-      </Text>
-
-      <TextInput
-        accessibilityLabel="Adresse e-mail"
-        autoCapitalize="none"
-        autoComplete="email"
-        inputMode="email"
-        onChangeText={setEmail}
-        style={styles.input}
-        value={email}
+    <Screen centered scroll>
+      <ScreenHeader
+        align="center"
+        badge={<Badge icon="secure" label="Session sécurisée" tone="accent" />}
+        subtitle="Vos dictées restent chiffrées sur ce téléphone tant qu’elles ne sont pas envoyées."
+        title="Connectez-vous."
       />
 
-      <TextInput
-        accessibilityLabel="Mot de passe"
-        autoCapitalize="none"
-        autoComplete="current-password"
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-        value={password}
-      />
+      <View style={styles.form}>
+        <Field
+          autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          inputMode="email"
+          keyboardType="email-address"
+          label="Adresse e-mail"
+          onChangeText={setEmail}
+          onSubmitEditing={() => passwordRef.current?.focus()}
+          returnKeyType="next"
+          submitBehavior="submit"
+          textContentType="username"
+          value={email}
+        />
 
-      {error ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {error}
-        </Text>
-      ) : null}
+        <Field
+          autoCapitalize="none"
+          autoComplete="current-password"
+          autoCorrect={false}
+          label="Mot de passe"
+          onChangeText={setPassword}
+          onSubmitEditing={disabled ? undefined : submit}
+          ref={passwordRef}
+          returnKeyType="go"
+          secureTextEntry
+          textContentType="password"
+          value={password}
+        />
 
-      {online ? null : (
-        <Text style={styles.notice}>
-          Reconnectez-vous à Internet pour vous connecter.
-        </Text>
-      )}
+        {error ? <Notice alert message={error} tone="danger" /> : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={() => onSignIn({ email, password })}
-        style={styles.button}
-      >
-        <Text style={styles.buttonLabel}>Se connecter</Text>
-      </Pressable>
-    </SafeAreaView>
+        {online ? null : (
+          <Notice
+            message="Reconnectez-vous à Internet pour vous connecter."
+            tone="offline"
+          />
+        )}
+
+        <Button
+          accessibilityHint="Ouvre votre agenda et vos dictées"
+          disabled={disabled}
+          icon="signIn"
+          label="Se connecter"
+          loading={pending}
+          onPress={submit}
+          size="lg"
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 16, justifyContent: 'center', padding: 24 },
-  title: { fontSize: 32, fontWeight: '600', textAlign: 'center' },
-  input: {
-    borderRadius: 8,
-    borderWidth: 1,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  error: { fontWeight: '500' },
-  notice: { opacity: 0.8 },
-  button: {
-    alignItems: 'center',
-    borderRadius: 8,
-    justifyContent: 'center',
-    minHeight: 48,
-    padding: 12,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '600' },
+  form: { gap: spacing.lg },
 });

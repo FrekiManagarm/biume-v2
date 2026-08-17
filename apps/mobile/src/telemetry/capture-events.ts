@@ -1,5 +1,6 @@
 import { productEventSchema } from '@biume/contracts/product-events';
 import type { ProductEvent } from '@biume/contracts/product-events';
+import type { LocalCaptureErrorCode } from '../capture/local-capture';
 
 /**
  * The only capture events the mobile app is allowed to emit.
@@ -45,9 +46,49 @@ export function buildCaptureEvent(
   return parsed.success ? parsed.data : null;
 }
 
+export type CaptureErrorCategory = NonNullable<
+  ProductEvent['properties']['errorCategory']
+>;
+
+/**
+ * Collapses the local error vocabulary into the few categories telemetry is
+ * allowed to carry. The mapping is deliberately lossy: a category answers "what
+ * kind of thing went wrong", never "what exactly happened to this capture".
+ */
+const errorCategories: Record<LocalCaptureErrorCode, CaptureErrorCategory> = {
+  microphone_denied: 'permission_denied',
+  network: 'network',
+  local_storage_full: 'storage',
+  local_file_missing: 'storage',
+  storage_unavailable: 'storage',
+  unauthorized: 'authorization',
+  active_organization_required: 'authorization',
+  forbidden: 'authorization',
+  validation: 'validation',
+  conflict: 'validation',
+  not_found: 'validation',
+  method_not_allowed: 'validation',
+  expired: 'validation',
+  rate_limited: 'upload',
+  server_error: 'upload',
+  object_incomplete: 'upload',
+  upload_url_expired: 'upload',
+  unknown: 'unknown',
+};
+
+export function errorCategoryFor(
+  code: LocalCaptureErrorCode,
+): CaptureErrorCategory {
+  return errorCategories[code] ?? 'unknown';
+}
+
 export type CaptureTelemetrySink = (event: ProductEvent) => void;
 
-export function createCaptureTelemetry(sink: CaptureTelemetrySink) {
+export type CaptureTelemetry = {
+  emit(name: CaptureEventName, properties: CaptureEventProperties): void;
+};
+
+export function createCaptureTelemetry(sink: CaptureTelemetrySink): CaptureTelemetry {
   return {
     emit(name: CaptureEventName, properties: CaptureEventProperties): void {
       const event = buildCaptureEvent(name, properties);

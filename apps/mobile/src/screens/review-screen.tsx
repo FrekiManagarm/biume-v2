@@ -1,12 +1,37 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { MobileAppointment } from '@biume/contracts/capture';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import {
+  Badge,
+  Button,
+  Card,
+  Clock,
+  GroupedList,
+  Notice,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
+  SelectRow,
+  spacing,
+} from '@/design';
+
 import { formatClock } from './record-screen';
+
+export type CaptureAttachmentChoice = {
+  appointmentId: string | null;
+  patientId: string | null;
+};
 
 export type ReviewScreenProps = {
   contextLabel: string | null;
   durationMs: number;
   playing: boolean;
   online?: boolean;
+  /** Candidates the dictation may be reattached to; empty hides the control. */
+  appointments?: MobileAppointment[];
+  attachedAppointmentId?: string | null;
+  onChangeAttachment?(attachment: CaptureAttachmentChoice): void;
   onTogglePlayback(): void;
   onRedo(): void;
   onValidate(): void;
@@ -23,81 +48,120 @@ export function ReviewScreen({
   durationMs,
   playing,
   online = true,
+  appointments = [],
+  attachedAppointmentId = null,
+  onChangeAttachment,
   onTogglePlayback,
   onRedo,
   onValidate,
   onConfirmRedo,
 }: ReviewScreenProps) {
+  const [pickingAttachment, setPickingAttachment] = useState(false);
+  const canReattach = appointments.length > 0 && onChangeAttachment !== undefined;
+
   async function handleRedo() {
     if (await onConfirmRedo()) onRedo();
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text accessibilityRole="header" style={styles.context}>
-        {contextLabel ?? 'Dictée libre'}
-      </Text>
+  function choose(attachment: CaptureAttachmentChoice) {
+    onChangeAttachment?.(attachment);
+    setPickingAttachment(false);
+  }
 
-      <View style={styles.block}>
-        <Text style={styles.duration}>{formatClock(durationMs)}</Text>
-        <Pressable
-          accessibilityRole="button"
+  return (
+    <Screen centered scroll>
+      <ScreenHeader
+        align="center"
+        badge={<Badge icon="secure" label="Chiffrée sur l’appareil" tone="accent" />}
+        title={contextLabel ?? 'Dictée libre'}
+      />
+
+      <Card style={styles.player}>
+        <Clock caption="Durée de la prise" value={formatClock(durationMs)} />
+        <Button
+          accessibilityHint="Relit la dictée sans la déchiffrer sur le disque"
+          icon={playing ? 'pause' : 'play'}
+          label={playing ? 'Pause' : 'Écouter'}
           onPress={onTogglePlayback}
-          style={styles.button}
-        >
-          <Text style={styles.buttonLabel}>{playing ? 'Pause' : 'Écouter'}</Text>
-        </Pressable>
-      </View>
+          variant="secondary"
+        />
+      </Card>
 
       {online ? null : (
-        <Text style={styles.notice}>
-          Hors ligne : la dictée partira dès le retour du réseau.
-        </Text>
+        <Notice
+          message="Hors ligne : la dictée partira dès le retour du réseau."
+          tone="offline"
+        />
       )}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onValidate}
-        style={styles.primary}
-      >
-        <Text style={styles.primaryLabel}>Valider la dictée</Text>
-      </Pressable>
+      {canReattach ? (
+        <View style={styles.attachment}>
+          {pickingAttachment ? (
+            <>
+              <SectionHeader title="Rattacher la dictée à" />
+              <GroupedList>
+                <SelectRow
+                  accessibilityHint="Conserve la dictée sans rendez-vous"
+                  icon="mic"
+                  onPress={() =>
+                    choose({ appointmentId: null, patientId: null })
+                  }
+                  selected={attachedAppointmentId === null}
+                  title="Dictée libre"
+                />
+                {appointments.map((item) => (
+                  <SelectRow
+                    accessibilityHint="Rattache la dictée à ce rendez-vous"
+                    icon="patient"
+                    key={item.id}
+                    onPress={() =>
+                      choose({
+                        appointmentId: item.id,
+                        patientId: item.patientId,
+                      })
+                    }
+                    selected={attachedAppointmentId === item.id}
+                    title={item.patientName}
+                  />
+                ))}
+              </GroupedList>
+            </>
+          ) : (
+            <Button
+              accessibilityHint="Choisit le rendez-vous auquel la dictée sera rattachée"
+              icon="calendar"
+              label="Modifier le rattachement"
+              onPress={() => setPickingAttachment(true)}
+              variant="ghost"
+            />
+          )}
+        </View>
+      ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          void handleRedo();
-        }}
-        style={styles.button}
-      >
-        <Text style={styles.buttonLabel}>Recommencer</Text>
-      </Pressable>
-    </SafeAreaView>
+      <View style={styles.actions}>
+        <Button
+          accessibilityHint="Met la dictée en file d’envoi"
+          icon="check"
+          label="Valider la dictée"
+          onPress={onValidate}
+          size="lg"
+        />
+        <Button
+          accessibilityHint="Supprime cette prise et en démarre une nouvelle"
+          icon="redo"
+          label="Recommencer"
+          onPress={() => {
+            void handleRedo();
+          }}
+          variant="ghost"
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 16, justifyContent: 'center', padding: 24 },
-  context: { fontSize: 22, fontWeight: '600', textAlign: 'center' },
-  block: { alignItems: 'center', gap: 12 },
-  duration: { fontSize: 40, fontVariant: ['tabular-nums'], fontWeight: '300' },
-  notice: { opacity: 0.8, textAlign: 'center' },
-  primary: {
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 2,
-    justifyContent: 'center',
-    minHeight: 64,
-    padding: 16,
-  },
-  primaryLabel: { fontSize: 18, fontWeight: '600' },
-  button: {
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 48,
-    padding: 12,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '500' },
+  player: { alignItems: 'stretch', gap: spacing.lg, paddingVertical: spacing.xl },
+  attachment: { gap: spacing.sm },
+  actions: { gap: spacing.sm },
 });

@@ -76,6 +76,15 @@ export function encryptedCaptureUri(
 export type SealedRecording = {
   encryptedFileUri: string;
   sha256: string;
+  /**
+   * The size of the audio itself, not of the envelope it is stored in.
+   *
+   * This value is declared to the server, signed into the upload
+   * authorization, and verified by `HEAD` against the stored object — and the
+   * object is the decrypted audio. Reporting the envelope size here makes every
+   * upload fail on a content-length mismatch, which no fake-backed test can
+   * see.
+   */
   byteSize: number;
 };
 
@@ -109,11 +118,17 @@ export async function sealRecording(
   await adapters.fileSystem.writeAsBytes(encryptedFileUri, envelope);
 
   const readBack = await adapters.fileSystem.readAsBytes(encryptedFileUri);
-  decryptCapture({ key, captureId: input.captureId, envelope: readBack });
+  const recovered = decryptCapture({
+    key,
+    captureId: input.captureId,
+    envelope: readBack,
+  });
 
   await adapters.fileSystem.deleteFile(input.plaintextUri);
 
-  return { encryptedFileUri, sha256, byteSize: readBack.length };
+  // Measured on what came back out of the envelope, not on the plaintext read
+  // at the top: this is exactly the payload the upload will send.
+  return { encryptedFileUri, sha256, byteSize: recovered.length };
 }
 
 /**

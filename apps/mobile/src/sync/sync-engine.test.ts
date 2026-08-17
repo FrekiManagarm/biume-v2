@@ -371,3 +371,68 @@ describe('after a restart', () => {
     expect(rows.get(captureId)?.attemptCount).toBe(2);
   });
 });
+
+describe('telemetry', () => {
+  it('reports an upload the server confirmed', async () => {
+    const emit = jest.fn();
+    const { ports } = createPorts([buildCapture()], { telemetry: { emit } });
+
+    await createSyncEngine(ports).runOnce();
+
+    expect(emit).toHaveBeenCalledWith('capture_uploaded', {
+      captureId,
+      journeyType: 'free_capture',
+      durationMs: 120_000,
+      byteSize: 1_048_576,
+    });
+  });
+
+  it('reports a failure as a normalized category', async () => {
+    const emit = jest.fn();
+    const { ports } = createPorts([buildCapture()], { telemetry: { emit } });
+    ports.uploader.put = jest.fn(async () => {
+      throw new UploadError('rate_limited', true);
+    }) as never;
+
+    await createSyncEngine(ports).runOnce();
+
+    expect(emit).toHaveBeenCalledWith('capture_queued_offline', {
+      captureId,
+      journeyType: 'free_capture',
+      errorCategory: 'upload',
+    });
+  });
+
+  it('tells an appointment dictation apart from a free one', async () => {
+    const emit = jest.fn();
+    const { ports } = createPorts(
+      [buildCapture({ appointmentId: 'appointment-1' })],
+      { telemetry: { emit } },
+    );
+
+    await createSyncEngine(ports).runOnce();
+
+    expect(emit).toHaveBeenCalledWith(
+      'capture_uploaded',
+      expect.objectContaining({ journeyType: 'appointment' }),
+    );
+  });
+
+  it('reports nothing when there is nothing to do', async () => {
+    const emit = jest.fn();
+    const { ports } = createPorts([], { telemetry: { emit } });
+
+    await createSyncEngine(ports).runOnce();
+
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('runs without a telemetry sink at all', async () => {
+    const { ports } = createPorts([buildCapture()]);
+
+    await expect(createSyncEngine(ports).runOnce()).resolves.toEqual({
+      status: 'uploaded',
+      captureId,
+    });
+  });
+});

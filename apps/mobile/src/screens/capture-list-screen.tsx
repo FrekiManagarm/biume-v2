@@ -1,5 +1,19 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import {
+  Badge,
+  Button,
+  Card,
+  GroupedList,
+  IconTile,
+  Screen,
+  ScreenHeader,
+  Text,
+  spacing,
+  type ButtonVariant,
+  type IconName,
+} from '@/design';
+
 import type {
   CaptureAction,
   CaptureRowView,
@@ -18,8 +32,47 @@ const actionLabels: Record<CaptureAction, string> = {
   delete: 'Supprimer',
 };
 
+const actionStyles: Record<
+  CaptureAction,
+  { icon: IconName; variant: ButtonVariant }
+> = {
+  retry: { icon: 'retry', variant: 'primary' },
+  reconnect: { icon: 'signIn', variant: 'primary' },
+  redo: { icon: 'redo', variant: 'secondary' },
+  delete: { icon: 'delete', variant: 'danger' },
+};
+
+/**
+ * Status is the only thing a row may show. No patient, no animal, no note:
+ * this list is read over a shoulder in a waiting room and announced out loud by
+ * a screen reader.
+ */
+const statusStyles: Record<
+  string,
+  { icon: IconName; tone: 'neutral' | 'accent' | 'primary' | 'alert' }
+> = {
+  queued: { icon: 'clock', tone: 'neutral' },
+  uploading: { icon: 'upload', tone: 'primary' },
+  uploaded: { icon: 'sent', tone: 'accent' },
+  needs_action: { icon: 'warning', tone: 'alert' },
+  expired: { icon: 'alert', tone: 'alert' },
+};
+
 /** Only the two destructive actions ask first. */
 const destructiveActions = new Set<CaptureAction>(['delete', 'redo']);
+
+function formatCreatedAt(isoDate: string): string {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return `Enregistrée le ${date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+  })} à ${date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
+}
 
 export function CaptureListScreen({
   rows,
@@ -35,66 +88,100 @@ export function CaptureListScreen({
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text accessibilityRole="header" style={styles.title}>
-        Mes dictées
-      </Text>
+    <Screen>
+      <ScreenHeader
+        subtitle="Une dictée validée part dès qu’une connexion est disponible."
+        title="Mes dictées"
+      />
 
       {rows.length === 0 ? (
-        <Text style={styles.notice}>Aucune dictée pour le moment.</Text>
-      ) : null}
+        <Card variant="dashed">
+          <IconTile name="mic" size="lg" />
+          <Text variant="heading">Aucune dictée pour le moment.</Text>
+          <Text tone="muted" variant="caption">
+            Les dictées enregistrées restent chiffrées sur ce téléphone jusqu’à
+            leur envoi, puis sont effacées au bout de 24 heures.
+          </Text>
+        </Card>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          style={styles.scroll}
+        >
+          <GroupedList>
+            {rows.map((item) => {
+              const status = statusStyles[item.status] ?? statusStyles.queued;
+              const urgent =
+                item.expiresInHours !== null && item.expiresInHours <= 6;
 
-      <ScrollView contentContainerStyle={styles.list}>
-        {rows.map((item) => (
-          <View
-            accessibilityLabel={item.accessibilityLabel}
-            accessible
-            key={item.id}
-            style={styles.row}
-          >
-            <Text style={styles.rowLabel}>{item.label}</Text>
-            {item.expiresInHours === null ? null : (
-              <Text style={styles.rowMeta}>
-                {`Expire dans ${item.expiresInHours} h`}
-              </Text>
-            )}
-            <View style={styles.actions}>
-              {item.actions.map((action) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={action}
-                  onPress={() => {
-                    void handle(item.id, action);
-                  }}
-                  style={styles.action}
-                >
-                  <Text style={styles.actionLabel}>{actionLabels[action]}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+              return (
+                <View key={item.id} style={styles.row}>
+                  {/*
+                   * Only the description carries the row label. Wrapping the
+                   * actions in it too would collapse them into a single
+                   * accessibility element and hide every recovery control.
+                   */}
+                  <View
+                    accessibilityLabel={item.accessibilityLabel}
+                    accessible
+                    style={styles.description}
+                  >
+                    <IconTile name={status.icon} tone={status.tone} />
+                    <View style={styles.body}>
+                      <View style={styles.titleRow}>
+                        <Text variant="heading">{item.label}</Text>
+                        {item.expiresInHours === null ? null : (
+                          <Badge
+                            icon="clock"
+                            label={`Expire dans ${item.expiresInHours} h`}
+                            tone={urgent ? 'warning' : 'neutral'}
+                          />
+                        )}
+                      </View>
+                      <Text tone="subtle" variant="caption">
+                        {formatCreatedAt(item.createdAt)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {item.actions.length > 0 ? (
+                    <View style={styles.actions}>
+                      {item.actions.map((action) => (
+                        <Button
+                          icon={actionStyles[action].icon}
+                          key={action}
+                          label={actionLabels[action]}
+                          onPress={() => {
+                            void handle(item.id, action);
+                          }}
+                          size="sm"
+                          variant={actionStyles[action].variant}
+                        />
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </GroupedList>
+        </ScrollView>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 16, padding: 24 },
-  title: { fontSize: 24, fontWeight: '600' },
-  notice: { opacity: 0.8 },
-  list: { gap: 12 },
-  row: { borderRadius: 8, borderWidth: 1, gap: 8, padding: 16 },
-  rowLabel: { fontSize: 16, fontWeight: '600' },
-  rowMeta: { fontSize: 13, opacity: 0.8 },
-  actions: { flexDirection: 'row', gap: 8 },
-  action: {
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: spacing.sm },
+  row: { gap: spacing.md, padding: spacing.lg },
+  description: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  body: { flex: 1, gap: spacing.xs },
+  titleRow: {
     alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
-  actionLabel: { fontSize: 14, fontWeight: '500' },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

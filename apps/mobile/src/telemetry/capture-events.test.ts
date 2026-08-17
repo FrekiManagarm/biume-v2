@@ -1,4 +1,8 @@
-import { buildCaptureEvent, createCaptureTelemetry } from './capture-events';
+import {
+  buildCaptureEvent,
+  createCaptureTelemetry,
+  errorCategoryFor,
+} from './capture-events';
 
 const base = {
   captureId: 'capture-1',
@@ -53,6 +57,40 @@ describe('event shape', () => {
         platform: 'windows' as never,
       }),
     ).toBeNull();
+  });
+});
+
+describe('error categories', () => {
+  it.each([
+    ['microphone_denied', 'permission_denied'],
+    ['network', 'network'],
+    ['local_storage_full', 'storage'],
+    ['local_file_missing', 'storage'],
+    ['storage_unavailable', 'storage'],
+    ['unauthorized', 'authorization'],
+    ['active_organization_required', 'authorization'],
+    ['forbidden', 'authorization'],
+    ['validation', 'validation'],
+    ['conflict', 'validation'],
+    ['not_found', 'validation'],
+    ['method_not_allowed', 'validation'],
+    ['expired', 'validation'],
+    ['rate_limited', 'upload'],
+    ['server_error', 'upload'],
+    ['object_incomplete', 'upload'],
+    ['upload_url_expired', 'upload'],
+    ['unknown', 'unknown'],
+  ] as const)('maps %s to %s', (code, category) => {
+    expect(errorCategoryFor(code)).toBe(category);
+  });
+
+  it('produces a category the shared contract accepts', () => {
+    const event = buildCaptureEvent('capture_queued_offline', {
+      ...base,
+      errorCategory: errorCategoryFor('rate_limited'),
+    });
+
+    expect(event?.properties.errorCategory).toBe('upload');
   });
 });
 

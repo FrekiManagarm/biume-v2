@@ -2,16 +2,24 @@ import { useAudioPlayer, useAudioRecorder } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking } from 'react-native';
-import { useWorkspacePorts } from '@/app-state/workspace-ports';
+import { useAppState } from '@/app-state/app-state';
+import {
+  captureFileAdapters,
+  interruptedSessionStore,
+  useWorkspacePorts,
+} from '@/app-state/workspace-ports';
+import { useCaptureWorkspace } from '@/app-state/capture-workspace';
+import { updateCaptureAttachment } from '@/capture/capture-actions';
 import { openCaptureAudio, sealRecording } from '@/capture/capture-files';
-import { createExpoCaptureFileAdapters } from '@/capture/expo-capture-files';
 import type { LocalCapture } from '@/capture/local-capture';
 import {
   biumeRecordingOptions,
   createExpoAudioRecorder,
 } from '@/recording/expo-audio-recorder';
+import { deviceFreeSpaceBytes } from '@/recording/expo-storage';
 import { createRecordingSession } from '@/recording/recording-session';
 import { createStorageGuard } from '@/recording/storage-guard';
+import { captureTelemetry } from '@/telemetry/telemetry-sink';
 import { RecordScreen } from '@/screens/record-screen';
 import { ReviewScreen } from '@/screens/review-screen';
 
@@ -24,7 +32,8 @@ function toDataUri(bytes: Uint8Array): string {
 export default function RecordRoute() {
   const router = useRouter();
   const params = useLocalSearchParams<{ appointmentId?: string }>();
-  const ports = useWorkspacePorts();
+  const { organizationId } = useAppState();
+  const ports = useWorkspacePorts(organizationId ?? '');
   const recorder = useAudioRecorder(biumeRecordingOptions);
 
   const [phase, setPhase] = useState<'recording' | 'review'>('recording');
@@ -35,22 +44,35 @@ export default function RecordRoute() {
   const player = useAudioPlayer(audioUri ?? undefined);
   const startedRef = useRef(false);
 
-  const adapters = useMemo(() => createExpoCaptureFileAdapters(), []);
+  const adapters = useMemo(() => captureFileAdapters(), []);
+  const interruptedSessions = useMemo(() => interruptedSessionStore(), []);
+
+  const { primary, upcoming } = useCaptureWorkspace(ports);
+
+  /** The agenda the practitioner may reattach this dictation to, deduplicated. */
+  const attachmentCandidates = useMemo(() => {
+    const all = primary ? [primary, ...upcoming] : upcoming;
+    return Array.from(new Map(all.map((item) => [item.id, item])).values());
+  }, [primary, upcoming]);
 
   const session = useMemo(
     () =>
       createRecordingSession({
         recorder: createExpoAudioRecorder(recorder),
-        storage: createStorageGuard(async () => Number.MAX_SAFE_INTEGER),
+        storage: createStorageGuard(deviceFreeSpaceBytes),
         seal: (input) => sealRecording(input, adapters),
         discardPlaintext: (uri) => adapters.fileSystem.deleteFile(uri),
-        persistInterruptedSession: async () => {},
-        clearInterruptedSession: async () => {},
+        // Written before the first sample: a crash one second later still
+        // leaves startup recovery enough to find and attribute the take.
+        persistInterruptedSession: (interrupted) =>
+          interruptedSessions.save(interrupted),
+        clearInterruptedSession: () => interruptedSessions.clear(),
         repository: ports.repository,
         newCaptureId: () => globalThis.crypto.randomUUID(),
         now: () => new Date(),
+        telemetry: captureTelemetry,
       }),
-    [adapters, ports.repository, recorder],
+    [adapters, interruptedSessions, ports.repository, recorder],
   );
 
   const finish = useCallback(async () => {
@@ -117,7 +139,18 @@ export default function RecordRoute() {
     return () => clearInterval(timer);
   }, [finish, phase, session]);
 
-  const contextLabel = params.appointmentId ? 'Rendez-vous' : null;
+  const attachedAppointmentId =
+    captured?.appointmentId ?? params.appointmentId ?? null;
+
+  const attachedAppointment =
+    attachmentCandidates.find((item) => item.id === attachedAppointmentId) ??
+    null;
+
+  const contextLabel = attachedAppointment
+    ? attachedAppointment.patientName
+    : attachedAppointmentId
+      ? 'Rendez-vous'
+      : null;
 
   if (phase === 'recording') {
     return (
@@ -140,8 +173,21 @@ export default function RecordRoute() {
 
   return (
     <ReviewScreen
+      appointments={attachmentCandidates}
+      attachedAppointmentId={attachedAppointmentId}
       contextLabel={contextLabel}
       durationMs={captured?.durationMs ?? 0}
+      onChangeAttachment={(attachment) => {
+        if (!captured) return;
+        void (async () => {
+          const changed = await updateCaptureAttachment(
+            captured.id,
+            attachment,
+            { repository: ports.repository, now: new Date() },
+          );
+          if (changed) setCaptured({ ...captured, ...attachment });
+        })();
+      }}
       onConfirmRedo={() =>
         new Promise<boolean>((resolve) => {
           Alert.alert(
@@ -159,10 +205,12 @@ export default function RecordRoute() {
         void (async () => {
           await adapters.fileSystem.deleteFile(captured.encryptedFileUri);
           await ports.repository.remove(captured.id);
+          // The retake keeps whatever the dictation is attached to now, not
+          // what it was attached to when this screen opened.
           router.replace({
             pathname: '/(app)/record',
-            params: params.appointmentId
-              ? { appointmentId: params.appointmentId }
+            params: attachedAppointmentId
+              ? { appointmentId: attachedAppointmentId }
               : {},
           });
         })();

@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAppState } from '@/app-state/app-state';
+import { usePalette } from '@/design';
 
 /**
  * The only place routing is decided. Each phase maps to exactly one
@@ -8,11 +9,12 @@ import { useAppState } from '@/app-state/app-state';
  */
 export default function RouteEntry() {
   const { phase } = useAppState();
+  const palette = usePalette();
 
   if (phase === 'loading') {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator accessibilityLabel="Chargement" />
+      <View style={[styles.container, { backgroundColor: palette.canvas }]}>
+        <ActivityIndicator accessibilityLabel="Chargement" color={palette.primary} />
       </View>
     );
   }

@@ -110,3 +110,118 @@ describe('review screen', () => {
     ).toBeOnTheScreen();
   });
 });
+
+const appointments = [
+  {
+    id: 'appointment-1',
+    patientId: 'patient-1',
+    patientName: 'Nala',
+    animalType: 'DOG',
+    beginAt: '2026-07-20T09:00:00.000Z',
+    endAt: '2026-07-20T09:30:00.000Z',
+    status: 'CONFIRMED',
+  },
+  {
+    id: 'appointment-2',
+    patientId: 'patient-2',
+    patientName: 'Ficelle',
+    animalType: 'CAT',
+    beginAt: '2026-07-20T10:00:00.000Z',
+    endAt: '2026-07-20T10:30:00.000Z',
+    status: 'SCHEDULED',
+  },
+] as never;
+
+describe('changing the attachment', () => {
+  it('offers no reattachment when there is no appointment to attach to', async () => {
+    await render(<ReviewScreen {...baseProps} />);
+
+    expect(
+      screen.queryByRole('button', { name: 'Modifier le rattachement' }),
+    ).not.toBeOnTheScreen();
+  });
+
+  it('attaches the dictation to another appointment', async () => {
+    const onChangeAttachment = jest.fn();
+    const user = userEvent.setup();
+    await render(
+      <ReviewScreen
+        {...baseProps}
+        appointments={appointments}
+        attachedAppointmentId="appointment-1"
+        onChangeAttachment={onChangeAttachment}
+      />,
+    );
+
+    await user.press(
+      screen.getByRole('button', { name: 'Modifier le rattachement' }),
+    );
+    await user.press(screen.getByRole('button', { name: 'Ficelle' }));
+
+    expect(onChangeAttachment).toHaveBeenCalledWith({
+      appointmentId: 'appointment-2',
+      patientId: 'patient-2',
+    });
+  });
+
+  it('turns the dictation into a free capture', async () => {
+    const onChangeAttachment = jest.fn();
+    const user = userEvent.setup();
+    await render(
+      <ReviewScreen
+        {...baseProps}
+        appointments={appointments}
+        attachedAppointmentId="appointment-1"
+        onChangeAttachment={onChangeAttachment}
+      />,
+    );
+
+    await user.press(
+      screen.getByRole('button', { name: 'Modifier le rattachement' }),
+    );
+    await user.press(screen.getByRole('button', { name: 'Dictée libre' }));
+
+    expect(onChangeAttachment).toHaveBeenCalledWith({
+      appointmentId: null,
+      patientId: null,
+    });
+  });
+
+  it('announces which attachment is the current one', async () => {
+    const user = userEvent.setup();
+    await render(
+      <ReviewScreen
+        {...baseProps}
+        appointments={appointments}
+        attachedAppointmentId="appointment-1"
+        onChangeAttachment={jest.fn()}
+      />,
+    );
+
+    await user.press(
+      screen.getByRole('button', { name: 'Modifier le rattachement' }),
+    );
+
+    expect(screen.getByRole('button', { name: 'Nala' })).toBeSelected();
+    expect(screen.getByRole('button', { name: 'Ficelle' })).not.toBeSelected();
+  });
+
+  it('still validates without a network once reattached', async () => {
+    const onValidate = jest.fn();
+    const user = userEvent.setup();
+    await render(
+      <ReviewScreen
+        {...baseProps}
+        appointments={appointments}
+        attachedAppointmentId={null}
+        online={false}
+        onChangeAttachment={jest.fn()}
+        onValidate={onValidate}
+      />,
+    );
+
+    await user.press(screen.getByRole('button', { name: 'Valider la dictée' }));
+
+    expect(onValidate).toHaveBeenCalled();
+  });
+});

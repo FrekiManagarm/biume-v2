@@ -170,6 +170,44 @@ describe('compare-and-set transition', () => {
     expect((await repository.get(capture.id))?.status).toBe('queued');
   });
 
+  it('rewrites the attachment of a capture under review', async () => {
+    // Reattaching before validation writes real columns, so the generic patch
+    // mapping has to cover them against an actual SQL engine.
+    const { repository } = await createRepository();
+    const capture = buildCapture({ status: 'review' });
+    await repository.insertReview(capture);
+
+    await repository.transition(capture.id, ['review'], {
+      appointmentId: 'appointment-2',
+      patientId: 'patient-2',
+      updatedAt: now.toISOString(),
+    });
+
+    const stored = await repository.get(capture.id);
+    expect(stored?.appointmentId).toBe('appointment-2');
+    expect(stored?.patientId).toBe('patient-2');
+  });
+
+  it('clears the attachment back to a free capture', async () => {
+    const { repository } = await createRepository();
+    const capture = buildCapture({
+      status: 'review',
+      appointmentId: 'appointment-1',
+      patientId: 'patient-1',
+    });
+    await repository.insertReview(capture);
+
+    await repository.transition(capture.id, ['review'], {
+      appointmentId: null,
+      patientId: null,
+      updatedAt: now.toISOString(),
+    });
+
+    const stored = await repository.get(capture.id);
+    expect(stored?.appointmentId).toBeNull();
+    expect(stored?.patientId).toBeNull();
+  });
+
   it('refuses to move a row whose status is not expected', async () => {
     const { repository } = await createRepository();
     const capture = buildCapture({ status: 'cancelled' });

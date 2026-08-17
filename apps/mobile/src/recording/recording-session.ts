@@ -2,6 +2,7 @@ import { captureMaxDurationMs } from '@biume/contracts/capture';
 import type { CaptureRepository } from '../capture/capture-repository';
 import type { SealedRecording } from '../capture/capture-files';
 import { localExpiresAt, type LocalCapture } from '../capture/local-capture';
+import type { CaptureTelemetry } from '../telemetry/capture-events';
 import type { AudioRecorderPort, StorageGuardPort } from './audio-recorder';
 
 /**
@@ -39,6 +40,8 @@ export type RecordingSessionPorts = {
   repository: CaptureRepository;
   newCaptureId(): string;
   now(): Date;
+  /** Optional: telemetry never gates a recording. */
+  telemetry?: CaptureTelemetry;
 };
 
 export type StartOutcome =
@@ -67,6 +70,12 @@ export type RecordingSession = {
   context(): RecordingContext | null;
   shouldAutoStop(elapsedMs: number): boolean;
 };
+
+function journeyTypeOf(
+  appointmentId: string | null,
+): 'appointment' | 'free_capture' {
+  return appointmentId === null ? 'free_capture' : 'appointment';
+}
 
 export function createRecordingSession(
   ports: RecordingSessionPorts,
@@ -120,6 +129,13 @@ export function createRecordingSession(
     await ports.clearInterruptedSession();
     active = null;
 
+    ports.telemetry?.emit('capture_completed', {
+      captureId: capture.id,
+      journeyType: journeyTypeOf(capture.appointmentId),
+      durationMs: capture.durationMs,
+      byteSize: capture.byteSize,
+    });
+
     return { status: 'review', capture };
   }
 
@@ -152,6 +168,11 @@ export function createRecordingSession(
         patientId: input.patientId,
         plaintextUri: uri,
         startedAt,
+      });
+
+      ports.telemetry?.emit('capture_started', {
+        captureId,
+        journeyType: journeyTypeOf(input.appointmentId),
       });
 
       return { status: 'recording', captureId, startedAt };

@@ -8,6 +8,23 @@ microphone, ni les interruptions système.
 
 Ce document doit être rempli avant tout pilote externe.
 
+## Ce qui est déjà vérifié automatiquement
+
+Au 17 août 2026, sans appareil :
+
+| Vérification | Commande | Résultat |
+|---|---|---|
+| Suite mobile | `bun --filter @biume/mobile test` | 27 suites, 319 tests |
+| Persistance PostgreSQL réelle | voir `operations.md` §6 | 6 tests |
+| Types | `bun run check-types` | 6 packages |
+| Dépendances SDK | `bunx expo install --check` | à jour |
+| Bundle iOS | `bunx expo export --platform ios` | OK |
+| Bundle Android | `bunx expo export --platform android` | OK |
+
+Un bundle qui se construit prouve que l'application démarre du point de vue du
+JavaScript. Il ne prouve rien sur le micro, les permissions, le stockage réel,
+ni les interruptions système : ces lignes-là exigent les appareils ci-dessous.
+
 ## Comment exécuter
 
 ```bash
@@ -38,6 +55,11 @@ production.
 | 10 | Stockage insuffisant | Refus avant création du fichier temporaire |
 | 11 | Appel entrant pendant l'enregistrement | La prise reste récupérable |
 | 12 | Verrouillage de l'écran pendant l'enregistrement | La prise reste récupérable |
+| 13 | Changer le rattachement en relecture | La dictée part vers le rendez-vous choisi, ou sans rendez-vous |
+| 14 | Coupure puis retour du réseau, app au premier plan | L'envoi repart seul, sans action ni tentative décomptée hors ligne |
+| 15 | Session expirée, action « Se reconnecter » | Après connexion, les dictées retenues repassent en « À envoyer » |
+| 16 | Action « Refaire » sur une dictée bloquée | Ligne et fichier supprimés, enregistrement rouvert sur le même rendez-vous |
+| 17 | App laissée ouverte plus de 24 h | Au retour au premier plan, l'audio expiré est supprimé du disque |
 
 ## Résultats
 
