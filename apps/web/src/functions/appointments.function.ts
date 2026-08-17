@@ -5,10 +5,20 @@ import {
   createAppointmentWithPatientIsolation,
   updateAppointmentWithTenantIsolation,
 } from "#/functions/tenant-mutation-isolation";
-import { type Appointment, appointments, pets } from "@biume/db/schema/index";
+import {
+  type Appointment,
+  advancedReport,
+  appointments,
+  pets,
+  reportSectionState,
+} from "@biume/db/schema/index";
+import { createInitialReportSectionStates } from "@biume/contracts/report";
 import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
+
+import { buildReportSectionStateRows } from "./report-domain";
+import { createSessionReport } from "./appointment-report.service";
 
 const appointmentWindowSchema = z.object({
   fromISO: z.string(),
@@ -28,6 +38,7 @@ const createAppointmentSchema = z.object({
   atHome: z.boolean().optional(),
   note: z.string().optional(),
   notifyOwner: z.boolean().optional(),
+  withReport: z.boolean().optional().default(true),
 });
 
 const updateAppointmentSchema = z.object({
@@ -194,6 +205,48 @@ export const createAppointment = createServerFn({ method: "POST" })
             createdAt: new Date(),
           })
           .returning();
+
+        const animal = await db.query.pets.findFirst({
+          where: eq(pets.id, data.patientId),
+          columns: { name: true },
+        });
+
+        await createSessionReport(
+          {
+            insertReport: async (values) => {
+              const reportId = crypto.randomUUID();
+              await db.batch([
+                db.insert(advancedReport).values({
+                  id: reportId,
+                  title: values.title,
+                  consultationReason: values.consultationReason,
+                  patientId: values.patientId,
+                  appointmentId: values.appointmentId,
+                  notes: "",
+                  status: "draft",
+                  createdBy: organization.id,
+                  createdAt: new Date(),
+                }),
+                db.insert(reportSectionState).values(
+                  buildReportSectionStateRows(
+                    reportId,
+                    createInitialReportSectionStates(),
+                  ),
+                ),
+              ]);
+
+              return reportId;
+            },
+          },
+          {
+            appointmentId: newAppointment.id,
+            patientId: data.patientId,
+            animalName: animal?.name ?? null,
+            beginAt: data.beginAt,
+            note: data.note ?? null,
+            withReport: data.withReport,
+          },
+        );
 
         return newAppointment;
       },
