@@ -10,6 +10,12 @@ type AppointmentCardProps = {
   appointment: DayAgendaAppointment;
   onPrimaryAction: (appointment: DayAgendaAppointment) => void;
   actions?: ReactNode;
+  /**
+   * Vrai pendant que l'action principale de cette carte est en vol (ex.
+   * création du compte rendu en cours) : désactive le bouton pour empêcher un
+   * double-clic de déclencher deux fois la mutation.
+   */
+  isPrimaryActionPending?: boolean;
 };
 
 const sessionTone: Record<DayAgendaAppointment["sessionState"], Tone> = {
@@ -29,6 +35,7 @@ export function AppointmentCard({
   actions,
   appointment,
   onPrimaryAction,
+  isPrimaryActionPending = false,
 }: AppointmentCardProps) {
   const { primaryAction } = appointment;
   const showPrimaryAction =
@@ -83,6 +90,7 @@ export function AppointmentCard({
       {showPrimaryAction ? (
         <Button
           className="mt-4 w-full sm:w-auto"
+          disabled={isPrimaryActionPending}
           onClick={() => onPrimaryAction(appointment)}
         >
           {primaryAction.label}

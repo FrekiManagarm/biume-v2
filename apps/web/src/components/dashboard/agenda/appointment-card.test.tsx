@@ -105,6 +105,25 @@ describe("AppointmentCard", () => {
     expect(screen.queryByRole("button")).toBeNull();
   });
 
+  test("l'action principale se désactive pendant qu'elle est en vol", () => {
+    // Garde-fou anti double-clic : tant que la mutation déclenchée par le
+    // clic précédent n'a pas abouti, le bouton reste désactivé pour éviter
+    // de créer deux comptes rendus pour le même rendez-vous.
+    const onPrimaryAction = vi.fn();
+    render(
+      <AppointmentCard
+        appointment={cardFor({ endAt: new Date("2026-08-17T10:00:00.000Z") })}
+        isPrimaryActionPending
+        onPrimaryAction={onPrimaryAction}
+      />,
+    );
+
+    const button = screen.getByRole("button", {
+      name: "Créer le compte rendu",
+    });
+    expect(button.hasAttribute("disabled")).toBe(true);
+  });
+
   test("le nom de l'animal et du propriétaire sont lisibles", () => {
     render(
       <AppointmentCard

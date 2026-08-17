@@ -156,6 +156,11 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
       return;
     }
 
+    // Défense en profondeur contre le double-clic : le bouton se désactive au
+    // prochain rendu via `isPrimaryActionPending`, mais un second clic tiré
+    // avant ce rendu (souris rapide, tests, etc.) doit être ignoré ici aussi.
+    if (createReportMutation.isPending) return;
+
     const petId = appointment.patient?.id;
     if (!petId) return;
 
@@ -294,6 +299,11 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
                     key={appointment.id}
                     appointment={appointment}
                     onPrimaryAction={handlePrimaryAction}
+                    isPrimaryActionPending={
+                      createReportMutation.isPending &&
+                      createReportMutation.variables?.appointmentId ===
+                        appointment.id
+                    }
                     actions={
                       <AppointmentActionsMenu
                         disabled={
