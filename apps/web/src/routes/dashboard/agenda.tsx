@@ -17,9 +17,18 @@ export const Route = createFileRoute("/dashboard/agenda")({
     ],
   }),
   ssr: true,
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(
-      appointmentsQueryOptions(defaultAppointmentWindow()),
-    ),
-  component: AgendaPage,
+  // Calculée une seule fois ici, puis transmise au chargeur et au composant :
+  // les deux consomment la même fenêtre, donc la même clé de requête, et le
+  // cache alimenté par le SSR est bien celui que le composant relit au
+  // montage plutôt qu'une fenêtre recalculée à la milliseconde près.
+  loaderDeps: () => defaultAppointmentWindow(),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(appointmentsQueryOptions(deps)),
+  component: AgendaRoute,
 });
+
+function AgendaRoute() {
+  const appointmentWindow = Route.useLoaderDeps();
+
+  return <AgendaPage appointmentWindow={appointmentWindow} />;
+}

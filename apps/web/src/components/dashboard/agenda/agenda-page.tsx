@@ -3,42 +3,69 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock,
-  Home,
-  MapPin,
-  PawPrint,
   Plus,
-  Stethoscope,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { DeleteEntityDialog } from "#/components/dashboard/lists/entity-row-actions";
+import {
+  EmptyState,
+  ListRow,
+  PageHeader,
+  Panel,
+  PanelHeader,
+} from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import {
   createAppointment,
+  deleteAppointment,
+  updateAppointment,
   type getAppointments as getAppointmentsFn,
 } from "#/lib/api/actions/appointments.action";
+import { createReport } from "#/lib/api/actions/reports.action";
 import {
   appointmentsQueryOptions,
-  defaultAppointmentWindow,
+  type AppointmentWindow,
 } from "#/lib/api/queries/appointments.query";
 import { patientsQueryOptions } from "#/lib/api/queries/patients.query";
+import {
+  buildDayAgendaModel,
+  type DayAgendaAppointment,
+} from "#/lib/dashboard/day-agenda";
 import { cn } from "#/lib/utils";
 
+import { AppointmentActionsMenu } from "./appointment-actions-menu";
+import { AppointmentCard } from "./appointment-card";
+import { EditAppointmentDialog } from "./edit-appointment-dialog";
 import { NewAppointmentDialog } from "./new-appointment-dialog";
 
 type AgendaAppointment = Awaited<ReturnType<typeof getAppointmentsFn>>[number];
 
-export function AgendaPage() {
+type AgendaPageProps = {
+  /**
+   * Calculée une seule fois par la route, puis transmise ici : c'est ce qui
+   * garantit que la clé de requête du chargement serveur et celle de ce
+   * composant coïncident au millisecond près, et que le SSR alimente bien le
+   * cache que ce composant va lire.
+   */
+  appointmentWindow: AppointmentWindow;
+};
+
+const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const appointmentWindow = useMemo(() => defaultAppointmentWindow(), []);
-  const { data: appointments } = useSuspenseQuery(
-    appointmentsQueryOptions(appointmentWindow),
-  );
+  const appointmentsQuery = appointmentsQueryOptions(appointmentWindow);
+  const { data: appointments } = useSuspenseQuery(appointmentsQuery);
   const { data: patients } = useSuspenseQuery(patientsQueryOptions());
+
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(new Date()),
   );
@@ -46,34 +73,49 @@ export function AgendaPage() {
     startOfDay(new Date()),
   );
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] =
+    useState<DayAgendaAppointment | null>(null);
+  const [deletingAppointment, setDeletingAppointment] =
+    useState<DayAgendaAppointment | null>(null);
+
+  function invalidateAppointments() {
+    return queryClient.invalidateQueries({
+      queryKey: appointmentsQuery.queryKey,
+    });
+  }
+
   const createAppointmentMutation = useMutation({
     mutationFn: createAppointment,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: appointmentsQueryOptions(appointmentWindow).queryKey,
-      }),
+    onSuccess: invalidateAppointments,
   });
+  const updateAppointmentMutation = useMutation({
+    mutationFn: updateAppointment,
+    onSuccess: invalidateAppointments,
+  });
+  const deleteAppointmentMutation = useMutation({
+    mutationFn: deleteAppointment,
+    onSuccess: () => {
+      invalidateAppointments();
+      setDeletingAppointment(null);
+    },
+  });
+  const createReportMutation = useMutation({ mutationFn: createReport });
+
+  const dayModel = useMemo(
+    () => buildDayAgendaModel({ appointments, now: new Date(), selectedDate }),
+    [appointments, selectedDate],
+  );
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
-  const selectedAppointments = appointments
-    .filter((appointment) =>
-      isSameDay(new Date(appointment.beginAt), selectedDate),
-    )
-    .sort(
-      (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
-    );
-  const upcomingAppointments = appointments
-    .filter(
-      (appointment) => new Date(appointment.beginAt) >= startOfDay(new Date()),
-    )
-    .sort(
-      (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
-    )
-    .slice(0, 5);
-  const completedThisMonth = appointments.filter(
-    (appointment) =>
-      appointment.status === "COMPLETED" &&
-      isSameMonth(new Date(appointment.beginAt), currentMonth),
-  ).length;
+  const upcomingAppointments = useMemo(() => {
+    const now = startOfDay(new Date());
+
+    return appointments
+      .filter((appointment) => new Date(appointment.beginAt) >= now)
+      .sort(
+        (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
+      )
+      .slice(0, 5);
+  }, [appointments]);
 
   function goToPreviousMonth() {
     setCurrentMonth(addMonths(currentMonth, -1));
@@ -89,68 +131,91 @@ export function AgendaPage() {
     setSelectedDate(startOfDay(today));
   }
 
+  function jumpToAppointment(appointment: AgendaAppointment) {
+    const date = new Date(appointment.beginAt);
+    setSelectedDate(startOfDay(date));
+    setCurrentMonth(startOfMonth(date));
+  }
+
+  function handlePrimaryAction(appointment: DayAgendaAppointment) {
+    const { primaryAction } = appointment;
+
+    if (primaryAction.reportId) {
+      if (primaryAction.kind === "view_report") {
+        navigate({
+          to: "/dashboard/reports/$id",
+          params: { id: primaryAction.reportId },
+        });
+      } else {
+        navigate({
+          to: "/dashboard/reports/$id/edit",
+          params: { id: primaryAction.reportId },
+        });
+      }
+
+      return;
+    }
+
+    const petId = appointment.patient?.id;
+    if (!petId) return;
+
+    createReportMutation.mutate(
+      { petId, appointmentId: appointment.id, status: "draft" },
+      {
+        onSuccess: (result) => {
+          navigate({
+            to: "/dashboard/reports/$id/edit",
+            params: { id: result.reportId },
+          });
+        },
+      },
+    );
+  }
+
   return (
-    <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          detail="Sur la date sélectionnée"
-          icon={Clock}
-          label="Journée"
-          tone="emerald"
-          value={selectedAppointments.length}
-        />
-        <MetricCard
-          detail="À partir d'aujourd'hui"
-          icon={CalendarDays}
-          label="À venir"
-          tone="sky"
-          value={upcomingAppointments.length}
-        />
-        <MetricCard
-          detail="Sur le mois affiché"
-          icon={Stethoscope}
-          label="Terminés"
-          tone="amber"
-          value={completedThisMonth}
-        />
-      </section>
+    <div className="grid w-full gap-5 pb-8">
+      <PageHeader
+        title="Agenda"
+        description="Coordonnez les rendez-vous et retrouvez, pour chaque séance, l'action qui l'attend."
+        actions={
+          <Button onClick={() => setIsNewAppointmentOpen(true)}>
+            Nouveau rendez-vous
+            <Plus className="size-4" data-icon="inline-end" />
+          </Button>
+        }
+      />
 
       <section className="grid gap-5 xl:grid-cols-[1fr_24rem]">
         <Panel>
-          <div className="mb-5 grid gap-4 border-b border-slate-200 pb-5 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-medium text-emerald-700">Calendrier</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                {formatMonth(currentMonth)}.
-              </h2>
-            </div>
-            <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
-              <Button
-                className="h-10 bg-slate-950 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.8)] hover:bg-slate-800 active:scale-[0.98]"
-                onClick={() => setIsNewAppointmentOpen(true)}
-              >
-                Nouveau rendez-vous
-                <Plus className="size-4" data-icon="inline-end" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
-                <ChevronLeft className="size-4" />
-                <span className="sr-only">Mois précédent</span>
-              </Button>
-              <Button variant="outline" onClick={goToToday}>
-                Aujourd'hui
-              </Button>
-              <Button variant="outline" size="icon" onClick={goToNextMonth}>
-                <ChevronRight className="size-4" />
-                <span className="sr-only">Mois suivant</span>
-              </Button>
-            </div>
-          </div>
+          <PanelHeader
+            title={`${formatMonth(currentMonth)}.`}
+            description="Sélectionnez un jour pour afficher son détail à droite."
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goToPreviousMonth}
+                >
+                  <ChevronLeft className="size-4" />
+                  <span className="sr-only">Mois précédent</span>
+                </Button>
+                <Button variant="outline" onClick={goToToday}>
+                  Aujourd'hui
+                </Button>
+                <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                  <ChevronRight className="size-4" />
+                  <span className="sr-only">Mois suivant</span>
+                </Button>
+              </>
+            }
+          />
 
-          <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-200">
-            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
+          <div className="grid grid-cols-7 gap-px overflow-hidden rounded-card border border-border bg-border">
+            {WEEKDAY_LABELS.map((day) => (
               <div
                 key={day}
-                className="bg-slate-50 px-2 py-3 text-center text-xs font-semibold uppercase text-slate-500"
+                className="bg-muted px-2 py-3 text-center text-xs font-semibold uppercase text-muted-foreground"
               >
                 {day}
               </div>
@@ -168,26 +233,26 @@ export function AgendaPage() {
                   type="button"
                   onClick={() => setSelectedDate(day.date)}
                   className={cn(
-                    "min-h-24 bg-white p-2 text-left transition duration-200 hover:bg-slate-50",
-                    !day.inMonth && "bg-slate-50 text-slate-400",
+                    "min-h-24 bg-card p-2 text-left transition duration-200 hover:bg-muted",
+                    !day.inMonth && "bg-muted text-muted-foreground",
                     isSelected &&
-                      "bg-emerald-50 ring-2 ring-inset ring-emerald-500",
+                      "bg-primary-surface ring-2 ring-inset ring-primary",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={cn(
                         "flex size-7 items-center justify-center rounded-lg text-sm font-semibold",
-                        isToday && "bg-slate-950 text-white",
+                        isToday && "bg-primary text-primary-foreground",
                         isSelected &&
                           !isToday &&
-                          "bg-emerald-100 text-emerald-900",
+                          "bg-primary-surface text-primary",
                       )}
                     >
                       {day.date.getDate()}
                     </span>
                     {dayAppointments.length > 0 ? (
-                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600">
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                         {dayAppointments.length}
                       </span>
                     ) : null}
@@ -196,14 +261,14 @@ export function AgendaPage() {
                     {dayAppointments.slice(0, 2).map((appointment) => (
                       <span
                         key={appointment.id}
-                        className="truncate rounded-md bg-white/70 px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200"
+                        className="truncate rounded-md bg-card/70 px-2 py-1 text-xs text-muted-foreground ring-1 ring-border"
                       >
                         {formatTime(appointment.beginAt)} ·{" "}
                         {appointment.patient?.name ?? "Patient"}
                       </span>
                     ))}
                     {dayAppointments.length > 2 ? (
-                      <span className="text-xs font-medium text-emerald-700">
+                      <span className="text-xs font-medium text-primary">
                         +{dayAppointments.length - 2} autre
                         {dayAppointments.length - 2 > 1 ? "s" : ""}
                       </span>
@@ -217,73 +282,73 @@ export function AgendaPage() {
 
         <aside className="grid gap-5 self-start">
           <Panel>
-            <div className="mb-5 border-b border-slate-200 pb-5">
-              <p className="text-sm font-medium text-emerald-700">
-                Journée sélectionnée
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                {formatLongDate(selectedDate)}.
-              </h2>
-            </div>
+            <PanelHeader
+              title={`${formatLongDate(selectedDate)}.`}
+              description={`Journée sélectionnée · ${dayModel.summary.appointmentCount} rendez-vous.`}
+            />
 
             <div className="grid gap-3">
-              {selectedAppointments.length > 0 ? (
-                selectedAppointments.map((appointment) => (
+              {dayModel.appointments.length > 0 ? (
+                dayModel.appointments.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
                     appointment={appointment}
+                    onPrimaryAction={handlePrimaryAction}
+                    actions={
+                      <AppointmentActionsMenu
+                        disabled={
+                          updateAppointmentMutation.isPending ||
+                          deleteAppointmentMutation.isPending
+                        }
+                        onCancel={() =>
+                          updateAppointmentMutation.mutate({
+                            appointmentId: appointment.id,
+                            status: "CANCELLED",
+                          })
+                        }
+                        onDelete={() => setDeletingAppointment(appointment)}
+                        onEdit={() => setEditingAppointment(appointment)}
+                      />
+                    }
                   />
                 ))
               ) : (
-                <div className="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
-                  <CalendarDays className="mx-auto size-6 text-slate-400" />
-                  <p className="mt-3 text-sm font-semibold text-slate-950">
-                    Aucun rendez-vous
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Cette journée est libre pour le moment.
-                  </p>
-                </div>
+                <EmptyState
+                  icon={CalendarDays}
+                  title="Aucun rendez-vous"
+                  description="Cette journée est libre pour le moment."
+                />
               )}
             </div>
           </Panel>
 
           <Panel>
-            <div className="mb-5 border-b border-slate-200 pb-5">
-              <p className="text-sm font-medium text-emerald-700">À venir</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                Prochains rendez-vous.
-              </h2>
-            </div>
-            <div className="grid gap-3">
+            <PanelHeader
+              title="Prochains rendez-vous."
+              description="À venir, du plus proche au plus lointain."
+            />
+            <div className="grid gap-2">
               {upcomingAppointments.length > 0 ? (
                 upcomingAppointments.map((appointment) => (
-                  <button
+                  <ListRow
                     key={appointment.id}
-                    type="button"
-                    onClick={() => {
-                      const date = new Date(appointment.beginAt);
-                      setSelectedDate(startOfDay(date));
-                      setCurrentMonth(startOfMonth(date));
-                    }}
-                    className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:bg-slate-50"
-                  >
-                    <div className="flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500">
-                      <Clock className="size-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-950">
-                        {appointment.patient?.name ?? "Patient"}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">
-                        {formatLongDate(appointment.beginAt)} ·{" "}
-                        {formatTime(appointment.beginAt)}
-                      </p>
-                    </div>
-                  </button>
+                    icon={Clock}
+                    title={appointment.patient?.name ?? "Patient"}
+                    meta={`${formatLongDate(appointment.beginAt)} · ${formatTime(appointment.beginAt)}`}
+                    action={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => jumpToAppointment(appointment)}
+                      >
+                        Voir
+                      </Button>
+                    }
+                  />
                 ))
               ) : (
-                <p className="text-sm leading-6 text-slate-500">
+                <p className="text-sm leading-6 text-muted-foreground">
                   Aucun rendez-vous à venir.
                 </p>
               )}
@@ -302,132 +367,36 @@ export function AgendaPage() {
         }
         onOpenChange={setIsNewAppointmentOpen}
       />
+
+      <EditAppointmentDialog
+        appointment={editingAppointment}
+        isSubmitting={updateAppointmentMutation.isPending}
+        open={editingAppointment !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingAppointment(null);
+        }}
+        onSubmit={(input) => updateAppointmentMutation.mutateAsync(input)}
+      />
+
+      <DeleteEntityDialog
+        confirmLabel="Supprimer"
+        description={
+          deletingAppointment
+            ? `Le rendez-vous du ${formatLongDate(deletingAppointment.beginAt)} à ${formatTime(deletingAppointment.beginAt)} sera supprimé. Un compte rendu déjà rempli reste disponible dans Comptes rendus.`
+            : ""
+        }
+        isPending={deleteAppointmentMutation.isPending}
+        open={deletingAppointment !== null}
+        title="Supprimer ce rendez-vous ?"
+        onConfirm={() => {
+          if (!deletingAppointment) return;
+          deleteAppointmentMutation.mutate(deletingAppointment.id);
+        }}
+        onOpenChange={(open) => {
+          if (!open) setDeletingAppointment(null);
+        }}
+      />
     </div>
-  );
-}
-
-function AppointmentCard({ appointment }: { appointment: AgendaAppointment }) {
-  return (
-    <article className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.5)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-950">
-            {formatTime(appointment.beginAt)} - {formatTime(appointment.endAt)}
-          </p>
-          <h3 className="mt-2 truncate text-base font-semibold tracking-tight text-slate-950">
-            {appointment.patient?.name ?? "Patient non renseigné"}
-          </h3>
-          <p className="mt-1 truncate text-sm text-slate-500">
-            {appointment.patient?.owner?.name ?? "Propriétaire inconnu"}
-          </p>
-        </div>
-        <StatusPill status={appointment.status} />
-      </div>
-
-      <div className="mt-4 grid gap-2 text-sm text-slate-600">
-        <span className="flex items-center gap-2">
-          <PawPrint className="size-3.5 text-slate-400" />
-          {appointment.patient?.animal?.name ?? "Espèce inconnue"}
-        </span>
-        <span className="flex items-center gap-2">
-          {appointment.atHome ? (
-            <Home className="size-3.5 text-slate-400" />
-          ) : (
-            <MapPin className="size-3.5 text-slate-400" />
-          )}
-          {appointment.atHome ? "À domicile" : "Cabinet"}
-        </span>
-        {appointment.note ? (
-          <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-600">
-            {appointment.note}
-          </p>
-        ) : null}
-      </div>
-    </article>
-  );
-}
-
-function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
-      {children}
-    </section>
-  );
-}
-
-function MetricCard({
-  detail,
-  icon: Icon,
-  label,
-  tone,
-  value,
-}: {
-  detail: string;
-  icon: typeof CalendarDays;
-  label: string;
-  tone: "emerald" | "sky" | "amber" | "slate";
-  value: number | string;
-}) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-            {value}
-          </p>
-          <p className="mt-2 text-xs font-medium text-slate-500">{detail}</p>
-        </div>
-        <div
-          className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-xl border",
-            tone === "emerald" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-800",
-            tone === "sky" && "border-sky-200 bg-sky-50 text-sky-800",
-            tone === "amber" && "border-amber-200 bg-amber-50 text-amber-800",
-            tone === "slate" && "border-slate-200 bg-slate-50 text-slate-600",
-          )}
-        >
-          <Icon className="size-5" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusPill({
-  status,
-}: {
-  status: "CREATED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-}) {
-  const config = {
-    CREATED: {
-      label: "Créé",
-      className: "border-slate-200 bg-slate-50 text-slate-600",
-    },
-    CONFIRMED: {
-      label: "Confirmé",
-      className: "border-sky-200 bg-sky-50 text-sky-800",
-    },
-    CANCELLED: {
-      label: "Annulé",
-      className: "border-red-200 bg-red-50 text-red-700",
-    },
-    COMPLETED: {
-      label: "Terminé",
-      className: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    },
-  }[status];
-
-  return (
-    <span
-      className={cn(
-        "inline-flex h-7 shrink-0 items-center rounded-lg border px-2.5 text-xs font-semibold",
-        config.className,
-      )}
-    >
-      {config.label}
-    </span>
   );
 }
 
