@@ -59,6 +59,20 @@ export const getDashboardAgendaDay = createServerFn({ method: "GET" })
             id: true,
             status: true,
             updatedAt: true,
+            consultationReason: true,
+            notes: true,
+          },
+          with: {
+            anatomicalIssues: {
+              columns: {
+                id: true,
+              },
+            },
+            recommendations: {
+              columns: {
+                id: true,
+              },
+            },
           },
         },
       },
@@ -78,6 +92,10 @@ export const getDashboardAgendaDay = createServerFn({ method: "GET" })
             id: report.id,
             status: report.status,
             updatedAt: report.updatedAt,
+            consultationReason: report.consultationReason,
+            notes: report.notes,
+            anatomicalIssueCount: report.anatomicalIssues.length,
+            recommendationCount: report.recommendations.length,
           }))
           .sort(compareAgendaReports),
         patient: row.patient
