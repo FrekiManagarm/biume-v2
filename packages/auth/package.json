@@ -9,6 +9,11 @@
             "default": "./src/*.ts"
         }
     },
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
     "dependencies": {
         "@biume/db": "workspace:*",
         "@biume/env": "workspace:*",
@@ -19,6 +24,7 @@
     },
     "devDependencies": {
         "@biume/config": "workspace:*",
-        "typescript": "catalog:"
+        "typescript": "catalog:",
+        "vitest": "^2.1.9"
     }
 }

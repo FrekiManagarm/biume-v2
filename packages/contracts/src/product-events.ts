@@ -29,7 +29,11 @@ export type ProductEventName = z.infer<typeof productEventNameSchema>;
 export const productEventSources = [
   "web_existing_patient",
   "web_quick_create",
+  "mobile_appointment",
+  "mobile_free_capture",
 ] as const;
+
+export const productEventPlatforms = ["ios", "android"] as const;
 const sourceSchema = z.enum(productEventSources);
 const reportSectionSchema = z.enum(reportSectionIds);
 
@@ -39,6 +43,14 @@ const safePropertiesSchema = z
     captureId: z.string().optional(),
     followupId: z.string().optional(),
     durationMs: z.number().int().nonnegative().optional(),
+    byteSize: z.number().int().nonnegative().optional(),
+    platform: z.enum(productEventPlatforms).optional(),
+    // Constrained to a version triple so the field cannot become a free-text
+    // channel into telemetry.
+    appVersion: z
+      .string()
+      .regex(/^\d+\.\d+\.\d+$/)
+      .optional(),
     sectionCount: z.number().int().nonnegative().optional(),
     acceptedCount: z.number().int().nonnegative().optional(),
     modifiedCount: z.number().int().nonnegative().optional(),
