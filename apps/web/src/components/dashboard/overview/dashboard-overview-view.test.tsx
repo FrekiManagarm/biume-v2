@@ -123,6 +123,10 @@ describe("DashboardOverviewView", () => {
     ).toBeNull();
     expect(screen.getAllByText("Annulé").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Annulé" })).toBeNull();
+    // Le badge de statut et l'action affichaient autrefois deux graphies du
+    // même état ("Annulée" vs "Annulé") sur la même ligne : régression
+    // repérée en revue de code, verrouillée ici.
+    expect(screen.queryByText("Annulée")).toBeNull();
     expect(
       screen
         .getAllByRole("link", { name: "Remplir le compte rendu" })

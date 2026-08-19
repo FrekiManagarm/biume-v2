@@ -46,7 +46,7 @@ const reportStatusConfig: Record<
 };
 
 const cancelledStatusConfig = {
-  label: "Annulée",
+  label: "Annulé",
   className: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
