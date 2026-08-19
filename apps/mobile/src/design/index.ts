@@ -20,6 +20,7 @@ export {
   clockType,
   controlHeight,
   elevation,
+  fontFamily,
   iconSize,
   palettes,
   radius,
