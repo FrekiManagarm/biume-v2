@@ -93,6 +93,14 @@ function RouteComponent() {
     Route.useRouteContext();
   const pathname = useLocation({ select: (location) => location.pathname });
   const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
+  // La grille mensuelle de l'agenda (7 colonnes) et le tableau des comptes
+  // rendus sont volontairement plus larges que le canvas de lecture : borner
+  // leur conteneur à max-w-7xl tronque les libellés de rendez-vous et les
+  // colonnes du tableau sur un grand écran. Elles s'affranchissent donc du
+  // canvas — une échappatoire assumée, propre au shell, pas un oubli.
+  const isWideSurfaceRoute =
+    pathname.startsWith("/dashboard/agenda") ||
+    pathname.startsWith("/dashboard/reports");
 
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
@@ -105,14 +113,21 @@ function RouteComponent() {
           <DashboardHeader />
           <div
             className={cn(
-              "min-h-0 w-full flex-1 p-4",
+              "min-h-0 w-full flex-1 bg-background",
               isAssistantRoute
-                ? "mb-0 flex flex-col overflow-hidden"
-                : "mb-4 overflow-y-auto",
+                ? "mb-0 flex flex-col overflow-hidden p-4"
+                : "mb-4 overflow-y-auto p-4 sm:p-6",
             )}
           >
-            <DashboardPageBanner />
-            <Outlet />
+            <div
+              className={cn(
+                "mx-auto w-full",
+                !isWideSurfaceRoute && "max-w-7xl",
+              )}
+            >
+              <DashboardPageBanner />
+              <Outlet />
+            </div>
           </div>
         </SidebarInset>
       </div>

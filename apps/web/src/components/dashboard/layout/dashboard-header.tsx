@@ -62,12 +62,13 @@ export function DashboardHeader() {
   }, [breadcrumb, pathname]);
 
   return (
-    <div className="flex flex-row justify-between items-center h-16 px-4 py-4">
+    <div className="flex h-16 flex-row items-center justify-between border-b border-border bg-card px-4">
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
-          className="h-10 w-10 rounded-xl border-border transition-all duration-300 hover:shadow-md p-0 m-0 bg-sidebar"
+          className="size-10 rounded-lg border-border bg-card p-0 transition duration-300 hover:bg-muted active:scale-[0.98]"
           onClick={toggleSidebar}
+          aria-label="Basculer la barre latérale"
         >
           <PanelLeft size={24} />
         </Button>
