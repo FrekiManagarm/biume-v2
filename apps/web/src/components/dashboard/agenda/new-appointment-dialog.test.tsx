@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -33,7 +39,10 @@ const patients = [
   },
 ];
 
-function renderDialog(onCreateAppointment: OnCreateAppointment) {
+function renderDialog(
+  onCreateAppointment: OnCreateAppointment,
+  onOpenChange = vi.fn(),
+) {
   render(
     <NewAppointmentDialog
       isSubmitting={false}
@@ -41,7 +50,7 @@ function renderDialog(onCreateAppointment: OnCreateAppointment) {
       patients={patients}
       selectedDate={new Date("2026-08-17T00:00:00.000Z")}
       onCreateAppointment={onCreateAppointment}
-      onOpenChange={vi.fn()}
+      onOpenChange={onOpenChange}
     />,
   );
 
@@ -49,6 +58,8 @@ function renderDialog(onCreateAppointment: OnCreateAppointment) {
   fireEvent.change(screen.getByLabelText("Patient"), {
     target: { value: "patient-1" },
   });
+
+  return { onOpenChange };
 }
 
 describe("NewAppointmentDialog", () => {
@@ -97,5 +108,28 @@ describe("NewAppointmentDialog", () => {
     );
 
     await onCreateAppointment.mock.results[0]?.value;
+  });
+
+  it("reste ouvert quand la création échoue", async () => {
+    // Même règle que `EditAppointmentDialog` : refermer le dialogue est ce qui
+    // dit « c'est créé ». Un échec réseau doit laisser le formulaire, et sa
+    // saisie, à l'écran.
+    const onCreateAppointment = vi
+      .fn<OnCreateAppointment>()
+      .mockRejectedValue(new Error("réseau"));
+    const { onOpenChange } = renderDialog(onCreateAppointment);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Créer le rendez-vous" }),
+    );
+
+    await waitFor(() => {
+      expect(onCreateAppointment).toHaveBeenCalledTimes(1);
+    });
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Créer le rendez-vous" }),
+    ).toBeTruthy();
   });
 });

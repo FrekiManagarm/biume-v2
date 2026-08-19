@@ -71,13 +71,23 @@ export function EditAppointmentDialog({
 
     if (!date || !startTime || !endTime) return;
 
-    await onSubmit({
-      appointmentId: appointment.id,
-      atHome: formData.get("atHome") === "on",
-      beginAt: buildLocalDate(date, startTime),
-      endAt: buildLocalDate(date, endTime),
-      note: note.length > 0 ? note : undefined,
-    });
+    // Le dialogue ne se referme que si l'enregistrement a réussi. Dans cette
+    // interface, la fermeture EST le signal de succès : la voir se refermer
+    // sur un échec réseau ferait repartir le praticien avec un rendez-vous
+    // qu'il croit déplacé et qui ne l'est pas, le message d'erreur ayant filé
+    // pendant qu'il regardait ailleurs. L'appelant affiche le message puis
+    // propage l'échec — c'est ce `catch` qui le reçoit.
+    try {
+      await onSubmit({
+        appointmentId: appointment.id,
+        atHome: formData.get("atHome") === "on",
+        beginAt: buildLocalDate(date, startTime),
+        endAt: buildLocalDate(date, endTime),
+        note: note.length > 0 ? note : undefined,
+      });
+    } catch {
+      return;
+    }
 
     onOpenChange(false);
   }

@@ -10,6 +10,15 @@ type AppointmentCardProps = {
   appointment: DayAgendaAppointment;
   onPrimaryAction: (appointment: DayAgendaAppointment) => void;
   actions?: ReactNode;
+  /**
+   * Le geste principal est déjà parti et n'a pas encore répondu.
+   *
+   * Sans ce retour, une interface qui ne bouge pas invite au double-clic —
+   * réflexe d'un praticien non technicien — et le second clic créerait un
+   * deuxième compte rendu. La garde vit chez l'appelant ; ce qui manque ici,
+   * c'est de le rendre visible.
+   */
+  isBusy?: boolean;
 };
 
 // Le vert porte l'état atteint (une séance terminée), pas l'action qui
@@ -33,6 +42,7 @@ const sessionTone: Record<DayAgendaAppointment["sessionState"], Tone> = {
 export function AppointmentCard({
   actions,
   appointment,
+  isBusy,
   onPrimaryAction,
 }: AppointmentCardProps) {
   const { primaryAction } = appointment;
@@ -104,6 +114,7 @@ export function AppointmentCard({
         <Button
           aria-label={actionAccessibleLabel}
           className="mt-4 w-full sm:w-auto"
+          disabled={isBusy}
           onClick={() => onPrimaryAction(appointment)}
         >
           {primaryAction.label}

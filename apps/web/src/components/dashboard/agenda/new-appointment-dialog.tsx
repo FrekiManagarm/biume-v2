@@ -67,14 +67,22 @@ export function NewAppointmentDialog({
       return;
     }
 
-    await onCreateAppointment({
-      atHome: formData.get("atHome") === "on",
-      beginAt: buildLocalDate(date, startTime),
-      endAt: buildLocalDate(date, endTime),
-      note: note.length > 0 ? note : undefined,
-      patientId,
-      withReport: formData.get("withReport") === "on",
-    });
+    // Même règle que `EditAppointmentDialog` : la fermeture du dialogue est ce
+    // qui dit au praticien que c'est enregistré. En cas d'échec, le formulaire
+    // reste à l'écran avec sa saisie, et le message d'erreur affiché par
+    // l'appelant est la seule chose qui change.
+    try {
+      await onCreateAppointment({
+        atHome: formData.get("atHome") === "on",
+        beginAt: buildLocalDate(date, startTime),
+        endAt: buildLocalDate(date, endTime),
+        note: note.length > 0 ? note : undefined,
+        patientId,
+        withReport: formData.get("withReport") === "on",
+      });
+    } catch {
+      return;
+    }
 
     onOpenChange(false);
     form.reset();

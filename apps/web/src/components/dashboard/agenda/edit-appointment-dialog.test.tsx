@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { DayAgendaAppointment } from "#/lib/dashboard/day-agenda";
@@ -46,16 +52,18 @@ const appointment: DayAgendaAppointment = {
   },
 };
 
-function renderDialog(onSubmit: OnSubmit) {
+function renderDialog(onSubmit: OnSubmit, onOpenChange = vi.fn()) {
   render(
     <EditAppointmentDialog
       appointment={appointment}
       isSubmitting={false}
       open
-      onOpenChange={vi.fn()}
+      onOpenChange={onOpenChange}
       onSubmit={onSubmit}
     />,
   );
+
+  return { onOpenChange };
 }
 
 describe("EditAppointmentDialog", () => {
@@ -107,6 +115,24 @@ describe("EditAppointmentDialog", () => {
 
     expect(screen.getByRole("button", { name: "Fermer" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Annuler" })).toBeNull();
+  });
+
+  it("reste ouvert quand l'enregistrement échoue", async () => {
+    // La fermeture du dialogue est ce que le praticien lit comme un succès :
+    // se refermer sur un échec réseau le ferait repartir avec un rendez-vous
+    // qu'il croit déplacé et qui ne l'est pas, le message d'erreur ayant filé
+    // pendant qu'il regardait ailleurs.
+    const onSubmit = vi.fn<OnSubmit>().mockRejectedValue(new Error("réseau"));
+    const { onOpenChange } = renderDialog(onSubmit);
+
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Enregistrer" })).toBeTruthy();
   });
 
   it("ne rend aucun formulaire tant qu'aucun rendez-vous n'est fourni", () => {

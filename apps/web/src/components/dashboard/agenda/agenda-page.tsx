@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -116,6 +116,16 @@ export function AgendaPage() {
 
   const isMutating =
     updateAppointmentMutation.isPending || deleteAppointmentMutation.isPending;
+  /**
+   * Garde synchrone du geste principal.
+   *
+   * `createReportMutation.isPending` ne devient vrai qu'au rendu suivant,
+   * alors qu'un double-clic réflexe part dans le même tick : deux brouillons
+   * seraient créés, dont un orphelin que plus rien ne montrerait. Le drapeau
+   * de rendu ne sert qu'à désactiver le bouton ; c'est cette référence qui
+   * empêche réellement le second appel.
+   */
+  const isCreatingReportRef = useRef(false);
 
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
   const dayAgenda = useMemo(
@@ -163,6 +173,8 @@ export function AgendaPage() {
   async function handlePrimaryAction(appointment: DayAgendaAppointment) {
     const { primaryAction } = appointment;
 
+    if (isCreatingReportRef.current) return;
+
     if (primaryAction.reportId) {
       if (primaryAction.kind === "view_report") {
         void navigate({
@@ -188,6 +200,8 @@ export function AgendaPage() {
       return;
     }
 
+    isCreatingReportRef.current = true;
+
     try {
       const created = await createReportMutation.mutateAsync({
         petId: patientId,
@@ -201,6 +215,8 @@ export function AgendaPage() {
       });
     } catch {
       toast.error("Le compte rendu n'a pas pu être créé. Réessayez.");
+    } finally {
+      isCreatingReportRef.current = false;
     }
   }
 
@@ -240,8 +256,27 @@ export function AgendaPage() {
     try {
       await updateAppointmentMutation.mutateAsync(input);
       toast.success("Rendez-vous modifié.");
-    } catch {
+    } catch (error) {
       toast.error("La modification n'a pas pu être enregistrée. Réessayez.");
+      // Le message est dit ; l'échec est propagé pour que le dialogue reste
+      // ouvert. Sa fermeture est ce que le praticien lit comme un succès.
+      throw error;
+    }
+  }
+
+  async function handleCreateAppointment(input: {
+    atHome: boolean;
+    beginAt: Date;
+    endAt: Date;
+    note?: string;
+    patientId: string;
+    withReport: boolean;
+  }) {
+    try {
+      await createAppointmentMutation.mutateAsync(input);
+    } catch (error) {
+      toast.error("Le rendez-vous n'a pas pu être créé. Réessayez.");
+      throw error;
     }
   }
 
@@ -305,6 +340,14 @@ export function AgendaPage() {
                 <button
                   key={day.date.toISOString()}
                   type="button"
+                  // Sans nom explicite, `nameFrom: contents` annonce « 9 1
+                  // 09:00 · Oslo » : ni le jour de la semaine, ni le mois. Et
+                  // l'état de la cellule (aujourd'hui, journée choisie) n'est
+                  // porté que par la couleur, donc invisible pour qui ne la
+                  // voit pas.
+                  aria-label={formatLongDate(day.date)}
+                  aria-current={isToday ? "date" : undefined}
+                  aria-pressed={isSelected}
                   onClick={() => setSelectedDate(day.date)}
                   className={cn(
                     "min-h-24 bg-card p-2 text-left transition duration-200 hover:bg-muted",
@@ -366,6 +409,7 @@ export function AgendaPage() {
                     key={appointment.id}
                     appointment={appointment}
                     onPrimaryAction={handlePrimaryAction}
+                    isBusy={createReportMutation.isPending}
                     actions={
                       <AppointmentActionsMenu
                         appointmentLabel={buildAppointmentLabel(appointment)}
@@ -438,9 +482,7 @@ export function AgendaPage() {
         open={isNewAppointmentOpen}
         patients={patients}
         selectedDate={selectedDate}
-        onCreateAppointment={(input) =>
-          createAppointmentMutation.mutateAsync(input)
-        }
+        onCreateAppointment={handleCreateAppointment}
         onOpenChange={setIsNewAppointmentOpen}
       />
 
