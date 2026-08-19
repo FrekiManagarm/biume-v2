@@ -19,7 +19,10 @@ import { useMemo, useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { createAppointment } from "#/lib/api/actions/appointments.action";
-import { appointmentsQueryOptions } from "#/lib/api/queries/appointments.query";
+import {
+  appointmentsQueryOptions,
+  defaultAppointmentWindow,
+} from "#/lib/api/queries/appointments.query";
 import { patientsQueryOptions } from "#/lib/api/queries/patients.query";
 import { cn } from "#/lib/utils";
 
@@ -27,7 +30,9 @@ import { NewAppointmentDialog } from "./new-appointment-dialog";
 
 export function AgendaPage() {
   const queryClient = useQueryClient();
-  const { data: appointments } = useSuspenseQuery(appointmentsQueryOptions());
+  const { data: appointments } = useSuspenseQuery(
+    appointmentsQueryOptions(defaultAppointmentWindow()),
+  );
   const { data: patients } = useSuspenseQuery(patientsQueryOptions());
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(new Date()),
@@ -40,7 +45,7 @@ export function AgendaPage() {
     mutationFn: createAppointment,
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: appointmentsQueryOptions().queryKey,
+        queryKey: appointmentsQueryOptions(defaultAppointmentWindow()).queryKey,
       }),
   });
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
@@ -296,7 +301,29 @@ export function AgendaPage() {
   );
 }
 
-function AppointmentCard({ appointment }: { appointment: Appointment }) {
+// `getAppointments` ne sélectionne qu'un sous-ensemble de colonnes sur
+// `patient` (id, name, breed, owner, animal) : le type `Appointment` complet,
+// avec ses relations obligatoires, ne correspond plus à la forme réellement
+// renvoyée. On ne type ici que ce que la carte affiche.
+type AgendaCardAppointment = {
+  id: string;
+  beginAt: Date | string;
+  endAt: Date | string;
+  status: Appointment["status"];
+  atHome?: boolean | null;
+  note?: string | null;
+  patient?: {
+    name: string | null;
+    owner?: { name: string | null } | null;
+    animal?: { name: string | null } | null;
+  } | null;
+};
+
+function AppointmentCard({
+  appointment,
+}: {
+  appointment: AgendaCardAppointment;
+}) {
   return (
     <article className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.5)]">
       <div className="flex items-start justify-between gap-3">

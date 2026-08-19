@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AgendaPage } from "#/components/dashboard/agenda/agenda-page";
-import { appointmentsQueryOptions } from "#/lib/api/queries/appointments.query";
+import {
+  appointmentsQueryOptions,
+  defaultAppointmentWindow,
+} from "#/lib/api/queries/appointments.query";
 
 export const Route = createFileRoute("/dashboard/agenda")({
   head: () => ({
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/dashboard/agenda")({
   }),
   ssr: true,
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(appointmentsQueryOptions()),
+    context.queryClient.ensureQueryData(
+      appointmentsQueryOptions(defaultAppointmentWindow()),
+    ),
   component: AgendaPage,
 });

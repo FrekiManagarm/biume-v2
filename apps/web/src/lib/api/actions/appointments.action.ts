@@ -6,8 +6,8 @@ import {
   getTodayAppointments as getTodayAppointmentsFn,
 } from "#/functions/appointments.function";
 
-export function getAppointments() {
-  return getAppointmentsFn();
+export function getAppointments(range: { fromISO: string; toISO: string }) {
+  return getAppointmentsFn({ data: range });
 }
 
 export function createAppointment(input: {
