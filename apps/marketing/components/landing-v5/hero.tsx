@@ -68,7 +68,7 @@ export function LandingV5Hero() {
           </a>
           <a
             href="#compte-rendu"
-            className="inline-flex h-[52px] items-center justify-center rounded-full border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] px-6 text-base font-semibold text-[color:var(--lv5-ink)] transition-colors hover:bg-[#F0EFEA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--lv5-violet)]"
+            className="inline-flex h-[52px] items-center justify-center rounded-full border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] px-6 text-base font-semibold text-[color:var(--lv5-ink)] transition-colors hover:bg-[color:var(--lv5-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--lv5-violet)]"
           >
             {HERO_CTA_SECONDARY}
           </a>
