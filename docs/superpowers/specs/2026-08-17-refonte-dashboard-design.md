@@ -98,17 +98,67 @@ expression ne l'est pas : ils doivent être portés sur les tokens et le kit.
 Le vert y marque « Active » et « Session sécurisée » — donc un état, ce qui
 correspond exactement au vert du système.
 
+### Une seule direction artistique, deux plateformes
+
+Le mobile et le web ne sont pas deux produits qui se ressemblent : c'est une
+application pour un praticien, rendue sur deux surfaces. Les primitives doivent
+donc porter **le même nom pour le même concept**, sinon la DA se met à diverger
+à chaque évolution, chaque plateforme croyant détenir la référence.
+
+`apps/mobile/src/design/` expose déjà l'essentiel. Correspondance à tenir :
+
+| Concept | `apps/mobile/src/design` | `apps/web/.../dashboard/kit` |
+| --- | --- | --- |
+| Surface groupée à filets | `GroupedList` | `GroupedList` |
+| Pavé d'icône | `IconTile` | `IconTile` |
+| Carte isolée | `Card` | `Panel` |
+| Ligne de liste | `SelectRow` | `GroupedListRow` |
+| En-tête d'écran | `ScreenHeader` | `PageHeader` |
+| En-tête de section | `SectionHeader` | `SectionHeader` |
+| Pastille d'état | `Badge` | `StatusPill` |
+| Bandeau d'information | `Notice` | *manquant* |
+| État vide | *manquant* | `EmptyState` |
+
+**Tons.** Les deux plateformes nomment les mêmes couleurs différemment, ce qui
+est le pire cas : une même valeur sous deux noms. Le nom retenu est le nom
+sémantique, celui qui dit ce qu'on attend du praticien plutôt que la place de la
+couleur dans une palette.
+
+| Rôle | Mobile aujourd'hui | Web aujourd'hui | Nom retenu |
+| --- | --- | --- | --- |
+| Violet, action qui fait avancer | `primary` | `action` | `action` |
+| Vert, état atteint | `accent` | `done` | `done` |
+| Ambre, dégradé mais pas cassé | `warning` | `attention` | `attention` |
+| Rouge, échec | `danger` | `problem` | `problem` |
+
+`primary` et `accent` décrivent une position dans une palette ; `action` et
+`done` décrivent ce que la couleur dit au praticien. C'est le second registre
+qui empêche un vert d'atterrir sur un bouton d'action.
+
+**Typographie.** Le mobile ne déclare aucune famille : ses tokens de typographie
+ne portent que taille, graisse et interlettrage, et rien ne charge de police au
+démarrage. `expo-font` est pourtant déjà une dépendance (`~57.0.1`). Le mobile
+doit charger Hanken Grotesk, faute de quoi les deux applications partagent leurs
+couleurs mais pas leur voix.
+
+Contrainte technique : React Native ne lit pas le `woff2` embarqué côté web. Il
+faut des `ttf` ou `otf`.
+
 ## Vocabulaire
 
 **« Entreprise », jamais « organisation ».** « Organisation » est un calque de
 l'anglais *organization* ; un ostéopathe indépendant parle de son entreprise ou
 de son cabinet, pas de son organisation.
 
-Portée du renommage : **toute chaîne visible par l'utilisateur** dans
-`apps/web/src/routes` et `apps/web/src/components` — 26 occurrences réparties
-sur `create-organization.tsx`, `select-organization.tsx`,
-`routes/dashboard/settings.tsx`, `dashboard-page-banner.tsx` et
-`account-switch-dialog.tsx`.
+Portée du renommage : **toute chaîne visible par l'utilisateur**, sur les deux
+plateformes.
+
+- `apps/web/src/routes` et `apps/web/src/components` — 26 occurrences réparties
+  sur `create-organization.tsx`, `select-organization.tsx`,
+  `routes/dashboard/settings.tsx`, `dashboard-page-banner.tsx` et
+  `account-switch-dialog.tsx` ;
+- `apps/mobile/src/screens/select-organization-screen.tsx` — 5 occurrences,
+  dont un `accessibilityHint` lu par les lecteurs d'écran.
 
 Restent inchangés, parce qu'ils ne sont pas du texte lu par un praticien :
 

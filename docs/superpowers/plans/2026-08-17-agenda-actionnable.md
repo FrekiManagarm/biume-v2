@@ -2670,6 +2670,216 @@ git commit -m "feat(web): poser le canvas de reference sur le shell du dashboard
 
 ---
 
+## Lot 2 bis — alignement de la direction artistique mobile
+
+Ces trois tâches sont indépendantes du reste du lot 2 et peuvent partir en PR
+séparée. Elles ferment l'écart de DA entre les deux applications : mêmes noms
+pour les mêmes concepts, même typographie, même vocabulaire.
+
+---
+
+### Task 16 : Un seul vocabulaire de primitives et de tons
+
+**Files:**
+- Modify: `apps/web/src/components/dashboard/kit/tone.ts`
+- Modify: `apps/web/src/components/dashboard/kit/section-intro.tsx` → renommé `section-header.tsx`
+- Modify: `apps/web/src/components/dashboard/kit/index.ts`
+- Modify: `apps/mobile/src/design/tokens.ts`
+- Modify: `apps/mobile/src/design/badge.tsx`
+- Modify: `apps/mobile/src/design/row.tsx`
+- Modify: `apps/mobile/src/design/surface.tsx`
+- Modify: `apps/mobile/src/design/notice.tsx`
+- Modify: `apps/mobile/src/design/index.ts`
+
+**Interfaces:**
+- Consomme : `Tone` (tâche 13).
+- Produit : sur les deux plateformes, le type de ton devient
+  `"neutral" | "action" | "done" | "attention" | "problem"`. Le web exporte
+  `SectionHeader` au lieu de `SectionIntro`.
+
+- [ ] **Étape 1 : renommer côté web**
+
+`SectionIntro` n'existe que dans le plan et n'a pas encore d'appelant hors
+tâches 12 et 14 : renommer le fichier en `section-header.tsx` et le composant en
+`SectionHeader`, pour coller au nom déjà porté par le mobile.
+
+```bash
+cd apps/web && git mv src/components/dashboard/kit/section-intro.tsx src/components/dashboard/kit/section-header.tsx
+```
+
+Mettre à jour `kit/index.ts` et les appelants.
+
+- [ ] **Étape 2 : renommer les tons côté mobile**
+
+Dans `apps/mobile/src/design`, remplacer dans les unions de types et les objets
+de correspondance :
+
+| Avant | Après |
+| --- | --- |
+| `'primary'` (ton) | `'action'` |
+| `'accent'` (ton) | `'done'` |
+| `'warning'` (ton) | `'attention'` |
+| `'danger'` (ton) | `'problem'` |
+
+**Attention :** ne renommer que les **tons**, pas les clés de palette. Les
+entrées `primary`, `primaryPressed`, `primarySurface`, `primaryBorder`,
+`accent`, `accentSurface`, `accentBorder`, `danger`, `warning` du type `Palette`
+restent telles quelles — ce sont des valeurs de couleur, pas des rôles
+d'interface. Seuls `BadgeTone`, le `tone` de `SelectRow`, celui d'`IconTile` et
+`NoticeTone` changent.
+
+Vérifier qu'aucun écran n'utilise plus les anciens noms :
+
+```bash
+cd apps/mobile && grep -rn "tone="primary"\|tone="accent"\|tone="danger"\|tone='primary'\|tone='accent'\|tone='danger'" src/
+```
+
+Attendu : aucun résultat.
+
+- [ ] **Étape 3 : vérifier**
+
+```bash
+bun run --filter @biume/mobile check-types && bun run --filter @biume/mobile test
+cd ../web && bunx tsc --noEmit && bunx vitest run
+```
+
+Attendu : aucune régression sur les deux plateformes.
+
+- [ ] **Étape 4 : commit**
+
+```bash
+git add apps/mobile/src/design apps/web/src/components/dashboard/kit
+git commit -m "refactor: nommer les tons par ce qu'ils disent, sur les deux plateformes"
+```
+
+---
+
+### Task 17 : Hanken Grotesk sur mobile
+
+Le web a la police depuis le lot 1, le mobile n'en déclare aucune. Tant que
+c'est le cas, les deux applications partagent leurs couleurs mais pas leur voix.
+
+**Files:**
+- Create: `apps/mobile/assets/fonts/HankenGrotesk-Variable.ttf`
+- Modify: `apps/mobile/src/design/tokens.ts`
+- Modify: `apps/mobile/src/app/_layout.tsx`
+
+**Interfaces:**
+- Produit : les entrées de `typography` gagnent une `fontFamily`.
+
+- [ ] **Étape 1 : lire la documentation Expo avant d'écrire**
+
+`apps/mobile/AGENTS.md` l'impose : *« Expo HAS CHANGED. Read the exact versioned
+docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code. »*
+
+Consulter la page `expo-font` de la version **v57.0.0** et relever la signature
+exacte de `useFonts`, ainsi que la façon recommandée de retenir l'écran de
+démarrage. `expo-font@~57.0.1` et `expo-splash-screen@~57.0.7` sont **déjà**
+installés — ne pas ajouter de dépendance.
+
+- [ ] **Étape 2 : obtenir le fichier de police**
+
+React Native ne lit pas le `woff2` embarqué dans `apps/web/public/fonts` : il
+faut un `ttf` ou un `otf`. Deux voies, par ordre de préférence :
+
+1. Récupérer `HankenGrotesk[wght].ttf` depuis le dépôt amont Google Fonts et le
+   déposer dans `apps/mobile/assets/fonts/`. Aucune dépendance ajoutée, cohérent
+   avec ce qui a été fait côté web au lot 1.
+2. Si la récupération manuelle n'est pas possible, `@expo-google-fonts/hanken-grotesk`
+   embarque les `ttf`. Mesurer l'impact sur `bun.lock` **avant** de committer —
+   le lot 1 a montré qu'un `bun add` re-résout le graphe entier et remonte des
+   paquets sans rapport.
+
+- [ ] **Étape 3 : charger la police au démarrage**
+
+Dans `apps/mobile/src/app/_layout.tsx`, charger la police et ne rendre l'arbre
+qu'une fois prête, selon la signature relevée à l'étape 1. Ne pas rendre les
+écrans avant chargement : un rendu en police système suivi d'un basculement
+décale toutes les mesures de texte.
+
+- [ ] **Étape 4 : déclarer la famille dans les tokens**
+
+Dans `apps/mobile/src/design/tokens.ts`, ajouter la famille à chaque entrée de
+`typography` et à `clockType` :
+
+```ts
+/**
+ * La même famille que le web. Les tokens ne portaient que taille, graisse et
+ * interlettrage : deux applications aux mêmes couleurs mais à deux voix
+ * n'étaient pas la même application.
+ */
+const fontFamily = 'HankenGrotesk';
+```
+
+puis `fontFamily` sur `display`, `title`, `heading`, `body`, `label`, `caption`
+et `clockType`.
+
+- [ ] **Étape 5 : vérifier**
+
+```bash
+bun run --filter @biume/mobile check-types && bun run --filter @biume/mobile test
+```
+
+Puis lancer l'application et vérifier à l'œil qu'un titre et un texte courant
+sont bien rendus en Hanken Grotesk, sur iOS **et** Android — le repli silencieux
+sur la police système est le mode d'échec habituel, et il ne lève aucune erreur.
+
+- [ ] **Étape 6 : commit**
+
+```bash
+git add apps/mobile/assets/fonts apps/mobile/src/design/tokens.ts apps/mobile/src/app/_layout.tsx
+git commit -m "feat(mobile): donner au mobile la typographie du web"
+```
+
+---
+
+### Task 18 : « Entreprise » sur mobile
+
+**Files:**
+- Modify: `apps/mobile/src/screens/select-organization-screen.tsx`
+- Modify: `apps/mobile/src/design/row.tsx` (commentaire)
+
+- [ ] **Étape 1 : relever puis renommer**
+
+```bash
+cd apps/mobile && grep -rn -i "organisation" src/
+```
+
+Attendu : 5 chaînes visibles dans `select-organization-screen.tsx`, plus un
+commentaire dans `row.tsx`. Traductions :
+
+| Avant | Après |
+| --- | --- |
+| Choisissez votre organisation | Choisissez votre entreprise |
+| Chaque organisation a ses propriétaires, ses rapports et ses réglages | Chaque entreprise a ses propriétaires, ses rapports et ses réglages |
+| Reconnectez-vous à Internet pour choisir une organisation. | Reconnectez-vous à Internet pour choisir une entreprise. |
+| Aucune organisation n'est associée à ce compte. | Aucune entreprise n'est associée à ce compte. |
+| Ouvre l'agenda de cette organisation | Ouvre l'agenda de cette entreprise |
+
+La dernière est un `accessibilityHint` : elle est lue à voix haute par
+VoiceOver et TalkBack, donc elle compte autant que le texte à l'écran.
+
+Ne pas toucher au nom de fichier `select-organization-screen.tsx` ni aux
+symboles : seules les chaînes changent.
+
+- [ ] **Étape 2 : vérifier**
+
+```bash
+cd apps/mobile && grep -rn -i "organisation" src/
+bun run --filter @biume/mobile check-types && bun run --filter @biume/mobile test
+```
+
+Attendu : aucune occurrence restante, aucune régression.
+
+- [ ] **Étape 3 : commit**
+
+```bash
+git add apps/mobile/src
+git commit -m "feat(mobile): dire entreprise plutot qu'organisation"
+```
+
+---
+
 ## Auto-revue
 
 **Couverture de la spec.** Contrainte non-technicienne : tâches 3, 9, 10, 14
@@ -2687,6 +2897,11 @@ l'ordre de déroulé. Exécuter : 1, 2, 3, 4, 5, 6, 7, 8, 9, **13**, 10, 11, 12,
 **14**, **15**. La tâche 13 précède les tâches 10 et 12 parce qu'elles
 consomment ses primitives ; les tâches 14 et 15 closent le lot en propageant le
 langage aux pages d'entrée et au shell.
+
+Le lot 2 bis (tâches 16 à 18) est indépendant et peut partir en PR séparée. La
+tâche 16 gagne toutefois à passer juste après la 13, tant que `SectionIntro`
+n'a pas d'appelant : le renommage y coûte deux lignes au lieu d'une passe
+complète.
 
 **Points laissés ouverts, à trancher à l'exécution.**
 
