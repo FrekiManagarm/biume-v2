@@ -52,6 +52,31 @@ describe("GroupedListRow", () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
+  test("le nom accessible est le titre seul, sans le badge ni le meta", () => {
+    const onSelect = vi.fn();
+    render(
+      <GroupedList>
+        <GroupedListRow
+          icon={Building2}
+          title="Cabinet du Vieux Chêne"
+          meta="cabinet-vieux-chene.biume"
+          badge={<span>Active</span>}
+          onSelect={onSelect}
+        />
+      </GroupedList>,
+    );
+
+    // Correspondance exacte : si le badge ou le meta se glissaient dans le nom
+    // accessible, ce nom deviendrait
+    // "Cabinet du Vieux ChêneActivecabinet-vieux-chene.biume" et cette requête
+    // ne trouverait plus rien.
+    const row = screen.getByRole("button", {
+      name: "Cabinet du Vieux Chêne",
+    });
+
+    expect(row).toBeTruthy();
+  });
+
   test("une ligne sans onSelect n'est pas un bouton", () => {
     render(
       <GroupedList>

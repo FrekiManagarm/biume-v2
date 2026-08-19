@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Eyebrow } from "./eyebrow";
+
 type PageHeaderProps = {
   /** Intitulé court au-dessus du titre, repris de `select-organization`. */
   eyebrow?: string;
@@ -25,9 +27,7 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        {eyebrow ? (
-          <p className="text-sm font-medium text-primary">{eyebrow}</p>
-        ) : null}
+        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {title}
         </h1>

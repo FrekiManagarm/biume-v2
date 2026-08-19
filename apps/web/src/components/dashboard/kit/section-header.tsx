@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Eyebrow } from "./eyebrow";
+
 type SectionHeaderProps = {
   /** Intitulé court au-dessus du titre. Nomme la nature de ce qui suit. */
   eyebrow: string;
@@ -10,8 +12,8 @@ type SectionHeaderProps = {
 /**
  * L'en-tête d'une section, repris de `select-organization`.
  *
- * L'intitulé coloré porte la catégorie, le titre porte la question à laquelle
- * la section répond. Cette paire donne au praticien un repère de lecture
+ * L'intitulé porte la catégorie, le titre porte la question à laquelle la
+ * section répond. Cette paire donne au praticien un repère de lecture
  * constant d'une page à l'autre. Nommé `SectionHeader` pour porter le même nom
  * que son équivalent mobile (`apps/mobile/src/design/screen.tsx` exporte déjà
  * `SectionHeader`) — les deux plateformes doivent partager le même vocabulaire
@@ -21,7 +23,7 @@ export function SectionHeader({ actions, eyebrow, title }: SectionHeaderProps) {
   return (
     <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-primary">{eyebrow}</p>
+        <Eyebrow>{eyebrow}</Eyebrow>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
           {title}
         </h2>
