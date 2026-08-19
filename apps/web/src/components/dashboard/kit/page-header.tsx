@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
 type PageHeaderProps = {
+  /** Intitulé court au-dessus du titre, repris de `select-organization`. */
+  eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -14,10 +16,18 @@ type PageHeaderProps = {
  * position fixe compte plus que sa forme : c'est ce qui permet de ne plus
  * chercher.
  */
-export function PageHeader({ actions, description, title }: PageHeaderProps) {
+export function PageHeader({
+  actions,
+  description,
+  eyebrow,
+  title,
+}: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
+        {eyebrow ? (
+          <p className="text-sm font-medium text-primary">{eyebrow}</p>
+        ) : null}
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {title}
         </h1>
