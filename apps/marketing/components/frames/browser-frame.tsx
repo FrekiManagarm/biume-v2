@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { cn } from "@biume/ui/lib/utils";
 import { computeFrameScale } from "./phone-frame";
 
 const BROWSER_CONTENT_WIDTH = 1120;
@@ -52,7 +53,7 @@ export function BrowserFrame({
   return (
     <div
       ref={containerRef}
-      className={`relative aspect-[1203/753] ${className ?? ""}`}
+      className={cn("relative aspect-[1203/753]", className)}
     >
       <div
         aria-hidden="true"

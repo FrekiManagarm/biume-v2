@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { cn } from "@biume/ui/lib/utils";
 
 /**
  * Calcule le facteur d'échelle d'un contenu dessiné à largeur fixe pour
@@ -73,7 +74,7 @@ export function PhoneFrame({
   return (
     <div
       ref={containerRef}
-      className={`relative aspect-[433/882] ${className ?? ""}`}
+      className={cn("relative aspect-[433/882]", className)}
     >
       <div
         aria-hidden="true"
