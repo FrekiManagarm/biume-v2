@@ -5,7 +5,7 @@ import { Text, type TextTone } from './text';
 import { radius, spacing, type Palette } from './tokens';
 import { usePalette } from './use-palette';
 
-export type NoticeTone = 'info' | 'offline' | 'danger' | 'accent';
+export type NoticeTone = 'info' | 'offline' | 'problem' | 'done';
 
 export type NoticeProps = {
   message: string;
@@ -31,7 +31,7 @@ function noticeColors(
         text: 'warning',
         icon: 'offline',
       };
-    case 'danger':
+    case 'problem':
       return {
         background: palette.dangerSurface,
         border: palette.dangerBorder,
@@ -39,7 +39,7 @@ function noticeColors(
         text: 'danger',
         icon: 'alert',
       };
-    case 'accent':
+    case 'done':
       return {
         background: palette.accentSurface,
         border: palette.accentBorder,

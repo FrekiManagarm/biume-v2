@@ -5,7 +5,7 @@ import { Text, type TextTone } from './text';
 import { radius, spacing, type Palette } from './tokens';
 import { usePalette } from './use-palette';
 
-export type BadgeTone = 'neutral' | 'accent' | 'primary' | 'warning' | 'danger';
+export type BadgeTone = 'neutral' | 'done' | 'action' | 'attention' | 'problem';
 
 export type BadgeProps = {
   label: string;
@@ -18,28 +18,28 @@ function badgeColors(
   palette: Palette,
 ): { background: string; border: string; foreground: string; text: TextTone } {
   switch (tone) {
-    case 'accent':
+    case 'done':
       return {
         background: palette.accentSurface,
         border: palette.accentBorder,
         foreground: palette.accent,
         text: 'accent',
       };
-    case 'primary':
+    case 'action':
       return {
         background: palette.primarySurface,
         border: palette.primaryBorder,
         foreground: palette.primary,
         text: 'primary',
       };
-    case 'warning':
+    case 'attention':
       return {
         background: palette.warningSurface,
         border: palette.warningBorder,
         foreground: palette.warning,
         text: 'warning',
       };
-    case 'danger':
+    case 'problem':
       return {
         background: palette.dangerSurface,
         border: palette.dangerBorder,
