@@ -1,0 +1,71 @@
+/* apps/marketing/components/landing-v5/landing-v5.css
+   Scope de thème de la nouvelle landing "SaaS moderne". Chargé par
+   components/landing-v5/index.tsx uniquement. */
+
+.landing-v5 {
+  --lv5-violet: #6B5AC8;
+  --lv5-violet-soft: #EEEBFB;
+  --lv5-violet-ink: #4E3FA3;
+  --lv5-violet-light: #8E82E8;
+  --lv5-blue: #5D9BB8;
+  --lv5-blue-soft: #E8F1F5;
+  --lv5-blue-ink: #3d738c;
+  --lv5-green: #2E9866;
+  --lv5-green-ink: #21734D;
+  --lv5-green-soft: #E7F3ED;
+  --lv5-canvas: #F7F7F4;
+  --lv5-surface: #FDFDFB;
+  --lv5-surface-muted: #ECECE7;
+  --lv5-ink: #1D1D21;
+  --lv5-ink-soft: #696970;
+  --lv5-ink-mid: #4a4a52;
+  --lv5-ink-tertiary: #8a8a92;
+  --lv5-line: #DEDED7;
+  --lv5-frame-border: #E5E4DE;
+  --lv5-anthracite: #202024;
+
+  --lv5-radius-control: 11px;
+  --lv5-radius-card: 17px;
+  --lv5-radius-major: 22px;
+  --lv5-radius-block: 26px;
+
+  --lv5-shadow-cta: 0 10px 24px rgba(107, 90, 200, .26);
+  --lv5-shadow-hover: 0 14px 30px rgba(29, 29, 33, .09);
+
+  --lv5-font-sans: var(--font-landing-v5-sans), ui-sans-serif, system-ui, sans-serif;
+  --lv5-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  background: var(--lv5-canvas);
+  color: var(--lv5-ink);
+  font-family: var(--lv5-font-sans);
+}
+
+/* Fond quadrillé clair : hero, onglets (base), tarifs. */
+.lv5-grid-bg {
+  background-image:
+    linear-gradient(rgba(29, 29, 33, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 29, 33, .055) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
+  mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
+}
+
+/* Fond quadrillé sombre : onglets du compte rendu, clôture. */
+.lv5-grid-bg-dark {
+  background-image:
+    linear-gradient(rgba(253, 253, 251, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(253, 253, 251, .05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
+  mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
+}
+
+@keyframes biume-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes biume-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
