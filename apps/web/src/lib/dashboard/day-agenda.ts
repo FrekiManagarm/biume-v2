@@ -1,3 +1,7 @@
+import { isReportEmpty } from "@biume/contracts/report";
+
+import { deriveSessionState, type SessionState } from "./session-state";
+
 export type AgendaAppointmentStatus =
   | "CREATED"
   | "CONFIRMED"
@@ -6,18 +10,20 @@ export type AgendaAppointmentStatus =
 
 export type AgendaDbReportStatus = "draft" | "finalized" | "sent";
 
-export type AgendaReportStatus =
-  | "none"
-  | "to_create"
-  | "draft"
-  | "ready_to_send"
+export type AgendaReportState =
+  | "absent"
+  | "empty"
+  | "started"
+  | "finalized"
   | "sent";
 
 export type AgendaActionKind =
   | "cancelled"
-  | "prepare"
+  | "upcoming"
+  | "prepare_report"
   | "create_report"
-  | "finalize_report"
+  | "fill_report"
+  | "continue_report"
   | "send_report"
   | "view_report";
 
@@ -25,6 +31,10 @@ export type AgendaReportInput = {
   id: string;
   status: AgendaDbReportStatus;
   updatedAt: Date | string | null;
+  consultationReason: string;
+  notes: string | null;
+  anatomicalIssueCount: number;
+  recommendationCount: number;
 };
 
 export type AgendaAnimalInput = {
@@ -67,7 +77,8 @@ export type DayAgendaAppointment = AgendaAppointmentInput & {
   beginAt: Date;
   endAt: Date;
   durationLabel: string;
-  reportStatus: AgendaReportStatus;
+  sessionState: SessionState;
+  reportState: AgendaReportState;
   primaryAction: AgendaPrimaryAction;
 };
 
@@ -101,41 +112,54 @@ export type BuildDayAgendaInput = {
   selectedDate: Date;
 };
 
-export function deriveAgendaReportStatus(
+export function deriveAgendaReportState(
   reports: AgendaReportInput[] = [],
-  appointmentStatus: AgendaAppointmentStatus,
-): AgendaReportStatus {
+): AgendaReportState {
   const latestReport = getLatestAgendaReport(reports);
 
-  if (!latestReport) {
-    return appointmentStatus === "COMPLETED" ? "to_create" : "none";
-  }
-
+  if (!latestReport) return "absent";
   if (latestReport.status === "sent") return "sent";
-  if (latestReport.status === "finalized") {
-    return "ready_to_send";
-  }
-  if (latestReport.status === "draft") return "draft";
+  if (latestReport.status === "finalized") return "finalized";
 
-  return appointmentStatus === "COMPLETED" ? "to_create" : "none";
+  return isReportEmpty(latestReport) ? "empty" : "started";
 }
 
+/**
+ * Le couple (état de séance, état du compte rendu) détermine l'unique action
+ * proposée. Le libellé est celui que lit le praticien : il dit le geste, pas
+ * l'état interne du système.
+ */
 export function getAgendaPrimaryAction(
-  status: AgendaReportStatus,
-  appointmentStatus: AgendaAppointmentStatus,
-): AgendaPrimaryAction {
-  if (status === "sent") return { kind: "view_report", label: "Voir le CR" };
-  if (status === "ready_to_send") {
-    return { kind: "send_report", label: "Envoyer" };
+  sessionState: SessionState,
+  reportState: AgendaReportState,
+): { kind: AgendaActionKind; label: string } {
+  if (sessionState === "cancelled") {
+    return { kind: "cancelled", label: "Annulé" };
   }
-  if (status === "draft") return { kind: "finalize_report", label: "Finaliser" };
-  if (status === "to_create") {
-    return { kind: "create_report", label: "Créer le compte rendu" };
+
+  if (reportState === "sent") {
+    return { kind: "view_report", label: "Voir le compte rendu" };
   }
-  if (appointmentStatus === "CANCELLED") {
-    return { kind: "cancelled", label: "Annulée" };
+
+  if (reportState === "finalized") {
+    return sessionState === "done"
+      ? { kind: "send_report", label: "Envoyer au propriétaire" }
+      : { kind: "view_report", label: "Voir le compte rendu" };
   }
-  return { kind: "prepare", label: "Préparer" };
+
+  if (reportState === "started") {
+    return { kind: "continue_report", label: "Continuer le compte rendu" };
+  }
+
+  if (sessionState === "done") {
+    return reportState === "absent"
+      ? { kind: "create_report", label: "Créer le compte rendu" }
+      : { kind: "fill_report", label: "Remplir le compte rendu" };
+  }
+
+  return reportState === "absent"
+    ? { kind: "prepare_report", label: "Préparer le compte rendu" }
+    : { kind: "upcoming", label: "Séance à venir" };
 }
 
 export function buildDayAgendaModel({
@@ -152,9 +176,14 @@ export function buildDayAgendaModel({
       const beginAt = new Date(appointment.beginAt);
       const endAt = new Date(appointment.endAt);
       const reports = appointment.reports ?? [];
-      const reportStatus = deriveAgendaReportStatus(reports, appointment.status);
+      const sessionState = deriveSessionState({
+        status: appointment.status,
+        endAt,
+        now,
+      });
+      const reportState = deriveAgendaReportState(reports);
       const primaryAction = {
-        ...getAgendaPrimaryAction(reportStatus, appointment.status),
+        ...getAgendaPrimaryAction(sessionState, reportState),
         ...getAgendaPrimaryActionTarget(appointment.id, reports),
       };
 
@@ -164,7 +193,8 @@ export function buildDayAgendaModel({
         endAt,
         durationLabel: formatDurationLabel(beginAt, endAt),
         reports,
-        reportStatus,
+        sessionState,
+        reportState,
         primaryAction,
       };
     })
@@ -176,7 +206,7 @@ export function buildDayAgendaModel({
   };
 
   for (const appointment of normalizedAppointments) {
-    if (appointment.status === "CANCELLED") continue;
+    if (appointment.sessionState === "cancelled") continue;
 
     const item: AgendaTodoItem = {
       id: `${appointment.id}-${appointment.primaryAction.kind}`,
@@ -187,16 +217,14 @@ export function buildDayAgendaModel({
       timeLabel: formatAgendaTime(appointment.beginAt),
     };
 
-    if (
-      appointment.primaryAction.kind === "prepare" &&
-      appointment.beginAt.getTime() >= now.getTime()
-    ) {
+    if (appointment.primaryAction.kind === "prepare_report") {
       todo.beforeSession.push(item);
     }
 
     if (
       appointment.primaryAction.kind === "create_report" ||
-      appointment.primaryAction.kind === "finalize_report" ||
+      appointment.primaryAction.kind === "fill_report" ||
+      appointment.primaryAction.kind === "continue_report" ||
       appointment.primaryAction.kind === "send_report"
     ) {
       todo.afterSession.push(item);

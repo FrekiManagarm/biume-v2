@@ -2,9 +2,10 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildDayAgendaModel,
-  deriveAgendaReportStatus,
+  deriveAgendaReportState,
   getAgendaPrimaryAction,
   type AgendaAppointmentInput,
+  type AgendaReportInput,
 } from "./day-agenda";
 
 function appointment(
@@ -27,96 +28,118 @@ function appointment(
   };
 }
 
-describe("deriveAgendaReportStatus", () => {
-  test("returns none before a completed session when no report exists", () => {
-    expect(deriveAgendaReportStatus([], "CONFIRMED")).toBe("none");
+function report(
+  overrides: Partial<AgendaReportInput> = {},
+): AgendaReportInput {
+  return {
+    id: "report-1",
+    status: "draft",
+    updatedAt: null,
+    consultationReason: "",
+    notes: null,
+    anatomicalIssueCount: 0,
+    recommendationCount: 0,
+    ...overrides,
+  };
+}
+
+describe("deriveAgendaReportState", () => {
+  test("aucun compte rendu", () => {
+    expect(deriveAgendaReportState([])).toBe("absent");
   });
 
-  test("returns to_create after a completed session when no report exists", () => {
-    expect(deriveAgendaReportStatus([], "COMPLETED")).toBe("to_create");
+  test("un brouillon sans aucune saisie est vide", () => {
+    expect(deriveAgendaReportState([report()])).toBe("empty");
   });
 
-  test("returns draft for a draft report", () => {
+  test("un brouillon avec un motif est commencé", () => {
     expect(
-      deriveAgendaReportStatus(
-        [{ id: "report-1", status: "draft", updatedAt: null }],
-        "COMPLETED",
-      ),
-    ).toBe("draft");
+      deriveAgendaReportState([report({ consultationReason: "Boiterie" })]),
+    ).toBe("started");
   });
 
-  test("returns ready_to_send for a finalized report", () => {
-    expect(
-      deriveAgendaReportStatus(
-        [{ id: "report-1", status: "finalized", updatedAt: null }],
-        "COMPLETED",
-      ),
-    ).toBe("ready_to_send");
+  test("un compte rendu finalisé", () => {
+    expect(deriveAgendaReportState([report({ status: "finalized" })])).toBe(
+      "finalized",
+    );
   });
 
-  test("returns sent for a sent report", () => {
+  test("un compte rendu envoyé", () => {
+    expect(deriveAgendaReportState([report({ status: "sent" })])).toBe("sent");
+  });
+
+  test("le compte rendu le plus récent l'emporte", () => {
     expect(
-      deriveAgendaReportStatus(
-        [{ id: "report-1", status: "sent", updatedAt: null }],
-        "COMPLETED",
-      ),
+      deriveAgendaReportState([
+        report({
+          id: "ancien",
+          status: "draft",
+          updatedAt: new Date("2026-08-01T10:00:00.000Z"),
+        }),
+        report({
+          id: "recent",
+          status: "sent",
+          updatedAt: new Date("2026-08-10T10:00:00.000Z"),
+        }),
+      ]),
     ).toBe("sent");
-  });
-
-  test("returns the latest report status by updatedAt", () => {
-    expect(
-      deriveAgendaReportStatus(
-        [
-          {
-            id: "report-1",
-            status: "sent",
-            updatedAt: new Date("2026-07-01T08:00:00.000Z"),
-          },
-          {
-            id: "report-2",
-            status: "draft",
-            updatedAt: new Date("2026-07-01T09:00:00.000Z"),
-          },
-        ],
-        "COMPLETED",
-      ),
-    ).toBe("draft");
   });
 });
 
 describe("getAgendaPrimaryAction", () => {
-  test("uses Prepare before a report exists on a future/current session", () => {
-    expect(getAgendaPrimaryAction("none", "CONFIRMED")).toMatchObject({
-      kind: "prepare",
-      label: "Préparer",
+  test("une séance annulée ne propose aucune action", () => {
+    expect(getAgendaPrimaryAction("cancelled", "started")).toEqual({
+      kind: "cancelled",
+      label: "Annulé",
     });
   });
 
-  test("uses Create report after completed session without report", () => {
-    expect(getAgendaPrimaryAction("to_create", "COMPLETED")).toMatchObject({
+  test("avant la séance, sans compte rendu, on propose de le préparer", () => {
+    expect(getAgendaPrimaryAction("scheduled", "absent")).toEqual({
+      kind: "prepare_report",
+      label: "Préparer le compte rendu",
+    });
+  });
+
+  test("avant la séance, un brouillon vide n'appelle aucune action", () => {
+    expect(getAgendaPrimaryAction("scheduled", "empty")).toEqual({
+      kind: "upcoming",
+      label: "Séance à venir",
+    });
+  });
+
+  test("avant la séance, un brouillon commencé se continue", () => {
+    expect(getAgendaPrimaryAction("scheduled", "started")).toEqual({
+      kind: "continue_report",
+      label: "Continuer le compte rendu",
+    });
+  });
+
+  test("après la séance, sans compte rendu, on le crée", () => {
+    expect(getAgendaPrimaryAction("done", "absent")).toEqual({
       kind: "create_report",
       label: "Créer le compte rendu",
     });
   });
 
-  test("uses Finalize for draft reports", () => {
-    expect(getAgendaPrimaryAction("draft", "COMPLETED")).toMatchObject({
-      kind: "finalize_report",
-      label: "Finaliser",
+  test("après la séance, un brouillon vide est à remplir", () => {
+    expect(getAgendaPrimaryAction("done", "empty")).toEqual({
+      kind: "fill_report",
+      label: "Remplir le compte rendu",
     });
   });
 
-  test("uses Send for finalized reports", () => {
-    expect(getAgendaPrimaryAction("ready_to_send", "COMPLETED")).toMatchObject({
+  test("après la séance, un compte rendu finalisé est à envoyer", () => {
+    expect(getAgendaPrimaryAction("done", "finalized")).toEqual({
       kind: "send_report",
-      label: "Envoyer",
+      label: "Envoyer au propriétaire",
     });
   });
 
-  test("does not imply a report for a cancelled appointment without report", () => {
-    expect(getAgendaPrimaryAction("none", "CANCELLED")).toMatchObject({
-      kind: "cancelled",
-      label: "Annulée",
+  test("un compte rendu envoyé se consulte", () => {
+    expect(getAgendaPrimaryAction("done", "sent")).toEqual({
+      kind: "view_report",
+      label: "Voir le compte rendu",
     });
   });
 });
@@ -133,11 +156,12 @@ describe("buildDayAgendaModel", () => {
           endAt: new Date("2026-07-01T14:15:00.000Z"),
           status: "COMPLETED",
           reports: [
-            {
+            report({
               id: "draft-report",
               status: "draft",
+              consultationReason: "Boiterie postérieure",
               updatedAt: new Date("2026-07-01T11:00:00.000Z"),
-            },
+            }),
           ],
         }),
       ],
@@ -145,8 +169,8 @@ describe("buildDayAgendaModel", () => {
 
     expect(model.appointments[0]?.durationLabel).toBe("45 min");
     expect(model.appointments[0]?.primaryAction).toMatchObject({
-      kind: "finalize_report",
-      label: "Finaliser",
+      kind: "continue_report",
+      label: "Continuer le compte rendu",
       reportId: "draft-report",
       appointmentId: "draft-appointment",
     });
@@ -166,7 +190,14 @@ describe("buildDayAgendaModel", () => {
           beginAt: new Date("2026-07-01T17:00:00.000Z"),
           endAt: new Date("2026-07-01T18:00:00.000Z"),
           status: "COMPLETED",
-          reports: [{ id: "report-2", status: "draft", updatedAt: null }],
+          reports: [
+            report({
+              id: "report-2",
+              status: "draft",
+              consultationReason: "Suivi",
+              updatedAt: null,
+            }),
+          ],
         }),
         appointment({
           id: "next",
@@ -218,7 +249,14 @@ describe("buildDayAgendaModel", () => {
           beginAt: new Date(2026, 6, 1, 17, 0),
           endAt: new Date(2026, 6, 1, 18, 0),
           status: "COMPLETED",
-          reports: [{ id: "report-2", status: "draft", updatedAt: null }],
+          reports: [
+            report({
+              id: "report-2",
+              status: "draft",
+              consultationReason: "Suivi",
+              updatedAt: null,
+            }),
+          ],
         }),
         appointment({
           id: "selected-day-early",

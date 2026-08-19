@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { toneSoftClassName, type Tone } from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import type { DashboardPriorityItem } from "#/lib/dashboard/dashboard-overview";
 import { cn } from "#/lib/utils";
@@ -17,10 +18,16 @@ type DashboardPrioritiesPanelProps = {
   priorities: DashboardPriorityItem[];
 };
 
-const toneClassName: Record<DashboardPriorityItem["tone"], string> = {
-  neutral: "border-slate-200 bg-white text-slate-600",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-700",
+/**
+ * Le modèle d'agenda parle en `neutral` / `success` / `warning` ; le kit
+ * parle en tons sémantiques. `success` (l'état atteint, un compte rendu
+ * envoyé) devient `done` (vert) ; `warning` (une action encore à faire)
+ * devient `attention`.
+ */
+const priorityTone: Record<DashboardPriorityItem["tone"], Tone> = {
+  neutral: "neutral",
+  success: "done",
+  warning: "attention",
 };
 
 export function DashboardPrioritiesPanel({
@@ -61,7 +68,7 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
       <div
         className={cn(
           "flex size-9 items-center justify-center rounded-lg border",
-          toneClassName[priority.tone],
+          toneSoftClassName(priorityTone[priority.tone]),
         )}
       >
         <Icon className="size-4" />
@@ -79,27 +86,22 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
   );
 }
 
+/**
+ * Toute action doit mener quelque part : c'était le défaut signalé dans la
+ * spec, où « Créer le compte rendu » s'affichait en texte gris non cliquable.
+ * `cancelled` et `upcoming` restent des états sans geste à poser.
+ */
 function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
-  if (
-    priority.reportId &&
-    (priority.actionKind === "finalize_report" ||
-      priority.actionKind === "send_report")
-  ) {
-    return (
-      <Button
-        asChild
-        size="sm"
-        variant="outline"
-        className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
-      >
-        <Link to="/dashboard/reports/$id/edit" params={{ id: priority.reportId }}>
-          {priority.actionLabel}
-        </Link>
-      </Button>
-    );
+  if (priority.actionKind === "cancelled" || priority.actionKind === "upcoming") {
+    return null;
   }
 
-  if (priority.reportId && priority.actionKind === "view_report") {
+  if (priority.reportId) {
+    const to =
+      priority.actionKind === "view_report"
+        ? "/dashboard/reports/$id"
+        : "/dashboard/reports/$id/edit";
+
     return (
       <Button
         asChild
@@ -107,7 +109,7 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
         variant="outline"
         className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
       >
-        <Link to="/dashboard/reports/$id" params={{ id: priority.reportId }}>
+        <Link to={to} params={{ id: priority.reportId }}>
           {priority.actionLabel}
         </Link>
       </Button>
@@ -115,9 +117,14 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   }
 
   return (
-    <span className="mt-3 inline-flex text-xs font-medium text-slate-500">
-      {priority.actionLabel}
-    </span>
+    <Button
+      asChild
+      size="sm"
+      variant="outline"
+      className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
+    >
+      <Link to="/dashboard/agenda">{priority.actionLabel}</Link>
+    </Button>
   );
 }
 

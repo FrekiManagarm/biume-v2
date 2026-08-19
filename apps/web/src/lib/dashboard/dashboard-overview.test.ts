@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import type { AgendaAppointmentInput } from "./day-agenda";
+import type { AgendaAppointmentInput, AgendaReportInput } from "./day-agenda";
 import { buildDashboardOverviewModel } from "./dashboard-overview";
 
 function appointment(
@@ -25,6 +25,19 @@ function appointment(
   };
 }
 
+function report(overrides: Partial<AgendaReportInput> = {}): AgendaReportInput {
+  return {
+    id: "report-1",
+    status: "draft",
+    updatedAt: null,
+    consultationReason: "",
+    notes: null,
+    anatomicalIssueCount: 0,
+    recommendationCount: 0,
+    ...overrides,
+  };
+}
+
 function formatLocalTime(value: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
     hour: "2-digit",
@@ -43,7 +56,7 @@ describe("buildDashboardOverviewModel", () => {
           beginAt: new Date("2026-07-02T07:00:00.000Z"),
           endAt: new Date("2026-07-02T08:00:00.000Z"),
           status: "COMPLETED",
-          reports: [{ id: "report-sent", status: "sent", updatedAt: null }],
+          reports: [report({ id: "report-sent", status: "sent" })],
         }),
         appointment({
           id: "next",
@@ -56,7 +69,7 @@ describe("buildDashboardOverviewModel", () => {
           beginAt: new Date("2026-07-02T11:30:00.000Z"),
           endAt: new Date("2026-07-02T12:30:00.000Z"),
           status: "COMPLETED",
-          reports: [{ id: "report-draft", status: "draft", updatedAt: null }],
+          reports: [report({ id: "report-draft", status: "draft" })],
         }),
       ],
       metrics: {
