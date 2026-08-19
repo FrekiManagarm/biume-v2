@@ -198,7 +198,7 @@ function SelectOrganization() {
 
             {organizations.length > 0 ? (
               <GroupedList>
-                {organizations.map((organization, index) => {
+                {organizations.map((organization) => {
                   const isActive = activeOrganizationId === organization.id;
                   const isPending = pendingOrganizationId === organization.id;
 
@@ -244,7 +244,6 @@ function SelectOrganization() {
                       }
                       disabled={pendingOrganizationId !== null || isSigningOut}
                       onSelect={() => handleSelectOrganization(organization.id)}
-                      style={{ animationDelay: `${index * 70}ms` }}
                     />
                   );
                 })}
