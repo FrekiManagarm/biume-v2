@@ -48,7 +48,7 @@ export function SelectOrganizationScreen({
   return (
     <Screen>
       <ScreenHeader
-        badge={<Badge icon="secure" label="Session sécurisée" tone="accent" />}
+        badge={<Badge icon="secure" label="Session sécurisée" tone="done" />}
         subtitle="Chaque organisation a ses propriétaires, ses rapports et ses réglages."
         title="Choisissez votre organisation"
       />
@@ -88,7 +88,7 @@ export function SelectOrganizationScreen({
                     accessibilityHint="Ouvre l’agenda de cette organisation"
                     badge={
                       active ? (
-                        <Badge icon="check" label="Active" tone="accent" />
+                        <Badge icon="check" label="Active" tone="done" />
                       ) : null
                     }
                     // Another row is opening: block the rest rather than let two
@@ -103,7 +103,7 @@ export function SelectOrganizationScreen({
                     }}
                     pending={pendingId === organization.id}
                     title={organization.name}
-                    tone={active ? 'accent' : 'neutral'}
+                    tone={active ? 'done' : 'neutral'}
                   />
                 );
               })}

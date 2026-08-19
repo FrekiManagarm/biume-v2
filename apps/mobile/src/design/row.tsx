@@ -11,7 +11,7 @@ export type SelectRowProps = {
   title: string;
   subtitle?: string;
   icon: IconName;
-  tone?: 'neutral' | 'accent' | 'primary';
+  tone?: 'neutral' | 'done' | 'action';
   badge?: ReactNode;
   onPress(): void;
   disabled?: boolean;
@@ -92,7 +92,7 @@ export function SelectRow({
         style={[
           styles.trailing,
           {
-            borderColor: tone === 'accent' ? palette.accentBorder : palette.border,
+            borderColor: tone === 'done' ? palette.accentBorder : palette.border,
           },
         ]}
       >
@@ -100,7 +100,7 @@ export function SelectRow({
           <ActivityIndicator color={palette.inkSubtle} size="small" />
         ) : (
           <Icon
-            color={tone === 'accent' ? palette.accent : palette.inkSubtle}
+            color={tone === 'done' ? palette.accent : palette.inkSubtle}
             name="chevronRight"
             size={18}
           />

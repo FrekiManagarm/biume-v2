@@ -49,11 +49,11 @@ const actionStyles: Record<
  */
 const statusStyles: Record<
   string,
-  { icon: IconName; tone: 'neutral' | 'accent' | 'primary' | 'alert' }
+  { icon: IconName; tone: 'neutral' | 'done' | 'action' | 'alert' }
 > = {
   queued: { icon: 'clock', tone: 'neutral' },
-  uploading: { icon: 'upload', tone: 'primary' },
-  uploaded: { icon: 'sent', tone: 'accent' },
+  uploading: { icon: 'upload', tone: 'action' },
+  uploaded: { icon: 'sent', tone: 'done' },
   needs_action: { icon: 'warning', tone: 'alert' },
   expired: { icon: 'alert', tone: 'alert' },
 };
@@ -135,7 +135,7 @@ export function CaptureListScreen({
                           <Badge
                             icon="clock"
                             label={`Expire dans ${item.expiresInHours} h`}
-                            tone={urgent ? 'warning' : 'neutral'}
+                            tone={urgent ? 'attention' : 'neutral'}
                           />
                         )}
                       </View>

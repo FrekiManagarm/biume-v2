@@ -72,7 +72,7 @@ export function ReviewScreen({
     <Screen centered scroll>
       <ScreenHeader
         align="center"
-        badge={<Badge icon="secure" label="Chiffrée sur l’appareil" tone="accent" />}
+        badge={<Badge icon="secure" label="Chiffrée sur l’appareil" tone="done" />}
         title={contextLabel ?? 'Dictée libre'}
       />
 
