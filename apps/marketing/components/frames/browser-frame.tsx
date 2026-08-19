@@ -87,11 +87,11 @@ function BrowserBezel({ urlLabel }: { urlLabel: string }) {
       className="pointer-events-none absolute inset-0 h-full w-full"
       aria-hidden="true"
     >
-      <rect width="1203" height="753" rx="14" fill="#F0EFEA" stroke="#DEDED7" strokeWidth="1.5" />
+      <rect width="1203" height="753" rx="14" fill="#ECECE7" stroke="#DEDED7" strokeWidth="1.5" />
       <circle cx="30" cy="27" r="6" fill="#DEDED7" />
       <circle cx="52" cy="27" r="6" fill="#DEDED7" />
       <circle cx="74" cy="27" r="6" fill="#DEDED7" />
-      <rect x="420" y="14" width="360" height="26" rx="13" fill="#F0EFEA" stroke="#DEDED7" />
+      <rect x="420" y="14" width="360" height="26" rx="13" fill="#ECECE7" stroke="#DEDED7" />
       <text x="600" y="31" textAnchor="middle" fontSize="12" fill="#8a8a92">
         {urlLabel}
       </text>
