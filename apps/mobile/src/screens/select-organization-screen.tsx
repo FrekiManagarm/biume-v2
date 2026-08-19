@@ -49,13 +49,13 @@ export function SelectOrganizationScreen({
     <Screen>
       <ScreenHeader
         badge={<Badge icon="secure" label="Session sécurisée" tone="done" />}
-        subtitle="Chaque organisation a ses propriétaires, ses rapports et ses réglages."
-        title="Choisissez votre organisation"
+        subtitle="Chaque entreprise a ses propriétaires, ses rapports et ses réglages."
+        title="Choisissez votre entreprise"
       />
 
       {online ? null : (
         <Notice
-          message="Reconnectez-vous à Internet pour choisir une organisation."
+          message="Reconnectez-vous à Internet pour choisir une entreprise."
           tone="offline"
         />
       )}
@@ -63,7 +63,7 @@ export function SelectOrganizationScreen({
       {organizations.length === 0 ? (
         <Card variant="dashed">
           <IconTile name="building" size="lg" />
-          <Text variant="heading">Aucune organisation n’est associée à ce compte.</Text>
+          <Text variant="heading">Aucune entreprise n’est associée à ce compte.</Text>
           <Text tone="muted" variant="caption">
             Créez un espace professionnel depuis l’application web, ou demandez
             une invitation à l’administrateur de votre structure.
@@ -85,7 +85,7 @@ export function SelectOrganizationScreen({
 
                 return (
                   <SelectRow
-                    accessibilityHint="Ouvre l’agenda de cette organisation"
+                    accessibilityHint="Ouvre l’agenda de cette entreprise"
                     badge={
                       active ? (
                         <Badge icon="check" label="Active" tone="done" />
