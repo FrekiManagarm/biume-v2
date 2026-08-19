@@ -11,6 +11,9 @@ type ReportsSearch = {
 };
 
 export const Route = createFileRoute("/dashboard/reports")({
+  // Le tableau tronque ses colonnes sous le canvas de lecture max-w-7xl :
+  // la page s'en affranchit elle-même.
+  staticData: { wideContent: true },
   head: () => ({
     meta: [
       { title: "Rapports | Biume" },
