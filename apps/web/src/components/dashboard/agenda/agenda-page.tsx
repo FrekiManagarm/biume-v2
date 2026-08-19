@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { Button } from "#/components/ui/button";
 import { createAppointment } from "#/lib/api/actions/appointments.action";
 import {
+  appointmentsQueryKeyPrefix,
   appointmentsQueryOptions,
   defaultAppointmentWindow,
 } from "#/lib/api/queries/appointments.query";
@@ -30,8 +31,12 @@ import { NewAppointmentDialog } from "./new-appointment-dialog";
 
 export function AgendaPage() {
   const queryClient = useQueryClient();
+  // Calculée une seule fois par montage : `defaultAppointmentWindow()` est
+  // déjà stable à la journée près, mais la recalculer à chaque rendu
+  // recréerait un nouvel objet (et un appel `Date.now()`) pour rien.
+  const appointmentWindow = useMemo(() => defaultAppointmentWindow(), []);
   const { data: appointments } = useSuspenseQuery(
-    appointmentsQueryOptions(defaultAppointmentWindow()),
+    appointmentsQueryOptions(appointmentWindow),
   );
   const { data: patients } = useSuspenseQuery(patientsQueryOptions());
   const [currentMonth, setCurrentMonth] = useState(() =>
@@ -43,10 +48,11 @@ export function AgendaPage() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const createAppointmentMutation = useMutation({
     mutationFn: createAppointment,
+    // On invalide le préfixe, pas une fenêtre précise : la liste peut être en
+    // cache sous la fenêtre calculée par le loader SSR (à un instant
+    // différent de celui-ci) plutôt que sous `appointmentWindow`.
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: appointmentsQueryOptions(defaultAppointmentWindow()).queryKey,
-      }),
+      queryClient.invalidateQueries({ queryKey: appointmentsQueryKeyPrefix }),
   });
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
   const selectedAppointments = appointments

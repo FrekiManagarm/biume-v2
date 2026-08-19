@@ -201,6 +201,13 @@ Le titre auto-généré ne compte pas. Les observations sont stockées dans
   compte rendu, y compris finalisé et déjà envoyé au propriétaire.**
 - À la suppression d'un rendez-vous : brouillon vide supprimé, compte rendu
   non-vide conservé et détaché, toujours rattaché à l'animal.
+- **La suppression ne vise que les comptes rendus au statut `draft`.** Précision
+  ajoutée le 2026-08-19 : `canFinalizeReport` accepte quatre sections marquées
+  « sans objet », donc un compte rendu peut être `finalized` ou `sent` tout en
+  étant « vide » au sens du contenu. Le supprimer emporterait en cascade ses
+  `reportSharedVersion` et `reportOwnerContent` — c'est-à-dire un document déjà
+  partagé avec le propriétaire. Un compte rendu qui a quitté le cabinet n'est
+  plus une coquille, quel que soit son contenu.
 
 ### Statut de séance
 

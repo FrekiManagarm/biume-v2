@@ -12,7 +12,10 @@ import {
   pets,
   reportSectionState,
 } from "@biume/db/schema/index";
-import { createInitialReportSectionStates } from "@biume/contracts/report";
+import {
+  createInitialReportSectionStates,
+  isReportEmpty,
+} from "@biume/contracts/report";
 import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
@@ -177,6 +180,39 @@ export const checkAppointmentConflicts = createServerFn({ method: "GET" })
   });
 
 /**
+ * Construit les requêtes d'insertion du compte rendu et de ses états de
+ * section, sans les exécuter : elles sont conçues pour rejoindre le batch de
+ * création du rendez-vous appelant.
+ */
+function buildReportInsertQueries(
+  organizationId: string,
+  reportId: string,
+  values: {
+    appointmentId: string;
+    patientId: string;
+    title: string;
+    consultationReason: string;
+  },
+) {
+  return [
+    db.insert(advancedReport).values({
+      id: reportId,
+      title: values.title,
+      consultationReason: values.consultationReason,
+      patientId: values.patientId,
+      appointmentId: values.appointmentId,
+      notes: "",
+      status: "draft",
+      createdBy: organizationId,
+      createdAt: new Date(),
+    }),
+    db.insert(reportSectionState).values(
+      buildReportSectionStateRows(reportId, createInitialReportSectionStates()),
+    ),
+  ] as const;
+}
+
+/**
  * Crée un nouveau rendez-vous
  */
 export const createAppointment = createServerFn({ method: "POST" })
@@ -195,9 +231,56 @@ export const createAppointment = createServerFn({ method: "POST" })
           columns: { id: true },
         }),
       insertAppointment: async () => {
-        const [newAppointment] = await db
+        // Le rendez-vous est un `$defaultFn` normalement, mais son id doit
+        // être connu avant l'exécution du batch pour que `advancedReport`
+        // puisse le référencer dans le même batch : on le génère nous-mêmes,
+        // exactement comme pour `reportId` plus bas.
+        const appointmentId = crypto.randomUUID();
+
+        const animal = await db.query.pets.findFirst({
+          where: eq(pets.id, data.patientId),
+          columns: { name: true },
+        });
+
+        // `insertReport` ne touche pas la base : il ne fait que réserver un id
+        // et retenir les valeurs à insérer. Les requêtes du compte rendu sont
+        // construites juste en dessous, à partir de ces valeurs, pour
+        // rejoindre celle du rendez-vous dans un unique batch. Deux batches
+        // séparés exposeraient un état intermédiaire où le rendez-vous existe
+        // déjà sans son compte rendu si la seconde écriture échouait — le
+        // praticien réessaierait et dupliquerait le rendez-vous.
+        let pendingReportId: string | null = null;
+        let pendingReportValues: {
+          appointmentId: string;
+          patientId: string;
+          title: string;
+          consultationReason: string;
+        } | null = null;
+
+        await createSessionReport(
+          {
+            insertReport: (values) => {
+              const reportId = crypto.randomUUID();
+              pendingReportId = reportId;
+              pendingReportValues = values;
+
+              return Promise.resolve(reportId);
+            },
+          },
+          {
+            appointmentId,
+            patientId: data.patientId,
+            animalName: animal?.name ?? null,
+            beginAt: data.beginAt,
+            note: data.note ?? null,
+            withReport: data.withReport,
+          },
+        );
+
+        const appointmentInsert = db
           .insert(appointments)
           .values({
+            id: appointmentId,
             patientId: data.patientId,
             beginAt: data.beginAt,
             endAt: data.endAt,
@@ -209,49 +292,22 @@ export const createAppointment = createServerFn({ method: "POST" })
           })
           .returning();
 
-        const animal = await db.query.pets.findFirst({
-          where: eq(pets.id, data.patientId),
-          columns: { name: true },
-        });
+        if (pendingReportId && pendingReportValues) {
+          const [reportInsert, sectionStateInsert] = buildReportInsertQueries(
+            organization.id,
+            pendingReportId,
+            pendingReportValues,
+          );
+          const [insertedAppointments] = await db.batch([
+            appointmentInsert,
+            reportInsert,
+            sectionStateInsert,
+          ]);
+          return insertedAppointments[0];
+        }
 
-        await createSessionReport(
-          {
-            insertReport: async (values) => {
-              const reportId = crypto.randomUUID();
-              await db.batch([
-                db.insert(advancedReport).values({
-                  id: reportId,
-                  title: values.title,
-                  consultationReason: values.consultationReason,
-                  patientId: values.patientId,
-                  appointmentId: values.appointmentId,
-                  notes: "",
-                  status: "draft",
-                  createdBy: organization.id,
-                  createdAt: new Date(),
-                }),
-                db.insert(reportSectionState).values(
-                  buildReportSectionStateRows(
-                    reportId,
-                    createInitialReportSectionStates(),
-                  ),
-                ),
-              ]);
-
-              return reportId;
-            },
-          },
-          {
-            appointmentId: newAppointment.id,
-            patientId: data.patientId,
-            animalName: animal?.name ?? null,
-            beginAt: data.beginAt,
-            note: data.note ?? null,
-            withReport: data.withReport,
-          },
-        );
-
-        return newAppointment;
+        const [insertedAppointments] = await db.batch([appointmentInsert]);
+        return insertedAppointments[0];
       },
     });
   });
@@ -318,10 +374,16 @@ export const deleteAppointment = createServerFn({ method: "POST" })
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
 
+      // Restreint aux brouillons : `canFinalizeReport` accepte des sections
+      // marquées « sans objet », donc un compte rendu peut être `finalized`
+      // ou `sent` — et déjà envoyé au propriétaire — tout en étant vide au
+      // sens du contenu. Seule la coquille `draft` auto-créée avec le
+      // rendez-vous est concernée par la suppression.
       const linkedReports = await db.query.advancedReport.findMany({
         where: and(
           eq(advancedReport.appointmentId, data.appointmentId),
           eq(advancedReport.createdBy, organization.id),
+          eq(advancedReport.status, "draft"),
         ),
         columns: {
           id: true,
@@ -344,15 +406,7 @@ export const deleteAppointment = createServerFn({ method: "POST" })
         })),
       );
 
-      // Les comptes rendus non vides sont détachés par la contrainte
-      // `ON DELETE set null` posée à la tâche 4.
-      if (deleteIds.length > 0) {
-        await db
-          .delete(advancedReport)
-          .where(inArray(advancedReport.id, deleteIds));
-      }
-
-      const [deletedAppointment] = await db
+      const appointmentDelete = db
         .delete(appointments)
         .where(
           and(
@@ -362,7 +416,32 @@ export const deleteAppointment = createServerFn({ method: "POST" })
         )
         .returning();
 
-      return deletedAppointment;
+      // Les comptes rendus non vides sont détachés par la contrainte
+      // `ON DELETE set null` posée à la tâche 4. Les deux suppressions sont
+      // groupées dans un même batch : si le `DELETE appointments` échouait
+      // après un `DELETE advancedReport` isolé, le brouillon serait déjà
+      // perdu alors que le rendez-vous survivrait. `createdBy` est reposé sur
+      // le `DELETE` lui-même en défense en profondeur, au cas où `deleteIds`
+      // viendrait un jour d'une source moins strictement scopée.
+      if (deleteIds.length > 0) {
+        const reportDelete = db
+          .delete(advancedReport)
+          .where(
+            and(
+              inArray(advancedReport.id, deleteIds),
+              eq(advancedReport.createdBy, organization.id),
+            ),
+          );
+
+        const [, appointmentResults] = await db.batch([
+          reportDelete,
+          appointmentDelete,
+        ]);
+        return appointmentResults[0];
+      }
+
+      const [appointmentResults] = await db.batch([appointmentDelete]);
+      return appointmentResults[0];
     } catch (error) {
       console.error("Error deleting appointment", error);
       throw new Error("Error deleting appointment");
@@ -458,14 +537,32 @@ export const getAppointmentsWithoutReport = createServerFn({ method: "GET" })
         reports: {
           columns: {
             id: true,
+            consultationReason: true,
+            notes: true,
+          },
+          with: {
+            anatomicalIssues: { columns: { id: true } },
+            recommendations: { columns: { id: true } },
           },
         },
       },
     });
 
-    // Filtrer ceux qui n'ont pas de rapport
-    const appointmentsWithoutReport = completedAppointments.filter(
-      (apt) => !apt.reports || apt.reports.length === 0,
+    // « Sans rapport » se lit désormais comme « sans contenu clinique » :
+    // depuis la tâche 6, un rendez-vous a presque toujours un brouillon vide
+    // créé automatiquement. Filtrer sur sa seule présence ferait disparaître
+    // silencieusement tout rendez-vous récent de cette liste, qui perdrait
+    // son sens. `isReportEmpty` sur chaque rapport (vacuously vrai s'il n'y
+    // en a aucun) couvre les deux cas.
+    const appointmentsWithoutReport = completedAppointments.filter((apt) =>
+      apt.reports.every((report) =>
+        isReportEmpty({
+          consultationReason: report.consultationReason,
+          notes: report.notes,
+          anatomicalIssueCount: report.anatomicalIssues.length,
+          recommendationCount: report.recommendations.length,
+        }),
+      ),
     );
 
     return appointmentsWithoutReport;
