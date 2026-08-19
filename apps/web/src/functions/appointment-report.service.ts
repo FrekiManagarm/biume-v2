@@ -1,3 +1,8 @@
+import {
+  isReportEmpty,
+  type ReportContentSummary,
+} from "@biume/contracts/report";
+
 export type CreateSessionReportInput = {
   appointmentId: string;
   patientId: string;
@@ -51,4 +56,27 @@ export async function createSessionReport(
   });
 
   return { reportId };
+}
+
+/**
+ * Supprimer un rendez-vous ne doit jamais détruire un compte rendu que le
+ * praticien a commencé — il peut avoir été finalisé et envoyé au propriétaire.
+ * Seule la coquille encore vide, créée automatiquement avec le rendez-vous,
+ * part avec lui.
+ */
+export function resolveReportsOnAppointmentDeletion(
+  reports: Array<ReportContentSummary & { id: string }>,
+): { deleteIds: string[]; detachIds: string[] } {
+  const deleteIds: string[] = [];
+  const detachIds: string[] = [];
+
+  for (const report of reports) {
+    if (isReportEmpty(report)) {
+      deleteIds.push(report.id);
+    } else {
+      detachIds.push(report.id);
+    }
+  }
+
+  return { deleteIds, detachIds };
 }

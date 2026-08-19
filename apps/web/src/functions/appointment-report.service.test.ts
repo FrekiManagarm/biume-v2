@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
   buildSessionReportTitle,
   createSessionReport,
+  resolveReportsOnAppointmentDeletion,
 } from "./appointment-report.service";
 
 const input = {
@@ -66,5 +67,49 @@ describe("createSessionReport", () => {
     expect(insertReport).toHaveBeenCalledWith(
       expect.objectContaining({ consultationReason: "" }),
     );
+  });
+});
+
+describe("resolveReportsOnAppointmentDeletion", () => {
+  const emptyReport = {
+    id: "vide",
+    consultationReason: "",
+    notes: null,
+    anatomicalIssueCount: 0,
+    recommendationCount: 0,
+  };
+  const startedReport = {
+    id: "rempli",
+    consultationReason: "Boiterie postérieur droit",
+    notes: null,
+    anatomicalIssueCount: 2,
+    recommendationCount: 1,
+  };
+
+  test("un brouillon vide part avec le rendez-vous", () => {
+    expect(resolveReportsOnAppointmentDeletion([emptyReport])).toEqual({
+      deleteIds: ["vide"],
+      detachIds: [],
+    });
+  });
+
+  test("un compte rendu rempli survit, détaché", () => {
+    expect(resolveReportsOnAppointmentDeletion([startedReport])).toEqual({
+      deleteIds: [],
+      detachIds: ["rempli"],
+    });
+  });
+
+  test("les deux cas cohabitent sur un même rendez-vous", () => {
+    expect(
+      resolveReportsOnAppointmentDeletion([emptyReport, startedReport]),
+    ).toEqual({ deleteIds: ["vide"], detachIds: ["rempli"] });
+  });
+
+  test("aucun compte rendu, rien à faire", () => {
+    expect(resolveReportsOnAppointmentDeletion([])).toEqual({
+      deleteIds: [],
+      detachIds: [],
+    });
   });
 });

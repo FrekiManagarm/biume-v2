@@ -1,5 +1,5 @@
 import { db } from "@biume/db";
-import { and, eq, or, lte, gte, ne } from "drizzle-orm";
+import { and, eq, or, lte, gte, ne, inArray } from "drizzle-orm";
 import { getCurrentOrganization } from "#/functions/auth.function";
 import {
   createAppointmentWithPatientIsolation,
@@ -18,7 +18,10 @@ import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
 
 import { buildReportSectionStateRows } from "./report-domain";
-import { createSessionReport } from "./appointment-report.service";
+import {
+  createSessionReport,
+  resolveReportsOnAppointmentDeletion,
+} from "./appointment-report.service";
 
 const appointmentWindowSchema = z.object({
   fromISO: z.string(),
@@ -314,6 +317,40 @@ export const deleteAppointment = createServerFn({ method: "POST" })
     try {
       const organization = await getCurrentOrganization();
       if (!organization) throw new Error("Organization not found");
+
+      const linkedReports = await db.query.advancedReport.findMany({
+        where: and(
+          eq(advancedReport.appointmentId, data.appointmentId),
+          eq(advancedReport.createdBy, organization.id),
+        ),
+        columns: {
+          id: true,
+          consultationReason: true,
+          notes: true,
+        },
+        with: {
+          anatomicalIssues: { columns: { id: true } },
+          recommendations: { columns: { id: true } },
+        },
+      });
+
+      const { deleteIds } = resolveReportsOnAppointmentDeletion(
+        linkedReports.map((report) => ({
+          id: report.id,
+          consultationReason: report.consultationReason,
+          notes: report.notes,
+          anatomicalIssueCount: report.anatomicalIssues.length,
+          recommendationCount: report.recommendations.length,
+        })),
+      );
+
+      // Les comptes rendus non vides sont détachés par la contrainte
+      // `ON DELETE set null` posée à la tâche 4.
+      if (deleteIds.length > 0) {
+        await db
+          .delete(advancedReport)
+          .where(inArray(advancedReport.id, deleteIds));
+      }
 
       const [deletedAppointment] = await db
         .delete(appointments)
