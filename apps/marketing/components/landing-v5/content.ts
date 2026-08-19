@@ -275,6 +275,7 @@ export const OWNER_MOCK_LINK = {
   message: "Le compte rendu de Nashira est disponible.",
   codeLabel: "Code reçu par SMS",
   digits: ["4", "1", "8", ""],
+  cta: "Voir le compte rendu",
 } as const;
 
 export const OWNER_MOCK_FOLLOWUP = {

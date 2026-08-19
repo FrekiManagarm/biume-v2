@@ -75,7 +75,9 @@ export function LandingV5Owner() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-auto min-h-[34px] rounded-[10px] bg-[color:var(--lv5-blue)]" />
+                <div className="mt-auto flex items-center justify-center min-h-[34px] rounded-[10px] bg-[color:var(--lv5-blue)] text-[0.78rem] font-semibold text-white">
+                  {OWNER_MOCK_LINK.cta}
+                </div>
               </div>
             </PhoneFrame>
 
