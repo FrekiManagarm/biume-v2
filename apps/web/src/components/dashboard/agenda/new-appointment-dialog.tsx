@@ -1,4 +1,11 @@
-import { CalendarDays, Clock, Home, MapPin, PawPrint } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Home,
+  MapPin,
+  NotepadText,
+  PawPrint,
+} from "lucide-react";
 import type { FormEvent } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -31,6 +38,7 @@ export type NewAppointmentDialogProps = {
     endAt: Date;
     note?: string;
     patientId: string;
+    withReport: boolean;
   }) => Promise<unknown> | unknown;
   onOpenChange: (open: boolean) => void;
 };
@@ -63,6 +71,7 @@ export function NewAppointmentDialog({
       endAt: buildLocalDate(date, endTime),
       note: note.length > 0 ? note : undefined,
       patientId,
+      withReport: formData.get("withReport") === "on",
     });
 
     onOpenChange(false);
@@ -74,10 +83,10 @@ export function NewAppointmentDialog({
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <div className="mb-1 flex size-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
+            <div className="mb-1 flex size-10 items-center justify-center rounded-xl border border-primary-border bg-primary-surface text-primary">
               <CalendarDays className="size-4" />
             </div>
-            <DialogTitle className="text-xl font-semibold tracking-tight text-slate-950">
+            <DialogTitle className="text-xl font-semibold tracking-tight text-foreground">
               Créer un rendez-vous
             </DialogTitle>
             <DialogDescription>
@@ -90,7 +99,7 @@ export function NewAppointmentDialog({
             <div className="grid gap-2">
               <Label htmlFor="appointment-patient">Patient</Label>
               <div className="relative">
-                <PawPrint className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <PawPrint className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <select
                   id="appointment-patient"
                   name="patientId"
@@ -124,7 +133,7 @@ export function NewAppointmentDialog({
               <div className="grid gap-2">
                 <Label htmlFor="appointment-start-time">Début</Label>
                 <div className="relative">
-                  <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="appointment-start-time"
                     name="startTime"
@@ -147,21 +156,41 @@ export function NewAppointmentDialog({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted px-4 py-3">
               <div className="min-w-0">
                 <Label
                   htmlFor="appointment-at-home"
                   className="flex items-center gap-2"
                 >
-                  <Home className="size-4 text-slate-500" />
+                  <Home className="size-4 text-muted-foreground" />
                   Rendez-vous à domicile
                 </Label>
-                <p className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="size-3.5" />
                   Désactivez pour une séance au cabinet.
                 </p>
               </div>
               <Switch id="appointment-at-home" name="atHome" />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted px-4 py-3">
+              <div className="min-w-0">
+                <Label
+                  htmlFor="appointment-with-report"
+                  className="flex items-center gap-2"
+                >
+                  <NotepadText className="size-4 text-muted-foreground" />
+                  Préparer le compte rendu de cette séance
+                </Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Il vous attendra sur ce rendez-vous après la séance.
+                </p>
+              </div>
+              <Switch
+                id="appointment-with-report"
+                name="withReport"
+                defaultChecked
+              />
             </div>
 
             <div className="grid gap-2">
