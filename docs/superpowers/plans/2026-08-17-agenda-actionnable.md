@@ -41,6 +41,14 @@ Ce plan part de cette branche.
 - **Aucune couleur codée en dur.** Toute page passe par les tokens et par
   `apps/web/src/components/dashboard/kit`. Aucun `slate-*`, `emerald-*`,
   `sky-*` ou `amber-*` ne doit subsister dans les fichiers touchés.
+- **Langage visuel de référence : `select-organization.tsx`.** Le dashboard, son
+  layout et ses pages subsidiaires en reprennent le canvas, la liste groupée
+  (une surface, des lignes séparées par un filet), les pavés d'icônes, les
+  intitulés de section et les interactions. Les pages d'entrée gardent seules le
+  hero en split et le titre display.
+- **« Entreprise », jamais « organisation »** dans tout texte lu par un
+  praticien. Les routes, la table `organization`, les identifiants HTML et les
+  noms de symboles restent inchangés.
 - **Ne pas modifier `packages/ui/src/styles/globals.css`** — `apps/marketing`
   en hérite.
 - **Ne pas éditer `apps/web/src/routeTree.gen.ts` à la main.** Regénérer avec
@@ -70,6 +78,10 @@ Ce plan part de cette branche.
 | `apps/web/src/components/dashboard/agenda/appointment-actions-menu.tsx` | Menu `⋯` : modifier, annuler, supprimer |
 | `apps/web/src/components/dashboard/agenda/edit-appointment-dialog.tsx` | Dialogue de modification d'un rendez-vous |
 | `packages/db/src/migrations/0005_detach_report_from_appointment.sql` | Généré par drizzle-kit |
+| `apps/web/src/components/dashboard/kit/grouped-list.tsx` | La liste groupée de `select-organization` : une surface, des lignes séparées par un filet |
+| `apps/web/src/components/dashboard/kit/grouped-list.test.tsx` | Vérifie la sélection d'une ligne et l'état désactivé |
+| `apps/web/src/components/dashboard/kit/icon-tile.tsx` | Le pavé d'icône de la référence, en deux tailles |
+| `apps/web/src/components/dashboard/kit/section-intro.tsx` | Intitulé coloré, titre, actions alignées à droite |
 
 **Modifiés**
 
@@ -2045,7 +2057,13 @@ Remplacer intégralement `agenda-page.tsx`. Contraintes :
   `text-slate-400` → `text-muted-foreground`, la sélection
   `bg-emerald-50 ring-emerald-500` → `bg-primary-surface ring-primary`, et le
   jour courant `bg-slate-950 text-white` → `bg-primary text-primary-foreground`.
-- Le panneau « À venir » liste les prochains rendez-vous avec `ListRow`.
+- Le panneau « À venir » liste les prochains rendez-vous avec `GroupedList` et
+  `GroupedListRow` (tâche 13), pas une carte par ligne.
+- Les en-têtes de section utilisent `SectionIntro`, et la page `PageHeader` avec
+  son `eyebrow`.
+
+**Ordre d'exécution :** la tâche 13 doit être terminée avant celle-ci, puisque
+la page consomme `GroupedList`, `SectionIntro` et `IconTile`.
 
 - [ ] **Étape 2 : adapter la route**
 
@@ -2106,15 +2124,569 @@ git commit -m "feat(web): reconstruire l'agenda sur le kit et le modele de seanc
 
 ---
 
+### Task 13 : Porter le langage de `select-organization` dans le kit
+
+`select-organization.tsx` est le meilleur travail de design du dépôt, et le
+système mobile s'en réclame déjà explicitement. Mais il n'existe que là, sous
+forme de classes recopiées. Cette tâche l'extrait pour que chaque page suivante
+en hérite au lieu de le réinventer.
+
+Elle passe **avant** la tâche 12 dans l'ordre d'exécution réel, puisque la page
+Agenda doit consommer ces primitives. Elle est numérotée 13 pour ne pas
+renuméroter un plan déjà relu.
+
+**Files:**
+- Create: `apps/web/src/components/dashboard/kit/icon-tile.tsx`
+- Create: `apps/web/src/components/dashboard/kit/grouped-list.tsx`
+- Create: `apps/web/src/components/dashboard/kit/section-intro.tsx`
+- Test: `apps/web/src/components/dashboard/kit/grouped-list.test.tsx`
+- Modify: `apps/web/src/components/dashboard/kit/page-header.tsx`
+- Modify: `apps/web/src/components/dashboard/kit/index.ts`
+
+**Interfaces:**
+- Consomme : `Tone`, `toneSoftClassName` (kit, lot 1).
+- Produit : `IconTile`, `GroupedList`, `GroupedListRow`, `SectionIntro`, et
+  `PageHeader` gagne une prop `eyebrow?: string`. Utilisés par les tâches 12, 14
+  et 15, et par les lots 3 et 4.
+
+- [ ] **Étape 1 : écrire les tests qui échouent**
+
+Créer `apps/web/src/components/dashboard/kit/grouped-list.test.tsx` :
+
+```tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { Building2 } from "lucide-react";
+import { describe, expect, test, vi } from "vitest";
+
+import { GroupedList, GroupedListRow } from "./grouped-list";
+
+describe("GroupedListRow", () => {
+  test("une ligne sélectionnable est un bouton nommé par son titre", async () => {
+    const onSelect = vi.fn();
+    render(
+      <GroupedList>
+        <GroupedListRow
+          icon={Building2}
+          title="Cabinet du Vieux Chêne"
+          meta="cabinet-vieux-chene.biume"
+          onSelect={onSelect}
+        />
+      </GroupedList>,
+    );
+
+    const row = screen.getByRole("button", { name: /Cabinet du Vieux Chêne/ });
+    await userEvent.click(row);
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  test("une ligne désactivée n'appelle pas onSelect", async () => {
+    const onSelect = vi.fn();
+    render(
+      <GroupedList>
+        <GroupedListRow
+          icon={Building2}
+          title="Cabinet du Vieux Chêne"
+          onSelect={onSelect}
+          disabled
+        />
+      </GroupedList>,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /Cabinet du Vieux Chêne/ }),
+    );
+
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test("une ligne sans onSelect n'est pas un bouton", () => {
+    render(
+      <GroupedList>
+        <GroupedListRow icon={Building2} title="Cabinet du Vieux Chêne" />
+      </GroupedList>,
+    );
+
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText("Cabinet du Vieux Chêne")).toBeTruthy();
+  });
+});
+```
+
+Vérifier que `@testing-library/user-event` est disponible :
+
+```bash
+cd apps/web && grep -n "user-event" package.json
+```
+
+S'il est absent, utiliser `fireEvent.click` de `@testing-library/react` plutôt
+que d'ajouter une dépendance — le lot 1 a montré qu'un `bun add` re-résout le
+graphe entier.
+
+- [ ] **Étape 2 : lancer les tests pour vérifier qu'ils échouent**
+
+```bash
+cd apps/web && bunx vitest run src/components/dashboard/kit/grouped-list.test.tsx
+```
+
+Attendu : ÉCHEC, `Failed to resolve import "./grouped-list"`.
+
+- [ ] **Étape 3 : implémenter le pavé d'icône**
+
+Créer `apps/web/src/components/dashboard/kit/icon-tile.tsx` :
+
+```tsx
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { cn } from "#/lib/utils";
+
+import { toneSoftClassName, type Tone } from "./tone";
+
+type IconTileProps = {
+  icon?: LucideIcon;
+  tone?: Tone;
+  size?: "sm" | "md";
+  /** Un logo ou une image, à la place de l'icône. */
+  children?: ReactNode;
+  className?: string;
+};
+
+/**
+ * Le carré qui identifie une ligne ou une carte.
+ *
+ * Repris de `select-organization`, où il porte le logo d'une entreprise ou son
+ * initiale par défaut. Sa taille est fixe : c'est ce qui aligne verticalement
+ * toutes les lignes d'une liste, quelle que soit la longueur de leur contenu.
+ */
+export function IconTile({
+  children,
+  className,
+  icon: Icon,
+  size = "md",
+  tone = "neutral",
+}: IconTileProps) {
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center overflow-hidden border transition duration-300",
+        size === "md" ? "size-12 rounded-xl" : "size-9 rounded-lg",
+        toneSoftClassName(tone),
+        className,
+      )}
+    >
+      {children ?? (Icon ? <IconTileGlyph icon={Icon} size={size} /> : null)}
+    </span>
+  );
+}
+
+function IconTileGlyph({ icon: Icon, size }: { icon: LucideIcon; size: "sm" | "md" }) {
+  return <Icon className={size === "md" ? "size-5" : "size-4"} aria-hidden />;
+}
+```
+
+- [ ] **Étape 4 : implémenter la liste groupée**
+
+Créer `apps/web/src/components/dashboard/kit/grouped-list.tsx` :
+
+```tsx
+import { ArrowRight, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { cn } from "#/lib/utils";
+
+import { IconTile } from "./icon-tile";
+import type { Tone } from "./tone";
+
+type GroupedListProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+/**
+ * Une liste d'éléments de même nature.
+ *
+ * Motif structurant de `select-organization` : **une seule** surface, dont les
+ * lignes sont séparées par un filet. Empiler une carte par élément fabrique un
+ * bruit visuel qui fait perdre la colonne de lecture, et `AGENTS.md` réserve la
+ * carte aux éléments répétés encadrés, pas à chaque ligne.
+ */
+export function GroupedList({ children, className }: GroupedListProps) {
+  return (
+    <div
+      className={cn(
+        "divide-y divide-border overflow-hidden rounded-card border border-border bg-card",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+type GroupedListRowProps = {
+  icon?: LucideIcon;
+  iconTone?: Tone;
+  /** Un logo, à la place de l'icône. */
+  iconContent?: ReactNode;
+  title: string;
+  meta?: string;
+  badge?: ReactNode;
+  /** Remplace l'affordance de droite : un bouton, un menu, un état. */
+  trailing?: ReactNode;
+  onSelect?: () => void;
+  disabled?: boolean;
+};
+
+export function GroupedListRow({
+  badge,
+  disabled,
+  icon,
+  iconContent,
+  iconTone = "neutral",
+  meta,
+  onSelect,
+  title,
+  trailing,
+}: GroupedListRowProps) {
+  const content = (
+    <>
+      <IconTile icon={icon} tone={iconTone}>
+        {iconContent}
+      </IconTile>
+
+      <span className="min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold text-foreground sm:text-base">
+            {title}
+          </span>
+          {badge}
+        </span>
+        {meta ? (
+          <span className="mt-1 block truncate text-sm text-muted-foreground">
+            {meta}
+          </span>
+        ) : null}
+      </span>
+
+      {trailing ?? (onSelect ? <GroupedListAffordance /> : <span />)}
+    </>
+  );
+
+  const layout =
+    "grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-4 text-left sm:px-5";
+
+  if (!onSelect) {
+    return <div className={layout}>{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className={cn(
+        layout,
+        "group transition duration-300 ease-out hover:bg-muted active:scale-[0.99]",
+        "disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100",
+      )}
+    >
+      {content}
+    </button>
+  );
+}
+
+function GroupedListAffordance() {
+  return (
+    <span className="flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition duration-300 group-hover:-translate-y-px group-hover:text-foreground">
+      <ArrowRight className="size-4" aria-hidden />
+    </span>
+  );
+}
+```
+
+- [ ] **Étape 5 : implémenter l'intitulé de section et l'eyebrow**
+
+Créer `apps/web/src/components/dashboard/kit/section-intro.tsx` :
+
+```tsx
+import type { ReactNode } from "react";
+
+type SectionIntroProps = {
+  /** Intitulé court au-dessus du titre. Nomme la nature de ce qui suit. */
+  eyebrow: string;
+  title: string;
+  actions?: ReactNode;
+};
+
+/**
+ * L'en-tête d'une section, repris de `select-organization`.
+ *
+ * L'intitulé coloré porte la catégorie, le titre porte la question à laquelle
+ * la section répond. Cette paire donne au praticien un repère de lecture
+ * constant d'une page à l'autre.
+ */
+export function SectionIntro({ actions, eyebrow, title }: SectionIntroProps) {
+  return (
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-primary">{eyebrow}</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+      </div>
+      {actions ? (
+        <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>
+      ) : null}
+    </div>
+  );
+}
+```
+
+Dans `page-header.tsx`, ajouter la prop `eyebrow` :
+
+```tsx
+type PageHeaderProps = {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+};
+```
+
+et la rendre avant le `h1` :
+
+```tsx
+        {eyebrow ? (
+          <p className="text-sm font-medium text-primary">{eyebrow}</p>
+        ) : null}
+```
+
+Exporter le tout depuis `kit/index.ts` :
+
+```ts
+export { GroupedList, GroupedListRow } from "./grouped-list";
+export { IconTile } from "./icon-tile";
+export { SectionIntro } from "./section-intro";
+```
+
+- [ ] **Étape 6 : lancer les tests pour vérifier qu'ils passent**
+
+```bash
+cd apps/web && bunx vitest run src/components/dashboard/kit/
+```
+
+Attendu : SUCCÈS, 3 tests verts.
+
+- [ ] **Étape 7 : commit**
+
+```bash
+git add apps/web/src/components/dashboard/kit
+git commit -m "feat(web): porter le langage de select-organization dans le kit"
+```
+
+---
+
+### Task 14 : Pages d'entreprise sur les tokens, et le mot « entreprise »
+
+**Files:**
+- Modify: `apps/web/src/routes/select-organization.tsx`
+- Modify: `apps/web/src/routes/create-organization.tsx`
+- Modify: `apps/web/src/routes/dashboard/settings.tsx`
+- Modify: `apps/web/src/components/dashboard/layout/dashboard-page-banner.tsx`
+- Modify: `apps/web/src/components/dashboard/dialogs/account-switch-dialog.tsx`
+
+**Interfaces:**
+- Consomme : `GroupedList`, `GroupedListRow`, `IconTile`, `SectionIntro`,
+  `EmptyState`, `StatusPill` (tâches 13 et lot 1).
+- Produit : rien de nouveau.
+
+- [ ] **Étape 1 : renommer le vocabulaire visible**
+
+Relever l'inventaire exact avant de toucher quoi que ce soit :
+
+```bash
+cd apps/web && grep -rn -i "organisation" src/routes src/components
+```
+
+Attendu : 26 occurrences sur 5 fichiers. Remplacer **uniquement les chaînes
+lues par un praticien**, en accordant le genre — « une organisation » devient
+« une entreprise », « l'organisation active » devient « l'entreprise active ».
+Traductions à appliquer :
+
+| Avant | Après |
+| --- | --- |
+| Choisir une organisation | Choisir une entreprise |
+| Organisations disponibles | Entreprises disponibles |
+| Aucune organisation rattachée | Aucune entreprise rattachée |
+| Créer une organisation | Créer une entreprise |
+| Créer ma première organisation | Créer ma première entreprise |
+| Chaque organisation possède… | Chaque entreprise possède… |
+| Impossible d'ouvrir cette organisation… | Impossible d'ouvrir cette entreprise… |
+
+Ne **pas** toucher : le chemin `/select-organization`, le chemin
+`/create-organization`, les `id` HTML `organization-name` / `organization-slug` /
+`organization-logo`, la clé `organizationLogoUploader`, ni aucun nom de symbole.
+
+Vérifier qu'il n'en reste aucune :
+
+```bash
+cd apps/web && grep -rn -i "organisation" src/routes src/components
+```
+
+Attendu : aucun résultat.
+
+- [ ] **Étape 2 : porter `select-organization` sur les tokens et le kit**
+
+Remplacer la liste d'entreprises — aujourd'hui un `div` en `divide-y` avec les
+classes recopiées à la main — par `GroupedList` / `GroupedListRow`, en passant
+le logo dans `iconContent`, le badge « Active » dans `badge` (un `StatusPill`
+de ton `done`, puisque c'est un état), et l'indicateur de chargement dans
+`trailing`. Remplacer le bloc vide par `EmptyState`.
+
+Migrer les couleurs restantes : `bg-[#f9fafb]` → `bg-background`,
+`text-slate-950` → `text-foreground`, `text-slate-600` → `text-ink-muted`,
+`text-slate-500` → `text-muted-foreground`, `border-slate-200` → `border-border`,
+`bg-white` → `bg-card`, `bg-slate-50` → `bg-muted`. Le bloc d'erreur passe sur
+`border-destructive-border bg-destructive-surface text-destructive`. Le badge
+« Session sécurisée » garde son vert via le ton `done`.
+
+Supprimer les ombres `shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)]` : la spec
+pose qu'une surface est tenue par sa bordure.
+
+**Conserver** le split `md:grid-cols-[0.8fr_1.2fr]`, le titre en `md:text-6xl`,
+les `active:scale-[0.98]` et le `animationDelay` échelonné — c'est une page
+d'entrée, elle garde son hero.
+
+- [ ] **Étape 3 : porter `create-organization` de la même façon**
+
+Même traitement. Le formulaire passe sur les tokens ; la structure en deux
+colonnes et l'échelle typographique sont conservées.
+
+- [ ] **Étape 4 : vérifier**
+
+```bash
+cd apps/web && grep -rnE "slate-|emerald-|sky-|amber-|#f9fafb" src/routes/select-organization.tsx src/routes/create-organization.tsx
+```
+
+Attendu : aucun résultat.
+
+```bash
+cd apps/web && bunx tsc --noEmit && bunx vitest run
+```
+
+Attendu : 5 erreurs pré-existantes, 0 test en échec.
+
+- [ ] **Étape 5 : vérification manuelle**
+
+```bash
+bun run dev:web
+```
+
+Se déconnecter, se reconnecter : la page de choix doit afficher « Entreprises
+disponibles », la ligne active doit porter un badge vert, et le bouton principal
+doit être violet. Aucun mot « organisation » ne doit rester à l'écran.
+
+- [ ] **Étape 6 : commit**
+
+```bash
+git add apps/web/src/routes/select-organization.tsx apps/web/src/routes/create-organization.tsx apps/web/src/routes/dashboard/settings.tsx apps/web/src/components/dashboard/layout/dashboard-page-banner.tsx apps/web/src/components/dashboard/dialogs/account-switch-dialog.tsx
+git commit -m "feat(web): dire entreprise et porter les pages d'entree sur le kit"
+```
+
+---
+
+### Task 15 : Layout du dashboard sur le canvas de référence
+
+Le shell est ce que le praticien voit sur **toutes** les pages. Tant qu'il ne
+suit pas la référence, chaque page migrée reste posée sur un fond qui ne lui
+correspond pas.
+
+**Files:**
+- Modify: `apps/web/src/routes/dashboard.tsx:96-119`
+- Modify: `apps/web/src/components/dashboard/layout/dashboard-header.tsx`
+- Modify: `apps/web/src/components/dashboard/layout/dashboard-page-banner.tsx`
+
+- [ ] **Étape 1 : poser le canvas**
+
+Dans `apps/web/src/routes/dashboard.tsx`, la zone de contenu doit porter
+explicitement le canvas et une largeur de lecture bornée, comme la référence
+borne la sienne à `max-w-7xl` :
+
+```tsx
+          <div
+            className={cn(
+              "min-h-0 w-full flex-1 bg-background",
+              isAssistantRoute
+                ? "mb-0 flex flex-col overflow-hidden p-4"
+                : "mb-4 overflow-y-auto p-4 sm:p-6",
+            )}
+          >
+            <div className="mx-auto w-full max-w-7xl">
+              <DashboardPageBanner />
+              <Outlet />
+            </div>
+          </div>
+```
+
+- [ ] **Étape 2 : aligner l'en-tête**
+
+Dans `dashboard-header.tsx`, remplacer le bouton de bascule
+`className="h-10 w-10 rounded-xl border-border transition-all duration-300 hover:shadow-md p-0 m-0 bg-sidebar"`
+par une expression sur tokens sans ombre :
+
+```tsx
+          className="size-10 rounded-lg border-border bg-card p-0 transition duration-300 hover:bg-muted active:scale-[0.98]"
+```
+
+Poser une bordure basse sur l'en-tête pour qu'il se détache du canvas :
+
+```tsx
+    <div className="flex h-16 flex-row items-center justify-between border-b border-border bg-card px-4">
+```
+
+- [ ] **Étape 3 : vérifier**
+
+```bash
+cd apps/web && grep -rnE "slate-|emerald-|sky-|amber-" src/routes/dashboard.tsx src/components/dashboard/layout/
+```
+
+Attendu : aucun résultat.
+
+```bash
+cd apps/web && bunx tsc --noEmit && bunx vitest run
+bun run --filter @biume/web build
+```
+
+Attendu : 5 erreurs pré-existantes, 0 test en échec, build vert.
+
+- [ ] **Étape 4 : commit**
+
+```bash
+git add apps/web/src/routes/dashboard.tsx apps/web/src/components/dashboard/layout
+git commit -m "feat(web): poser le canvas de reference sur le shell du dashboard"
+```
+
+---
+
 ## Auto-revue
 
-**Couverture de la spec.** Contrainte non-technicienne : tâches 3, 9, 10 (libellés
-métier, action visible). Système de design : tâches 9, 10, 12 (aucune couleur en
-dur). Création du brouillon : tâches 6 et 9. Visibilité d'un brouillon vide :
-tâches 1 et 8. Cycle de vie : tâches 4 et 7. Statut de séance : tâche 2. Tableau
-des actions : tâche 3. Actions visibles sur la carte : tâches 10 et 11. Structure
-à deux pages et module de rapport : **hors de ce plan**, couverts par les lots 3
+**Couverture de la spec.** Contrainte non-technicienne : tâches 3, 9, 10, 14
+(libellés métier, action visible, « entreprise »). Système de design : tâches 9,
+10, 12, 13, 14, 15 (aucune couleur en dur). Langage visuel de référence : tâches
+13 (extraction), 12 et 14 (application), 15 (shell). Vocabulaire : tâche 14.
+Création du brouillon : tâches 6 et 9. Visibilité d'un brouillon vide : tâches 1
+et 8. Cycle de vie : tâches 4 et 7. Statut de séance : tâche 2. Tableau des
+actions : tâche 3. Actions visibles sur la carte : tâches 10 et 11. Structure à
+deux pages et module de rapport : **hors de ce plan**, couverts par les lots 3
 et 4.
+
+**Ordre d'exécution réel.** Les numéros suivent l'ordre de rédaction, pas
+l'ordre de déroulé. Exécuter : 1, 2, 3, 4, 5, 6, 7, 8, 9, **13**, 10, 11, 12,
+**14**, **15**. La tâche 13 précède les tâches 10 et 12 parce qu'elles
+consomment ses primitives ; les tâches 14 et 15 closent le lot en propageant le
+langage aux pages d'entrée et au shell.
 
 **Points laissés ouverts, à trancher à l'exécution.**
 
@@ -2125,7 +2697,13 @@ et 4.
    entier — il duplique `new-appointment-dialog.tsx` moins deux champs. Si sa
    rédaction fait apparaître plus de divergences que prévu, extraire un
    `AppointmentFormFields` partagé plutôt que de dupliquer.
-3. Tâche 5 : la fenêtre −2 / +6 mois est un choix par défaut. Si un praticien
+3. Tâche 14 : le renommage touche `routes/dashboard/settings.tsx`, page dont la
+   refonte relève du lot 4. On y change **le vocabulaire uniquement** ; son
+   alignement visuel attend son lot.
+4. Tâche 15 : le `max-w-7xl` posé sur la zone de contenu peut serrer des pages
+   déjà larges — la grille mensuelle de l'agenda et le tableau des comptes
+   rendus sont à revérifier en vérification manuelle sur un grand écran.
+5. Tâche 5 : la fenêtre −2 / +6 mois est un choix par défaut. Si un praticien
    consulte un mois hors fenêtre dans le calendrier, les rendez-vous
    n'apparaîtront pas. À corriger en indexant la fenêtre sur le mois affiché si
    le cas se présente en vérification manuelle.

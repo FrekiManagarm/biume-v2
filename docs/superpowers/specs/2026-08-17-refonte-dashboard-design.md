@@ -59,6 +59,68 @@ Contraintes d'implémentation :
   ultérieurement.
 - Une surface est tenue par sa bordure, pas par son ombre.
 
+### Langage visuel de référence
+
+**`apps/web/src/routes/select-organization.tsx` et `create-organization.tsx` sont
+la référence.** Tout le dashboard — son layout et ses pages subsidiaires — doit
+en reprendre le langage. Ce n'est pas un choix arbitraire : le commentaire de
+tête de `apps/mobile/src/design/tokens.ts` décrit déjà le système mobile comme
+« the web `select-organization` page transposed to a phone ». La référence
+visuelle et la référence de tokens sont donc la même, et la boucle se referme.
+
+Éléments à reprendre :
+
+| Motif | Règle |
+| --- | --- |
+| Canvas | Le fond de page n'est jamais blanc. Le blanc appartient aux surfaces posées dessus. |
+| Liste groupée | **Une seule** surface contenant des lignes séparées par un filet (`divide-y`), pas une carte par ligne. C'est le motif structurant de la référence. |
+| Pavé d'icône | Carré de 48 px, coins arrondis, bordure fine, fond teinté selon l'état. |
+| Ligne | `grid-cols-[auto_1fr_auto]` : pavé d'icône, contenu, affordance circulaire de 40 px à droite. |
+| Intro de section | Un intitulé court et coloré au-dessus du titre, puis les actions alignées à droite. |
+| Interactions | `transition duration-300 ease-out`, `active:scale-[0.98]` sur les contrôles, `group-hover:-translate-y-px` sur l'affordance. |
+| Vide | Bordure en pointillés, pavé d'icône, titre, explication, et les gestes qui le remplissent. |
+
+**Ce qui ne se transpose pas.** La référence est une page d'entrée : split
+0.8/1.2 pleine hauteur et titre display en `text-6xl`. `AGENTS.md` demande
+l'inverse pour les interfaces produit — « dense, clear, operational UI over
+marketing-style composition ». Un titre de 60 px au-dessus d'un tableau
+repousserait le travail sous la ligne de flottaison.
+
+La règle est donc : les pages d'entrée (connexion, choix et création
+d'entreprise) gardent le hero en split ; les pages du dashboard héritent du
+canvas, de la liste groupée, des pavés d'icônes, des intitulés de section et des
+interactions, avec une échelle typographique réduite.
+
+**Conséquence sur la référence elle-même.** `select-organization.tsx` et
+`create-organization.tsx` sont aujourd'hui écrits en couleurs codées en dur
+(`bg-[#f9fafb]`, `slate-*`, `emerald-*`). Leur structure est la bonne, leur
+expression ne l'est pas : ils doivent être portés sur les tokens et le kit.
+Le vert y marque « Active » et « Session sécurisée » — donc un état, ce qui
+correspond exactement au vert du système.
+
+## Vocabulaire
+
+**« Entreprise », jamais « organisation ».** « Organisation » est un calque de
+l'anglais *organization* ; un ostéopathe indépendant parle de son entreprise ou
+de son cabinet, pas de son organisation.
+
+Portée du renommage : **toute chaîne visible par l'utilisateur** dans
+`apps/web/src/routes` et `apps/web/src/components` — 26 occurrences réparties
+sur `create-organization.tsx`, `select-organization.tsx`,
+`routes/dashboard/settings.tsx`, `dashboard-page-banner.tsx` et
+`account-switch-dialog.tsx`.
+
+Restent inchangés, parce qu'ils ne sont pas du texte lu par un praticien :
+
+- les chemins de routes `/select-organization` et `/create-organization` ;
+- la table `organization` et les identifiants Drizzle ;
+- les identifiants HTML (`organization-name`, `organization-slug`) et les clés
+  d'upload ;
+- les noms de fonctions, de variables et de types.
+
+Renommer les routes casserait les liens existants et l'intégration Better Auth
+pour un bénéfice nul : un praticien ne lit pas la barre d'adresse.
+
 ## Rendez-vous et compte rendu
 
 ### Création
