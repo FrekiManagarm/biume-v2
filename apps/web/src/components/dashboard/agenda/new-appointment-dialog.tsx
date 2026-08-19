@@ -54,7 +54,12 @@ export function NewAppointmentDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    // React vide `event.currentTarget` dès la fin du traitement synchrone de
+    // l'événement : après le `await` ci-dessous, y accéder à nouveau
+    // renvoie `null`. On garde donc une référence directe au formulaire pour
+    // pouvoir le réinitialiser une fois la création terminée.
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const patientId = String(formData.get("patientId") ?? "");
     const date = String(formData.get("date") ?? "");
     const startTime = String(formData.get("startTime") ?? "");
@@ -75,7 +80,7 @@ export function NewAppointmentDialog({
     });
 
     onOpenChange(false);
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (
