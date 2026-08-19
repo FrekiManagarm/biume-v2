@@ -1,5 +1,5 @@
 import { ArrowRight, type LucideIcon } from "lucide-react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { cn } from "#/lib/utils";
 
@@ -52,13 +52,6 @@ type GroupedListRowProps = {
   trailing?: ReactNode;
   onSelect?: () => void;
   disabled?: boolean;
-  /**
-   * Passe-plat vers l'élément racine — sert par exemple à échelonner
-   * l'entrée d'une liste (`animationDelay`) depuis l'appelant, qui connaît
-   * seul l'index de la ligne. `select-organization`, la page de référence,
-   * conserve ce détail.
-   */
-  style?: CSSProperties;
 };
 
 export function GroupedListRow({
@@ -70,7 +63,6 @@ export function GroupedListRow({
   meta,
   onSelect,
   statusLabel,
-  style,
   title,
   trailing,
 }: GroupedListRowProps) {
@@ -102,11 +94,7 @@ export function GroupedListRow({
     "grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-4 text-left sm:px-5";
 
   if (!onSelect) {
-    return (
-      <div className={layout} style={style}>
-        {content}
-      </div>
-    );
+    return <div className={layout}>{content}</div>;
   }
 
   // Le nom accessible part du titre : `aria-label` remplace le calcul par
@@ -129,7 +117,6 @@ export function GroupedListRow({
       aria-label={accessibleName}
       disabled={disabled}
       onClick={onSelect}
-      style={style}
       className={cn(
         layout,
         "group transition duration-300 ease-out hover:bg-muted active:scale-[0.99]",
