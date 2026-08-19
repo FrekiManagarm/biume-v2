@@ -100,19 +100,19 @@ export function LandingV5Masthead() {
             >
               <span aria-hidden="true">☰</span>
             </summary>
-            {/*
-              La liste des sections (NAV_LINKS) n'est rendue qu'une seule
-              fois, dans la nav "Navigation principale" ci-dessus : elle
-              reste présente dans le DOM (donc atteignable au clavier une
-              fois le viewport élargi) même quand elle est masquée en
-              dessous de 980px. La nav mobile ne duplique pas ces ancres ;
-              elle expose l'action de conversion principale, autrement
-              masquée sous 520px.
-            */}
             <nav
               aria-label="Navigation mobile"
               className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(88vw,320px)] rounded-2xl border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] p-2 shadow-[var(--lv5-shadow-hover)]"
             >
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="flex min-h-12 items-center rounded-full px-4 text-[0.9rem] text-[color:var(--lv5-ink-soft)] transition-colors hover:bg-[#F0EFEA] hover:text-[color:var(--lv5-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--lv5-violet)]"
+                >
+                  {link.label}
+                </a>
+              ))}
               <a
                 href={webAppPath("/signup")}
                 data-conversion="header-signup-mobile"

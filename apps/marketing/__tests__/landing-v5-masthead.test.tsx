@@ -5,10 +5,10 @@ import { NAV_LINKS } from "../components/landing-v5/content";
 import { renderWithLandingImageConfig, textOnly } from "./landing-test-utils";
 
 describe("LandingV5Masthead", () => {
-  test("renders every nav link once, all with real hrefs", () => {
+  test("renders every nav link twice: once per responsive nav surface (desktop and mobile panels), all with real hrefs", () => {
     const html = renderWithLandingImageConfig(<LandingV5Masthead />);
     for (const link of NAV_LINKS) {
-      expect(html.match(new RegExp(`href="${link.href}"`, "g"))).toHaveLength(1);
+      expect(html.match(new RegExp(`href="${link.href}"`, "g"))).toHaveLength(2);
       expect(textOnly(html)).toContain(link.label);
     }
   });
