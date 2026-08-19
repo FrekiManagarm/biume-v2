@@ -1,11 +1,4 @@
-import {
-  CalendarDays,
-  Clock,
-  Home,
-  MapPin,
-  NotepadText,
-  PawPrint,
-} from "lucide-react";
+import { CalendarDays, NotepadText, PawPrint } from "lucide-react";
 import type { FormEvent } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -17,10 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
+import {
+  AppointmentScheduleFields,
+  buildLocalDate,
+  formatDateInput,
+} from "./appointment-schedule-fields";
 
 export type NewAppointmentDialogProps = {
   isSubmitting: boolean;
@@ -124,59 +121,13 @@ export function NewAppointmentDialog({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-date">Date</Label>
-                <Input
-                  id="appointment-date"
-                  name="date"
-                  required
-                  type="date"
-                  defaultValue={formatDateInput(selectedDate)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-start-time">Début</Label>
-                <div className="relative">
-                  <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="appointment-start-time"
-                    name="startTime"
-                    required
-                    type="time"
-                    className="pl-9"
-                    defaultValue="09:00"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="appointment-end-time">Fin</Label>
-                <Input
-                  id="appointment-end-time"
-                  name="endTime"
-                  required
-                  type="time"
-                  defaultValue="10:00"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted px-4 py-3">
-              <div className="min-w-0">
-                <Label
-                  htmlFor="appointment-at-home"
-                  className="flex items-center gap-2"
-                >
-                  <Home className="size-4 text-muted-foreground" />
-                  Rendez-vous à domicile
-                </Label>
-                <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin className="size-3.5" />
-                  Désactivez pour une séance au cabinet.
-                </p>
-              </div>
-              <Switch id="appointment-at-home" name="atHome" />
-            </div>
+            <AppointmentScheduleFields
+              idPrefix="appointment"
+              defaultDate={formatDateInput(selectedDate)}
+              defaultStartTime="09:00"
+              defaultEndTime="10:00"
+              defaultAtHome={false}
+            />
 
             <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted px-4 py-3">
               <div className="min-w-0">
@@ -240,19 +191,4 @@ function formatPatientOption(
   ].filter(Boolean);
 
   return segments.join(" · ");
-}
-
-function formatDateInput(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function buildLocalDate(date: string, time: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const [hours, minutes] = time.split(":").map(Number);
-
-  return new Date(year, month - 1, day, hours, minutes);
 }
