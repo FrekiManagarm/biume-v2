@@ -89,8 +89,15 @@ export function GroupedListRow({
   }
 
   return (
+    // Le nom accessible est le titre seul : `aria-label` remplace le calcul
+    // par défaut, qui aurait concaténé titre, badge et meta sans séparateur
+    // (« Cabinet du Vieux ChêneActivecabinet-vieux-chene.biume »). Un lecteur
+    // d'écran énoncerait tout ça avant que le praticien sache quelle
+    // organisation il s'apprête à ouvrir — cf. `apps/mobile/src/design/row.tsx`,
+    // qui documente et résout déjà ce même problème côté mobile.
     <button
       type="button"
+      aria-label={title}
       disabled={disabled}
       onClick={onSelect}
       className={cn(
