@@ -38,17 +38,35 @@ export function AppointmentCard({
   const { primaryAction } = appointment;
   const showPrimaryAction =
     primaryAction.kind !== "cancelled" && primaryAction.kind !== "upcoming";
+  const animalName = appointment.patient?.name;
+  const beginTimeLabel = formatTime(appointment.beginAt);
+  // Nom accessible de la carte : sur une journée à dix rendez-vous, un lecteur
+  // d'écran qui navigue par région n'a que ce libellé pour les distinguer.
+  // Sans nom d'animal renseigné, on n'invente pas un « de … » bancal.
+  const cardLabel = animalName
+    ? `Rendez-vous de ${animalName} à ${beginTimeLabel}`
+    : `Rendez-vous à ${beginTimeLabel}`;
+  // Même besoin sur le bouton : la navigation par liste de boutons (VoiceOver,
+  // NVDA) sort les libellés de leur carte, et « Remplir le compte rendu »
+  // répété dix fois ne dit plus quel animal chacun concerne. Le texte visible
+  // reste `primaryAction.label` — seul le nom annoncé porte le contexte.
+  const actionAccessibleLabel = animalName
+    ? `${primaryAction.label} pour ${animalName}`
+    : primaryAction.label;
 
   return (
-    <article className="rounded-card border border-border bg-card p-4">
+    <article
+      aria-label={cardLabel}
+      className="rounded-card border border-border bg-card p-4"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-muted-foreground">
-            {formatTime(appointment.beginAt)} – {formatTime(appointment.endAt)}
+            {beginTimeLabel} – {formatTime(appointment.endAt)}
             <span className="ml-2">· {appointment.durationLabel}</span>
           </p>
           <h3 className="mt-1 truncate text-base font-semibold tracking-tight text-foreground">
-            {appointment.patient?.name ?? "Animal non renseigné"}
+            {animalName ?? "Animal non renseigné"}
           </h3>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">
             {appointment.patient?.owner?.name ?? "Propriétaire inconnu"}
@@ -84,6 +102,7 @@ export function AppointmentCard({
 
       {showPrimaryAction ? (
         <Button
+          aria-label={actionAccessibleLabel}
           className="mt-4 w-full sm:w-auto"
           onClick={() => onPrimaryAction(appointment)}
         >
