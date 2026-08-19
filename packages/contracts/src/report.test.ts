@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canFinalizeReport,
   createInitialReportSectionStates,
+  isReportEmpty,
   ownerSourceKindSchema,
   ownerSourceKinds,
   ownerReportSnapshotSchema,
@@ -10,6 +11,7 @@ import {
   reportStatuses,
   resolvedReportSectionStateValues,
   reportSchema,
+  type ReportContentSummary,
 } from "./report";
 
 describe("report contracts", () => {
@@ -185,5 +187,44 @@ describe("report contracts", () => {
         createdAt: "2026-07-18T10:00:00.000Z",
       }).reportRevision,
     ).toBe(3);
+  });
+});
+
+describe("isReportEmpty", () => {
+  const empty: ReportContentSummary = {
+    consultationReason: "",
+    notes: null,
+    anatomicalIssueCount: 0,
+    recommendationCount: 0,
+  };
+
+  it("un compte rendu sans aucune saisie est vide", () => {
+    expect(isReportEmpty(empty)).toBe(true);
+  });
+
+  it("des espaces seuls ne comptent pas comme une saisie", () => {
+    expect(
+      isReportEmpty({ ...empty, consultationReason: "   ", notes: "\n " }),
+    ).toBe(true);
+  });
+
+  it("un motif de consultation rend le compte rendu non vide", () => {
+    expect(isReportEmpty({ ...empty, consultationReason: "Boiterie" })).toBe(
+      false,
+    );
+  });
+
+  it("une note rend le compte rendu non vide", () => {
+    expect(isReportEmpty({ ...empty, notes: "Revoir dans 3 semaines" })).toBe(
+      false,
+    );
+  });
+
+  it("une zone anatomique rend le compte rendu non vide", () => {
+    expect(isReportEmpty({ ...empty, anatomicalIssueCount: 1 })).toBe(false);
+  });
+
+  it("une recommandation rend le compte rendu non vide", () => {
+    expect(isReportEmpty({ ...empty, recommendationCount: 1 })).toBe(false);
   });
 });
