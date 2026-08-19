@@ -49,13 +49,13 @@ const actionStyles: Record<
  */
 const statusStyles: Record<
   string,
-  { icon: IconName; tone: 'neutral' | 'done' | 'action' | 'alert' }
+  { icon: IconName; tone: 'neutral' | 'done' | 'action' | 'attention' | 'problem' }
 > = {
   queued: { icon: 'clock', tone: 'neutral' },
   uploading: { icon: 'upload', tone: 'action' },
   uploaded: { icon: 'sent', tone: 'done' },
-  needs_action: { icon: 'warning', tone: 'alert' },
-  expired: { icon: 'alert', tone: 'alert' },
+  needs_action: { icon: 'warning', tone: 'attention' },
+  expired: { icon: 'alert', tone: 'attention' },
 };
 
 /** Only the two destructive actions ask first. */

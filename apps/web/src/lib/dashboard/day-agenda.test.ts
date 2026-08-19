@@ -129,10 +129,10 @@ describe("getAgendaPrimaryAction", () => {
     });
   });
 
-  test("après la séance, un compte rendu finalisé est à envoyer", () => {
+  test("après la séance, un compte rendu finalisé se consulte (l'envoi au propriétaire n'existe pas encore)", () => {
     expect(getAgendaPrimaryAction("done", "finalized")).toEqual({
-      kind: "send_report",
-      label: "Envoyer au propriétaire",
+      kind: "view_report",
+      label: "Voir le compte rendu",
     });
   });
 

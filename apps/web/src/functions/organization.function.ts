@@ -7,7 +7,7 @@ import { z } from "zod";
 import { getCurrentOrganization } from "#/functions/auth.function";
 
 export const updateOrganizationSchema = z.object({
-  name: z.string().min(1, "Le nom de l'organisation est requis.").max(120),
+  name: z.string().min(1, "Le nom de l'entreprise est requis.").max(120),
   slug: z.string().min(1, "Le slug est requis.").max(140),
   email: z.union([z.email("L'email de contact est invalide."), z.literal("")]),
   description: z.string().max(1200),
@@ -25,7 +25,7 @@ export const getOrganizationSettings = createServerFn({
   });
 
   if (!settings) {
-    throw new Error("Organisation introuvable.");
+    throw new Error("Entreprise introuvable.");
   }
 
   return settings;
@@ -52,7 +52,7 @@ export const updateOrganization = createServerFn({ method: "POST" })
       .returning();
 
     if (!updatedOrganization) {
-      throw new Error("Impossible de mettre à jour l'organisation.");
+      throw new Error("Impossible de mettre à jour l'entreprise.");
     }
 
     return updatedOrganization;

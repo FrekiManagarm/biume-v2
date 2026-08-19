@@ -30,12 +30,12 @@ const reportStatusConfig: Record<
     labelClassName: "text-slate-500",
   },
   empty: {
-    label: "Brouillon vide",
+    label: "Compte rendu à créer",
     indicatorClassName: "bg-sky-500",
     labelClassName: "text-sky-700",
   },
   started: {
-    label: "Brouillon",
+    label: "Compte rendu à terminer",
     indicatorClassName: "bg-amber-500",
     labelClassName: "text-amber-700",
   },

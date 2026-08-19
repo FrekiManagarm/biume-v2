@@ -142,9 +142,13 @@ export function getAgendaPrimaryAction(
   }
 
   if (reportState === "finalized") {
-    return sessionState === "done"
-      ? { kind: "send_report", label: "Envoyer au propriétaire" }
-      : { kind: "view_report", label: "Voir le compte rendu" };
+    // Le geste « Envoyer au propriétaire » n'existe nulle part dans le code :
+    // aucun écriture ne pose jamais `status: "sent"` (ReportUpdateStatus se
+    // limite à "draft" | "finalized" dans reports-editor.helpers.ts). Proposer
+    // ce bouton mènerait le praticien vers un cul-de-sac. On retombe donc sur
+    // la consultation du compte rendu, seul geste réellement disponible.
+    // À rouvrir dès qu'un vrai envoi au propriétaire sera implémenté.
+    return { kind: "view_report", label: "Voir le compte rendu" };
   }
 
   if (reportState === "started") {

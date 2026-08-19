@@ -63,7 +63,7 @@ export const switchActiveOrganization = createServerFn({ method: "POST" })
     });
 
     if (!organization) {
-      throw new Error("Impossible d'activer cette organisation.");
+      throw new Error("Impossible d'activer cette entreprise.");
     }
 
     return organization;
