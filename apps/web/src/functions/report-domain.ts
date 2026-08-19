@@ -6,6 +6,7 @@ import {
   reportSectionIds,
   type OwnerReportSnapshot,
   type OwnerSourceKind,
+  type ReportContentSummary,
   type ReportSectionId,
   type ReportSectionState,
   type ReportSectionStates,
@@ -21,6 +22,29 @@ type OwnerTextRecord = {
   sourceId: string;
   ownerText: string;
 };
+type ReportContentRow = {
+  consultationReason: string;
+  notes: string | null;
+  anatomicalIssues: readonly unknown[];
+  recommendations: readonly unknown[];
+};
+
+/**
+ * Traduit une ligne Drizzle en résumé de contenu pour `isReportEmpty`.
+ * Isolé du filtre de `loadAllReportRows` pour rester testable sans base :
+ * inverser les deux comptages ou renommer une relation viderait sinon toute
+ * la liste des comptes rendus sans qu'aucun test ne le détecte.
+ */
+export function toReportContentSummary(
+  row: ReportContentRow,
+): ReportContentSummary {
+  return {
+    consultationReason: row.consultationReason,
+    notes: row.notes,
+    anatomicalIssueCount: row.anatomicalIssues.length,
+    recommendationCount: row.recommendations.length,
+  };
+}
 
 export function buildOwnerReportSnapshot(
   input: OwnerReportSnapshotInput,

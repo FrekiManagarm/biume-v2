@@ -7,7 +7,53 @@ import {
   buildReportSectionStateRows,
   normalizeReportSectionStates,
   resolveOwnerFacingText,
+  toReportContentSummary,
 } from "./report-domain";
+
+describe("toReportContentSummary", () => {
+  it("counts loaded anatomical issues and recommendations separately", () => {
+    expect(
+      toReportContentSummary({
+        consultationReason: "Boiterie postérieure droite",
+        notes: "Suivi dans deux semaines",
+        anatomicalIssues: [{ id: "issue-1" }, { id: "issue-2" }],
+        recommendations: [{ id: "rec-1" }],
+      }),
+    ).toEqual({
+      consultationReason: "Boiterie postérieure droite",
+      notes: "Suivi dans deux semaines",
+      anatomicalIssueCount: 2,
+      recommendationCount: 1,
+    });
+  });
+
+  it("returns zero counts for empty relations", () => {
+    expect(
+      toReportContentSummary({
+        consultationReason: "",
+        notes: "",
+        anatomicalIssues: [],
+        recommendations: [],
+      }),
+    ).toEqual({
+      consultationReason: "",
+      notes: "",
+      anatomicalIssueCount: 0,
+      recommendationCount: 0,
+    });
+  });
+
+  it("passes a null notes value through unchanged", () => {
+    expect(
+      toReportContentSummary({
+        consultationReason: "",
+        notes: null,
+        anatomicalIssues: [],
+        recommendations: [],
+      }).notes,
+    ).toBeNull();
+  });
+});
 
 describe("report section persistence", () => {
   it("builds one row for every canonical section", () => {

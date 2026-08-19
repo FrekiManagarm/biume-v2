@@ -47,6 +47,7 @@ import {
   buildQuickReportRows,
   buildReportSectionStateRows,
   normalizeReportSectionStates,
+  toReportContentSummary,
 } from "./report-domain";
 import {
   createImmutableReportSharedVersion,
@@ -117,15 +118,7 @@ async function loadAllReportRows({
    * liste que lorsque le praticien y a écrit quelque chose — sinon la liste se
    * remplirait d'une coquille par séance planifiée.
    */
-  return rows.filter(
-    (row) =>
-      !isReportEmpty({
-        consultationReason: row.consultationReason,
-        notes: row.notes,
-        anatomicalIssueCount: row.anatomicalIssues.length,
-        recommendationCount: row.recommendations.length,
-      }),
-  );
+  return rows.filter((row) => !isReportEmpty(toReportContentSummary(row)));
 }
 
 export type AdvancedReportListItem = Awaited<
