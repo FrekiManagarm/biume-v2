@@ -161,12 +161,17 @@ export function NewAppointmentDialog({
           </div>
 
           <DialogFooter className="mt-6">
+            {/* « Fermer », et non « Annuler » : le menu d'actions d'un
+              rendez-vous porte juste à côté « Annuler la séance », qui change
+              le statut du rendez-vous. Le même mot pour refermer un
+              formulaire et pour annuler une séance rendrait les deux gestes
+              indiscernables pour un praticien non technicien. */}
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Annuler
+              Fermer
             </Button>
             <Button
               type="submit"

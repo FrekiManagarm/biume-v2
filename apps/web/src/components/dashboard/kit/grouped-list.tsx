@@ -40,6 +40,14 @@ type GroupedListRowProps = {
   title: string;
   meta?: string;
   badge?: ReactNode;
+  /**
+   * Le statut porté par `badge`, en toutes lettres, quand il change la
+   * décision du praticien (« Annulé »). `button` a `nameFrom: contents` :
+   * l'`aria-label` de la ligne remplace tout son sous-arbre, donc un badge
+   * seulement visuel ne serait jamais annoncé. Il est ajouté après le titre —
+   * on entend d'abord de quoi il s'agit, puis son état.
+   */
+  statusLabel?: string;
   /** Remplace l'affordance de droite : un bouton, un menu, un état. */
   trailing?: ReactNode;
   onSelect?: () => void;
@@ -54,6 +62,7 @@ export function GroupedListRow({
   iconTone = "neutral",
   meta,
   onSelect,
+  statusLabel,
   title,
   trailing,
 }: GroupedListRowProps) {
@@ -88,16 +97,24 @@ export function GroupedListRow({
     return <div className={layout}>{content}</div>;
   }
 
+  // Le nom accessible part du titre : `aria-label` remplace le calcul par
+  // défaut, qui aurait concaténé titre, badge et meta sans séparateur
+  // (« Cabinet du Vieux ChêneActivecabinet-vieux-chene.biume »). Un lecteur
+  // d'écran énoncerait tout ça avant que le praticien sache quelle
+  // organisation il s'apprête à ouvrir — cf. `apps/mobile/src/design/row.tsx`,
+  // qui documente et résout déjà ce même problème côté mobile.
+  //
+  // Le statut, lui, est composé après le titre quand l'appelant le déclare :
+  // savoir qu'une séance est annulée décide de ce que le praticien fait
+  // ensuite, et cette information ne doit pas rester purement visuelle. Le
+  // `meta` reste exclu dans tous les cas : c'est un identifiant technique ou
+  // un rappel, jamais ce qui fait choisir la ligne.
+  const accessibleName = statusLabel ? `${title}, ${statusLabel}` : title;
+
   return (
-    // Le nom accessible est le titre seul : `aria-label` remplace le calcul
-    // par défaut, qui aurait concaténé titre, badge et meta sans séparateur
-    // (« Cabinet du Vieux ChêneActivecabinet-vieux-chene.biume »). Un lecteur
-    // d'écran énoncerait tout ça avant que le praticien sache quelle
-    // organisation il s'apprête à ouvrir — cf. `apps/mobile/src/design/row.tsx`,
-    // qui documente et résout déjà ce même problème côté mobile.
     <button
       type="button"
-      aria-label={title}
+      aria-label={accessibleName}
       disabled={disabled}
       onClick={onSelect}
       className={cn(

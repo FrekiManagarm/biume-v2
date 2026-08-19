@@ -3,34 +3,70 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { Appointment } from "@biume/db/schema/index";
+import { useNavigate } from "@tanstack/react-router";
 import {
+  CalendarClock,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  Home,
-  MapPin,
-  PawPrint,
   Plus,
-  Stethoscope,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
+import {
+  EmptyState,
+  GroupedList,
+  GroupedListRow,
+  PageHeader,
+  Panel,
+  PanelHeader,
+  SectionHeader,
+  StatusPill,
+  type Tone,
+} from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
-import { createAppointment } from "#/lib/api/actions/appointments.action";
+import {
+  createAppointment,
+  deleteAppointment,
+  updateAppointment,
+} from "#/lib/api/actions/appointments.action";
+import { createReport } from "#/lib/api/actions/reports.action";
 import {
   appointmentsQueryKeyPrefix,
   appointmentsQueryOptions,
   defaultAppointmentWindow,
 } from "#/lib/api/queries/appointments.query";
 import { patientsQueryOptions } from "#/lib/api/queries/patients.query";
+import {
+  buildDayAgendaModel,
+  type AgendaAppointmentStatus,
+  type DayAgendaAppointment,
+} from "#/lib/dashboard/day-agenda";
+import {
+  deriveSessionState,
+  sessionStateLabel,
+  type SessionState,
+} from "#/lib/dashboard/session-state";
 import { cn } from "#/lib/utils";
 
+import { AppointmentActionsMenu } from "./appointment-actions-menu";
+import { AppointmentCard } from "./appointment-card";
+import { EditAppointmentDialog } from "./edit-appointment-dialog";
 import { NewAppointmentDialog } from "./new-appointment-dialog";
+
+// Le vert porte l'état atteint, jamais l'action : une séance terminée est un
+// fait, une séance annulée est un problème, une séance prévue n'est rien de
+// plus qu'une ligne du planning.
+const sessionTone: Record<SessionState, Tone> = {
+  scheduled: "neutral",
+  done: "done",
+  cancelled: "problem",
+};
 
 export function AgendaPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   // Calculée une seule fois par montage : `defaultAppointmentWindow()` est
   // déjà stable à la journée près, mais la recalculer à chaque rendu
   // recréerait un nouvel objet (et un appel `Date.now()`) pour rien.
@@ -46,35 +82,55 @@ export function AgendaPage() {
     startOfDay(new Date()),
   );
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [editedAppointment, setEditedAppointment] =
+    useState<DayAgendaAppointment | null>(null);
+
+  // On invalide le préfixe, pas une fenêtre précise : la liste peut être en
+  // cache sous la fenêtre calculée par le loader SSR (à un instant différent
+  // de celui-ci) plutôt que sous `appointmentWindow`.
+  function invalidateAppointments() {
+    return queryClient.invalidateQueries({
+      queryKey: appointmentsQueryKeyPrefix,
+    });
+  }
+
   const createAppointmentMutation = useMutation({
     mutationFn: createAppointment,
-    // On invalide le préfixe, pas une fenêtre précise : la liste peut être en
-    // cache sous la fenêtre calculée par le loader SSR (à un instant
-    // différent de celui-ci) plutôt que sous `appointmentWindow`.
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: appointmentsQueryKeyPrefix }),
+    onSuccess: invalidateAppointments,
   });
+  const updateAppointmentMutation = useMutation({
+    mutationFn: updateAppointment,
+    onSuccess: invalidateAppointments,
+  });
+  const deleteAppointmentMutation = useMutation({
+    mutationFn: deleteAppointment,
+    onSuccess: invalidateAppointments,
+  });
+  // Le compte rendu qui vient d'être créé change l'action attendue sur son
+  // rendez-vous (« Créer » devient « Continuer ») : la liste des rendez-vous
+  // porte les comptes rendus, elle doit donc être rechargée elle aussi.
+  const createReportMutation = useMutation({
+    mutationFn: createReport,
+    onSuccess: invalidateAppointments,
+  });
+
+  const isMutating =
+    updateAppointmentMutation.isPending || deleteAppointmentMutation.isPending;
+
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
-  const selectedAppointments = appointments
-    .filter((appointment) =>
-      isSameDay(new Date(appointment.beginAt), selectedDate),
-    )
-    .sort(
-      (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
-    );
-  const upcomingAppointments = appointments
-    .filter(
-      (appointment) => new Date(appointment.beginAt) >= startOfDay(new Date()),
-    )
-    .sort(
-      (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
-    )
-    .slice(0, 5);
-  const completedThisMonth = appointments.filter(
-    (appointment) =>
-      appointment.status === "COMPLETED" &&
-      isSameMonth(new Date(appointment.beginAt), currentMonth),
-  ).length;
+  const dayAgenda = useMemo(
+    () =>
+      buildDayAgendaModel({
+        appointments,
+        now: new Date(),
+        selectedDate,
+      }),
+    [appointments, selectedDate],
+  );
+  const upcomingAppointments = useMemo(
+    () => buildUpcomingAppointments(appointments),
+    [appointments],
+  );
 
   function goToPreviousMonth() {
     setCurrentMonth(addMonths(currentMonth, -1));
@@ -90,68 +146,150 @@ export function AgendaPage() {
     setSelectedDate(startOfDay(today));
   }
 
+  function goToDay(date: Date) {
+    setSelectedDate(startOfDay(date));
+    setCurrentMonth(startOfMonth(date));
+  }
+
+  /**
+   * L'unique geste que le rendez-vous attend.
+   *
+   * Le modèle a déjà tranché ce qu'il faut faire ; il reste à savoir si le
+   * compte rendu existe. S'il existe, on l'ouvre — en lecture seule quand il
+   * est déjà parti chez le propriétaire, en édition sinon. S'il n'existe pas,
+   * on le crée avant d'y emmener le praticien : lui demander de le créer
+   * d'abord puis de revenir serait un aller-retour de plus à comprendre.
+   */
+  async function handlePrimaryAction(appointment: DayAgendaAppointment) {
+    const { primaryAction } = appointment;
+
+    if (primaryAction.reportId) {
+      if (primaryAction.kind === "view_report") {
+        void navigate({
+          to: "/dashboard/reports/$id",
+          params: { id: primaryAction.reportId },
+        });
+        return;
+      }
+
+      void navigate({
+        to: "/dashboard/reports/$id/edit",
+        params: { id: primaryAction.reportId },
+      });
+      return;
+    }
+
+    const patientId = appointment.patient?.id;
+
+    if (!patientId) {
+      toast.error(
+        "Ce rendez-vous n'a pas de patient : son compte rendu ne peut pas être créé.",
+      );
+      return;
+    }
+
+    try {
+      const created = await createReportMutation.mutateAsync({
+        petId: patientId,
+        appointmentId: appointment.id,
+        status: "draft",
+      });
+
+      void navigate({
+        to: "/dashboard/reports/$id/edit",
+        params: { id: created.reportId },
+      });
+    } catch {
+      toast.error("Le compte rendu n'a pas pu être créé. Réessayez.");
+    }
+  }
+
+  /**
+   * Annuler la séance, ce qui n'est pas la supprimer : le rendez-vous reste
+   * dans l'agenda, marqué « Annulé », parce qu'un créneau annulé fait partie
+   * de l'historique de l'animal.
+   */
+  async function handleCancelSession(appointment: DayAgendaAppointment) {
+    try {
+      await updateAppointmentMutation.mutateAsync({
+        appointmentId: appointment.id,
+        status: "CANCELLED",
+      });
+      toast.success("Séance annulée.");
+    } catch {
+      toast.error("La séance n'a pas pu être annulée. Réessayez.");
+    }
+  }
+
+  async function handleDeleteAppointment(appointment: DayAgendaAppointment) {
+    try {
+      await deleteAppointmentMutation.mutateAsync(appointment.id);
+      toast.success("Rendez-vous supprimé.");
+    } catch {
+      toast.error("Le rendez-vous n'a pas pu être supprimé. Réessayez.");
+    }
+  }
+
+  async function handleEditSubmit(input: {
+    appointmentId: string;
+    beginAt: Date;
+    endAt: Date;
+    atHome: boolean;
+    note?: string;
+  }) {
+    try {
+      await updateAppointmentMutation.mutateAsync(input);
+      toast.success("Rendez-vous modifié.");
+    } catch {
+      toast.error("La modification n'a pas pu être enregistrée. Réessayez.");
+    }
+  }
+
   return (
-    <div className="grid w-full gap-5 pb-8 text-slate-950">
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          detail="Sur la date sélectionnée"
-          icon={Clock}
-          label="Journée"
-          tone="emerald"
-          value={selectedAppointments.length}
-        />
-        <MetricCard
-          detail="À partir d'aujourd'hui"
-          icon={CalendarDays}
-          label="À venir"
-          tone="sky"
-          value={upcomingAppointments.length}
-        />
-        <MetricCard
-          detail="Sur le mois affiché"
-          icon={Stethoscope}
-          label="Terminés"
-          tone="amber"
-          value={completedThisMonth}
-        />
-      </section>
+    <div className="grid w-full gap-6 pb-8">
+      <PageHeader
+        eyebrow="Agenda"
+        title="Vos séances"
+        description="Chaque rendez-vous porte l'état de sa séance et le geste qu'elle attend, sans avoir à l'ouvrir."
+        actions={
+          <Button onClick={() => setIsNewAppointmentOpen(true)}>
+            Nouveau rendez-vous
+            <Plus className="size-4" data-icon="inline-end" />
+          </Button>
+        }
+      />
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_24rem]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
         <Panel>
-          <div className="mb-5 grid gap-4 border-b border-slate-200 pb-5 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-medium text-emerald-700">Calendrier</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                {formatMonth(currentMonth)}.
-              </h2>
-            </div>
-            <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
-              <Button
-                className="h-10 bg-slate-950 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.8)] hover:bg-slate-800 active:scale-[0.98]"
-                onClick={() => setIsNewAppointmentOpen(true)}
-              >
-                Nouveau rendez-vous
-                <Plus className="size-4" data-icon="inline-end" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
-                <ChevronLeft className="size-4" />
-                <span className="sr-only">Mois précédent</span>
-              </Button>
-              <Button variant="outline" onClick={goToToday}>
-                Aujourd'hui
-              </Button>
-              <Button variant="outline" size="icon" onClick={goToNextMonth}>
-                <ChevronRight className="size-4" />
-                <span className="sr-only">Mois suivant</span>
-              </Button>
-            </div>
-          </div>
+          <PanelHeader
+            title={formatMonth(currentMonth)}
+            description="Sélectionnez une journée pour voir ses rendez-vous."
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goToPreviousMonth}
+                >
+                  <ChevronLeft className="size-4" aria-hidden />
+                  <span className="sr-only">Mois précédent</span>
+                </Button>
+                <Button variant="outline" onClick={goToToday}>
+                  Aujourd'hui
+                </Button>
+                <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                  <ChevronRight className="size-4" aria-hidden />
+                  <span className="sr-only">Mois suivant</span>
+                </Button>
+              </>
+            }
+          />
 
-          <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-200">
+          <div className="grid grid-cols-7 gap-px overflow-hidden rounded-card border border-border bg-border">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
               <div
                 key={day}
-                className="bg-slate-50 px-2 py-3 text-center text-xs font-semibold uppercase text-slate-500"
+                className="bg-muted px-2 py-3 text-center text-xs font-semibold uppercase text-muted-foreground"
               >
                 {day}
               </div>
@@ -169,26 +307,24 @@ export function AgendaPage() {
                   type="button"
                   onClick={() => setSelectedDate(day.date)}
                   className={cn(
-                    "min-h-24 bg-white p-2 text-left transition duration-200 hover:bg-slate-50",
-                    !day.inMonth && "bg-slate-50 text-slate-400",
+                    "min-h-24 bg-card p-2 text-left transition duration-200 hover:bg-muted",
+                    !day.inMonth && "bg-muted text-muted-foreground",
                     isSelected &&
-                      "bg-emerald-50 ring-2 ring-inset ring-emerald-500",
+                      "bg-primary-surface ring-2 ring-inset ring-primary",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={cn(
                         "flex size-7 items-center justify-center rounded-lg text-sm font-semibold",
-                        isToday && "bg-slate-950 text-white",
-                        isSelected &&
-                          !isToday &&
-                          "bg-emerald-100 text-emerald-900",
+                        isToday && "bg-primary text-primary-foreground",
+                        isSelected && !isToday && "text-primary",
                       )}
                     >
                       {day.date.getDate()}
                     </span>
                     {dayAppointments.length > 0 ? (
-                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600">
+                      <span className="rounded-chip border border-border bg-card px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                         {dayAppointments.length}
                       </span>
                     ) : null}
@@ -197,14 +333,14 @@ export function AgendaPage() {
                     {dayAppointments.slice(0, 2).map((appointment) => (
                       <span
                         key={appointment.id}
-                        className="truncate rounded-md bg-white/70 px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200"
+                        className="truncate rounded-md border border-border bg-card px-2 py-1 text-xs text-muted-foreground"
                       >
                         {formatTime(appointment.beginAt)} ·{" "}
-                        {appointment.patient?.name ?? "Patient"}
+                        {appointment.patient?.name ?? "Animal"}
                       </span>
                     ))}
                     {dayAppointments.length > 2 ? (
-                      <span className="text-xs font-medium text-emerald-700">
+                      <span className="text-xs font-medium text-muted-foreground">
                         +{dayAppointments.length - 2} autre
                         {dayAppointments.length - 2 > 1 ? "s" : ""}
                       </span>
@@ -216,82 +352,86 @@ export function AgendaPage() {
           </div>
         </Panel>
 
-        <aside className="grid gap-5 self-start">
+        <aside className="grid gap-6 self-start">
           <Panel>
-            <div className="mb-5 border-b border-slate-200 pb-5">
-              <p className="text-sm font-medium text-emerald-700">
-                Journée sélectionnée
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                {formatLongDate(selectedDate)}.
-              </h2>
-            </div>
+            <PanelHeader
+              title={formatLongDate(selectedDate)}
+              description={formatDayCount(dayAgenda.summary.appointmentCount)}
+            />
 
             <div className="grid gap-3">
-              {selectedAppointments.length > 0 ? (
-                selectedAppointments.map((appointment) => (
+              {dayAgenda.appointments.length > 0 ? (
+                dayAgenda.appointments.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
                     appointment={appointment}
+                    onPrimaryAction={handlePrimaryAction}
+                    actions={
+                      <AppointmentActionsMenu
+                        appointmentLabel={buildAppointmentLabel(appointment)}
+                        disabled={isMutating}
+                        onEdit={() => setEditedAppointment(appointment)}
+                        onCancel={() => void handleCancelSession(appointment)}
+                        onDelete={() =>
+                          void handleDeleteAppointment(appointment)
+                        }
+                      />
+                    }
                   />
                 ))
               ) : (
-                <div className="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
-                  <CalendarDays className="mx-auto size-6 text-slate-400" />
-                  <p className="mt-3 text-sm font-semibold text-slate-950">
-                    Aucun rendez-vous
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Cette journée est libre pour le moment.
-                  </p>
-                </div>
+                <EmptyState
+                  icon={CalendarDays}
+                  title="Aucun rendez-vous"
+                  description="Cette journée est libre. Créez-y une séance si un propriétaire vous appelle."
+                  action={
+                    <Button onClick={() => setIsNewAppointmentOpen(true)}>
+                      Nouveau rendez-vous
+                    </Button>
+                  }
+                />
               )}
             </div>
           </Panel>
 
-          <Panel>
-            <div className="mb-5 border-b border-slate-200 pb-5">
-              <p className="text-sm font-medium text-emerald-700">À venir</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                Prochains rendez-vous.
-              </h2>
-            </div>
-            <div className="grid gap-3">
-              {upcomingAppointments.length > 0 ? (
-                upcomingAppointments.map((appointment) => (
-                  <button
+          {/* Pas de `Panel` autour de la liste groupée : `GroupedList` est
+            elle-même une surface bordée, l'imbriquer dans un panneau
+            dessinerait deux cadres l'un dans l'autre. */}
+          <section>
+            <SectionHeader eyebrow="À venir" title="Prochains rendez-vous" />
+
+            {upcomingAppointments.length > 0 ? (
+              <GroupedList>
+                {upcomingAppointments.map((appointment) => (
+                  <GroupedListRow
                     key={appointment.id}
-                    type="button"
-                    onClick={() => {
-                      const date = new Date(appointment.beginAt);
-                      setSelectedDate(startOfDay(date));
-                      setCurrentMonth(startOfMonth(date));
-                    }}
-                    className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:bg-slate-50"
-                  >
-                    <div className="flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500">
-                      <Clock className="size-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-950">
-                        {appointment.patient?.name ?? "Patient"}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">
-                        {formatLongDate(appointment.beginAt)} ·{" "}
-                        {formatTime(appointment.beginAt)}
-                      </p>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-slate-500">
-                  Aucun rendez-vous à venir.
-                </p>
-              )}
-            </div>
-          </Panel>
+                    icon={CalendarClock}
+                    title={appointment.animalName}
+                    meta={appointment.whenLabel}
+                    badge={
+                      appointment.statusLabel ? (
+                        <StatusPill
+                          tone={sessionTone[appointment.sessionState]}
+                        >
+                          {appointment.statusLabel}
+                        </StatusPill>
+                      ) : undefined
+                    }
+                    statusLabel={appointment.statusLabel}
+                    onSelect={() => goToDay(appointment.beginAt)}
+                  />
+                ))}
+              </GroupedList>
+            ) : (
+              <EmptyState
+                icon={CalendarClock}
+                title="Rien de prévu"
+                description="Les rendez-vous que vous planifierez apparaîtront ici, du plus proche au plus lointain."
+              />
+            )}
+          </section>
         </aside>
-      </section>
+      </div>
 
       <NewAppointmentDialog
         isSubmitting={createAppointmentMutation.isPending}
@@ -303,155 +443,96 @@ export function AgendaPage() {
         }
         onOpenChange={setIsNewAppointmentOpen}
       />
+
+      <EditAppointmentDialog
+        appointment={editedAppointment}
+        isSubmitting={updateAppointmentMutation.isPending}
+        open={editedAppointment !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditedAppointment(null);
+        }}
+        onSubmit={handleEditSubmit}
+      />
     </div>
   );
 }
 
-// `getAppointments` ne sélectionne qu'un sous-ensemble de colonnes sur
-// `patient` (id, name, breed, owner, animal) : le type `Appointment` complet,
-// avec ses relations obligatoires, ne correspond plus à la forme réellement
-// renvoyée. On ne type ici que ce que la carte affiche.
-type AgendaCardAppointment = {
+/**
+ * La phrase qui identifie un rendez-vous dans un libellé accessible.
+ *
+ * Même formulation que le `cardLabel` d'`AppointmentCard`, en minuscule :
+ * elle est enchâssée dans d'autres phrases (« Actions – rendez-vous de Nox à
+ * 14:00 », « le rendez-vous de Nox à 14:00 … sera supprimé »). Sans nom
+ * d'animal, on n'invente pas un « de … » bancal.
+ */
+function buildAppointmentLabel(appointment: DayAgendaAppointment) {
+  const animalName = appointment.patient?.name;
+  const timeLabel = formatTime(appointment.beginAt);
+
+  return animalName
+    ? `rendez-vous de ${animalName} à ${timeLabel}`
+    : `rendez-vous à ${timeLabel}`;
+}
+
+type UpcomingAppointmentInput = {
   id: string;
   beginAt: Date | string;
   endAt: Date | string;
-  status: Appointment["status"];
-  atHome?: boolean | null;
-  note?: string | null;
-  patient?: {
-    name: string | null;
-    owner?: { name: string | null } | null;
-    animal?: { name: string | null } | null;
-  } | null;
+  status: AgendaAppointmentStatus;
+  patient?: { name: string | null } | null;
 };
 
-function AppointmentCard({
-  appointment,
-}: {
-  appointment: AgendaCardAppointment;
-}) {
-  return (
-    <article className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.5)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-950">
-            {formatTime(appointment.beginAt)} - {formatTime(appointment.endAt)}
-          </p>
-          <h3 className="mt-2 truncate text-base font-semibold tracking-tight text-slate-950">
-            {appointment.patient?.name ?? "Patient non renseigné"}
-          </h3>
-          <p className="mt-1 truncate text-sm text-slate-500">
-            {appointment.patient?.owner?.name ?? "Propriétaire inconnu"}
-          </p>
-        </div>
-        <StatusPill status={appointment.status} />
-      </div>
+type UpcomingAppointment = {
+  id: string;
+  beginAt: Date;
+  animalName: string;
+  whenLabel: string;
+  sessionState: SessionState;
+  /** Absent quand la séance est simplement prévue : dans une liste intitulée
+   * « à venir », dire « Prévu » sur chaque ligne n'apprend rien. Une séance
+   * annulée, elle, change ce que le praticien fera de sa journée. */
+  statusLabel?: string;
+};
 
-      <div className="mt-4 grid gap-2 text-sm text-slate-600">
-        <span className="flex items-center gap-2">
-          <PawPrint className="size-3.5 text-slate-400" />
-          {appointment.patient?.animal?.name ?? "Espèce inconnue"}
-        </span>
-        <span className="flex items-center gap-2">
-          {appointment.atHome ? (
-            <Home className="size-3.5 text-slate-400" />
-          ) : (
-            <MapPin className="size-3.5 text-slate-400" />
-          )}
-          {appointment.atHome ? "À domicile" : "Cabinet"}
-        </span>
-        {appointment.note ? (
-          <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-600">
-            {appointment.note}
-          </p>
-        ) : null}
-      </div>
-    </article>
-  );
+function buildUpcomingAppointments(
+  appointments: UpcomingAppointmentInput[],
+): UpcomingAppointment[] {
+  const now = new Date();
+  const today = startOfDay(now);
+
+  return appointments
+    .filter((appointment) => new Date(appointment.beginAt) >= today)
+    .sort(
+      (a, b) => new Date(a.beginAt).getTime() - new Date(b.beginAt).getTime(),
+    )
+    .slice(0, 5)
+    .map((appointment) => {
+      const beginAt = new Date(appointment.beginAt);
+      const sessionState = deriveSessionState({
+        status: appointment.status,
+        endAt: new Date(appointment.endAt),
+        now,
+      });
+
+      return {
+        id: appointment.id,
+        beginAt,
+        animalName: appointment.patient?.name ?? "Animal non renseigné",
+        whenLabel: `${formatLongDate(beginAt)} · ${formatTime(beginAt)}`,
+        sessionState,
+        statusLabel:
+          sessionState === "scheduled"
+            ? undefined
+            : sessionStateLabel(sessionState),
+      };
+    });
 }
 
-function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6">
-      {children}
-    </section>
-  );
-}
+function formatDayCount(count: number) {
+  if (count === 0) return "Aucun rendez-vous sur cette journée.";
+  if (count === 1) return "1 rendez-vous sur cette journée.";
 
-function MetricCard({
-  detail,
-  icon: Icon,
-  label,
-  tone,
-  value,
-}: {
-  detail: string;
-  icon: typeof CalendarDays;
-  label: string;
-  tone: "emerald" | "sky" | "amber" | "slate";
-  value: number | string;
-}) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.5)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-            {value}
-          </p>
-          <p className="mt-2 text-xs font-medium text-slate-500">{detail}</p>
-        </div>
-        <div
-          className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-xl border",
-            tone === "emerald" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-800",
-            tone === "sky" && "border-sky-200 bg-sky-50 text-sky-800",
-            tone === "amber" && "border-amber-200 bg-amber-50 text-amber-800",
-            tone === "slate" && "border-slate-200 bg-slate-50 text-slate-600",
-          )}
-        >
-          <Icon className="size-5" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusPill({
-  status,
-}: {
-  status: "CREATED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-}) {
-  const config = {
-    CREATED: {
-      label: "Créé",
-      className: "border-slate-200 bg-slate-50 text-slate-600",
-    },
-    CONFIRMED: {
-      label: "Confirmé",
-      className: "border-sky-200 bg-sky-50 text-sky-800",
-    },
-    CANCELLED: {
-      label: "Annulé",
-      className: "border-red-200 bg-red-50 text-red-700",
-    },
-    COMPLETED: {
-      label: "Terminé",
-      className: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    },
-  }[status];
-
-  return (
-    <span
-      className={cn(
-        "inline-flex h-7 shrink-0 items-center rounded-lg border px-2.5 text-xs font-semibold",
-        config.className,
-      )}
-    >
-      {config.label}
-    </span>
-  );
+  return `${count} rendez-vous sur cette journée.`;
 }
 
 function buildMonthDays(month: Date) {

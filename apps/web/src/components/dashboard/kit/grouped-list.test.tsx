@@ -77,6 +77,28 @@ describe("GroupedListRow", () => {
     expect(row).toBeTruthy();
   });
 
+  test("le statut déclaré est annoncé après le titre, et le meta reste exclu", () => {
+    const onSelect = vi.fn();
+    render(
+      <GroupedList>
+        <GroupedListRow
+          icon={Building2}
+          title="Nox"
+          meta="lundi 17 août · 09:00"
+          badge={<span>Annulé</span>}
+          statusLabel="Annulé"
+          onSelect={onSelect}
+        />
+      </GroupedList>,
+    );
+
+    // Correspondance exacte, dans cet ordre : le praticien doit entendre de
+    // quoi il s'agit avant son état, et le meta ne doit jamais s'y glisser.
+    // Sans `statusLabel` composé dans le nom accessible, « Annulé » resterait
+    // purement visuel et cette requête ne trouverait rien.
+    expect(screen.getByRole("button", { name: "Nox, Annulé" })).toBeTruthy();
+  });
+
   test("une ligne sans onSelect n'est pas un bouton", () => {
     render(
       <GroupedList>
