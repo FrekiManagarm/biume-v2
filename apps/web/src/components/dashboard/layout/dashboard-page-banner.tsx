@@ -78,7 +78,7 @@ const pageCopy: Array<{
     copy: {
       eyebrow: "Réglages",
       title: "Paramètres",
-      description: "Identité, notifications et abonnement de l'organisation.",
+      description: "Identité, notifications et abonnement de l'entreprise.",
     },
   },
 ];
