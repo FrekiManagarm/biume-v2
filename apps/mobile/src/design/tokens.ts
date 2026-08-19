@@ -142,11 +142,13 @@ export const radius = {
 /**
  * La même famille que le web. Les tokens ne portaient que taille, graisse et
  * interlettrage : deux applications aux mêmes couleurs mais à deux voix
- * n'étaient pas la même application. Le nom doit correspondre exactement à la
- * clé passée à `useFonts` dans `app/_layout.tsx`, faute de quoi React Native
- * retombe silencieusement sur la police système sans lever d'erreur.
+ * n'étaient pas la même application. Exportée pour que `app/_layout.tsx`
+ * construise la clé de `useFonts` à partir de cette même constante plutôt que
+ * de la recopier : un renommage se propage alors tout seul, au lieu de
+ * reproduire silencieusement le repli sur la police système que cette tâche
+ * existe pour éviter.
  */
-const fontFamily = 'HankenGrotesk';
+export const fontFamily = 'HankenGrotesk';
 
 /**
  * Fixed sizes rather than a fluid scale: a phone has one viewport, and Dynamic

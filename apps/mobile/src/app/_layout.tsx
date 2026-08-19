@@ -9,7 +9,7 @@ import {
   requestSync,
   sweepRetention,
 } from '@/app-state/workspace-ports';
-import { useIsDark, usePalette } from '@/design';
+import { fontFamily, useIsDark, usePalette } from '@/design';
 import { registerBackgroundSync } from '@/sync/background-sync';
 
 // Le splash reste à l'écran tant que la police n'est pas prête : un premier
@@ -54,15 +54,21 @@ export default function RootLayout() {
   const palette = usePalette();
   const isDark = useIsDark();
 
-  // Le nom de clé fait la jonction avec `fontFamily` dans design/tokens.ts :
-  // deux applications aux mêmes couleurs mais à deux voix ne sont pas la même
-  // application. Chargée une seule fois, la police variable porte toutes les
-  // graisses utilisées par les tokens (Thin à Black).
+  // La clé de `useFonts` est construite à partir de la même constante que
+  // `design/tokens.ts` (et non recopiée) : un renommage futur d'un seul côté
+  // se propage tout seul plutôt que de reproduire silencieusement le repli
+  // sur la police système que cette tâche existe pour éviter. Chargée une
+  // seule fois, la police variable porte toutes les graisses utilisées par
+  // les tokens (Thin à Black).
   const [fontsLoaded, fontError] = useFonts({
-    HankenGrotesk: require('../../assets/fonts/HankenGrotesk-Variable.ttf'),
+    [fontFamily]: require('../../assets/fonts/HankenGrotesk-Variable.ttf'),
   });
 
   useEffect(() => {
+    // `fontError` masque aussi le splash : un praticien face à l'application
+    // rendue en police système reste opérationnel, alors qu'un splash bloqué
+    // indéfiniment sur un échec de chargement l'empêcherait purement et
+    // simplement de travailler.
     if (fontsLoaded || fontError) {
       void SplashScreen.hideAsync();
     }
