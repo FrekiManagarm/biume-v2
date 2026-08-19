@@ -37,7 +37,7 @@ export function AccountSwitchDialog({
   const isProfessional = type === "professional";
   const accountLabel = isProfessional ? "Espace pro" : "Espace personnel";
   const destination = isProfessional
-    ? organizationName || "Organisation"
+    ? organizationName || "Entreprise"
     : "Compte personnel";
   const title = isLoading
     ? `Changement vers ${destination}`

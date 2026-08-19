@@ -11,6 +11,11 @@ import {
 import { useMemo, useState, type FormEvent } from "react";
 
 import { FileDropzone, formatFileRejection } from "#/components/file-dropzone";
+import {
+  IconTile,
+  SectionHeader,
+  StatusPill,
+} from "#/components/dashboard/kit";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
@@ -26,16 +31,16 @@ export function createOrganizationSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  return slug || "organisation";
+  return slug || "entreprise";
 }
 
 export const Route = createFileRoute("/create-organization")({
   head: () => ({
     meta: [
-      { title: "Créer une organisation | Biume" },
+      { title: "Créer une entreprise | Biume" },
       {
         name: "description",
-        content: "Creez une nouvelle organisation Biume.",
+        content: "Creez une nouvelle entreprise Biume.",
       },
     ],
   }),
@@ -138,7 +143,7 @@ function CreateOrganization() {
     const organizationSlug = effectiveSlug;
 
     if (!organizationName) {
-      setError("Le nom de l'organisation est requis.");
+      setError("Le nom de l'entreprise est requis.");
       return;
     }
 
@@ -163,7 +168,7 @@ function CreateOrganization() {
     if (result.error) {
       setError(
         result.error.message ||
-        "Impossible de créer cette organisation pour le moment.",
+          "Impossible de créer cette entreprise pour le moment.",
       );
       setIsPending(false);
       return;
@@ -173,9 +178,9 @@ function CreateOrganization() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#f9fafb] text-slate-950">
+    <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto grid min-h-dvh w-full max-w-7xl grid-cols-1 px-4 py-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12 md:px-8 lg:px-10">
-        <section className="flex flex-col justify-between border-b border-slate-200 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-10">
+        <section className="flex flex-col justify-between border-b border-border pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-10">
           <div>
             <div className="inline-flex w-fit items-center gap-2 text-sm font-semibold tracking-tight">
               <img
@@ -189,23 +194,24 @@ function CreateOrganization() {
             </div>
 
             <div className="mt-14 max-w-136 md:mt-24">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-[0_18px_40px_-26px_rgba(15,23,42,0.45)]">
-                <Sparkles className="size-3.5 text-emerald-700" />
-                Nouvel espace
+              <div className="mb-5 inline-flex">
+                <StatusPill icon={Sparkles} tone="done">
+                  Nouvel espace
+                </StatusPill>
               </div>
-              <h1 className="text-4xl font-semibold leading-none tracking-tight text-slate-950 md:text-6xl">
-                Créez votre organisation.
+              <h1 className="text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
+                Créez votre entreprise.
               </h1>
-              <p className="mt-5 max-w-120 text-base leading-7 text-slate-600">
+              <p className="mt-5 max-w-120 text-base leading-7 text-ink-muted">
                 Ajoutez un espace professionnel pour isoler les propriétaires,
                 rapports et paramètres de cette activité.
               </p>
             </div>
           </div>
 
-          <div className="mt-10 hidden text-sm text-slate-500 md:block">
+          <div className="mt-10 hidden text-sm text-muted-foreground md:block">
             Connecté en tant que{" "}
-            <span className="font-medium text-slate-800">
+            <span className="font-medium text-foreground">
               {session.user.email}
             </span>
           </div>
@@ -216,37 +222,33 @@ function CreateOrganization() {
             <Button
               asChild
               variant="ghost"
-              className="mb-6 h-10 px-0 text-slate-600 hover:bg-transparent hover:text-slate-950"
+              className="mb-6 h-10 px-0 text-ink-muted hover:bg-transparent hover:text-foreground"
             >
               <Link to="/select-organization">
                 <ArrowLeft className="size-4" aria-hidden="true" />
-                Retour aux organisations
+                Retour aux entreprises
               </Link>
             </Button>
 
-            <div className="mb-4">
-              <p className="text-sm font-medium text-emerald-700">
-                Identité de l'organisation
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
-                Renseignez les informations principales.
-              </h2>
-            </div>
+            <SectionHeader
+              eyebrow="Identité de l'entreprise"
+              title="Renseignez les informations principales."
+            />
 
-            <p className="mb-2 text-xs leading-5 text-slate-500">
-              <span className="font-medium text-red-600">*</span> Champs
+            <p className="mb-2 text-xs leading-5 text-muted-foreground">
+              <span className="font-medium text-destructive">*</span> Champs
               obligatoires
             </p>
 
             <form
               onSubmit={handleSubmit}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] sm:p-6"
+              className="rounded-card border border-border bg-card p-5 sm:p-6"
             >
               <div className="grid gap-5">
                 <div className="grid gap-2">
                   <Label htmlFor="organization-name" className="gap-1">
-                    Nom de l'organisation
-                    <span className="text-red-600" aria-hidden="true">
+                    Nom de l'entreprise
+                    <span className="text-destructive" aria-hidden="true">
                       *
                     </span>
                   </Label>
@@ -258,7 +260,7 @@ function CreateOrganization() {
                     required
                     className="h-11"
                   />
-                  <p className="text-xs leading-5 text-slate-500">
+                  <p className="text-xs leading-5 text-muted-foreground">
                     Ce nom sera visible dans le sélecteur et la barre latérale.
                   </p>
                 </div>
@@ -266,7 +268,7 @@ function CreateOrganization() {
                 <div className="grid gap-2">
                   <Label htmlFor="organization-slug" className="gap-1">
                     Slug
-                    <span className="text-red-600" aria-hidden="true">
+                    <span className="text-destructive" aria-hidden="true">
                       *
                     </span>
                   </Label>
@@ -278,11 +280,11 @@ function CreateOrganization() {
                       required
                       className="h-11 border-0 shadow-none focus-visible:ring-0"
                     />
-                    <span className="flex items-center border-t border-slate-200 px-3 py-2 text-sm text-slate-500 sm:border-l sm:border-t-0">
+                    <span className="flex items-center border-t border-border px-3 py-2 text-sm text-muted-foreground sm:border-l sm:border-t-0">
                       .biume
                     </span>
                   </div>
-                  <p className="text-xs leading-5 text-slate-500">
+                  <p className="text-xs leading-5 text-muted-foreground">
                     Le slug doit être unique. Il est généré depuis le nom, mais
                     vous pouvez l'ajuster.
                   </p>
@@ -315,10 +317,10 @@ function CreateOrganization() {
                   />
 
                   {logoUrl ? (
-                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border border-success-border bg-success-surface px-3 py-2 text-sm text-success">
                       <img
                         alt=""
-                        className="size-10 rounded-md border border-emerald-200 bg-white object-cover"
+                        className="size-10 rounded-md border border-success-border bg-card object-cover"
                         src={logoUrl}
                       />
                       <div className="min-w-0">
@@ -326,7 +328,7 @@ function CreateOrganization() {
                           <CheckCircle2 className="size-4" aria-hidden="true" />
                           Logo importé
                         </p>
-                        <p className="truncate text-xs text-emerald-700">
+                        <p className="truncate text-xs text-success">
                           {logoUrl}
                         </p>
                       </div>
@@ -346,7 +348,7 @@ function CreateOrganization() {
 
                 {error ? (
                   <div
-                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700"
+                    className="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-sm leading-6 text-destructive"
                     role="alert"
                   >
                     {error}
@@ -358,9 +360,7 @@ function CreateOrganization() {
                   type="submit"
                   className="h-11 w-full active:scale-[0.98]"
                 >
-                  {isLogoUploading
-                    ? "Import du logo..."
-                    : "Créer l'organisation"}
+                  {isLogoUploading ? "Import du logo..." : "Créer l'entreprise"}
                   {isPending || isLogoUploading ? (
                     <LoaderCircle
                       className="size-4 animate-spin"
@@ -378,12 +378,10 @@ function CreateOrganization() {
               </div>
             </form>
 
-            <div className="mt-5 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-              <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800">
-                <Building2 className="size-4" aria-hidden="true" />
-              </div>
+            <div className="mt-5 grid grid-cols-[auto_1fr] items-start gap-3 rounded-card border border-border bg-card px-4 py-3 text-sm leading-6 text-ink-muted">
+              <IconTile icon={Building2} tone="done" size="sm" />
               <p>
-                Après création, cette organisation devient l'espace actif de la
+                Après création, cette entreprise devient l'espace actif de la
                 session et vous serez redirigé vers le dashboard.
               </p>
             </div>
