@@ -17,6 +17,7 @@ export function createAppointment(input: {
   note?: string;
   notifyOwner?: boolean;
   patientId: string;
+  withReport?: boolean;
 }) {
   return createAppointmentFn({ data: input });
 }
