@@ -9,6 +9,7 @@
 export { EmptyState } from "./empty-state";
 export { GroupedList, GroupedListRow } from "./grouped-list";
 export { IconTile } from "./icon-tile";
+export { ListRow } from "./list-row";
 export { Metric } from "./metric";
 export { PageHeader } from "./page-header";
 export { Panel, PanelHeader } from "./panel";

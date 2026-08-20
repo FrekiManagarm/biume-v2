@@ -40,6 +40,13 @@ type GroupedListRowProps = {
   title: string;
   meta?: string;
   badge?: ReactNode;
+  /**
+   * Statut à faire entendre après le titre. Le `badge` est purement visuel :
+   * sans ce libellé, un lecteur d'écran n'apprend jamais qu'une ligne est
+   * active ou annulée. Le `meta` reste exclu — on entend d'abord de quoi il
+   * s'agit, jamais un identifiant technique.
+   */
+  statusLabel?: string;
   /** Remplace l'affordance de droite : un bouton, un menu, un état. */
   trailing?: ReactNode;
   onSelect?: () => void;
@@ -50,6 +57,7 @@ export function GroupedListRow({
   badge,
   disabled,
   icon,
+  statusLabel,
   iconContent,
   iconTone = "neutral",
   meta,
@@ -97,7 +105,7 @@ export function GroupedListRow({
     // qui documente et résout déjà ce même problème côté mobile.
     <button
       type="button"
-      aria-label={title}
+      aria-label={statusLabel ? `${title}, ${statusLabel}` : title}
       disabled={disabled}
       onClick={onSelect}
       className={cn(
