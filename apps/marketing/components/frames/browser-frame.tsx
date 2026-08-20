@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@biume/ui/lib/utils";
 import { computeFrameScale } from "./phone-frame";
 
+const BROWSER_FRAME = { width: 1203, height: 753 };
 const BROWSER_CONTENT_WIDTH = 1120;
 const BROWSER_SCREEN = {
   left: 0.083,
@@ -12,6 +13,13 @@ const BROWSER_SCREEN = {
   width: 99.751,
   height: 92.961,
 };
+
+/** Voir `PHONE_CONTENT_HEIGHT` : sans hauteur, `h-full` ne remplit rien. */
+const BROWSER_CONTENT_HEIGHT = Math.round(
+  (BROWSER_CONTENT_WIDTH *
+    (BROWSER_FRAME.height * BROWSER_SCREEN.height)) /
+    (BROWSER_FRAME.width * BROWSER_SCREEN.width),
+);
 
 export function BrowserFrame({
   children,
@@ -24,6 +32,7 @@ export function BrowserFrame({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(0);
+  const maskId = useId();
 
   useEffect(() => {
     const node = containerRef.current;
@@ -69,6 +78,7 @@ export function BrowserFrame({
         <div
           style={{
             width: `${BROWSER_CONTENT_WIDTH}px`,
+            height: `${BROWSER_CONTENT_HEIGHT}px`,
             transform: `scale(${scale})`,
             transformOrigin: "top left",
           }}
@@ -76,19 +86,57 @@ export function BrowserFrame({
           {children}
         </div>
       </div>
-      <BrowserBezel urlLabel={urlLabel} />
+      <BrowserBezel maskId={maskId} urlLabel={urlLabel} />
     </div>
   );
 }
 
-function BrowserBezel({ urlLabel }: { urlLabel: string }) {
+function BrowserBezel({
+  maskId,
+  urlLabel,
+}: {
+  maskId: string;
+  urlLabel: string;
+}) {
   return (
     <svg
       viewBox="0 0 1203 753"
       className="pointer-events-none absolute inset-0 h-full w-full"
       aria-hidden="true"
     >
-      <rect width="1203" height="753" rx="14" fill="#ECECE7" stroke="#DEDED7" strokeWidth="1.5" />
+      {/*
+        Le châssis est rendu au-dessus du contenu : sans ce masque, son fond
+        plein recouvrait entièrement la maquette et le cadre paraissait vide.
+        Même principe que `PhoneBezel`, qui découpe déjà son écran.
+      */}
+      <defs>
+        <mask id={maskId}>
+          <rect width="1203" height="753" fill="white" />
+          <rect
+            x={(BROWSER_SCREEN.left / 100) * BROWSER_FRAME.width}
+            y={(BROWSER_SCREEN.top / 100) * BROWSER_FRAME.height}
+            width={(BROWSER_SCREEN.width / 100) * BROWSER_FRAME.width}
+            height={(BROWSER_SCREEN.height / 100) * BROWSER_FRAME.height}
+            rx="11"
+            fill="black"
+          />
+        </mask>
+      </defs>
+      <rect
+        width="1203"
+        height="753"
+        rx="14"
+        fill="#ECECE7"
+        mask={`url(#${maskId})`}
+      />
+      <rect
+        width="1203"
+        height="753"
+        rx="14"
+        fill="none"
+        stroke="#DEDED7"
+        strokeWidth="1.5"
+      />
       <circle cx="30" cy="27" r="6" fill="#DEDED7" />
       <circle cx="52" cy="27" r="6" fill="#DEDED7" />
       <circle cx="74" cy="27" r="6" fill="#DEDED7" />
