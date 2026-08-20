@@ -212,6 +212,7 @@
     "packages/auth": {
       "name": "@biume/auth",
       "dependencies": {
+        "@better-auth/expo": "^1.6.25",
         "@biume/db": "workspace:*",
         "@biume/env": "workspace:*",
         "autumn-js": "^1.2.33",

@@ -1,4 +1,5 @@
 import { useAudioPlayer, useAudioRecorder } from 'expo-audio';
+import { randomUUID } from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking } from 'react-native';
@@ -68,7 +69,7 @@ export default function RecordRoute() {
           interruptedSessions.save(interrupted),
         clearInterruptedSession: () => interruptedSessions.clear(),
         repository: ports.repository,
-        newCaptureId: () => globalThis.crypto.randomUUID(),
+        newCaptureId: () => randomUUID(),
         now: () => new Date(),
         telemetry: captureTelemetry,
       }),
@@ -100,7 +101,13 @@ export default function RecordRoute() {
         'La dictée est conservée et vous sera proposée à la récupération au prochain démarrage.',
       );
       router.back();
+      return;
     }
+
+    // 'not_recording': the recorder never started (e.g. it failed before
+    // `active` was set) or was already stopped. There is nothing to review,
+    // so leaving the screen is the only way out of the stuck 'recording' UI.
+    router.back();
   }, [adapters, router, session]);
 
   useEffect(() => {

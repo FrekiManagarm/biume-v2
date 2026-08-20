@@ -284,7 +284,7 @@ describe('recording capabilities', () => {
       numberOfChannels: 1,
       bitRate: 64_000,
       android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
-      ios: { outputFormat: 'mpeg4aac', audioQuality: 'medium' },
+      ios: { outputFormat: 'aac ', audioQuality: 'medium' },
     });
   });
 });

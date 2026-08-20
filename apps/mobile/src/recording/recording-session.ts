@@ -16,7 +16,11 @@ export const biumeRecordingPreset = {
   numberOfChannels: 1,
   bitRate: 64_000,
   android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
-  ios: { outputFormat: 'mpeg4aac', audioQuality: 'medium' },
+  // expo-audio packs this string's first 4 bytes as the raw Core Audio
+  // FourCharCode, so it must be the exact 'aac ' code (trailing space
+  // included), not a readable label like 'mpeg4aac' — that packs to an
+  // unregistered format ID and AVAudioRecorder fails with kAudioFormatUnsupportedDataFormatError ('fmt?').
+  ios: { outputFormat: 'aac ', audioQuality: 'medium' },
 } as const;
 
 export type InterruptedSession = {
