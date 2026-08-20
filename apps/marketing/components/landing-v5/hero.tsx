@@ -212,12 +212,6 @@ export function LandingV5Hero() {
             </div>
           </PhoneFrame>
         </div>
-
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-37.5"
-          style={{ background: "linear-gradient(to bottom, transparent, var(--lv5-canvas) 74%)" }}
-        />
       </Reveal>
     </section>
   );
