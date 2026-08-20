@@ -231,7 +231,7 @@ export const FEATURES = [
 /* ── Mobile (arc de téléphones) ───────────────────────────────── */
 
 export const MOBILE_EYEBROW = "Sur le terrain";
-export const MOBILE_TITLE = "Le cabinet tient dans une poche.";
+export const MOBILE_TITLE = "Votre activité tient dans une poche.";
 export const MOBILE_LEAD =
   "Les rendez-vous du jour, la séance à clôturer, le compte rendu prêt à envoyer — tout tient sur l'écran que vous avez déjà en main.";
 
