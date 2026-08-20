@@ -51,7 +51,7 @@ export function LandingV5Owner() {
         <Reveal delay={150}>
           <div className="flex gap-4">
             <PhoneFrame className="min-w-0 flex-1">
-              <div aria-hidden="true" className="flex h-full flex-col gap-2.5 p-3">
+              <div aria-hidden="true" className="flex h-full flex-col gap-2 pt-9 px-[13px] pb-4">
                 <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
                   {OWNER_MOCK_LINK.label}
                 </p>
@@ -82,7 +82,7 @@ export function LandingV5Owner() {
             </PhoneFrame>
 
             <PhoneFrame className="min-w-0 flex-1">
-              <div aria-hidden="true" className="flex h-full flex-col gap-2.5 p-3">
+              <div aria-hidden="true" className="flex h-full flex-col gap-2 pt-9 px-[13px] pb-4">
                 <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
                   {OWNER_MOCK_FOLLOWUP.label}
                 </p>

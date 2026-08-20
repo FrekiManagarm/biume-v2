@@ -6,7 +6,7 @@ import { Reveal } from "./motion";
 export function LandingV5ReportTabs() {
   return (
     <section
-      id="compte-rendu"
+      id="produit"
       aria-labelledby="tabs-title"
       className="lv5-grid-bg-dark bg-[color:var(--lv5-anthracite)] py-[clamp(52px,7vw,96px)] px-[clamp(18px,4vw,34px)] text-[rgba(253,253,251,.82)]"
     >

@@ -7,12 +7,14 @@ import Lenis from "lenis";
 import { useEffect, useRef, type ReactNode } from "react";
 
 /**
- * Moteur de mouvement de landing-v5 : un seul moteur (GSAP + ScrollTrigger
- * + Lenis), sans garde de mouvement réduit — décision produit explicite du
- * handoff. Les sections qui ont besoin de leur propre défilement scrubbé
- * ouvrent leur propre ScrollTrigger (ex. masthead) : ScrollTrigger ne pose
- * qu'un seul écouteur global quel que soit le nombre de
- * `ScrollTrigger.create` dans l'arbre.
+ * Moteur de mouvement de landing-v5 : Lenis pour le scroll doux, GSAP pour
+ * les tweens, sans garde de mouvement réduit — décision produit explicite
+ * du handoff. Les apparitions au scroll (`Reveal`) passent par un
+ * IntersectionObserver plutôt que `ScrollTrigger.batch` : son callback se
+ * déclenche toujours dès `observe()` avec l'état réel du moment, y compris
+ * pour un élément déjà visible au chargement, sans dépendre d'un premier
+ * évènement de scroll. Les sections qui ont besoin de leur propre
+ * défilement passent par leur propre `ScrollTrigger` (ex. masthead).
  */
 
 let pluginsReady = false;
@@ -82,14 +84,21 @@ export function LandingV5MotionRoot({ children }: { children: ReactNode }) {
     () => {
       ensureGsapPlugins();
 
-      const selector = "[data-reveal]";
-      gsap.set(selector, { autoAlpha: 0, y: 20 });
+      const nodes = root.current?.querySelectorAll<HTMLElement>("[data-reveal]");
+      if (!nodes || nodes.length === 0) return;
 
-      ScrollTrigger.batch(selector, {
-        start: "top 94%",
-        once: true,
-        onEnter: (batch) => {
-          batch.forEach((el) => {
+      gsap.set(nodes, { autoAlpha: 0, y: 20 });
+
+      // IntersectionObserver plutôt que ScrollTrigger.batch : son callback
+      // se déclenche toujours une première fois dès `observe()`, avec l'état
+      // d'intersection réel du moment — y compris pour un élément déjà
+      // visible au chargement (tout le haut de page, hero compris), sans
+      // dépendre d'un premier évènement de scroll pour être évalué.
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const el = entry.target as HTMLElement;
             const delay = Number(el.getAttribute("data-delay") ?? 0) / 1000;
             gsap.to(el, {
               autoAlpha: 1,
@@ -99,9 +108,15 @@ export function LandingV5MotionRoot({ children }: { children: ReactNode }) {
               delay,
               overwrite: "auto",
             });
-          });
+            observer.unobserve(el);
+          }
         },
-      });
+        { threshold: 0, rootMargin: "0px 0px -6% 0px" },
+      );
+
+      nodes.forEach((node) => observer.observe(node));
+
+      return () => observer.disconnect();
     },
     { scope: root },
   );

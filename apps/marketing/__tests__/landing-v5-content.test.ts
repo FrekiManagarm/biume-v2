@@ -52,12 +52,12 @@ describe("landing-v5 content", () => {
     expect(DEMO_URL).toBe("https://cal.com/mathieu-chambaud-biume");
   });
 
-  test("footer has exactly 3 SEO columns (Produit, Métiers, Société)", () => {
+  test("footer has exactly 3 SEO columns (Le métier, Comparer, Biume)", () => {
     expect(FOOTER_COLUMNS).toHaveLength(3);
     expect(FOOTER_COLUMNS.map((c) => c.title)).toEqual([
-      "Produit",
-      "Métiers",
-      "Société",
+      "Le métier",
+      "Comparer",
+      "Biume",
     ]);
   });
 });

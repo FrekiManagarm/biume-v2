@@ -17,7 +17,7 @@ export const TRIAL_NOTE =
   "15 jours d'essai · sans carte bancaire · résiliable à tout moment";
 
 export const NAV_LINKS = [
-  { href: "#compte-rendu", label: "Compte rendu" },
+  { href: "#produit", label: "Compte rendu" },
   { href: "#fonctions", label: "Fonctions" },
   { href: "#mobile", label: "Mobile" },
   { href: "#tarifs", label: "Tarifs" },
@@ -33,14 +33,14 @@ export const HERO_TITLE_LINE_1 = "Vos notes de séance,";
 export const HERO_TITLE_LINE_2 = "un compte rendu prêt à envoyer.";
 
 export const HERO_LEAD =
-  "Vous notez comme vous avez toujours noté : abrégé, technique, rapide. Biume met en forme pour le propriétaire. Vous relisez passage par passage, et rien ne part avant votre validation.";
+  "Biume reprend vos abréviations telles quelles et en tire un document que le propriétaire comprend. Vous relisez, vous validez, vous envoyez — en quelques minutes, à la fin de la séance.";
 
 export const HERO_CTA_PRIMARY = "Commencer l'essai gratuit";
 export const HERO_CTA_SECONDARY = "Voir un compte rendu";
 
 export const HERO_MOCK = {
   subject: "Nashira · jument, 11 ans",
-  subtitle: "Séance du 12 mars · à finaliser",
+  subtitle: "Séance du 14 mars · 10:30 · Écurie du Val",
   sendLabel: "Envoyer au propriétaire",
   nav: [
     { label: "Agenda" },
@@ -113,7 +113,9 @@ export const FACTS = [
 /* ── La solution (bento) ──────────────────────────────────────── */
 
 export const BENTO_EYEBROW = "La solution";
-export const BENTO_TITLE = "Un seul geste de plus : valider.";
+export const BENTO_TITLE = "Un seul objet, traité de bout en bout.";
+export const BENTO_LEAD =
+  "Biume ne cherche pas à remplacer votre gestion. Il prend le compte rendu propriétaire et tout ce qui en découle.";
 
 export const BENTO_NOTES_TO_DOC = {
   title: "Vos notes deviennent un document lisible",
@@ -354,8 +356,8 @@ export const PRICING_DEMO_CARD = {
 
 /* ── Questions ─────────────────────────────────────────────────── */
 
-export const FAQ_TITLE = "Questions.";
-export const FAQ_CONTACT = "D'autres questions ? Écrivez-nous, on répond vite.";
+export const FAQ_TITLE = "Questions fréquentes.";
+export const FAQ_CONTACT = "Une autre question ? Écrivez à contact@biume.com.";
 
 export const FAQ = [
   {
@@ -396,17 +398,7 @@ export const CLOSE_CTA_SECONDARY = "Réserver une démonstration";
 
 export const FOOTER_COLUMNS = [
   {
-    title: "Produit",
-    links: [
-      { href: "#compte-rendu", label: "Le compte rendu" },
-      { href: "#fonctions", label: "Fonctions" },
-      { href: "#mobile", label: "Mobile" },
-      { href: "#tarifs", label: "Tarifs" },
-      { href: "#questions", label: "Questions" },
-    ],
-  },
-  {
-    title: "Métiers",
+    title: "Le métier",
     links: [
       { href: "/logiciel-osteopathe-animalier", label: "Logiciel ostéopathe animalier" },
       {
@@ -419,14 +411,23 @@ export const FOOTER_COLUMNS = [
       },
       { href: "/suivi-post-seance-animal", label: "Suivi post-séance" },
       { href: "/relance-client-osteopathe-animalier", label: "Relance client" },
+    ],
+  },
+  {
+    title: "Comparer",
+    links: [
       { href: "/comparatifs", label: "Tous les comparatifs" },
+      { href: "/comparatifs/neovoice-vs-biume", label: "Neovoice vs Biume" },
+      { href: "/alternatives/kiwiappli", label: "Alternative à Kiwiappli" },
+      { href: "/alternatives/animalib", label: "Alternative à Animalib" },
       { href: "/blog", label: "Blog" },
     ],
   },
   {
-    title: "Société",
+    title: "Biume",
     links: [
       { href: "/about", label: "À propos" },
+      { href: "/tarifs", label: "Tarifs" },
       { href: "/cgu", label: "CGU" },
       { href: "/privacy", label: "Confidentialité" },
     ],

@@ -1,6 +1,7 @@
 import {
   BENTO_EYEBROW,
   BENTO_FOLLOW_UP,
+  BENTO_LEAD,
   BENTO_NOTES_TO_DOC,
   BENTO_OWNER,
   BENTO_TITLE,
@@ -32,6 +33,10 @@ export function LandingV5Bento() {
           >
             {BENTO_TITLE}
           </h2>
+
+          <p className="mx-auto mt-4 max-w-[54ch] text-[clamp(1rem,1.3vw,1.14rem)] leading-[1.6] text-[color:var(--lv5-ink-soft)]">
+            {BENTO_LEAD}
+          </p>
 
           <div className="mt-[clamp(32px,4vw,48px)] grid grid-cols-1 gap-[clamp(16px,2.2vw,24px)] text-left sm:grid-cols-2">
             <Reveal

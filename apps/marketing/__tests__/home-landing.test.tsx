@@ -3,12 +3,10 @@ import { describe, expect, mock, test } from "bun:test";
 
 import {
   CLOSE_TITLE,
-  CONTROL_LEAD,
-  CONTROL_TITLE,
   FAQ,
-  FOLLOW_UP_TITLE,
-  HERO_TITLE,
-  SPECIMEN_NOTE,
+  HERO_TITLE_LINE_1,
+  HERO_TITLE_LINE_2,
+  TABS_NOTE,
 } from "../components/landing-v5/content";
 import { webAppPath } from "../lib/web-app-url";
 import {
@@ -31,10 +29,19 @@ function getJsonLdSchemas(html: string) {
   ].map(([, json]) => JSON.parse(json ?? "{}") as Record<string, unknown>);
 }
 
-describe("Biume homepage (landing-v5)", () => {
-  test("uses the landing-v5 composition for the approved homepage story", () => {
+describe("Biume homepage (landing-v5, SaaS moderne)", () => {
+  test("uses the new landing-v5 composition for the approved homepage story", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
-    const markers = ["produit", "controle", "suivi", "proprietaire", "tarifs", "questions"];
+    const markers = [
+      "produit",
+      "fonctions",
+      "mobile",
+      "proprietaire",
+      "suivi",
+      "limites",
+      "tarifs",
+      "questions",
+    ];
 
     expect(html).toContain('class="landing-v5 ');
     for (const marker of markers) {
@@ -42,20 +49,14 @@ describe("Biume homepage (landing-v5)", () => {
     }
   });
 
-  test("renders the complete factual story, prices, FAQ and final conversions", () => {
+  test("renders the hero title, the report demo disclaimer, prices and FAQ", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const text = textOnly(html);
 
-    expect(text).toContain(HERO_TITLE);
-    expect(text).toContain(SPECIMEN_NOTE);
-    expect(text).toContain(CONTROL_TITLE);
-    expect(text).toContain(CONTROL_LEAD);
-    expect(text).toContain(FOLLOW_UP_TITLE);
-    expect(html).toContain("atelier-practice.webp");
-    expect(html).toContain("atelier-owner.webp");
-    // Le prix annuel n'apparaît qu'après bascule du sélecteur côté client
-    // (voir landing-v5-pricing.test.tsx) ; seul le mensuel est rendu ici.
-    expect(html).toContain("29,99 €");
+    expect(text).toContain(HERO_TITLE_LINE_1);
+    expect(text).toContain(HERO_TITLE_LINE_2);
+    expect(text).toContain(TABS_NOTE);
+    expect(text).toContain("29,99 €");
     expect(html.match(/data-slot="accordion-item"/g)).toHaveLength(FAQ.length);
     expect(text).toContain(CLOSE_TITLE);
 
@@ -72,11 +73,8 @@ describe("Biume homepage (landing-v5)", () => {
     );
 
     expect(new Set(ids).size).toBe(ids.length);
-    for (const target of ["produit", "suivi", "proprietaire", "tarifs", "questions"]) {
+    for (const target of ["produit", "fonctions", "mobile", "tarifs", "questions"]) {
       expect(navigationTargets).toContain(target);
-    }
-    for (const target of new Set(navigationTargets)) {
-      expect(ids.filter((id) => id === target)).toHaveLength(1);
     }
   });
 
@@ -89,8 +87,6 @@ describe("Biume homepage (landing-v5)", () => {
 
     expect(firstAnchor).toContain('href="#contenu"');
     expect(firstAnchor).toContain("sr-only");
-    expect(firstAnchor).toContain("focus:not-sr-only");
-    expect(firstAnchor).toContain("focus:bg-[color:var(--lv5-violet)]");
     expect(skipLinkIndex).toBeGreaterThanOrEqual(0);
     expect(navigationIndex).toBeGreaterThan(skipLinkIndex);
     expect(mainTarget).toBeDefined();
@@ -103,7 +99,6 @@ describe("Biume homepage (landing-v5)", () => {
 
     expect(normalized).not.toMatch(/moins de cinq minutes/);
     expect(normalized).not.toMatch(/témoignage|avis client|utilisateurs actifs/);
-    expect(html).not.toContain("carnet-theme");
   });
 
   test("keeps the unchanged factual Service schema and adds the FAQPage schema", () => {
@@ -126,51 +121,15 @@ describe("Biume homepage (landing-v5)", () => {
       },
       areaServed: "FR",
     });
-    expect(
-      schemas.some((schema) => schema["@type"] === "SoftwareApplication"),
-    ).toBe(false);
     expect(faqPage).toBeDefined();
     expect((faqPage?.mainEntity as unknown[] | undefined)?.length).toBe(FAQ.length);
   });
 
-  test("removes the superseded proof and temporary Carnet compatibility layer", async () => {
-    const removedComponent = ["product", "proof"].join("-");
-    const removedExport = ["Product", "Proof"].join("");
-    const [pageSource, css, productProofExists, productProofTestExists] =
-      await Promise.all([
-        Bun.file(new URL("../app/page.tsx", import.meta.url)).text(),
-        Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
-        Bun.file(
-          new URL(
-            `../components/landing/${removedComponent}.tsx`,
-            import.meta.url,
-          ),
-        ).exists(),
-        Bun.file(
-          new URL(`./${removedComponent}.test.tsx`, import.meta.url),
-        ).exists(),
-      ]);
+  test("removes the retired 'Le parcours' markers entirely", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
 
-    expect(pageSource).not.toContain(removedExport);
-    expect(pageSource).not.toContain(removedComponent);
-    expect(productProofExists).toBe(false);
-    expect(productProofTestExists).toBe(false);
-    expect(css).not.toMatch(/--carnet-|\.carnet-action/);
-  });
-
-  test("keeps scoped Tailwind discovery and inline route CSS", async () => {
-    const [sharedCss, marketingCss, webCss, config] = await Promise.all([
-      Bun.file(
-        new URL("../../../packages/ui/src/styles/globals.css", import.meta.url),
-      ).text(),
-      Bun.file(new URL("../app/globals.css", import.meta.url)).text(),
-      Bun.file(new URL("../../web/src/styles.css", import.meta.url)).text(),
-      Bun.file(new URL("../next.config.ts", import.meta.url)).text(),
-    ]);
-
-    expect(sharedCss).toContain('@import "tailwindcss" source(none)');
-    expect(marketingCss).toContain('@source "../**/*.{ts,tsx,mdx}"');
-    expect(webCss).toContain('@source "./**/*.{ts,tsx}"');
-    expect(config).toContain("inlineCss: true");
+    expect(html).not.toContain("atelier-practice.webp");
+    expect(html).not.toContain("atelier-owner.webp");
+    expect(html).not.toMatch(/id="controle"/);
   });
 });

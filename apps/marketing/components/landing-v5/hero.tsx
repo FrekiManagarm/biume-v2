@@ -33,7 +33,7 @@ export function LandingV5Hero() {
 
       <div className="relative mx-auto max-w-[760px] px-[clamp(18px,4vw,34px)] text-center">
         <a
-          href="#compte-rendu"
+          href="#produit"
           className="inline-flex items-center gap-2 rounded-full border border-[color:var(--lv5-line)] bg-[rgba(253,253,251,.9)] py-[5px] pl-[5px] pr-3.5 text-sm text-[color:var(--lv5-ink-mid)] shadow-[0_1px_2px_rgba(29,29,33,.05)]"
         >
           <span className="rounded-full bg-[color:var(--lv5-violet)] px-2.5 py-0.5 text-xs font-semibold text-white">
@@ -67,7 +67,7 @@ export function LandingV5Hero() {
             {HERO_CTA_PRIMARY}
           </a>
           <a
-            href="#compte-rendu"
+            href="#produit"
             className="inline-flex h-[52px] items-center justify-center rounded-full border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] px-6 text-base font-semibold text-[color:var(--lv5-ink)] transition-colors hover:bg-[color:var(--lv5-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--lv5-violet)]"
           >
             {HERO_CTA_SECONDARY}
@@ -189,7 +189,7 @@ export function LandingV5Hero() {
           </BrowserFrame>
 
           <PhoneFrame className="absolute -bottom-10 -right-6 w-[180px] max-[640px]:hidden animate-[biume-float_6s_ease-in-out_infinite]">
-            <div className="flex h-full flex-col gap-2.5 p-3">
+            <div className="flex h-full flex-col gap-2 pt-9 px-[13px] pb-4">
               <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
                 {HERO_PHONE_MOCK.label}
               </p>

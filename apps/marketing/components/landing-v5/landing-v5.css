@@ -40,24 +40,38 @@
   font-family: var(--lv5-font-sans);
 }
 
-/* Fond quadrillé clair : hero, onglets (base), tarifs. */
-.lv5-grid-bg {
-  background-image:
-    linear-gradient(rgba(29, 29, 33, .055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 29, 33, .055) 1px, transparent 1px);
+/* Fond quadrillé clair : hero, onglets (base), tarifs.
+   Le masque radial vit sur un ::before dédié plutôt que sur l'élément
+   lui-même : appliquer mask-image directement sur une section masque TOUT
+   son contenu peint (texte inclus), pas seulement son background-image. */
+.lv5-grid-bg,
+.lv5-grid-bg-dark {
+  position: relative;
+}
+
+.lv5-grid-bg::before,
+.lv5-grid-bg-dark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-size: 56px 56px;
   -webkit-mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
   mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
 }
 
+.lv5-grid-bg::before {
+  background-image:
+    linear-gradient(rgba(29, 29, 33, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 29, 33, .055) 1px, transparent 1px);
+}
+
 /* Fond quadrillé sombre : onglets du compte rendu, clôture. */
-.lv5-grid-bg-dark {
+.lv5-grid-bg-dark::before {
   background-image:
     linear-gradient(rgba(253, 253, 251, .05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(253, 253, 251, .05) 1px, transparent 1px);
-  background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
-  mask-image: radial-gradient(60% 50% at 50% 0%, black, transparent 75%);
 }
 
 @keyframes biume-marquee {

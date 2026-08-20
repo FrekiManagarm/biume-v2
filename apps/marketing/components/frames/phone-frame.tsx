@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@biume/ui/lib/utils";
 
 /**
@@ -45,6 +45,7 @@ export function PhoneFrame({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(0);
+  const maskId = useId();
 
   useEffect(() => {
     const node = containerRef.current;
@@ -78,7 +79,7 @@ export function PhoneFrame({
     >
       <div
         aria-hidden="true"
-        className="absolute overflow-hidden bg-[color:var(--lv5-anthracite)]"
+        className="absolute overflow-hidden bg-[color:var(--lv5-surface)]"
         style={{
           left: `${PHONE_SCREEN.left}%`,
           top: `${PHONE_SCREEN.top}%`,
@@ -97,12 +98,12 @@ export function PhoneFrame({
           {children}
         </div>
       </div>
-      <PhoneBezel />
+      <PhoneBezel maskId={maskId} />
     </div>
   );
 }
 
-function PhoneBezel() {
+function PhoneBezel({ maskId }: { maskId: string }) {
   return (
     <svg
       viewBox="0 0 433 882"
@@ -110,7 +111,7 @@ function PhoneBezel() {
       aria-hidden="true"
     >
       <defs>
-        <mask id="phone-screen-mask">
+        <mask id={maskId}>
           <rect width="433" height="882" fill="white" />
           <rect
             x={(PHONE_SCREEN.left / 100) * 433}
@@ -128,7 +129,7 @@ function PhoneBezel() {
         height="882"
         rx="64"
         fill="#1D1D21"
-        mask="url(#phone-screen-mask)"
+        mask={`url(#${maskId})`}
       />
       <rect
         width="433"

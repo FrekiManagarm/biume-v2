@@ -41,7 +41,7 @@ export function LandingV5Features() {
                       {feature.body}
                     </p>
                     <a
-                      href="#compte-rendu"
+                      href="#produit"
                       className="mt-4 inline-flex items-center gap-1.5 text-[0.94rem] font-semibold text-[color:var(--lv5-violet)]"
                     >
                       {feature.link}
@@ -50,7 +50,7 @@ export function LandingV5Features() {
                   </div>
 
                   <PhoneFrame className="w-[220px] shrink-0">
-                    <div aria-hidden="true" className="flex h-full flex-col gap-2.5 p-3">
+                    <div aria-hidden="true" className="flex h-full flex-col gap-2 pt-9 px-[13px] pb-4">
                       {"phoneLabel" in feature ? (
                         <>
                           <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
