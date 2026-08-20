@@ -54,7 +54,7 @@ export function RecordScreen({
           <Notice
             alert
             message="Biume a besoin du microphone. Autorisez-le dans les réglages."
-            tone="danger"
+            tone="problem"
           />
           <Button
             icon="secure"

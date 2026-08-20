@@ -140,20 +140,32 @@ export const radius = {
 } as const;
 
 /**
+ * La même famille que le web. Les tokens ne portaient que taille, graisse et
+ * interlettrage : deux applications aux mêmes couleurs mais à deux voix
+ * n'étaient pas la même application. Exportée pour que `app/_layout.tsx`
+ * construise la clé de `useFonts` à partir de cette même constante plutôt que
+ * de la recopier : un renommage se propage alors tout seul, au lieu de
+ * reproduire silencieusement le repli sur la police système que cette tâche
+ * existe pour éviter.
+ */
+export const fontFamily = 'HankenGrotesk';
+
+/**
  * Fixed sizes rather than a fluid scale: a phone has one viewport, and Dynamic
  * Type already scales every `Text` here because font scaling is left on.
  */
 export const typography = {
-  display: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.6 },
-  title: { fontSize: 22, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
-  heading: { fontSize: 17, lineHeight: 23, fontWeight: '600', letterSpacing: -0.2 },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: '600' },
-  caption: { fontSize: 13, lineHeight: 18, fontWeight: '500' },
+  display: { fontFamily, fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.6 },
+  title: { fontFamily, fontSize: 22, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
+  heading: { fontFamily, fontSize: 17, lineHeight: 23, fontWeight: '600', letterSpacing: -0.2 },
+  body: { fontFamily, fontSize: 16, lineHeight: 24, fontWeight: '400' },
+  label: { fontFamily, fontSize: 15, lineHeight: 20, fontWeight: '600' },
+  caption: { fontFamily, fontSize: 13, lineHeight: 18, fontWeight: '500' },
 } satisfies Record<string, TextStyle>;
 
 /** The clock is the one place where a number is the interface. */
 export const clockType = {
+  fontFamily,
   fontSize: 60,
   lineHeight: 68,
   fontWeight: '200',
