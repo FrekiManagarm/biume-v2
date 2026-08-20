@@ -26,12 +26,4 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
   }
-
-  // Une page déclare elle-même si elle a besoin de plus que le canvas de
-  // lecture (max-w-7xl) : le shell lit cette metadata sans avoir à connaître
-  // le chemin de la page. `wideContent` reste optionnel, donc les routes qui
-  // ne le déclarent pas n'ont pas besoin de fournir `staticData`.
-  interface StaticDataRouteOption {
-    wideContent?: boolean;
-  }
 }
