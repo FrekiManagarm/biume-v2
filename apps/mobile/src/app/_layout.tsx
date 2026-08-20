@@ -1,4 +1,6 @@
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useMemo } from 'react';
 import { AppState } from 'react-native';
 import { AppStateProvider } from '@/app-state/app-state';
@@ -7,8 +9,14 @@ import {
   requestSync,
   sweepRetention,
 } from '@/app-state/workspace-ports';
-import { useIsDark, usePalette } from '@/design';
+import { fontFamily, useIsDark, usePalette } from '@/design';
 import { registerBackgroundSync } from '@/sync/background-sync';
+
+// Le splash reste à l'écran tant que la police n'est pas prête : un premier
+// rendu en police système suivi d'un basculement vers Hanken Grotesk décale
+// toutes les mesures de texte et fait sauter la mise en page sous les yeux du
+// praticien. Doit être appelé au chargement du module, avant tout rendu.
+void SplashScreen.preventAutoHideAsync();
 
 /**
  * Turns the lifecycle events synchronization depends on into runs. Correctness
@@ -46,6 +54,26 @@ export default function RootLayout() {
   const palette = usePalette();
   const isDark = useIsDark();
 
+  // La clé de `useFonts` est construite à partir de la même constante que
+  // `design/tokens.ts` (et non recopiée) : un renommage futur d'un seul côté
+  // se propage tout seul plutôt que de reproduire silencieusement le repli
+  // sur la police système que cette tâche existe pour éviter. Chargée une
+  // seule fois, la police variable porte toutes les graisses utilisées par
+  // les tokens (Thin à Black).
+  const [fontsLoaded, fontError] = useFonts({
+    [fontFamily]: require('../../assets/fonts/HankenGrotesk-Variable.ttf'),
+  });
+
+  useEffect(() => {
+    // `fontError` masque aussi le splash : un praticien face à l'application
+    // rendue en police système reste opérationnel, alors qu'un splash bloqué
+    // indéfiniment sur un échec de chargement l'empêcherait purement et
+    // simplement de travailler.
+    if (fontsLoaded || fontError) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
   /**
    * The navigator paints the surface between two screens. Left on its defaults
    * it flashes white on every push, which on a dark theme reads as a bug.
@@ -66,6 +94,12 @@ export default function RootLayout() {
       },
     };
   }, [isDark, palette]);
+
+  // Rien ne se rend avant que la police ne soit prête (ou en échec) : le
+  // splash reste visible à la place d'un premier passage en police système.
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <AppStateProvider>

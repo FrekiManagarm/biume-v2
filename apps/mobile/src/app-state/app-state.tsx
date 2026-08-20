@@ -141,7 +141,7 @@ export function AppStateProvider({
           setError(
             caught instanceof Error
               ? caught.message
-              : 'Organisation active non modifiée.',
+              : 'Entreprise active non modifiée.',
           );
         } finally {
           setPending(false);

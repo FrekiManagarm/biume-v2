@@ -76,7 +76,7 @@ export function HomeScreen({
       {primary ? (
         <Card>
           <View style={styles.primaryHead}>
-            <IconTile name="patient" size="lg" tone="primary" />
+            <IconTile name="patient" size="lg" tone="action" />
             <View style={styles.primaryIdentity}>
               <Text numberOfLines={1} variant="title">
                 {primary.patientName}
