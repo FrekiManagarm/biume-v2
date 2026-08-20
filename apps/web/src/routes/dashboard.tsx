@@ -3,6 +3,7 @@ import {
   Outlet,
   redirect,
   useLocation,
+  useMatches,
 } from "@tanstack/react-router";
 import { DashboardSidebar } from "#/components/dashboard/layout/dashboard-sidebar";
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
@@ -93,6 +94,22 @@ function RouteComponent() {
     Route.useRouteContext();
   const pathname = useLocation({ select: (location) => location.pathname });
   const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
+  // La largeur de lecture est un paramètre quantitatif ordinaire, appelé à
+  // se reproduire à chaque nouvelle page dense : le shell ne doit pas
+  // connaître la liste des pages larges (une page ajoutée plus tard sans
+  // y penser resterait bornée par erreur). C'est la page qui déclare, via
+  // `staticData.wideContent`, qu'elle a besoin de plus que max-w-7xl ; le
+  // shell se contente de lire la metadata de la route active.
+  const matches = useMatches();
+  const wideContent = matches.some((match) => match.staticData.wideContent);
+
+  // Contenu commun à toutes les routes : bannière + contenu de la page.
+  const pageContent = (
+    <>
+      <DashboardPageBanner />
+      <Outlet />
+    </>
+  );
 
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
@@ -105,14 +122,28 @@ function RouteComponent() {
           <DashboardHeader />
           <div
             className={cn(
-              "min-h-0 w-full flex-1 p-4",
+              "min-h-0 w-full flex-1 bg-background",
               isAssistantRoute
-                ? "mb-0 flex flex-col overflow-hidden"
-                : "mb-4 overflow-y-auto",
+                ? "mb-0 flex flex-col overflow-hidden p-4"
+                : "mb-4 overflow-y-auto p-4 sm:p-6",
             )}
           >
-            <DashboardPageBanner />
-            <Outlet />
+            {isAssistantRoute ? (
+              // AssistantPage (h-full flex-1 min-h-0) doit être un item flex
+              // direct du conteneur flex-col ci-dessus : c'est ce qui lui
+              // permet de remplir la hauteur restante et d'autoriser le
+              // défilement interne du chat. Un wrapper non-flex inséré ici
+              // casserait cette chaîne — donc pas de wrapper sur cette
+              // branche, et pas de canvas borné pour l'assistant (son propre
+              // contenu se centre déjà sur une largeur de bulle de chat).
+              pageContent
+            ) : (
+              <div
+                className={cn("mx-auto w-full", !wideContent && "max-w-7xl")}
+              >
+                {pageContent}
+              </div>
+            )}
           </div>
         </SidebarInset>
       </div>

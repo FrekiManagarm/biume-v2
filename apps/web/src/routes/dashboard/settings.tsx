@@ -42,7 +42,7 @@ import { cn } from "#/lib/utils";
 import { useUploadThing } from "#/lib/utils/uploadthing";
 
 const organizationSettingsSchema = z.object({
-  name: z.string().min(1, "Le nom de l'organisation est requis.").max(120),
+  name: z.string().min(1, "Le nom de l'entreprise est requis.").max(120),
   slug: z.string().min(1, "Le slug est requis.").max(140),
   email: z.union([z.email("L'email de contact est invalide."), z.literal("")]),
   description: z.string().max(1200),
@@ -76,7 +76,7 @@ const tabs: Array<{
 }> = [
     {
       id: "organization",
-      title: "Organisation",
+      title: "Entreprise",
       description: "Identité, langue et IA",
       icon: Building2,
     },
@@ -160,7 +160,7 @@ function SettingsPage() {
         data: organizationSettingsSchema.parse(value),
       });
       await router.invalidate();
-      toast.success("Organisation mise à jour.");
+      toast.success("Entreprise mise à jour.");
     },
   });
 
@@ -1004,7 +1004,7 @@ function createOrganizationSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  return slug || "organisation";
+  return slug || "entreprise";
 }
 
 function getErrorText(errors: FieldErrorValue[]) {

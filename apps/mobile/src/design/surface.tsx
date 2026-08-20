@@ -74,8 +74,8 @@ export function GroupedList({ children }: { children: ReactNode }) {
 
 export type IconTileProps = {
   name: IconName;
-  /** `accent` marks the active organization; `alert` a capture needing action. */
-  tone?: 'neutral' | 'accent' | 'primary' | 'alert';
+  /** `done` marks the active organization; `alert` a capture needing action. */
+  tone?: 'neutral' | 'done' | 'action' | 'alert';
   size?: 'md' | 'lg';
 };
 
@@ -88,12 +88,12 @@ export function IconTile({ name, tone = 'neutral', size = 'md' }: IconTileProps)
       border: palette.border,
       foreground: palette.inkMuted,
     },
-    accent: {
+    done: {
       background: palette.accentSurface,
       border: palette.accentBorder,
       foreground: palette.accent,
     },
-    primary: {
+    action: {
       background: palette.primarySurface,
       border: palette.primaryBorder,
       foreground: palette.primary,

@@ -119,32 +119,35 @@ export const BENTO_LEAD =
 
 export const BENTO_NOTES_TO_DOC = {
   title: "Vos notes deviennent un document lisible",
-  rawLabel: "Vos notes",
-  raw: "mot : raideur post-transport, refus incurvation D",
-  outLabel: "Compte rendu",
-  out: "Nashira semblait gênée depuis son dernier transport, avec une difficulté à s'incurver du côté droit.",
+  body: "Abréviations, sigles, ordre libre : Biume repart de votre formulation et la traduit sans rien inventer. Le vocabulaire technique est expliqué, pas effacé.",
+  raw: "palp : tension T-L G>D, restriction D14-L1",
+  out: "Une zone de tension le long du dos, plus marquée à gauche, et une articulation du bas du dos moins mobile que la normale.",
 } as const;
 
 export const BENTO_VALIDATION = {
   title: "Vous validez passage par passage",
+  body: "Rien ne part sans votre clic. Chaque paragraphe est proposé à côté de votre note d'origine.",
   rows: [
-    { label: "Motif de la séance", tone: "green" },
-    { label: "Examen", tone: "green" },
-    { label: "Suites de séance", tone: "violet" },
+    { label: "Motif", status: "validé", tone: "green" },
+    { label: "Examen", status: "validé", tone: "green" },
+    { label: "Traitement", status: "à relire", tone: "violet" },
   ],
 } as const;
 
 export const BENTO_OWNER = {
   title: "Le propriétaire lit sur son téléphone",
-  card: "Lien sécurisé",
+  body: "Un lien sécurisé, un code à usage unique. Rien à installer, aucun compte à créer.",
+  cardLabel: "Lien sécurisé",
+  cardMessage: "Le compte rendu de Nashira est disponible.",
 } as const;
 
 export const BENTO_FOLLOW_UP = {
   title: "Le suivi se déclenche tout seul",
+  body: "Le questionnaire à J+2 et le contrôle daté sortent des suites que vous avez écrites. Seules les réponses qui demandent une action vous sont signalées.",
   rows: [
     { when: "J+0", label: "Compte rendu envoyé" },
-    { when: "J+2", label: "Question de suivi programmée" },
-    { when: "J+21", label: "Contrôle rappelé" },
+    { when: "J+2", label: "Questionnaire de suivi" },
+    { when: "J+21", label: "Contrôle dans votre agenda" },
   ],
 } as const;
 
@@ -228,7 +231,7 @@ export const FEATURES = [
 /* ── Mobile (arc de téléphones) ───────────────────────────────── */
 
 export const MOBILE_EYEBROW = "Sur le terrain";
-export const MOBILE_TITLE = "Le cabinet tient dans une poche.";
+export const MOBILE_TITLE = "Votre activité tient dans une poche.";
 export const MOBILE_LEAD =
   "Les rendez-vous du jour, la séance à clôturer, le compte rendu prêt à envoyer — tout tient sur l'écran que vous avez déjà en main.";
 

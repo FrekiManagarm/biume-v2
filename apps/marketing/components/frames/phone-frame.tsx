@@ -26,6 +26,7 @@ export function computeFrameScale({
   return (containerWidth * screenWidthRatio) / contentWidth;
 }
 
+const PHONE_FRAME = { width: 433, height: 882 };
 const PHONE_CONTENT_WIDTH = 216;
 const PHONE_SCREEN = {
   left: 4.908,
@@ -35,6 +36,19 @@ const PHONE_SCREEN = {
   radiusX: 14.32,
   radiusY: 6.61,
 };
+
+/**
+ * Hauteur du contenu dans son propre repère, déduite du rapport de l'écran.
+ *
+ * Sans elle, le conteneur mis à l'échelle n'a qu'une largeur : sa hauteur
+ * suit le contenu, et un enfant en `h-full` ne remplit plus rien. Les
+ * maquettes se tassaient alors en haut de l'écran, sous l'encoche.
+ */
+const PHONE_CONTENT_HEIGHT = Math.round(
+  (PHONE_CONTENT_WIDTH *
+    (PHONE_FRAME.height * PHONE_SCREEN.height)) /
+    (PHONE_FRAME.width * PHONE_SCREEN.width),
+);
 
 export function PhoneFrame({
   children,
@@ -91,6 +105,7 @@ export function PhoneFrame({
         <div
           style={{
             width: `${PHONE_CONTENT_WIDTH}px`,
+            height: `${PHONE_CONTENT_HEIGHT}px`,
             transform: `scale(${scale})`,
             transformOrigin: "top left",
           }}

@@ -16,7 +16,7 @@ describe('organization selection', () => {
     );
 
     expect(
-      screen.getByRole('header', { name: 'Choisissez votre organisation' }),
+      screen.getByRole('header', { name: 'Choisissez votre entreprise' }),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Cabinet Nord' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Cabinet Sud' })).toBeOnTheScreen();
@@ -43,7 +43,7 @@ describe('organization selection', () => {
     );
 
     expect(
-      screen.getByText('Aucune organisation n’est associée à ce compte.'),
+      screen.getByText('Aucune entreprise n’est associée à ce compte.'),
     ).toBeOnTheScreen();
   });
 
@@ -58,7 +58,7 @@ describe('organization selection', () => {
 
     expect(
       screen.getByText(
-        'Reconnectez-vous à Internet pour choisir une organisation.',
+        'Reconnectez-vous à Internet pour choisir une entreprise.',
       ),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Cabinet Nord' })).toBeDisabled();

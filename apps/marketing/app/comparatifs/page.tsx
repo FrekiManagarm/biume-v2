@@ -85,7 +85,7 @@ export default function ComparisonHubPage() {
         {
           question: "Pourquoi choisir Biume plutôt qu'un outil tout-en-un ?",
           answer:
-            "Parce que Biume relie la gestion quotidienne du cabinet à la continuité après séance: résumé clair, feedback propriétaire, timeline animal et relance utile.",
+            "Parce que Biume relie la gestion quotidienne de votre activité à la continuité après séance: résumé clair, feedback propriétaire, timeline animal et relance utile.",
         },
         {
           question: "Puis-je utiliser Biume avec un autre logiciel ?",

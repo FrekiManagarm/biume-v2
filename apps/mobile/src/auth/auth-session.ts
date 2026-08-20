@@ -56,13 +56,13 @@ function organizationActions(): OrganizationActions {
 
 export async function listOrganizations() {
   const { data, error } = await organizationActions().list();
-  if (error) throw new Error(error.message ?? 'Organisations indisponibles.');
+  if (error) throw new Error(error.message ?? 'Entreprises indisponibles.');
   return data ?? [];
 }
 
 export async function setActiveOrganization(organizationId: string) {
   const { error } = await organizationActions().setActive({ organizationId });
   if (error) {
-    throw new Error(error.message ?? 'Organisation active non modifiée.');
+    throw new Error(error.message ?? 'Entreprise active non modifiée.');
   }
 }

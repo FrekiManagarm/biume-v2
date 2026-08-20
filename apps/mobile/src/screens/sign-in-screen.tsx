@@ -37,7 +37,7 @@ export function SignInScreen({
     <Screen centered scroll>
       <ScreenHeader
         align="center"
-        badge={<Badge icon="secure" label="Session sécurisée" tone="accent" />}
+        badge={<Badge icon="secure" label="Session sécurisée" tone="done" />}
         subtitle="Vos dictées restent chiffrées sur ce téléphone tant qu’elles ne sont pas envoyées."
         title="Connectez-vous."
       />
@@ -72,7 +72,7 @@ export function SignInScreen({
           value={password}
         />
 
-        {error ? <Notice alert message={error} tone="danger" /> : null}
+        {error ? <Notice alert message={error} tone="problem" /> : null}
 
         {online ? null : (
           <Notice
