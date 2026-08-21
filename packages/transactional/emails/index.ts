@@ -15,3 +15,4 @@ export * from "./OrganizationInvitation";
 export * from "./ReportReminderEmail";
 export * from "./ResetPassword";
 export * from "./OwnerAccessCodeEmail";
+export * from "./FollowUpQuestionnaireEmail";
