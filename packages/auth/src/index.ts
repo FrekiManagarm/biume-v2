@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import * as schema from "@biume/db/schema/index";
 import { env } from "@biume/env/server";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { expo } from "@better-auth/expo";
 import { autumn } from "autumn-js/better-auth";
 import { organization } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./roles";
@@ -74,6 +75,7 @@ export function createAuth() {
     },
     plugins: [
       tanstackStartCookies(),
+      expo(),
       autumn(
         env.AUTUMN_SECRET_KEY
           ? { secretKey: env.AUTUMN_SECRET_KEY, customerScope: "organization" }

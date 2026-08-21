@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import type { AudioRecorder, RecordingOptions } from 'expo-audio';
-import { requestRecordingPermissionsAsync } from 'expo-audio';
+import { requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import type { AudioRecorderPort } from './audio-recorder';
 import { biumeRecordingPreset } from './recording-session';
 
@@ -46,6 +46,9 @@ export function createExpoAudioRecorder(
     },
 
     async start() {
+      // iOS refuses to create a recorder until the audio session is
+      // switched into a recording-capable category.
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync(biumeRecordingOptions);
       recorder.record();
       const uri = recorder.uri;
