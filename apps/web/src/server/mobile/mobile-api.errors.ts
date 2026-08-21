@@ -10,7 +10,7 @@ import type {
 export const errorMessages: Record<CaptureErrorCode, string> = {
   validation: "Requête invalide.",
   unauthorized: "Session expirée, reconnectez-vous.",
-  active_organization_required: "Sélectionnez une organisation.",
+  active_organization_required: "Sélectionnez une entreprise.",
   forbidden: "Accès refusé.",
   method_not_allowed: "Méthode non supportée.",
   not_found: "Ressource introuvable.",
