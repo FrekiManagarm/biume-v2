@@ -18,6 +18,7 @@ export * from "./advancedReport/reportSectionState";
 export * from "./advancedReport/reportSharedVersion";
 export * from "./audioCapture";
 export * from "./captureTranscript";
+export * from "./reportProposal";
 export * from "./anatomicalPart";
 export * from "./anatomicalPartType";
 export * from "./animals";

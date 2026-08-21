@@ -50,6 +50,13 @@
       "when": 1787321400915,
       "tag": "0006_daffy_stephen_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787321979452,
+      "tag": "0007_fuzzy_doorman",
+      "breakpoints": true
     }
   ]
 }
