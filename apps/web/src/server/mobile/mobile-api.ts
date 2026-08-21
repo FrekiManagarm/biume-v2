@@ -13,15 +13,26 @@ import {
   type MobileCapturesResponse,
   type UploadSessionResponse,
 } from "@biume/contracts/capture";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import type { Context } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
 import { buildMobileApiError } from "./mobile-api.errors";
+import {
+  agendaQuerySchema,
+  appointmentsRoute,
+  cancelCaptureRoute,
+  completeCaptureRoute,
+  createCaptureRoute,
+  listCapturesRoute,
+  sessionRoute,
+  uploadSessionRoute,
+} from "./mobile-api.routes";
 
 export const mobileAgendaMaxWindowMs = 31 * 24 * 60 * 60 * 1000;
 export const mobileAgendaMaxLimit = mobileAppointmentsPageSize;
 export const mobileAgendaDefaultLimit = 20;
-
-const apiBasePath = "/api/mobile/v1";
 
 export type MobileSessionContext = {
   userId: string;
@@ -66,77 +77,6 @@ export type MobileApiPorts = {
   cancelCapture(actor: CaptureActor, captureId: string): Promise<void>;
 };
 
-function jsonResponse(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
-}
-
-function emptyResponse(status: number): Response {
-  return new Response(null, {
-    status,
-    headers: { "cache-control": "no-store" },
-  });
-}
-
-function errorResponse(
-  code: CaptureErrorCode,
-  options: { retryable?: boolean } = {},
-): Response {
-  const { status, body } = buildMobileApiError(code, options);
-  return jsonResponse(status, body);
-}
-
-/**
- * Serialized output is validated against the shared contract before it leaves
- * the process. A port that returns more than the contract allows produces an
- * internal error instead of leaking the extra fields.
- */
-function validatedResponse<T>(
-  status: number,
-  schema: z.ZodType<T>,
-  payload: unknown,
-): Response {
-  const result = schema.safeParse(payload);
-  if (!result.success) return errorResponse("server_error");
-  return jsonResponse(status, result.data);
-}
-
-async function readJsonBody(request: Request): Promise<unknown | symbol> {
-  const invalid = Symbol.for("mobile.invalid_json");
-  const raw = await request.text();
-  if (raw.length === 0) return {};
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return invalid;
-  }
-}
-
-const invalidJson = Symbol.for("mobile.invalid_json");
-
-const agendaQuerySchema = z
-  .object({
-    from: z.iso.datetime().optional(),
-    to: z.iso.datetime().optional(),
-    limit: z.coerce.number().int().positive().optional(),
-    cursor: z.string().min(1).optional(),
-  })
-  .strict();
-
-const capturesQuerySchema = z
-  .object({
-    limit: z.coerce.number().int().positive().optional(),
-    cursor: z.string().min(1).optional(),
-  })
-  .strict();
-
-const captureIdSchema = z.uuid();
-
 function parseAgendaQuery(
   url: URL,
   now: Date,
@@ -168,173 +108,188 @@ function parseAgendaQuery(
   };
 }
 
-type RouteMatch =
-  | { kind: "session" }
-  | { kind: "appointments" }
-  | { kind: "captures" }
-  | { kind: "capture"; captureId: string }
-  | { kind: "capture-upload-session"; captureId: string }
-  | { kind: "capture-complete"; captureId: string }
-  | { kind: "not-found" }
-  | { kind: "invalid-capture-id" };
+const noStore = { "cache-control": "no-store" };
 
-function matchRoute(pathname: string): RouteMatch {
-  const suffix = pathname.slice(apiBasePath.length).replace(/^\/+|\/+$/g, "");
-  const segments = suffix.length === 0 ? [] : suffix.split("/");
-
-  if (segments.length === 1 && segments[0] === "session") {
-    return { kind: "session" };
-  }
-  if (segments.length === 1 && segments[0] === "appointments") {
-    return { kind: "appointments" };
-  }
-  if (segments.length === 1 && segments[0] === "captures") {
-    return { kind: "captures" };
-  }
-  if (segments[0] === "captures" && segments.length >= 2) {
-    const captureId = captureIdSchema.safeParse(segments[1]);
-    if (!captureId.success) return { kind: "invalid-capture-id" };
-    if (segments.length === 2) {
-      return { kind: "capture", captureId: captureId.data };
-    }
-    if (segments.length === 3 && segments[2] === "upload-session") {
-      return { kind: "capture-upload-session", captureId: captureId.data };
-    }
-    if (segments.length === 3 && segments[2] === "complete") {
-      return { kind: "capture-complete", captureId: captureId.data };
-    }
-  }
-  return { kind: "not-found" };
+/**
+ * Annotée `Response` plutôt que laissée inférer : `app.openapi()` contraint le
+ * retour du gestionnaire au seul schéma de succès déclaré, si bien qu'un
+ * chemin d'erreur casserait l'inférence. La garantie qui compte reste la
+ * validation contre le contrat partagé, faite à l'exécution.
+ */
+function fail(c: Context, code: CaptureErrorCode, retryable?: boolean) {
+  const { status, body } = buildMobileApiError(
+    code,
+    retryable === undefined ? {} : { retryable },
+  );
+  return c.json(body, status as 400, noStore);
 }
 
-const allowedMethods: Record<Exclude<RouteMatch["kind"], "not-found" | "invalid-capture-id">, string[]> =
-  {
-    session: ["GET"],
-    appointments: ["GET"],
-    captures: ["GET", "POST"],
-    capture: ["DELETE"],
-    "capture-upload-session": ["POST"],
-    "capture-complete": ["POST"],
-  };
+/**
+ * La sortie est validée contre le contrat partagé avant de quitter le
+ * processus. Un port qui renvoie plus que le contrat n'autorise produit une
+ * erreur interne plutôt que de laisser fuir les champs supplémentaires.
+ */
+function validated<T, Status extends 200 | 201>(
+  c: Context,
+  // Générique sur le statut : une signature `200 | 201` produirait une union
+  // dont la branche 201 n'est déclarée par aucune route de lecture, et
+  // `app.openapi()` la refuserait.
+  status: Status,
+  schema: z.ZodType<T>,
+  payload: unknown,
+) {
+  const result = schema.safeParse(payload);
+  if (!result.success) return fail(c, "server_error");
+  return c.json(result.data, status, noStore);
+}
 
-export function createMobileApiHandler(
+type Variables = {
+  session: MobileSessionContext;
+  actor: CaptureActor;
+};
+
+export function createMobileApiApp(
   ports: MobileApiPorts,
   options: { now?: () => Date } = {},
 ) {
   const now = options.now ?? (() => new Date());
 
-  return async function handle(request: Request): Promise<Response> {
-    try {
-      const url = new URL(request.url);
-      const route = matchRoute(url.pathname);
+  const app = new OpenAPIHono<{ Variables: Variables }>({
+    // Une charge que Zod rejette est une requête invalide, pas une erreur
+    // interne : le client doit recevoir le contrat d'erreur habituel.
+    defaultHook: (result, c) => {
+      if (!result.success) return fail(c, "validation");
+    },
+  }).basePath("/api/mobile/v1");
 
-      if (route.kind === "invalid-capture-id") {
-        return errorResponse("validation");
-      }
-      if (route.kind === "not-found") return errorResponse("not_found");
-      if (!allowedMethods[route.kind].includes(request.method)) {
-        return errorResponse("method_not_allowed");
-      }
+  app.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
+    type: "http",
+    scheme: "bearer",
+  });
 
-      const session = await ports.authenticate(request.headers);
-      if (!session) return errorResponse("unauthorized");
+  app.use("*", async (c, next) => {
+    const session = await ports.authenticate(c.req.raw.headers);
+    if (!session) return fail(c, "unauthorized");
+    c.set("session", session);
+    await next();
+  });
 
-      if (route.kind === "session") {
-        return validatedResponse(200, mobileSessionResponseSchema, {
-          userId: session.userId,
-          organization: session.organization,
-          canUploadCaptures: session.organization !== null,
-        });
-      }
+  /**
+   * Hono répond 404 sur un chemin connu servi par une autre méthode, là où le
+   * contrat annonce 405. Ces relais sont enregistrés après la route légitime :
+   * l'appariement suit l'ordre de déclaration, donc la bonne méthode gagne.
+   */
+  const methodNotAllowed = (path: string) =>
+    app.all(path, (c) => fail(c, "method_not_allowed"));
 
-      // Every remaining route writes or reads tenant data, so an active
-      // organization is a precondition rather than an optional detail.
-      if (!session.organization) {
-        return errorResponse("active_organization_required");
-      }
-      const actor: CaptureActor = {
-        practitionerId: session.userId,
-        organizationId: session.organization.id,
-      };
+  app.openapi(sessionRoute, (c) => {
+    const session = c.get("session");
+    return validated(c, 200, mobileSessionResponseSchema, {
+      userId: session.userId,
+      organization: session.organization,
+      canUploadCaptures: session.organization !== null,
+    });
+  });
 
-      switch (route.kind) {
-        case "appointments": {
-          const query = parseAgendaQuery(url, now());
-          if ("error" in query) return errorResponse("validation");
-          const page = await ports.listAppointments(actor, query);
-          return validatedResponse(
-            200,
-            mobileAppointmentsResponseSchema,
-            page,
-          );
-        }
+  methodNotAllowed("/session");
 
-        case "captures": {
-          if (request.method === "GET") {
-            const parsed = capturesQuerySchema.safeParse(
-              Object.fromEntries(url.searchParams),
-            );
-            if (!parsed.success) return errorResponse("validation");
-            const page = await ports.listCaptures(actor, {
-              limit: Math.min(
-                parsed.data.limit ?? mobileAgendaDefaultLimit,
-                mobileAgendaMaxLimit,
-              ),
-              cursor: parsed.data.cursor ?? null,
-            });
-            return validatedResponse(200, mobileCapturesResponseSchema, page);
-          }
+  // Toute route au-delà de `/session` lit ou écrit des données de locataire :
+  // l'organisation active est une précondition, pas un détail facultatif.
+  app.use("*", async (c, next) => {
+    const session = c.get("session");
+    if (!session.organization) return fail(c, "active_organization_required");
+    c.set("actor", {
+      practitionerId: session.userId,
+      organizationId: session.organization.id,
+    });
+    await next();
+  });
 
-          const body = await readJsonBody(request);
-          if (body === invalidJson) return errorResponse("validation");
-          const parsed = createCaptureRequestSchema.safeParse(body);
-          if (!parsed.success) return errorResponse("validation");
-          const created = await ports.createCapture(actor, parsed.data);
-          return validatedResponse(201, captureResponseSchema, created);
-        }
+  app.openapi(appointmentsRoute, async (c) => {
+    const query = parseAgendaQuery(new URL(c.req.url), now());
+    if ("error" in query) return fail(c, "validation");
+    const page = await ports.listAppointments(c.get("actor"), query);
+    return validated(c, 200, mobileAppointmentsResponseSchema, page);
+  });
 
-        case "capture-upload-session": {
-          const session = await ports.createUploadSession(
-            actor,
-            route.captureId,
-          );
-          return validatedResponse(200, uploadSessionResponseSchema, session);
-        }
+  app.openapi(listCapturesRoute, async (c) => {
+    const { limit, cursor } = c.req.valid("query");
+    const page = await ports.listCaptures(c.get("actor"), {
+      limit: Math.min(limit ?? mobileAgendaDefaultLimit, mobileAgendaMaxLimit),
+      cursor: cursor ?? null,
+    });
+    return validated(c, 200, mobileCapturesResponseSchema, page);
+  });
 
-        case "capture-complete": {
-          const body = await readJsonBody(request);
-          if (body === invalidJson) return errorResponse("validation");
-          const parsed = completeCaptureRequestSchema.safeParse(body);
-          if (!parsed.success) return errorResponse("validation");
-          const confirmed = await ports.completeCapture(
-            actor,
-            route.captureId,
-            parsed.data,
-          );
-          return validatedResponse(200, captureResponseSchema, confirmed);
-        }
+  app.openapi(createCaptureRoute, async (c) => {
+    const created = await ports.createCapture(
+      c.get("actor"),
+      c.req.valid("json"),
+    );
+    return validated(c, 201, captureResponseSchema, created);
+  });
 
-        case "capture": {
-          await ports.cancelCapture(actor, route.captureId);
-          return emptyResponse(204);
-        }
-      }
-    } catch (error) {
-      if (error instanceof CaptureServiceError) {
-        return errorResponse(error.code, { retryable: error.retryable });
-      }
-      // Anything else is an implementation detail. It is logged upstream, never
-      // serialized to the client.
-      return errorResponse("server_error");
+  app.openapi(uploadSessionRoute, async (c) => {
+    const uploadSession = await ports.createUploadSession(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+    );
+    return validated(c, 200, uploadSessionResponseSchema, uploadSession);
+  });
+
+  app.openapi(completeCaptureRoute, async (c) => {
+    const confirmed = await ports.completeCapture(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, captureResponseSchema, confirmed);
+  });
+
+  app.openapi(cancelCaptureRoute, async (c) => {
+    await ports.cancelCapture(c.get("actor"), c.req.valid("param").captureId);
+    return c.body(null, 204, noStore);
+  });
+
+  methodNotAllowed("/appointments");
+  methodNotAllowed("/captures");
+  methodNotAllowed("/captures/:captureId");
+  methodNotAllowed("/captures/:captureId/upload-session");
+  methodNotAllowed("/captures/:captureId/complete");
+
+  app.notFound((c) => fail(c, "not_found"));
+
+  app.onError((error, c) => {
+    // Hono lève une `HTTPException(400)` sur un corps que `JSON.parse` refuse.
+    // C'est une requête invalide, pas une panne du serveur : le client doit
+    // pouvoir arrêter sa boucle sans réessayer.
+    if (error instanceof HTTPException && error.status === 400) {
+      return fail(c, "validation");
     }
-  };
+    if (error instanceof CaptureServiceError) {
+      return fail(c, error.code, error.retryable);
+    }
+    // Tout le reste est un détail d'implémentation : journalisé en amont,
+    // jamais sérialisé vers le client.
+    return fail(c, "server_error");
+  });
+
+  return app;
+}
+
+export function createMobileApiHandler(
+  ports: MobileApiPorts,
+  options: { now?: () => Date } = {},
+) {
+  const app = createMobileApiApp(ports, options);
+  // `app.fetch` peut répondre de façon synchrone ; la signature publique reste
+  // une promesse, inchangée pour les vingt-six tests existants.
+  return async (request: Request): Promise<Response> => app.fetch(request);
 }
 
 export async function handleMobileApiRequest(
   request: Request,
 ): Promise<Response> {
   const { createProductionMobileApiPorts } = await import("./mobile-api.ports");
-  return createMobileApiHandler(await createProductionMobileApiPorts())(
-    request,
-  );
+  return createMobileApiHandler(await createProductionMobileApiPorts())(request);
 }
