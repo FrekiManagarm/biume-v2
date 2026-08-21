@@ -33,3 +33,6 @@ jobs:
 
       - name: Tests des contrats partagés
         run: bun --filter @biume/contracts test
+
+      - name: Tests de l'authentification
+        run: bun --filter @biume/auth test
