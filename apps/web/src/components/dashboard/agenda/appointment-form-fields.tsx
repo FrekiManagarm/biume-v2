@@ -1,8 +1,15 @@
 import { Clock, Home, MapPin } from "lucide-react";
+import { useState } from "react";
 
+import { toneSoftClassName } from "#/components/dashboard/kit/tone";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
+import {
+  conflictWarning,
+  findAppointmentConflicts,
+  type ConflictCandidate,
+} from "#/lib/dashboard/appointment-conflicts";
 
 export type AppointmentFormFieldsProps = {
   /** Préfixe des `id`/`htmlFor` pour éviter toute collision entre dialogues. */
@@ -13,6 +20,10 @@ export type AppointmentFormFieldsProps = {
   /** Heure au format `HH:mm`. */
   defaultEndTime: string;
   defaultAtHome?: boolean;
+  /** L'agenda déjà chargé, pour signaler un chevauchement pendant la saisie. */
+  existingAppointments?: ConflictCandidate[];
+  /** Le rendez-vous en cours de déplacement, qui ne se chevauche pas lui-même. */
+  excludeAppointmentId?: string;
 };
 
 /**
@@ -29,7 +40,25 @@ export function AppointmentFormFields({
   defaultStartTime,
   defaultEndTime,
   defaultAtHome = false,
+  existingAppointments = [],
+  excludeAppointmentId,
 }: AppointmentFormFieldsProps) {
+  // Les champs deviennent contrôlés pour que l'avertissement suive la saisie,
+  // mais gardent leurs `name` : la lecture par `FormData` dans les deux
+  // dialogues n'est pas touchée.
+  const [date, setDate] = useState(() => formatDateInput(defaultDate));
+  const [startTime, setStartTime] = useState(defaultStartTime);
+  const [endTime, setEndTime] = useState(defaultEndTime);
+
+  const warning = conflictWarning(
+    findAppointmentConflicts({
+      beginAt: buildLocalDate(date, startTime),
+      endAt: buildLocalDate(date, endTime),
+      excludeAppointmentId,
+      candidates: existingAppointments,
+    }),
+  );
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -40,7 +69,8 @@ export function AppointmentFormFields({
             name="date"
             required
             type="date"
-            defaultValue={formatDateInput(defaultDate)}
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
           />
         </div>
         <div className="grid gap-2">
@@ -53,7 +83,8 @@ export function AppointmentFormFields({
               required
               type="time"
               className="pl-9"
-              defaultValue={defaultStartTime}
+              value={startTime}
+              onChange={(event) => setStartTime(event.target.value)}
             />
           </div>
         </div>
@@ -64,10 +95,22 @@ export function AppointmentFormFields({
             name="endTime"
             required
             type="time"
-            defaultValue={defaultEndTime}
+            value={endTime}
+            onChange={(event) => setEndTime(event.target.value)}
           />
         </div>
       </div>
+
+      {/* Le ton `attention` dit qu'on attend un arbitrage du praticien, pas
+          qu'une erreur s'est produite : l'enregistrement reste possible. */}
+      {warning ? (
+        <p
+          role="status"
+          className={`rounded-xl border px-4 py-3 text-sm ${toneSoftClassName("attention")}`}
+        >
+          {warning}
+        </p>
+      ) : null}
 
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted px-4 py-3">
         <div className="min-w-0">
