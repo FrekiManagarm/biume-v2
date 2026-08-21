@@ -79,6 +79,13 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
     objectStore: getR2AudioObjectStore(),
     now: () => new Date(),
     hashOrganizationId,
+    async onCaptureUploaded(captureId) {
+      const { tasks } = await import("@trigger.dev/sdk/v3");
+      const { transcribeCaptureTaskId } = await import(
+        "#/trigger/transcribe-capture.trigger"
+      );
+      await tasks.trigger(transcribeCaptureTaskId, { captureId });
+    },
   };
 
   return {

@@ -7,6 +7,13 @@ import { osteopathyLexicon } from "./lexicon";
 
 export const transcriptionMaxAttempts = 3;
 
+/**
+ * Déclaré ici plutôt que dans l'adaptateur : celui-ci importe `env`, dont la
+ * validation se déclenche au chargement du module. L'orchestration doit rester
+ * chargeable — et donc testable — sans aucune variable d'environnement.
+ */
+export const transcriptionProviderId = "openai:gpt-4o-transcribe";
+
 /** Borne du paramètre d'amorçage côté fournisseur. */
 const promptMaxCharacters = 1000;
 

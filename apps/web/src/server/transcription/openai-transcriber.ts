@@ -1,7 +1,5 @@
 import { env } from "@biume/env/server";
 
-export const transcriptionProviderId = "openai:gpt-4o-transcribe";
-
 export type Transcriber = {
   transcribe(input: {
     bytes: Uint8Array;
