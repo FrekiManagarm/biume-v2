@@ -14,3 +14,4 @@ export * from "./ContactEmail";
 export * from "./OrganizationInvitation";
 export * from "./ReportReminderEmail";
 export * from "./ResetPassword";
+export * from "./OwnerAccessCodeEmail";
