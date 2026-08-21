@@ -14,6 +14,13 @@
 
 ## Contraintes globales
 
+> **Correction du 21 août 2026, relevée à l'exécution du plan 2b.**
+> `CaptureServiceError` prend `(code, reason: CaptureFailureReason, options?)`,
+> et `CaptureFailureReason` est une union fermée décrivant les échecs d'une
+> dictée. Les domaines hors capture lèvent `MobileRequestError(code, { retryable })`,
+> définie dans `apps/web/src/server/mobile/mobile-api.errors.ts` et déjà traitée
+> par le `onError` de l'application Hono.
+
 - Gestionnaire de paquets : Bun uniquement.
 - `packages/contracts` est la source de vérité des schémas.
 - Toute lecture filtre sur `organizationId` en plus de l'identifiant demandé.
@@ -1322,7 +1329,7 @@ describe("correction de la transcription", () => {
   it("traduit une transcription encore en cours en conflit", async () => {
     const ports = createPorts({
       correctTranscript: vi.fn(async () => {
-        throw new CaptureServiceError("conflict", false);
+        throw new MobileRequestError("conflict");
       }),
     });
     const response = await createMobileApiHandler(ports)(
@@ -1400,7 +1407,7 @@ Dans `mobile-api.ts` :
 
 Dans `mobile-api.ports.ts`, les deux implémentations joignent `captureTranscript` à `audioCapture` et **filtrent sur `audioCapture.organizationId = actor.organizationId`**. Sans cette jointure, un identifiant de capture deviné livrerait la transcription d'un autre cabinet — c'est-à-dire des données de santé.
 
-`correctTranscript` lève `new CaptureServiceError("conflict", false)` quand `repository.correct` retourne `false`, et `new CaptureServiceError("not_found", false)` quand la capture n'appartient pas à l'organisation.
+`correctTranscript` lève `new MobileRequestError("conflict")` quand `repository.correct` retourne `false`, et `new MobileRequestError("not_found")` quand la capture n'appartient pas à l'organisation.
 
 - [ ] **Étape 5 : Lancer les tests, régénérer le contrat, valider**
 

@@ -14,6 +14,13 @@
 
 ## Contraintes globales
 
+> **Correction du 21 août 2026, relevée à l'exécution du plan 2b.**
+> `CaptureServiceError` prend `(code, reason: CaptureFailureReason, options?)`,
+> et `CaptureFailureReason` est une union fermée décrivant les échecs d'une
+> dictée. Les domaines hors capture lèvent `MobileRequestError(code, { retryable })`,
+> définie dans `apps/web/src/server/mobile/mobile-api.errors.ts` et déjà traitée
+> par le `onError` de l'application Hono.
+
 - Gestionnaire de paquets : Bun uniquement.
 - `packages/contracts` est la source de vérité des schémas.
 - Toute lecture filtre sur `organizationId` en plus de l'identifiant demandé.
@@ -1439,7 +1446,7 @@ describe("décision sur une proposition", () => {
   it("traduit une décision déjà prise en conflit", async () => {
     const ports = createPorts({
       decideProposal: vi.fn(async () => {
-        throw new CaptureServiceError("conflict", false);
+        throw new MobileRequestError("conflict");
       }),
     });
     const response = await createMobileApiHandler(ports)(
@@ -1506,7 +1513,7 @@ Dans `mobile-api.ts`, ajouter les quatre gestionnaires. Celui de lecture retourn
 
 - [ ] **Étape 5 : Implémenter les ports**
 
-Dans `mobile-api.ports.ts`, chaque implémentation vérifie **d'abord** que `advancedReport.createdBy = actor.organizationId`, et lève `CaptureServiceError("not_found", false)` sinon. Un rapport contient des données de santé : un identifiant deviné ne doit jamais en livrer.
+Dans `mobile-api.ports.ts`, chaque implémentation vérifie **d'abord** que `advancedReport.createdBy = actor.organizationId`, et lève `MobileRequestError("not_found")` sinon. Un rapport contient des données de santé : un identifiant deviné ne doit jamais en livrer.
 
 `regenerateProposals` déclenche `extractReportTask` puis relit l'état courant. `decideProposal` et `decideSection` recalculent les états de section via `deriveSectionStates` après écriture, jamais avant.
 

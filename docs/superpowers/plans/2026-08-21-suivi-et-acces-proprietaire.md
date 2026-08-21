@@ -14,6 +14,13 @@
 
 ## Contraintes globales
 
+> **Correction du 21 août 2026, relevée à l'exécution du plan 2b.**
+> `CaptureServiceError` prend `(code, reason: CaptureFailureReason, options?)`,
+> et `CaptureFailureReason` est une union fermée décrivant les échecs d'une
+> dictée. Les domaines hors capture lèvent `MobileRequestError(code, { retryable })`,
+> définie dans `apps/web/src/server/mobile/mobile-api.errors.ts` et déjà traitée
+> par le `onError` de l'application Hono.
+
 - Gestionnaire de paquets : Bun uniquement.
 - **Le propriétaire n'installe rien et ne crée aucun compte.** Toute conception qui exige un mot de passe est hors sujet.
 - Un jeton de partage est **opaque, imprévisible et à entropie suffisante**. Il ne dérive jamais d'un identifiant de rapport, de client ou d'animal.
@@ -1522,7 +1529,7 @@ describe("suivis actionnables", () => {
 
 - [ ] **Étape 2 : Lancer les tests, décrire les routes, brancher les ports**
 
-Même démarche qu'aux plans précédents. Le port `scheduleFollowUp` appelle `validateDueDate` et lève `CaptureServiceError("validation", false)` sur tout retour différent de `"ok"`. `listActionableFollowUps` filtre en SQL sur `status = 'answered' AND handled_at IS NULL` **et** exige au moins une ligne dans `follow_up_alert` — jamais en mémoire après lecture non bornée.
+Même démarche qu'aux plans précédents. Le port `scheduleFollowUp` appelle `validateDueDate` et lève `MobileRequestError("validation")` sur tout retour différent de `"ok"`. `listActionableFollowUps` filtre en SQL sur `status = 'answered' AND handled_at IS NULL` **et** exige au moins une ligne dans `follow_up_alert` — jamais en mémoire après lecture non bornée.
 
 - [ ] **Étape 3 : Lancer la suite, régénérer le contrat, valider**
 
