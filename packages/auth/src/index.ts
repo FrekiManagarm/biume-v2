@@ -6,7 +6,7 @@ import { env } from "@biume/env/server";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { expo } from "@better-auth/expo";
 import { autumn } from "autumn-js/better-auth";
-import { organization } from "better-auth/plugins";
+import { bearer, organization } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./roles";
 import { resolveTrustedOrigins } from "./trusted-origins";
 
@@ -75,6 +75,9 @@ export function createAuth() {
     },
     plugins: [
       tanstackStartCookies(),
+      // Le client mobile ne gère pas de cookies : il lit le jeton dans
+      // `set-auth-token` à la connexion et le renvoie en `Authorization`.
+      bearer(),
       expo(),
       autumn(
         env.AUTUMN_SECRET_KEY
