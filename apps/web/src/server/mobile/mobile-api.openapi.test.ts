@@ -35,6 +35,10 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/owners",
       "/api/mobile/v1/patients",
       "/api/mobile/v1/patients/{patientId}/history",
+      "/api/mobile/v1/reports/{reportId}/proposals",
+      "/api/mobile/v1/reports/{reportId}/proposals/regenerate",
+      "/api/mobile/v1/reports/{reportId}/proposals/{proposalId}/decision",
+      "/api/mobile/v1/reports/{reportId}/sections/{section}/decision",
       "/api/mobile/v1/session",
     ]);
   });

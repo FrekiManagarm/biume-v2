@@ -23,6 +23,12 @@ import {
   correctTranscriptRequestSchema,
   transcriptSchema,
 } from "@biume/contracts/transcript";
+import {
+  decideProposalRequestSchema,
+  decideSectionRequestSchema,
+  reportProposalsResponseSchema,
+} from "@biume/contracts/proposal";
+import { reportSectionIds } from "@biume/contracts/report";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -312,6 +318,98 @@ export const correctTranscriptRoute = createRoute({
     200: {
       description: "Transcription corrigée",
       content: json(transcriptSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const reportIdParamsSchema = z.object({
+  reportId: z
+    .string()
+    .min(1)
+    .openapi({ param: { name: "reportId", in: "path" } }),
+});
+
+export const proposalParamsSchema = reportIdParamsSchema.extend({
+  proposalId: z
+    .string()
+    .min(1)
+    .openapi({ param: { name: "proposalId", in: "path" } }),
+});
+
+/**
+ * La section est validée contre l'énumération partagée : une section inventée
+ * produit un 400, jamais une écriture silencieuse.
+ */
+export const sectionParamsSchema = reportIdParamsSchema.extend({
+  // Reconstruite avec le `z` de zod-openapi, seul à porter `.openapi()`, mais
+  // depuis la constante partagée : la source de vérité reste unique.
+  section: z.enum(reportSectionIds).openapi({
+    param: { name: "section", in: "path" },
+  }),
+});
+
+export const reportProposalsRoute = createRoute({
+  method: "get",
+  path: "/reports/{reportId}/proposals",
+  security,
+  summary: "Propositions d'un rapport et transcription qui les justifie",
+  request: { params: reportIdParamsSchema },
+  responses: {
+    200: {
+      description: "Propositions",
+      content: json(reportProposalsResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const decideProposalRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/proposals/{proposalId}/decision",
+  security,
+  summary: "Confirmer ou écarter une proposition",
+  request: {
+    params: proposalParamsSchema,
+    body: { content: json(decideProposalRequestSchema) },
+  },
+  responses: {
+    200: {
+      description: "Propositions à jour",
+      content: json(reportProposalsResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const decideSectionRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/sections/{section}/decision",
+  security,
+  summary: "Décider d'une section entière",
+  request: {
+    params: sectionParamsSchema,
+    body: { content: json(decideSectionRequestSchema) },
+  },
+  responses: {
+    200: {
+      description: "Propositions à jour",
+      content: json(reportProposalsResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const regenerateProposalsRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/proposals/regenerate",
+  security,
+  summary: "Régénérer les propositions encore à vérifier",
+  request: { params: reportIdParamsSchema },
+  responses: {
+    200: {
+      description: "Propositions à jour",
+      content: json(reportProposalsResponseSchema),
     },
     ...errorResponses,
   },

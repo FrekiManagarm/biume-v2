@@ -9,6 +9,7 @@ import {
   captureTranscript,
   clients,
   pets,
+  reportProposal,
 } from "@biume/db/schema/index";
 import { and, asc, desc, eq, gt, gte, ilike, lte, or, sql } from "drizzle-orm";
 import {
@@ -22,6 +23,13 @@ import {
 import { MobileRequestError } from "./mobile-api.errors";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
 import type { Transcript } from "@biume/contracts/transcript";
+import type {
+  Proposal,
+  ReportProposalsResponse,
+} from "@biume/contracts/proposal";
+import type { ReportSectionId } from "@biume/contracts/report";
+import { deriveSectionStates } from "#/server/extraction/extraction.service";
+import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
 import { createCaptureRepository } from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
@@ -119,6 +127,93 @@ async function readTranscript(
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+
+function toProposal(row: typeof reportProposal.$inferSelect): Proposal {
+  return {
+    id: row.id,
+    reportId: row.reportId,
+    section: row.section as Proposal["section"],
+    kind: row.kind as Proposal["kind"],
+    text: row.text,
+    state: row.state as Proposal["state"],
+    anchor: {
+      start: row.anchorStart,
+      end: row.anchorEnd,
+      quote: row.anchorQuote,
+    },
+    decidedAt: row.decidedAt?.toISOString() ?? null,
+  };
+}
+
+/**
+ * Un rapport contient des données de santé : le filtre de locataire est
+ * vérifié avant toute lecture de proposition, et un identifiant deviné ne
+ * livre rien.
+ */
+async function readReportProposals(
+  actor: CaptureActor,
+  reportId: string,
+): Promise<ReportProposalsResponse | null> {
+  const [report] = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.id, reportId),
+        eq(advancedReport.createdBy, actor.organizationId),
+      ),
+    )
+    .limit(1);
+
+  if (!report) return null;
+
+  const rows = await db
+    .select()
+    .from(reportProposal)
+    .where(eq(reportProposal.reportId, reportId))
+    .orderBy(asc(reportProposal.createdAt));
+
+  const items = rows.map(toProposal);
+
+  // La transcription voyage avec les propositions pour que le mobile puisse
+  // surligner la source sans second appel.
+  const captureId = rows.find((row) => row.captureId !== null)?.captureId;
+  const [transcript] = captureId
+    ? await db
+        .select({ text: captureTranscript.text })
+        .from(captureTranscript)
+        .where(eq(captureTranscript.captureId, captureId))
+        .limit(1)
+    : [];
+
+  return {
+    reportId,
+    transcript: transcript?.text ?? "",
+    items,
+    sections: deriveSectionStates(items),
+  };
+}
+
+/**
+ * Les états de section sont déduits des propositions après chaque décision,
+ * jamais posés à la main : deux sources de vérité finiraient par se
+ * contredire.
+ */
+async function syncAndReread(
+  actor: CaptureActor,
+  reportId: string,
+): Promise<ReportProposalsResponse> {
+  const refreshed = await readReportProposals(actor, reportId);
+  if (!refreshed) throw new MobileRequestError("not_found");
+
+  await createProposalRepository().syncSectionStates(
+    reportId,
+    refreshed.sections as never,
+  );
+
+  return refreshed;
 }
 
 export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> {
@@ -354,6 +449,59 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
             ? encodeCursor(last.beginAt, last.appointmentId)
             : null,
       };
+    },
+
+    async getReportProposals(actor, reportId) {
+      return readReportProposals(actor, reportId);
+    },
+
+    async decideProposal(actor, reportId, proposalId, request) {
+      const current = await readReportProposals(actor, reportId);
+      if (!current) throw new MobileRequestError("not_found");
+
+      const decided = await createProposalRepository().decide(
+        reportId,
+        proposalId,
+        request.state,
+      );
+      if (!decided) throw new MobileRequestError("conflict");
+
+      return syncAndReread(actor, reportId);
+    },
+
+    async decideSection(actor, reportId, section, request) {
+      const current = await readReportProposals(actor, reportId);
+      if (!current) throw new MobileRequestError("not_found");
+
+      await createProposalRepository().decideSection(
+        reportId,
+        section as ReportSectionId,
+        request.state,
+      );
+
+      return syncAndReread(actor, reportId);
+    },
+
+    async regenerateProposals(actor, reportId) {
+      const current = await readReportProposals(actor, reportId);
+      if (!current) throw new MobileRequestError("not_found");
+
+      const captureId = await db
+        .select({ id: reportProposal.captureId })
+        .from(reportProposal)
+        .where(eq(reportProposal.reportId, reportId))
+        .limit(1);
+
+      const source = captureId[0]?.id;
+      if (source) {
+        const { tasks } = await import("@trigger.dev/sdk/v3");
+        const { extractReportTaskId } = await import(
+          "#/trigger/extract-report.trigger"
+        );
+        await tasks.trigger(extractReportTaskId, { reportId, captureId: source });
+      }
+
+      return current;
     },
 
     async getTranscript(actor, captureId) {

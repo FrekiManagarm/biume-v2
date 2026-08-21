@@ -98,6 +98,10 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
     moveAppointment: vi.fn(),
     getTranscript: vi.fn(async () => null),
     correctTranscript: vi.fn(),
+    getReportProposals: vi.fn(async () => null),
+    decideProposal: vi.fn(),
+    decideSection: vi.fn(),
+    regenerateProposals: vi.fn(),
     ...overrides,
   };
 }

@@ -18,6 +18,13 @@ import {
   type CorrectTranscriptRequest,
   type Transcript,
 } from "@biume/contracts/transcript";
+import {
+  reportProposalsResponseSchema,
+  type DecideProposalRequest,
+  type DecideSectionRequest,
+  type ReportProposalsResponse,
+} from "@biume/contracts/proposal";
+import type { ReportSectionId } from "@biume/contracts/report";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -51,6 +58,10 @@ import {
   listCapturesRoute,
   correctTranscriptRoute,
   createOwnerRoute,
+  decideProposalRoute,
+  decideSectionRoute,
+  regenerateProposalsRoute,
+  reportProposalsRoute,
   createPatientRoute,
   getTranscriptRoute,
   moveAppointmentRoute,
@@ -146,6 +157,26 @@ export type MobileApiPorts = {
     captureId: string,
     request: CorrectTranscriptRequest,
   ): Promise<Transcript>;
+  getReportProposals(
+    actor: CaptureActor,
+    reportId: string,
+  ): Promise<ReportProposalsResponse | null>;
+  decideProposal(
+    actor: CaptureActor,
+    reportId: string,
+    proposalId: string,
+    request: DecideProposalRequest,
+  ): Promise<ReportProposalsResponse>;
+  decideSection(
+    actor: CaptureActor,
+    reportId: string,
+    section: ReportSectionId,
+    request: DecideSectionRequest,
+  ): Promise<ReportProposalsResponse>;
+  regenerateProposals(
+    actor: CaptureActor,
+    reportId: string,
+  ): Promise<ReportProposalsResponse>;
 };
 
 function parseAgendaQuery(
@@ -319,6 +350,47 @@ export function createMobileApiApp(
     return validated(c, 200, mobilePatientHistoryResponseSchema, page);
   });
 
+  app.openapi(reportProposalsRoute, async (c) => {
+    const found = await ports.getReportProposals(
+      c.get("actor"),
+      c.req.valid("param").reportId,
+    );
+    if (!found) return fail(c, "not_found");
+    return validated(c, 200, reportProposalsResponseSchema, found);
+  });
+
+  // Déclarée avant la route à paramètre : `regenerate` ne doit jamais être lu
+  // comme un identifiant de proposition.
+  app.openapi(regenerateProposalsRoute, async (c) => {
+    const refreshed = await ports.regenerateProposals(
+      c.get("actor"),
+      c.req.valid("param").reportId,
+    );
+    return validated(c, 200, reportProposalsResponseSchema, refreshed);
+  });
+
+  app.openapi(decideProposalRoute, async (c) => {
+    const { reportId, proposalId } = c.req.valid("param");
+    const refreshed = await ports.decideProposal(
+      c.get("actor"),
+      reportId,
+      proposalId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, reportProposalsResponseSchema, refreshed);
+  });
+
+  app.openapi(decideSectionRoute, async (c) => {
+    const { reportId, section } = c.req.valid("param");
+    const refreshed = await ports.decideSection(
+      c.get("actor"),
+      reportId,
+      section,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, reportProposalsResponseSchema, refreshed);
+  });
+
   app.openapi(getTranscriptRoute, async (c) => {
     const found = await ports.getTranscript(
       c.get("actor"),
@@ -408,6 +480,9 @@ export function createMobileApiApp(
   methodNotAllowed("/patients/:patientId/history");
   methodNotAllowed("/appointments/:appointmentId/move");
   methodNotAllowed("/captures/:captureId/transcript");
+  methodNotAllowed("/reports/:reportId/proposals");
+  methodNotAllowed("/reports/:reportId/proposals/:proposalId/decision");
+  methodNotAllowed("/reports/:reportId/sections/:section/decision");
 
   app.notFound((c) => fail(c, "not_found"));
 
