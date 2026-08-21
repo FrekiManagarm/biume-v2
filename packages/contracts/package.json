@@ -8,6 +8,7 @@
     "./capture": "./src/capture.ts",
     "./report": "./src/report.ts",
     "./mobile-records": "./src/mobile-records.ts",
+    "./transcript": "./src/transcript.ts",
     "./product-events": "./src/product-events.ts"
   },
   "scripts": {
