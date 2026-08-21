@@ -23,13 +23,16 @@ const document = createMobileApiApp(createPorts()).getOpenAPI31Document({
 });
 
 describe("application Hono de l'api mobile", () => {
-  it("décrit les six endpoints existants", () => {
+  it("décrit chaque endpoint servi", () => {
     expect(Object.keys(document.paths ?? {}).sort()).toEqual([
       "/api/mobile/v1/appointments",
       "/api/mobile/v1/captures",
       "/api/mobile/v1/captures/{captureId}",
       "/api/mobile/v1/captures/{captureId}/complete",
       "/api/mobile/v1/captures/{captureId}/upload-session",
+      "/api/mobile/v1/owners",
+      "/api/mobile/v1/patients",
+      "/api/mobile/v1/patients/{patientId}/history",
       "/api/mobile/v1/session",
     ]);
   });

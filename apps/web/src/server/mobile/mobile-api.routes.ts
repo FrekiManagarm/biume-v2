@@ -8,6 +8,11 @@ import {
   mobileSessionResponseSchema,
   uploadSessionResponseSchema,
 } from "@biume/contracts/capture";
+import {
+  mobileOwnersResponseSchema,
+  mobilePatientHistoryResponseSchema,
+  mobilePatientsResponseSchema,
+} from "@biume/contracts/mobile-records";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -155,6 +160,70 @@ export const cancelCaptureRoute = createRoute({
   request: { params: captureIdParamsSchema },
   responses: {
     204: { description: "Dictée annulée" },
+    ...errorResponses,
+  },
+});
+
+export const recordsQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().positive().optional(),
+    cursor: z.string().min(1).optional(),
+    search: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+export const patientsQuerySchema = recordsQuerySchema.extend({
+  ownerId: z.string().min(1).optional(),
+});
+
+export const patientIdParamsSchema = z.object({
+  patientId: z
+    .string()
+    .min(1)
+    .openapi({ param: { name: "patientId", in: "path" } }),
+});
+
+export const ownersRoute = createRoute({
+  method: "get",
+  path: "/owners",
+  security,
+  summary: "Propriétaires du cabinet",
+  request: { query: recordsQuerySchema },
+  responses: {
+    200: {
+      description: "Page de propriétaires",
+      content: json(mobileOwnersResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const patientsRoute = createRoute({
+  method: "get",
+  path: "/patients",
+  security,
+  summary: "Animaux suivis par le cabinet",
+  request: { query: patientsQuerySchema },
+  responses: {
+    200: {
+      description: "Page d'animaux",
+      content: json(mobilePatientsResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const patientHistoryRoute = createRoute({
+  method: "get",
+  path: "/patients/{patientId}/history",
+  security,
+  summary: "Séances récentes d'un animal et état de leur compte rendu",
+  request: { params: patientIdParamsSchema, query: recordsQuerySchema },
+  responses: {
+    200: {
+      description: "Historique",
+      content: json(mobilePatientHistoryResponseSchema),
+    },
     ...errorResponses,
   },
 });

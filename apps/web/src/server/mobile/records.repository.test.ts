@@ -50,6 +50,25 @@ describe("toMobileOwner", () => {
       patientCount: 0,
     });
   });
+
+  /**
+   * `clients.name` est nullable en base alors que le contrat exige un nom.
+   * Sans repli, un propriétaire importé sans nom ferait échouer la validation
+   * de réponse et sortirait en erreur interne, faisant disparaître toute la
+   * page de l'écran.
+   */
+  it("nomme un propriétaire dont la fiche n'a pas de nom", () => {
+    expect(
+      toMobileOwner({
+        id: "client-2",
+        name: null,
+        email: null,
+        phone: null,
+        city: null,
+        patientCount: 0,
+      }).name,
+    ).toBe("Propriétaire sans nom");
+  });
 });
 
 describe("toMobilePatient", () => {

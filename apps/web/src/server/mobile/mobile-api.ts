@@ -20,12 +20,24 @@ import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
 import { buildMobileApiError } from "./mobile-api.errors";
 import {
+  mobileOwnersResponseSchema,
+  mobilePatientHistoryResponseSchema,
+  mobilePatientsResponseSchema,
+  mobileRecordsPageSize,
+  type MobileOwnersResponse,
+  type MobilePatientHistoryResponse,
+  type MobilePatientsResponse,
+} from "@biume/contracts/mobile-records";
+import {
   agendaQuerySchema,
   appointmentsRoute,
   cancelCaptureRoute,
   completeCaptureRoute,
   createCaptureRoute,
   listCapturesRoute,
+  ownersRoute,
+  patientHistoryRoute,
+  patientsRoute,
   sessionRoute,
   uploadSessionRoute,
 } from "./mobile-api.routes";
@@ -75,6 +87,24 @@ export type MobileApiPorts = {
     request: z.infer<typeof completeCaptureRequestSchema>,
   ): Promise<CaptureResponse>;
   cancelCapture(actor: CaptureActor, captureId: string): Promise<void>;
+  listOwners(
+    actor: CaptureActor,
+    query: { limit: number; cursor: string | null; search: string | null },
+  ): Promise<MobileOwnersResponse>;
+  listPatients(
+    actor: CaptureActor,
+    query: {
+      limit: number;
+      cursor: string | null;
+      search: string | null;
+      ownerId: string | null;
+    },
+  ): Promise<MobilePatientsResponse>;
+  getPatientHistory(
+    actor: CaptureActor,
+    patientId: string,
+    query: { limit: number; cursor: string | null },
+  ): Promise<MobilePatientHistoryResponse>;
 };
 
 function parseAgendaQuery(
@@ -212,6 +242,42 @@ export function createMobileApiApp(
     return validated(c, 200, mobileAppointmentsResponseSchema, page);
   });
 
+  // Une limite non bornée transformerait un cabinet chargé en lecture massive.
+  // Elle est ramenée à la borne, jamais refusée.
+  const boundLimit = (limit: number | undefined) =>
+    Math.min(limit ?? mobileAgendaDefaultLimit, mobileRecordsPageSize);
+
+  app.openapi(ownersRoute, async (c) => {
+    const { limit, cursor, search } = c.req.valid("query");
+    const page = await ports.listOwners(c.get("actor"), {
+      limit: boundLimit(limit),
+      cursor: cursor ?? null,
+      search: search ?? null,
+    });
+    return validated(c, 200, mobileOwnersResponseSchema, page);
+  });
+
+  app.openapi(patientsRoute, async (c) => {
+    const { limit, cursor, search, ownerId } = c.req.valid("query");
+    const page = await ports.listPatients(c.get("actor"), {
+      limit: boundLimit(limit),
+      cursor: cursor ?? null,
+      search: search ?? null,
+      ownerId: ownerId ?? null,
+    });
+    return validated(c, 200, mobilePatientsResponseSchema, page);
+  });
+
+  app.openapi(patientHistoryRoute, async (c) => {
+    const { limit, cursor } = c.req.valid("query");
+    const page = await ports.getPatientHistory(
+      c.get("actor"),
+      c.req.valid("param").patientId,
+      { limit: boundLimit(limit), cursor: cursor ?? null },
+    );
+    return validated(c, 200, mobilePatientHistoryResponseSchema, page);
+  });
+
   app.openapi(listCapturesRoute, async (c) => {
     const { limit, cursor } = c.req.valid("query");
     const page = await ports.listCaptures(c.get("actor"), {
@@ -256,6 +322,9 @@ export function createMobileApiApp(
   methodNotAllowed("/captures/:captureId");
   methodNotAllowed("/captures/:captureId/upload-session");
   methodNotAllowed("/captures/:captureId/complete");
+  methodNotAllowed("/owners");
+  methodNotAllowed("/patients");
+  methodNotAllowed("/patients/:patientId/history");
 
   app.notFound((c) => fail(c, "not_found"));
 

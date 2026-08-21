@@ -1168,6 +1168,1822 @@
         }
       }
     },
+    "/api/mobile/v1/owners": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Propriétaires du cabinet",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page de propriétaires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "email": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "phone": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "patientCount": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email",
+                          "phone",
+                          "city",
+                          "patientCount"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 50
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Méthode non supportée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "État incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Dictée expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service indisponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mobile/v1/patients": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Animaux suivis par le cabinet",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "ownerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page d'animaux",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "ownerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "ownerName": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "species": {
+                            "type": "string",
+                            "enum": [
+                              "DOG",
+                              "CAT",
+                              "HORSE",
+                              "RABBIT",
+                              "NAC",
+                              "COW",
+                              "OTHER"
+                            ]
+                          },
+                          "breed": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "birthDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          },
+                          "lastAppointmentAt": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ownerId",
+                          "ownerName",
+                          "name",
+                          "species",
+                          "breed",
+                          "birthDate",
+                          "lastAppointmentAt"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 50
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Méthode non supportée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "État incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Dictée expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service indisponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mobile/v1/patients/{patientId}/history": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Séances récentes d'un animal et état de leur compte rendu",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "patientId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historique",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "appointmentId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "beginAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "reportId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "minLength": 1
+                          },
+                          "reportStatus": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "draft",
+                              "finalized",
+                              "sent",
+                              null
+                            ]
+                          },
+                          "consultationReason": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "appointmentId",
+                          "beginAt",
+                          "reportId",
+                          "reportStatus",
+                          "consultationReason"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 50
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Méthode non supportée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "État incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Dictée expirée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service indisponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "validation",
+                        "unauthorized",
+                        "active_organization_required",
+                        "forbidden",
+                        "method_not_allowed",
+                        "not_found",
+                        "conflict",
+                        "rate_limited",
+                        "server_error",
+                        "storage_unavailable",
+                        "object_incomplete",
+                        "expired",
+                        "network",
+                        "unknown"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "retryAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retryable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/mobile/v1/captures": {
       "get": {
         "security": [

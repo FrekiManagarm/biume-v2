@@ -2,12 +2,14 @@ import { createHash } from "node:crypto";
 import { patientSpeciesSchema } from "@biume/contracts/capture";
 import { db } from "@biume/db";
 import {
+  advancedReport,
   animals,
   appointments,
   audioCapture,
+  clients,
   pets,
 } from "@biume/db/schema/index";
-import { and, asc, desc, eq, gt, gte, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, lte, or, sql } from "drizzle-orm";
 import {
   cancelCapture,
   completeCapture,
@@ -17,7 +19,26 @@ import {
 } from "./capture.service";
 import { createCaptureRepository } from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
+import {
+  toHistoryEntry,
+  toMobileOwner,
+  toMobilePatient,
+} from "./records.repository";
 import type { MobileApiPorts } from "./mobile-api";
+
+/** Curseur d'identifiant simple, pour les listes triées par identifiant. */
+function encodeIdCursor(id: string): string {
+  return Buffer.from(id).toString("base64url");
+}
+
+function decodeIdCursor(cursor: string): string | null {
+  try {
+    const id = Buffer.from(cursor, "base64url").toString("utf8");
+    return id.length > 0 ? id : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Object keys must not expose a business identifier. A truncated SHA-256 keeps
@@ -138,6 +159,140 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
         nextCursor:
           rows.length > query.limit && last
             ? encodeCursor(last.beginAt, last.id)
+            : null,
+      };
+    },
+
+    async listOwners(actor, query) {
+      const cursor = query.cursor ? decodeIdCursor(query.cursor) : null;
+
+      const rows = await db
+        .select({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          phone: clients.phone,
+          city: clients.city,
+          patientCount: sql<number>`count(${pets.id})::int`,
+        })
+        .from(clients)
+        .leftJoin(pets, eq(pets.ownerId, clients.id))
+        .where(
+          and(
+            // La frontière de locataire est portée par l'acteur, jamais par la
+            // requête du client.
+            eq(clients.organizationId, actor.organizationId),
+            query.search ? ilike(clients.name, `%${query.search}%`) : undefined,
+            cursor ? gt(clients.id, cursor) : undefined,
+          ),
+        )
+        .groupBy(clients.id)
+        .orderBy(asc(clients.id))
+        // Une ligne de plus que demandé : sa présence dit qu'il reste une page,
+        // sans second appel de comptage.
+        .limit(query.limit + 1);
+
+      const page = rows.slice(0, query.limit);
+      const last = page.at(-1);
+
+      return {
+        items: page.map(toMobileOwner),
+        nextCursor:
+          rows.length > query.limit && last ? encodeIdCursor(last.id) : null,
+      };
+    },
+
+    async listPatients(actor, query) {
+      const cursor = query.cursor ? decodeIdCursor(query.cursor) : null;
+
+      const rows = await db
+        .select({
+          id: pets.id,
+          ownerId: pets.ownerId,
+          ownerName: clients.name,
+          name: pets.name,
+          speciesCode: animals.code,
+          breed: pets.breed,
+          birthDate: pets.birthDate,
+          lastAppointmentAt: sql<Date | null>`max(${appointments.beginAt})`,
+        })
+        .from(pets)
+        .innerJoin(clients, eq(clients.id, pets.ownerId))
+        .leftJoin(animals, eq(animals.id, pets.type))
+        .leftJoin(appointments, eq(appointments.patientId, pets.id))
+        .where(
+          and(
+            eq(pets.organizationId, actor.organizationId),
+            query.ownerId ? eq(pets.ownerId, query.ownerId) : undefined,
+            query.search ? ilike(pets.name, `%${query.search}%`) : undefined,
+            cursor ? gt(pets.id, cursor) : undefined,
+          ),
+        )
+        .groupBy(pets.id, clients.name, animals.code)
+        .orderBy(asc(pets.id))
+        .limit(query.limit + 1);
+
+      const page = rows.slice(0, query.limit);
+      const last = page.at(-1);
+
+      return {
+        items: page.map((row) =>
+          toMobilePatient({
+            ...row,
+            ownerId: row.ownerId ?? "",
+            lastAppointmentAt: row.lastAppointmentAt
+              ? new Date(row.lastAppointmentAt)
+              : null,
+          }),
+        ),
+        nextCursor:
+          rows.length > query.limit && last ? encodeIdCursor(last.id) : null,
+      };
+    },
+
+    async getPatientHistory(actor, patientId, query) {
+      const cursor = query.cursor ? decodeCursor(query.cursor) : null;
+
+      const rows = await db
+        .select({
+          appointmentId: appointments.id,
+          beginAt: appointments.beginAt,
+          reportId: advancedReport.id,
+          reportStatus: advancedReport.status,
+          consultationReason: advancedReport.consultationReason,
+        })
+        .from(appointments)
+        .innerJoin(pets, eq(pets.id, appointments.patientId))
+        .leftJoin(advancedReport, eq(advancedReport.appointmentId, appointments.id))
+        .where(
+          and(
+            // Le locataire est filtré sur l'animal comme sur le rendez-vous :
+            // un identifiant deviné ne doit rien livrer.
+            eq(appointments.organizationId, actor.organizationId),
+            eq(pets.organizationId, actor.organizationId),
+            eq(appointments.patientId, patientId),
+            cursor
+              ? or(
+                  lte(appointments.beginAt, cursor.beginAt),
+                  and(
+                    eq(appointments.beginAt, cursor.beginAt),
+                    gt(appointments.id, cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(appointments.beginAt), asc(appointments.id))
+        .limit(query.limit + 1);
+
+      const page = rows.slice(0, query.limit);
+      const last = page.at(-1);
+
+      return {
+        items: page.map(toHistoryEntry),
+        nextCursor:
+          rows.length > query.limit && last
+            ? encodeCursor(last.beginAt, last.appointmentId)
             : null,
       };
     },

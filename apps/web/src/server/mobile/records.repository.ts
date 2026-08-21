@@ -32,9 +32,11 @@ function isoOrNull(value: Date | null | undefined): string | null {
   return value ? value.toISOString() : null;
 }
 
+export const ownerWithoutNameLabel = "Propriétaire sans nom";
+
 export type OwnerRow = {
   id: string;
-  name: string;
+  name: string | null;
   email: string | null | undefined;
   phone: string | null | undefined;
   city: string | null | undefined;
@@ -44,7 +46,7 @@ export type OwnerRow = {
 export function toMobileOwner(row: OwnerRow): MobileOwner {
   return {
     id: row.id,
-    name: row.name,
+    name: orNull(row.name) ?? ownerWithoutNameLabel,
     email: orNull(row.email),
     phone: orNull(row.phone),
     city: orNull(row.city),
@@ -55,7 +57,7 @@ export function toMobileOwner(row: OwnerRow): MobileOwner {
 export type PatientRow = {
   id: string;
   ownerId: string;
-  ownerName: string;
+  ownerName: string | null;
   name: string;
   speciesCode: string | null;
   breed: string | null;
@@ -67,7 +69,7 @@ export function toMobilePatient(row: PatientRow): MobilePatient {
   return {
     id: row.id,
     ownerId: row.ownerId,
-    ownerName: row.ownerName,
+    ownerName: orNull(row.ownerName) ?? ownerWithoutNameLabel,
     name: row.name,
     species: resolveSpecies(row.speciesCode),
     breed: orNull(row.breed),
