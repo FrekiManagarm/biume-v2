@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Code généré par build_runner : régénéré par la CI à chaque exécution.
+*.g.dart
+*.freezed.dart
