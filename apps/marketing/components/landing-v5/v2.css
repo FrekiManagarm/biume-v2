@@ -1,0 +1,218 @@
+/* ============================================================
+   Biume Landing v2 — Direction Duna
+   Canvas lin chaud, interface ~99% achromatique, encre aubergine.
+   Un seul moment de couleur : le hero full-bleed.
+   Zéro ombre portée — l'élévation est une bordure hairline.
+   Couleurs de marque préservées : violet hsl(251 73% 72%),
+   vert hsl(148 71% 45%) — micro-accents uniquement.
+   ============================================================ */
+
+.v2 {
+  /* Surfaces */
+  --v2-canvas: #f7f6f2; /* lin chaud */
+  --v2-surface: #ffffff;
+  --v2-bone: #edece7;
+
+  /* Encre aubergine — dérivée de la teinte de marque (251) */
+  --v2-ink: #211129;
+  --v2-ink-soft: #766a7c; /* warm ash */
+  --v2-ink-faint: #8d8790; /* stone */
+  --v2-line: rgba(33, 17, 41, 0.1);
+  --v2-line-strong: rgba(33, 17, 41, 0.22);
+
+  /* Action primaire — espresso, seul fill interactif */
+  --v2-espresso: #251136;
+  --v2-espresso-hover: #371c4f;
+
+  /* Marque — couleurs de base du globals.css */
+  --v2-accent: hsl(251 73% 72%); /* violet — fill CTA, lavis hero */
+  --v2-accent-hover: hsl(251 74% 64%); /* violet plus soutenu au survol */
+  --v2-violet-ink: #6b5ac8; /* violet profond (landing-theme) — textes accentués */
+  --v2-green: hsl(148 71% 45%); /* vert — validations */
+
+  --font-sans: var(--font-v2-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-v2-mono), ui-monospace, "SF Mono", monospace;
+
+  background: var(--v2-canvas);
+  color: var(--v2-ink);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  /* Pont pour les pages marketing historiques encore composées avec les
+     variables sémantiques partagées. */
+  --background: var(--v2-canvas);
+  --foreground: var(--v2-ink);
+  --card: var(--v2-surface);
+  --card-foreground: var(--v2-ink);
+  --muted: var(--v2-bone);
+  --muted-foreground: var(--v2-ink-soft);
+  --border: var(--v2-line-strong);
+  --primary: var(--v2-violet-ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--v2-green);
+  --secondary-foreground: #ffffff;
+  --ring: var(--v2-violet-ink);
+}
+
+/* ---------- Typographie ---------- */
+
+.v2-display {
+  font-family: var(--font-sans);
+  letter-spacing: -0.055em; /* signature éditoriale à 72px+ */
+}
+
+.v2-mono {
+  font-family: var(--font-mono);
+}
+
+.v2-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--v2-violet-ink);
+}
+
+.v2-eyebrow-green {
+  color: var(--v2-green);
+}
+
+/* ---------- Boutons — pill 999px, zéro ombre ---------- */
+
+.v2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.v2-btn-primary {
+  background: var(--v2-violet-ink);
+  color: #ffffff;
+}
+
+.v2-btn-primary:hover {
+  background: var(--v2-espresso-hover);
+}
+
+.v2-btn-secondary {
+  background: transparent;
+  color: var(--v2-ink);
+  border-color: var(--v2-line-strong);
+}
+
+.v2-btn-secondary:hover {
+  border-color: var(--v2-green); /* vert Biume */
+}
+
+.v2-btn-lg {
+  border-radius: 60px;
+  padding: 20px 32px;
+  font-size: 1.02rem;
+}
+
+.v2-btn-sm {
+  padding: 10px 18px;
+  font-size: 0.88rem;
+}
+
+/* ---------- Surfaces ---------- */
+
+/* Seule "élévation" du système : ring inset hairline */
+.v2-panel {
+  background: var(--v2-surface);
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 1px rgba(33, 17, 41, 0.08);
+}
+
+.v2-card {
+  background: var(--v2-surface);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(33, 17, 41, 0.08);
+}
+
+/* ---------- Pill d'annonce ---------- */
+
+.v2-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: var(--v2-espresso);
+  color: #ffffff;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.v2-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--v2-green); /* vert de marque */
+}
+
+/* ---------- Liens ---------- */
+
+.v2-link {
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.v2-link:hover {
+  color: var(--v2-violet-ink);
+}
+
+/* Les titres des gabarits SEO historiques gardent leur contenu, sans l'ancien
+   traitement dégradé qui ne fait pas partie du langage V2. */
+.v2 .bg-clip-text {
+  background-image: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.v2 .text-transparent {
+  color: inherit !important;
+}
+
+/* ---------- FAQ — ouverture courte, sans animer la mise en page ---------- */
+
+@keyframes v2-faq-answer-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.4rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.v2 details[open] .v2-faq-answer {
+  animation: v2-faq-answer-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2 details[open] .v2-faq-answer {
+    animation: none;
+  }
+}

@@ -1,10 +1,15 @@
-// apps/marketing/components/landing-v5/fonts.ts
-import { Hanken_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
-export const landingV5Sans = Hanken_Grotesk({
+export const sans = Geist({
   subsets: ["latin"],
-  variable: "--font-landing-v5-sans",
+  variable: "--font-v2-sans",
   display: "swap",
 });
 
-export const landingV5FontVariables = [landingV5Sans.variable].join(" ");
+export const mono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-v2-mono",
+  display: "swap",
+});
+
+export const fontVariables = [sans.variable, mono.variable].join(" ");

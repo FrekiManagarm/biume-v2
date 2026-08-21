@@ -20,8 +20,8 @@ export function LandingV5ReportTabs() {
         <p className="mt-4 max-w-[54ch] text-[rgba(253,253,251,.66)]">{TABS_LEAD}</p>
 
         <Reveal delay={120}>
-          <Tabs defaultValue={SPECIMEN_STEPS[0]!.id} className="mt-10">
-            <TabsList aria-label={TABS_TITLE} className="flex flex-wrap gap-2 bg-transparent p-0">
+          <Tabs defaultValue={SPECIMEN_STEPS[0]!.id} className="flex flex-col mt-10">
+            <TabsList aria-label={TABS_TITLE} className="flex flex-wrap content-center mx-auto gap-2 bg-transparent p-0">
               {SPECIMEN_STEPS.map((step) => (
                 <TabsTrigger
                   key={step.id}

@@ -5,7 +5,7 @@ import { LandingV5Boundaries } from "./boundaries";
 import { LandingV5Close } from "./close";
 import { LandingV5Facts } from "./facts";
 import { LandingV5Faq } from "./faq";
-import { landingV5FontVariables } from "./fonts";
+import { fontVariables } from "./fonts";
 import { LandingV5Features } from "./features";
 import { LandingV5FollowUp } from "./follow-up";
 import { LandingV5Footer } from "./footer";
@@ -21,7 +21,7 @@ import { LandingV5TradesMarquee } from "./trades-marquee";
 export function LandingV5() {
   return (
     <LandingV5MotionRoot>
-      <div className={`landing-v5 ${landingV5FontVariables} min-h-screen antialiased`}>
+      <div className={`landing-v5 ${fontVariables} min-h-screen antialiased`}>
         <LandingV5Masthead />
         <main id="contenu" tabIndex={-1}>
           <LandingV5Hero />

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { v2FontVariables } from "../components/v2/fonts";
+import { fontVariables } from "../components/landing-v5/fonts";
 import { rootMetadata } from "../lib/metadata";
 import "./globals.css";
-import "./v2/v2.css";
+import "../components/landing-v5/v2.css";
 
 export const metadata: Metadata = rootMetadata;
 
@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="antialiased" suppressHydrationWarning>
-      <body className={`v2 ${v2FontVariables}`}>{children}</body>
+      <body className={`v2 ${fontVariables}`}>{children}</body>
     </html>
   );
 }
