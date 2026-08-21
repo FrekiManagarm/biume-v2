@@ -1,4 +1,5 @@
 export * from "./capture";
+export * from "./followup";
 export * from "./mobile-records";
 export * from "./product-events";
 export * from "./proposal";

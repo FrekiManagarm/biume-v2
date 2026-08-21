@@ -19,6 +19,8 @@ export * from "./advancedReport/reportSharedVersion";
 export * from "./audioCapture";
 export * from "./captureTranscript";
 export * from "./reportProposal";
+export * from "./ownerAccess";
+export * from "./followup";
 export * from "./anatomicalPart";
 export * from "./anatomicalPartType";
 export * from "./animals";
