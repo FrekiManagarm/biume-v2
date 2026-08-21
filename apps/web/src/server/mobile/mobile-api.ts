@@ -18,15 +18,24 @@ import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
-import { buildMobileApiError } from "./mobile-api.errors";
+import { buildMobileApiError, MobileRequestError } from "./mobile-api.errors";
 import {
   mobileOwnersResponseSchema,
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
+  mobileOwnerSchema,
+  mobilePatientSchema,
   mobileRecordsPageSize,
+  type CreateMobileOwnerRequest,
+  type CreateMobilePatientRequest,
+  type MobileOwner,
   type MobileOwnersResponse,
+  moveAppointmentResponseSchema,
+  type MobilePatient,
   type MobilePatientHistoryResponse,
   type MobilePatientsResponse,
+  type MoveAppointmentRequest,
+  type MoveAppointmentResponse,
 } from "@biume/contracts/mobile-records";
 import {
   agendaQuerySchema,
@@ -35,6 +44,9 @@ import {
   completeCaptureRoute,
   createCaptureRoute,
   listCapturesRoute,
+  createOwnerRoute,
+  createPatientRoute,
+  moveAppointmentRoute,
   ownersRoute,
   patientHistoryRoute,
   patientsRoute,
@@ -105,6 +117,19 @@ export type MobileApiPorts = {
     patientId: string,
     query: { limit: number; cursor: string | null },
   ): Promise<MobilePatientHistoryResponse>;
+  createOwner(
+    actor: CaptureActor,
+    request: CreateMobileOwnerRequest,
+  ): Promise<MobileOwner>;
+  createPatient(
+    actor: CaptureActor,
+    request: CreateMobilePatientRequest,
+  ): Promise<MobilePatient>;
+  moveAppointment(
+    actor: CaptureActor,
+    appointmentId: string,
+    slot: MoveAppointmentRequest,
+  ): Promise<MoveAppointmentResponse>;
 };
 
 function parseAgendaQuery(
@@ -278,6 +303,28 @@ export function createMobileApiApp(
     return validated(c, 200, mobilePatientHistoryResponseSchema, page);
   });
 
+  app.openapi(moveAppointmentRoute, async (c) => {
+    const result = await ports.moveAppointment(
+      c.get("actor"),
+      c.req.valid("param").appointmentId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, moveAppointmentResponseSchema, result);
+  });
+
+  app.openapi(createOwnerRoute, async (c) => {
+    const created = await ports.createOwner(c.get("actor"), c.req.valid("json"));
+    return validated(c, 201, mobileOwnerSchema, created);
+  });
+
+  app.openapi(createPatientRoute, async (c) => {
+    const created = await ports.createPatient(
+      c.get("actor"),
+      c.req.valid("json"),
+    );
+    return validated(c, 201, mobilePatientSchema, created);
+  });
+
   app.openapi(listCapturesRoute, async (c) => {
     const { limit, cursor } = c.req.valid("query");
     const page = await ports.listCaptures(c.get("actor"), {
@@ -325,6 +372,7 @@ export function createMobileApiApp(
   methodNotAllowed("/owners");
   methodNotAllowed("/patients");
   methodNotAllowed("/patients/:patientId/history");
+  methodNotAllowed("/appointments/:appointmentId/move");
 
   app.notFound((c) => fail(c, "not_found"));
 
@@ -335,7 +383,10 @@ export function createMobileApiApp(
     if (error instanceof HTTPException && error.status === 400) {
       return fail(c, "validation");
     }
-    if (error instanceof CaptureServiceError) {
+    if (
+      error instanceof CaptureServiceError ||
+      error instanceof MobileRequestError
+    ) {
       return fail(c, error.code, error.retryable);
     }
     // Tout le reste est un détail d'implémentation : journalisé en amont,

@@ -9,9 +9,15 @@ import {
   uploadSessionResponseSchema,
 } from "@biume/contracts/capture";
 import {
+  createMobileOwnerRequestSchema,
+  createMobilePatientRequestSchema,
+  mobileOwnerSchema,
   mobileOwnersResponseSchema,
+  mobilePatientSchema,
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
+  moveAppointmentRequestSchema,
+  moveAppointmentResponseSchema,
 } from "@biume/contracts/mobile-records";
 import { createRoute, z } from "@hono/zod-openapi";
 
@@ -223,6 +229,55 @@ export const patientHistoryRoute = createRoute({
     200: {
       description: "Historique",
       content: json(mobilePatientHistoryResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const createOwnerRoute = createRoute({
+  method: "post",
+  path: "/owners",
+  security,
+  summary: "Créer un propriétaire depuis le terrain",
+  request: { body: { content: json(createMobileOwnerRequestSchema) } },
+  responses: {
+    201: { description: "Propriétaire créé", content: json(mobileOwnerSchema) },
+    ...errorResponses,
+  },
+});
+
+export const createPatientRoute = createRoute({
+  method: "post",
+  path: "/patients",
+  security,
+  summary: "Créer un animal rattaché à un propriétaire",
+  request: { body: { content: json(createMobilePatientRequestSchema) } },
+  responses: {
+    201: { description: "Animal créé", content: json(mobilePatientSchema) },
+    ...errorResponses,
+  },
+});
+
+export const appointmentIdParamsSchema = z.object({
+  appointmentId: z
+    .string()
+    .min(1)
+    .openapi({ param: { name: "appointmentId", in: "path" } }),
+});
+
+export const moveAppointmentRoute = createRoute({
+  method: "post",
+  path: "/appointments/{appointmentId}/move",
+  security,
+  summary: "Déplacer une séance, en signalant les chevauchements",
+  request: {
+    params: appointmentIdParamsSchema,
+    body: { content: json(moveAppointmentRequestSchema) },
+  },
+  responses: {
+    200: {
+      description: "Séance déplacée",
+      content: json(moveAppointmentResponseSchema),
     },
     ...errorResponses,
   },

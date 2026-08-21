@@ -17,6 +17,8 @@ import {
   createUploadSession,
   type CaptureServiceDependencies,
 } from "./capture.service";
+import { MobileRequestError } from "./mobile-api.errors";
+import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
 import { createCaptureRepository } from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
 import {
@@ -295,6 +297,156 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
             ? encodeCursor(last.beginAt, last.appointmentId)
             : null,
       };
+    },
+
+    async moveAppointment(actor, appointmentId, slot) {
+      const beginAt = new Date(slot.beginAt);
+      const endAt = new Date(slot.endAt);
+
+      const [target] = await db
+        .select({ id: appointments.id })
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!target) throw new MobileRequestError("not_found");
+
+      // La fenêtre de lecture est bornée à la journée concernée : détecter un
+      // chevauchement ne justifie jamais de charger tout l'agenda.
+      const dayStart = new Date(beginAt);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(beginAt);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const candidates = await db
+        .select({
+          id: appointments.id,
+          beginAt: appointments.beginAt,
+          endAt: appointments.endAt,
+          status: appointments.status,
+          patientName: pets.name,
+        })
+        .from(appointments)
+        .leftJoin(pets, eq(appointments.patientId, pets.id))
+        .where(
+          and(
+            eq(appointments.organizationId, actor.organizationId),
+            gte(appointments.beginAt, dayStart),
+            lte(appointments.beginAt, dayEnd),
+          ),
+        );
+
+      await db
+        .update(appointments)
+        .set({ beginAt, endAt, updatedAt: new Date() })
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.organizationId, actor.organizationId),
+          ),
+        );
+
+      // Le même prédicat que le web : les deux surfaces signalent exactement
+      // les mêmes chevauchements, par construction.
+      const conflicts = findAppointmentConflicts({
+        beginAt,
+        endAt,
+        excludeAppointmentId: appointmentId,
+        candidates,
+      });
+
+      return {
+        appointmentId,
+        beginAt: beginAt.toISOString(),
+        endAt: endAt.toISOString(),
+        conflicts: conflicts.map((conflict) => ({
+          appointmentId: conflict.id,
+          beginAt: new Date(conflict.beginAt).toISOString(),
+          patientName: conflict.patientName,
+        })),
+      };
+    },
+
+    async createOwner(actor, request) {
+      const [created] = await db
+        .insert(clients)
+        .values({
+          name: request.name,
+          email: request.email ?? null,
+          phone: request.phone ?? null,
+          city: request.city ?? null,
+          organizationId: actor.organizationId,
+        })
+        .returning({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          phone: clients.phone,
+          city: clients.city,
+        });
+
+      if (!created) throw new MobileRequestError("server_error", { retryable: true });
+
+      return toMobileOwner({ ...created, patientCount: 0 });
+    },
+
+    async createPatient(actor, request) {
+      // Le propriétaire est vérifié avant l'insertion : sans ce contrôle, un
+      // identifiant deviné rattacherait un animal au dossier d'un autre
+      // cabinet.
+      const [owner] = await db
+        .select({ id: clients.id, name: clients.name })
+        .from(clients)
+        .where(
+          and(
+            eq(clients.id, request.ownerId),
+            eq(clients.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!owner) throw new MobileRequestError("not_found");
+
+      const [species] = await db
+        .select({ id: animals.id })
+        .from(animals)
+        .where(eq(animals.code, request.species))
+        .limit(1);
+
+      const [created] = await db
+        .insert(pets)
+        .values({
+          name: request.name,
+          ownerId: owner.id,
+          organizationId: actor.organizationId,
+          type: species?.id ?? null,
+          breed: request.breed ?? null,
+          birthDate: request.birthDate ? new Date(request.birthDate) : null,
+        })
+        .returning({
+          id: pets.id,
+          name: pets.name,
+          breed: pets.breed,
+          birthDate: pets.birthDate,
+        });
+
+      if (!created) throw new MobileRequestError("server_error", { retryable: true });
+
+      return toMobilePatient({
+        id: created.id,
+        ownerId: owner.id,
+        ownerName: owner.name,
+        name: created.name,
+        speciesCode: request.species,
+        breed: created.breed,
+        birthDate: created.birthDate,
+        lastAppointmentAt: null,
+      });
     },
 
     async listCaptures(actor, query) {

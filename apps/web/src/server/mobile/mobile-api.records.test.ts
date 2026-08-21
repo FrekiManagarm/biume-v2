@@ -132,3 +132,71 @@ describe("lecture des fiches", () => {
     expect(response.status).toBe(401);
   });
 });
+
+function post(path: string, body: unknown) {
+  return new Request(`https://biume.test/api/mobile/v1${path}`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer jeton",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+describe("création de fiches", () => {
+  it("crée un propriétaire à partir du seul nom", async () => {
+    const ports = createPorts({ createOwner: vi.fn(async () => owner) });
+    const response = await createMobileApiHandler(ports)(
+      post("/owners", { name: "Camille Roux" }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(ports.createOwner).toHaveBeenCalledWith(
+      { practitionerId: "user-1", organizationId: "org-1" },
+      { name: "Camille Roux" },
+    );
+  });
+
+  it("rejette un propriétaire sans nom", async () => {
+    const response = await createMobileApiHandler(createPorts())(
+      post("/owners", { name: "   " }),
+    );
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).code).toBe("validation");
+  });
+
+  /**
+   * Le client ne décide jamais du locataire. Un `organizationId` transmis est
+   * une charge rejetée, jamais un champ silencieusement ignoré.
+   */
+  it("rejette une charge qui tente de choisir son organisation", async () => {
+    const response = await createMobileApiHandler(createPorts())(
+      post("/owners", { name: "Camille Roux", organizationId: "org-2" }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it("crée un animal avec le minimum de terrain", async () => {
+    const ports = createPorts({ createPatient: vi.fn(async () => patient) });
+    const response = await createMobileApiHandler(ports)(
+      post("/patients", { ownerId: "client-1", name: "Filou", species: "DOG" }),
+    );
+
+    expect(response.status).toBe(201);
+  });
+
+  it("rejette un animal dont l'espèce est inconnue", async () => {
+    const response = await createMobileApiHandler(createPorts())(
+      post("/patients", {
+        ownerId: "client-1",
+        name: "Filou",
+        species: "DRAGON",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+});

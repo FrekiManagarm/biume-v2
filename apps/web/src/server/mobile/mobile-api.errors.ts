@@ -62,3 +62,23 @@ export function buildMobileApiError(
     },
   };
 }
+
+/**
+ * Échec d'une requête mobile hors du domaine de la capture.
+ *
+ * `CaptureServiceError` porte une `CaptureFailureReason`, union fermée décrivant
+ * les échecs d'une dictée. Y ajouter « propriétaire introuvable » étirerait ce
+ * vocabulaire jusqu'à ce qu'il ne dise plus rien ; les fiches, l'agenda et les
+ * rapports lèvent donc leur propre erreur.
+ */
+export class MobileRequestError extends Error {
+  readonly code: CaptureErrorCode;
+  readonly retryable: boolean;
+
+  constructor(code: CaptureErrorCode, options: { retryable?: boolean } = {}) {
+    super(code);
+    this.name = "MobileRequestError";
+    this.code = code;
+    this.retryable = options.retryable ?? false;
+  }
+}

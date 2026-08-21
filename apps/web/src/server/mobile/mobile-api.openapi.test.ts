@@ -26,6 +26,7 @@ describe("application Hono de l'api mobile", () => {
   it("décrit chaque endpoint servi", () => {
     expect(Object.keys(document.paths ?? {}).sort()).toEqual([
       "/api/mobile/v1/appointments",
+      "/api/mobile/v1/appointments/{appointmentId}/move",
       "/api/mobile/v1/captures",
       "/api/mobile/v1/captures/{captureId}",
       "/api/mobile/v1/captures/{captureId}/complete",
