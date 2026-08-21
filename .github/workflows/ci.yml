@@ -25,8 +25,11 @@ jobs:
       - name: Installer les dépendances
         run: bun install --frozen-lockfile
 
+      # `@biume/mobile` est exclu : son `check-types` est `flutter analyze`,
+      # et Flutter n'est pas installé sur ce runner. Le job `mobile` s'en
+      # charge, avec sa propre chaîne d'outils.
       - name: Vérifier les types
-        run: bun run check-types
+        run: bun run check-types --filter='!@biume/mobile'
 
       - name: Tests du web
         run: bun --filter @biume/web test
