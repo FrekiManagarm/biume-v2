@@ -9,13 +9,13 @@ import {
   uploadSessionResponseSchema,
   type CaptureErrorCode,
   type CaptureResponse,
-  type MobileApiError,
   type MobileAppointmentsResponse,
   type MobileCapturesResponse,
   type UploadSessionResponse,
 } from "@biume/contracts/capture";
 import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
+import { buildMobileApiError } from "./mobile-api.errors";
 
 export const mobileAgendaMaxWindowMs = 31 * 24 * 60 * 60 * 1000;
 export const mobileAgendaMaxLimit = mobileAppointmentsPageSize;
@@ -66,52 +66,6 @@ export type MobileApiPorts = {
   cancelCapture(actor: CaptureActor, captureId: string): Promise<void>;
 };
 
-/**
- * Messages are deliberately generic and localized. Nothing derived from an
- * exception, a database, or a storage provider ever reaches the client.
- */
-const errorMessages: Record<CaptureErrorCode, string> = {
-  validation: "Requête invalide.",
-  unauthorized: "Session expirée, reconnectez-vous.",
-  active_organization_required: "Sélectionnez une organisation.",
-  forbidden: "Accès refusé.",
-  method_not_allowed: "Méthode non supportée.",
-  not_found: "Ressource introuvable.",
-  conflict: "Cette dictée est dans un état incompatible.",
-  rate_limited: "Trop de requêtes, réessayez plus tard.",
-  server_error: "Une erreur interne est survenue.",
-  storage_unavailable: "Stockage indisponible, réessayez plus tard.",
-  object_incomplete: "L'audio envoyé est incomplet, relancez l'envoi.",
-  expired: "Cette dictée a expiré.",
-  network: "Connexion indisponible.",
-  unknown: "Une erreur est survenue.",
-};
-
-const errorStatuses: Record<CaptureErrorCode, number> = {
-  validation: 400,
-  unauthorized: 401,
-  active_organization_required: 409,
-  forbidden: 403,
-  method_not_allowed: 405,
-  not_found: 404,
-  conflict: 409,
-  rate_limited: 429,
-  server_error: 500,
-  storage_unavailable: 503,
-  object_incomplete: 409,
-  expired: 410,
-  network: 503,
-  unknown: 500,
-};
-
-const retryableByDefault = new Set<CaptureErrorCode>([
-  "rate_limited",
-  "server_error",
-  "storage_unavailable",
-  "object_incomplete",
-  "network",
-]);
-
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -133,12 +87,8 @@ function errorResponse(
   code: CaptureErrorCode,
   options: { retryable?: boolean } = {},
 ): Response {
-  const body: MobileApiError = {
-    code,
-    message: errorMessages[code],
-    retryable: options.retryable ?? retryableByDefault.has(code),
-  };
-  return jsonResponse(errorStatuses[code], body);
+  const { status, body } = buildMobileApiError(code, options);
+  return jsonResponse(status, body);
 }
 
 /**
