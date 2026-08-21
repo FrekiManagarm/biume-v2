@@ -1,4 +1,4 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 
 /// Les échecs que le domaine connaît, dans son propre vocabulaire.
 ///
@@ -92,11 +92,10 @@ class RateLimitedFailure extends Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure({String? message, bool retryable = true})
+  const ServerFailure({String? message, super.retryable = true})
     : super(
         code: 'server_error',
         message: message ?? 'Une erreur est survenue.',
-        retryable: retryable,
       );
 }
 
