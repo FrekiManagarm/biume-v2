@@ -104,6 +104,9 @@ function createObjectStore(overrides: Partial<AudioObjectStore> = {}) {
       byteSize: 1_048_576,
       metadata: { sha256 },
     })),
+    // Ajouté avec le pipeline de transcription. Aucun test de ce fichier ne
+    // lit l'audio : la capture ne fait que le déposer et le confirmer.
+    getBytes: vi.fn(async () => null),
     delete: vi.fn(async () => {}),
     ...overrides,
   } satisfies AudioObjectStore;
