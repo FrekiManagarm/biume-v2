@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "check-types": "tsc --noEmit",
+    "emit-openapi": "bun run scripts/emit-openapi.ts",
     "lint": "eslint",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check ."
