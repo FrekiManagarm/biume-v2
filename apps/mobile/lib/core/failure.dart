@@ -107,3 +107,15 @@ class UnknownFailure extends Failure {
         retryable: false,
       );
 }
+
+/// Le serveur a répondu sans erreur mais sans session exploitable. Rare, et
+/// distinct d'un refus d'authentification : le jeton peut être bon alors que
+/// la réponse ne suit pas le contrat.
+class AuthFailureFallback extends Failure {
+  const AuthFailureFallback()
+    : super(
+        code: 'server_error',
+        message: 'Session indisponible, réessayez.',
+        retryable: true,
+      );
+}

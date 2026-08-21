@@ -55,6 +55,7 @@ dependencies:
   crypto: ^3.0.7
   workmanager: ^0.10.9
   sqlite3: ^3.5.2
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:
