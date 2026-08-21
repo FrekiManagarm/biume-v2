@@ -25,6 +25,13 @@ import {
   type ReportProposalsResponse,
 } from "@biume/contracts/proposal";
 import type { ReportSectionId } from "@biume/contracts/report";
+import {
+  actionableFollowUpsResponseSchema,
+  followUpSchema,
+  type ActionableFollowUpsResponse,
+  type FollowUp,
+  type ScheduleFollowUpRequest,
+} from "@biume/contracts/followup";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -58,8 +65,11 @@ import {
   listCapturesRoute,
   correctTranscriptRoute,
   createOwnerRoute,
+  actionableFollowUpsRoute,
   decideProposalRoute,
   decideSectionRoute,
+  markFollowUpHandledRoute,
+  scheduleFollowUpRoute,
   regenerateProposalsRoute,
   reportProposalsRoute,
   createPatientRoute,
@@ -177,6 +187,19 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     reportId: string,
   ): Promise<ReportProposalsResponse>;
+  scheduleFollowUp(
+    actor: CaptureActor,
+    reportId: string,
+    request: ScheduleFollowUpRequest,
+  ): Promise<FollowUp>;
+  listActionableFollowUps(
+    actor: CaptureActor,
+    query: { limit: number; cursor: string | null },
+  ): Promise<ActionableFollowUpsResponse>;
+  markFollowUpHandled(
+    actor: CaptureActor,
+    followUpId: string,
+  ): Promise<FollowUp>;
 };
 
 function parseAgendaQuery(
@@ -350,6 +373,32 @@ export function createMobileApiApp(
     return validated(c, 200, mobilePatientHistoryResponseSchema, page);
   });
 
+  app.openapi(scheduleFollowUpRoute, async (c) => {
+    const scheduled = await ports.scheduleFollowUp(
+      c.get("actor"),
+      c.req.valid("param").reportId,
+      c.req.valid("json"),
+    );
+    return validated(c, 201, followUpSchema, scheduled);
+  });
+
+  app.openapi(actionableFollowUpsRoute, async (c) => {
+    const { limit, cursor } = c.req.valid("query");
+    const page = await ports.listActionableFollowUps(c.get("actor"), {
+      limit: boundLimit(limit),
+      cursor: cursor ?? null,
+    });
+    return validated(c, 200, actionableFollowUpsResponseSchema, page);
+  });
+
+  app.openapi(markFollowUpHandledRoute, async (c) => {
+    const handled = await ports.markFollowUpHandled(
+      c.get("actor"),
+      c.req.valid("param").followUpId,
+    );
+    return validated(c, 200, followUpSchema, handled);
+  });
+
   app.openapi(reportProposalsRoute, async (c) => {
     const found = await ports.getReportProposals(
       c.get("actor"),
@@ -483,6 +532,9 @@ export function createMobileApiApp(
   methodNotAllowed("/reports/:reportId/proposals");
   methodNotAllowed("/reports/:reportId/proposals/:proposalId/decision");
   methodNotAllowed("/reports/:reportId/sections/:section/decision");
+  methodNotAllowed("/reports/:reportId/followup");
+  methodNotAllowed("/followups/actionable");
+  methodNotAllowed("/followups/:followUpId/handled");
 
   app.notFound((c) => fail(c, "not_found"));
 

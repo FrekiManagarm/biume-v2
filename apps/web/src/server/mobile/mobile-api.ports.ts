@@ -8,10 +8,25 @@ import {
   audioCapture,
   captureTranscript,
   clients,
+  followUp,
+  followUpAlert,
+  reportShareLink,
   pets,
   reportProposal,
 } from "@biume/db/schema/index";
-import { and, asc, desc, eq, gt, gte, ilike, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  isNull,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import {
   cancelCapture,
   completeCapture,
@@ -28,6 +43,12 @@ import type {
   ReportProposalsResponse,
 } from "@biume/contracts/proposal";
 import type { ReportSectionId } from "@biume/contracts/report";
+import {
+  defaultFollowUpQuestionnaire,
+  type AlertReason,
+  type FollowUp,
+} from "@biume/contracts/followup";
+import { validateDueDate } from "#/server/followup/followup.service";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
@@ -214,6 +235,58 @@ async function syncAndReread(
   );
 
   return refreshed;
+}
+
+
+async function readFollowUp(
+  actor: CaptureActor,
+  followUpId: string,
+): Promise<FollowUp | null> {
+  const [row] = await db
+    .select({
+      id: followUp.id,
+      reportId: followUp.reportId,
+      status: followUp.status,
+      answer: followUp.answer,
+      dueAt: followUp.dueAt,
+      answeredAt: followUp.answeredAt,
+      handledAt: followUp.handledAt,
+      patientName: pets.name,
+      ownerName: clients.name,
+    })
+    .from(followUp)
+    .leftJoin(reportShareLink, eq(reportShareLink.token, followUp.shareToken))
+    .leftJoin(clients, eq(clients.id, reportShareLink.ownerId))
+    .leftJoin(pets, eq(pets.ownerId, clients.id))
+    .where(
+      and(
+        eq(followUp.id, followUpId),
+        // Le locataire est porté par la colonne du suivi lui-même : un
+        // identifiant deviné ne livre rien.
+        eq(followUp.organizationId, actor.organizationId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+
+  const alerts = await db
+    .select({ reason: followUpAlert.reason })
+    .from(followUpAlert)
+    .where(eq(followUpAlert.followUpId, row.id));
+
+  return {
+    id: row.id,
+    reportId: row.reportId,
+    patientName: row.patientName ?? "Animal sans nom",
+    ownerName: row.ownerName ?? "Propriétaire sans nom",
+    status: row.status,
+    dueAt: row.dueAt.toISOString(),
+    answeredAt: row.answeredAt?.toISOString() ?? null,
+    answer: row.answer ?? null,
+    alertReasons: alerts.map((alert) => alert.reason as AlertReason),
+    handledAt: row.handledAt?.toISOString() ?? null,
+  };
 }
 
 export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> {
@@ -449,6 +522,92 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
             ? encodeCursor(last.beginAt, last.appointmentId)
             : null,
       };
+    },
+
+    async scheduleFollowUp(actor, reportId, request) {
+      const [report] = await db
+        .select({ id: advancedReport.id })
+        .from(advancedReport)
+        .where(
+          and(
+            eq(advancedReport.id, reportId),
+            eq(advancedReport.createdBy, actor.organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!report) throw new MobileRequestError("not_found");
+
+      // Le plancher métier est appliqué ici, pas seulement dans l'interface.
+      if (validateDueDate(new Date(request.dueAt), new Date()) !== "ok") {
+        throw new MobileRequestError("validation");
+      }
+
+      const [link] = await db
+        .select({ token: reportShareLink.token })
+        .from(reportShareLink)
+        .limit(1);
+
+      const id = crypto.randomUUID();
+      await db.insert(followUp).values({
+        id,
+        reportId,
+        organizationId: actor.organizationId,
+        shareToken: link?.token ?? null,
+        questionnaire: request.questionnaire ?? defaultFollowUpQuestionnaire,
+        dueAt: new Date(request.dueAt),
+      });
+
+      const created = await readFollowUp(actor, id);
+      if (!created) throw new MobileRequestError("server_error", { retryable: true });
+
+      return created;
+    },
+
+    async listActionableFollowUps(actor, query) {
+      // Le filtre est en SQL : « arrivé, alerté, non traité » ne doit jamais
+      // être calculé après une lecture non bornée.
+      const rows = await db
+        .selectDistinct({ id: followUp.id, dueAt: followUp.dueAt })
+        .from(followUp)
+        .innerJoin(followUpAlert, eq(followUpAlert.followUpId, followUp.id))
+        .where(
+          and(
+            eq(followUp.organizationId, actor.organizationId),
+            eq(followUp.status, "answered"),
+            isNull(followUp.handledAt),
+          ),
+        )
+        .orderBy(desc(followUp.dueAt))
+        .limit(query.limit + 1);
+
+      const page = rows.slice(0, query.limit);
+      const items = (
+        await Promise.all(page.map((row) => readFollowUp(actor, row.id)))
+      ).filter((item): item is FollowUp => item !== null);
+
+      return { items, nextCursor: null };
+    },
+
+    async markFollowUpHandled(actor, followUpId) {
+      const now = new Date();
+      const [updated] = await db
+        .update(followUp)
+        .set({ handledAt: now, updatedAt: now })
+        .where(
+          and(
+            eq(followUp.id, followUpId),
+            eq(followUp.organizationId, actor.organizationId),
+          ),
+        )
+        .returning({ id: followUp.id });
+
+      if (!updated) throw new MobileRequestError("not_found");
+
+      const handled = await readFollowUp(actor, followUpId);
+      if (!handled) throw new MobileRequestError("not_found");
+
+      return handled;
     },
 
     async getReportProposals(actor, reportId) {

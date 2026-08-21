@@ -29,6 +29,11 @@ import {
   reportProposalsResponseSchema,
 } from "@biume/contracts/proposal";
 import { reportSectionIds } from "@biume/contracts/report";
+import {
+  actionableFollowUpsResponseSchema,
+  followUpSchema,
+  scheduleFollowUpRequestSchema,
+} from "@biume/contracts/followup";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -411,6 +416,55 @@ export const regenerateProposalsRoute = createRoute({
       description: "Propositions à jour",
       content: json(reportProposalsResponseSchema),
     },
+    ...errorResponses,
+  },
+});
+
+export const followUpIdParamsSchema = z.object({
+  followUpId: z
+    .string()
+    .min(1)
+    .openapi({ param: { name: "followUpId", in: "path" } }),
+});
+
+export const scheduleFollowUpRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/followup",
+  security,
+  summary: "Programmer le questionnaire de suivi du propriétaire",
+  request: {
+    params: reportIdParamsSchema,
+    body: { content: json(scheduleFollowUpRequestSchema) },
+  },
+  responses: {
+    201: { description: "Suivi programmé", content: json(followUpSchema) },
+    ...errorResponses,
+  },
+});
+
+export const actionableFollowUpsRoute = createRoute({
+  method: "get",
+  path: "/followups/actionable",
+  security,
+  summary: "Suivis dont la réponse demande une action",
+  request: { query: recordsQuerySchema },
+  responses: {
+    200: {
+      description: "Suivis actionnables",
+      content: json(actionableFollowUpsResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const markFollowUpHandledRoute = createRoute({
+  method: "post",
+  path: "/followups/{followUpId}/handled",
+  security,
+  summary: "Marquer un suivi comme traité",
+  request: { params: followUpIdParamsSchema },
+  responses: {
+    200: { description: "Suivi traité", content: json(followUpSchema) },
     ...errorResponses,
   },
 });
