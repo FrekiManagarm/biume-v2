@@ -13,6 +13,11 @@ import {
   type MobileCapturesResponse,
   type UploadSessionResponse,
 } from "@biume/contracts/capture";
+import {
+  transcriptSchema,
+  type CorrectTranscriptRequest,
+  type Transcript,
+} from "@biume/contracts/transcript";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -44,8 +49,10 @@ import {
   completeCaptureRoute,
   createCaptureRoute,
   listCapturesRoute,
+  correctTranscriptRoute,
   createOwnerRoute,
   createPatientRoute,
+  getTranscriptRoute,
   moveAppointmentRoute,
   ownersRoute,
   patientHistoryRoute,
@@ -130,6 +137,15 @@ export type MobileApiPorts = {
     appointmentId: string,
     slot: MoveAppointmentRequest,
   ): Promise<MoveAppointmentResponse>;
+  getTranscript(
+    actor: CaptureActor,
+    captureId: string,
+  ): Promise<Transcript | null>;
+  correctTranscript(
+    actor: CaptureActor,
+    captureId: string,
+    request: CorrectTranscriptRequest,
+  ): Promise<Transcript>;
 };
 
 function parseAgendaQuery(
@@ -303,6 +319,24 @@ export function createMobileApiApp(
     return validated(c, 200, mobilePatientHistoryResponseSchema, page);
   });
 
+  app.openapi(getTranscriptRoute, async (c) => {
+    const found = await ports.getTranscript(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+    );
+    if (!found) return fail(c, "not_found");
+    return validated(c, 200, transcriptSchema, found);
+  });
+
+  app.openapi(correctTranscriptRoute, async (c) => {
+    const corrected = await ports.correctTranscript(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, transcriptSchema, corrected);
+  });
+
   app.openapi(moveAppointmentRoute, async (c) => {
     const result = await ports.moveAppointment(
       c.get("actor"),
@@ -373,6 +407,7 @@ export function createMobileApiApp(
   methodNotAllowed("/patients");
   methodNotAllowed("/patients/:patientId/history");
   methodNotAllowed("/appointments/:appointmentId/move");
+  methodNotAllowed("/captures/:captureId/transcript");
 
   app.notFound((c) => fail(c, "not_found"));
 

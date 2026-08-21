@@ -6,6 +6,7 @@ import {
   animals,
   appointments,
   audioCapture,
+  captureTranscript,
   clients,
   pets,
 } from "@biume/db/schema/index";
@@ -15,9 +16,12 @@ import {
   completeCapture,
   createCapture,
   createUploadSession,
+  type CaptureActor,
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
+import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
+import type { Transcript } from "@biume/contracts/transcript";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
 import { createCaptureRepository } from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
@@ -69,6 +73,52 @@ function decodeCursor(cursor: string): { beginAt: Date; id: string } | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * La jointure sur `audioCapture` porte le filtre de locataire : sans elle, un
+ * identifiant de capture deviné livrerait la transcription d'un autre cabinet,
+ * c'est-à-dire des données de santé.
+ */
+async function readTranscript(
+  actor: CaptureActor,
+  captureId: string,
+): Promise<Transcript | null> {
+  const [row] = await db
+    .select({
+      captureId: captureTranscript.captureId,
+      status: captureTranscript.status,
+      text: captureTranscript.text,
+      language: captureTranscript.language,
+      provider: captureTranscript.provider,
+      correctedAt: captureTranscript.correctedAt,
+      createdAt: captureTranscript.createdAt,
+      updatedAt: captureTranscript.updatedAt,
+    })
+    .from(captureTranscript)
+    .innerJoin(audioCapture, eq(audioCapture.id, captureTranscript.captureId))
+    .where(
+      and(
+        eq(captureTranscript.captureId, captureId),
+        eq(audioCapture.organizationId, actor.organizationId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    captureId: row.captureId,
+    status: row.status,
+    text: row.text,
+    language: row.language,
+    // Une transcription jamais exécutée n'a pas de fournisseur ; le contrat en
+    // exige un, et « aucun » est l'information juste.
+    provider: row.provider.length > 0 ? row.provider : "aucun",
+    correctedAt: row.correctedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
 }
 
 export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> {
@@ -304,6 +354,26 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
             ? encodeCursor(last.beginAt, last.appointmentId)
             : null,
       };
+    },
+
+    async getTranscript(actor, captureId) {
+      return readTranscript(actor, captureId);
+    },
+
+    async correctTranscript(actor, captureId, request) {
+      const existing = await readTranscript(actor, captureId);
+      if (!existing) throw new MobileRequestError("not_found");
+
+      const corrected = await createTranscriptRepository().correct(
+        captureId,
+        request.text,
+      );
+      if (!corrected) throw new MobileRequestError("conflict");
+
+      const refreshed = await readTranscript(actor, captureId);
+      if (!refreshed) throw new MobileRequestError("not_found");
+
+      return refreshed;
     },
 
     async moveAppointment(actor, appointmentId, slot) {

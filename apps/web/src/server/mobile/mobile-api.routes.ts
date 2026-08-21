@@ -19,6 +19,10 @@ import {
   moveAppointmentRequestSchema,
   moveAppointmentResponseSchema,
 } from "@biume/contracts/mobile-records";
+import {
+  correctTranscriptRequestSchema,
+  transcriptSchema,
+} from "@biume/contracts/transcript";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -278,6 +282,36 @@ export const moveAppointmentRoute = createRoute({
     200: {
       description: "Séance déplacée",
       content: json(moveAppointmentResponseSchema),
+    },
+    ...errorResponses,
+  },
+});
+
+export const getTranscriptRoute = createRoute({
+  method: "get",
+  path: "/captures/{captureId}/transcript",
+  security,
+  summary: "Transcription d'une dictée",
+  request: { params: captureIdParamsSchema },
+  responses: {
+    200: { description: "Transcription", content: json(transcriptSchema) },
+    ...errorResponses,
+  },
+});
+
+export const correctTranscriptRoute = createRoute({
+  method: "post",
+  path: "/captures/{captureId}/transcript",
+  security,
+  summary: "Enregistrer la correction du praticien",
+  request: {
+    params: captureIdParamsSchema,
+    body: { content: json(correctTranscriptRequestSchema) },
+  },
+  responses: {
+    200: {
+      description: "Transcription corrigée",
+      content: json(transcriptSchema),
     },
     ...errorResponses,
   },
