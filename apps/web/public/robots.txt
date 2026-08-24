@@ -1,0 +1,4 @@
+# app.biume.com sert l'application authentifiee, jamais du contenu d'acquisition.
+# Tout le referencement passe par biume.com, dont le robots.txt ne couvre pas cet hote.
+User-agent: *
+Disallow: /

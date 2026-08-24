@@ -9,6 +9,7 @@ import {
   getBlogPage,
   getBlogPost,
   getBlogPostContent,
+  getRelatedBlogPosts,
 } from "../../../lib/blog-posts";
 import {
   JsonLd,
@@ -72,6 +73,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const Mdx = page.data.body;
   const mdxFallback =
     typeof Mdx === "function" ? null : getBlogPostContent(slug);
+  const siblingPosts = getRelatedBlogPosts(slug);
 
   const schema = {
     "@context": "https://schema.org",
@@ -189,6 +191,24 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 >
                   Essayer 15 jours gratuitement
                 </Link>
+
+                {siblingPosts.length > 0 ? (
+                  <div className="mt-8 border-t border-[color:var(--v2-line)] pt-6">
+                    <p className="v2-eyebrow">Autres articles</p>
+                    <ul className="mt-4 space-y-3">
+                      {siblingPosts.map((sibling) => (
+                        <li key={sibling.slug}>
+                          <Link
+                            href={sibling.path}
+                            className="v2-link text-sm font-semibold text-[color:var(--v2-violet-ink)]"
+                          >
+                            {sibling.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>

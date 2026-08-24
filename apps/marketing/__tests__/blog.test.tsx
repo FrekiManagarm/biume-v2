@@ -125,3 +125,107 @@ describe("marketing blog", () => {
     expect(html).toContain("Essayer 15 jours gratuitement");
   });
 });
+
+describe("blog SERP hygiene", () => {
+  // Audit SEO 24/08/2026 : deux slugs avaient perdu leurs accents en cours de
+  // route (« grce », « sant », « lia ») et deux titres depassaient 100
+  // caracteres, donc tronques dans les resultats de recherche.
+  const TITLE_SUFFIX = " | Biume".length;
+
+  test("no slug carries an accent-stripped word fragment", () => {
+    const broken = ["-grce-", "-sant-", "-lia-", "-aprs-", "-priv-"];
+
+    for (const post of blogPosts) {
+      for (const fragment of broken) {
+        expect(`-${post.slug}-`).not.toContain(fragment);
+      }
+    }
+  });
+
+  test("slugs stay url-safe and reasonably short", () => {
+    for (const post of blogPosts) {
+      expect(post.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      expect(post.slug.length).toBeLessThanOrEqual(60);
+    }
+  });
+
+  // 80 et non 60 : les titres du cluster placent deja leur mot-cle en tete, une
+  // troncature SERP ne coupe donc que la queue explicative. Ce plafond vise les
+  // titres reellement hors-normes (les deux fautifs faisaient 107 et 108).
+  test("no title runs so long that the SERP cuts into its substance", () => {
+    for (const post of blogPosts) {
+      expect({
+        slug: post.slug,
+        overLimit: post.title.length + TITLE_SUFFIX > 80,
+      }).toEqual({ slug: post.slug, overLimit: false });
+    }
+  });
+
+  test("descriptions fit the SERP snippet", () => {
+    for (const post of blogPosts) {
+      expect(post.description.length).toBeGreaterThan(70);
+      expect(post.description.length).toBeLessThanOrEqual(160);
+    }
+  });
+
+  test("each article renders exactly one H1", async () => {
+    for (const post of blogPosts) {
+      const element = await BlogPostPage({
+        params: Promise.resolve({ slug: post.slug }),
+      });
+      const html = renderToStaticMarkup(element);
+      const h1Count = html.match(/<h1\b/g)?.length ?? 0;
+
+      expect({ slug: post.slug, h1Count }).toEqual({
+        slug: post.slug,
+        h1Count: 1,
+      });
+    }
+  });
+});
+
+describe("blog internal linking", () => {
+  // Audit SEO 24/08/2026 : chaque article n'avait qu'un seul lien entrant
+  // (l'index), tandis que /cgu et /privacy en recoltaient 30 via le pied de
+  // page. La rotation cyclique garantit a chaque article deux liens de pairs.
+  test("every article links to two siblings, and none links to itself", async () => {
+    const { getRelatedBlogPosts } = await import("../lib/blog-posts");
+
+    for (const post of blogPosts) {
+      const siblings = getRelatedBlogPosts(post.slug);
+
+      expect(siblings).toHaveLength(2);
+      expect(siblings.map((item) => item.slug)).not.toContain(post.slug);
+      expect(new Set(siblings.map((item) => item.slug)).size).toBe(2);
+    }
+  });
+
+  test("every article receives at least two inbound links from its peers", async () => {
+    const { getRelatedBlogPosts } = await import("../lib/blog-posts");
+    const inbound = new Map(blogPosts.map((post) => [post.slug, 0]));
+
+    for (const post of blogPosts) {
+      for (const sibling of getRelatedBlogPosts(post.slug)) {
+        inbound.set(sibling.slug, (inbound.get(sibling.slug) ?? 0) + 1);
+      }
+    }
+
+    for (const [slug, count] of inbound) {
+      expect({ slug, count }).toEqual({ slug, count: 2 });
+    }
+  });
+
+  test("the rendered article exposes its sibling links", async () => {
+    const { getRelatedBlogPosts } = await import("../lib/blog-posts");
+    const post = blogPosts[0]!;
+    const element = await BlogPostPage({
+      params: Promise.resolve({ slug: post.slug }),
+    });
+    const html = renderToStaticMarkup(element);
+
+    for (const sibling of getRelatedBlogPosts(post.slug)) {
+      expect(html).toContain(`href="${sibling.path}"`);
+      expect(html).toContain(sibling.title);
+    }
+  });
+});

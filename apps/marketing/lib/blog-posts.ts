@@ -85,6 +85,28 @@ export function getBlogPost(slug: string) {
   return blogPosts.find((post) => post.slug === slug);
 }
 
+/**
+ * Rotation cyclique : l'article i pointe vers i+1 et i+2. Chaque article recoit
+ * donc exactement deux liens entrants de ses pairs, sans qu'aucun ne depende
+ * d'un choix editorial a maintenir. Avant, les articles n'avaient qu'un seul
+ * lien entrant (l'index du blog) pendant que /cgu et /privacy en cumulaient 30
+ * via le pied de page sitewide.
+ */
+export function getRelatedBlogPosts(slug: string, count = 2): BlogPost[] {
+  const index = blogPosts.findIndex((post) => post.slug === slug);
+
+  if (index === -1 || blogPosts.length <= 1) {
+    return [];
+  }
+
+  const reachable = Math.min(count, blogPosts.length - 1);
+
+  return Array.from(
+    { length: reachable },
+    (_, offset) => blogPosts[(index + offset + 1) % blogPosts.length]!,
+  );
+}
+
 export function getBlogPage(slug: string) {
   return blog.getPage([slug]);
 }

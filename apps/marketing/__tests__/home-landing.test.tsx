@@ -133,3 +133,41 @@ describe("Biume homepage (landing-v5, SaaS moderne)", () => {
     expect(html).not.toMatch(/id="controle"/);
   });
 });
+
+describe("homepage primary keyword placement", () => {
+  // L'audit SEO du 24/08/2026 : « ostéopathe animalier » n'apparaissait qu'une
+  // fois dans 1462 mots, jamais dans le H1 ni dans les 100 premiers mots, alors
+  // que le title et la description de la racine ciblent ce terme.
+  const KEYWORD = "ostéopathe animalier";
+
+  // textOnly conserve le contenu des <script> : le JSON-LD passerait pour de la
+  // copie visible et fausserait le comptage comme l'ordre des premiers mots.
+  function visibleText(html: string) {
+    return textOnly(
+      html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, " "),
+    ).toLowerCase();
+  }
+
+  test("names the primary keyword inside the H1", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/s)?.[1] ?? "";
+
+    expect(visibleText(h1)).toContain(KEYWORD);
+  });
+
+  test("names the primary keyword within the first 100 words", () => {
+    const html = renderWithLandingImageConfig(<HomePage />);
+    const opening = visibleText(html).split(/\s+/).slice(0, 100).join(" ");
+
+    expect(opening).toContain(KEYWORD);
+  });
+
+  test("repeats the primary keyword without stuffing it", () => {
+    const occurrences =
+      visibleText(renderWithLandingImageConfig(<HomePage />)).split(KEYWORD)
+        .length - 1;
+
+    expect(occurrences).toBeGreaterThanOrEqual(3);
+    expect(occurrences).toBeLessThanOrEqual(10);
+  });
+});

@@ -27,9 +27,10 @@ export const NAV_LINKS = [
 /* ── Hero ──────────────────────────────────────────────────────── */
 
 export const HERO_PILL_BADGE = "Nouveau";
-export const HERO_PILL_TEXT = "Le compte rendu propriétaire, écrit depuis vos notes";
+export const HERO_PILL_TEXT =
+  "Le compte rendu propriétaire de l'ostéopathe animalier";
 
-export const HERO_TITLE_LINE_1 = "Vos notes de séance,";
+export const HERO_TITLE_LINE_1 = "Vos notes d'ostéopathe animalier,";
 export const HERO_TITLE_LINE_2 = "un compte rendu prêt à envoyer.";
 
 export const HERO_LEAD =
@@ -90,7 +91,7 @@ export const TRADES = {
 export const FACTS_EYEBROW = "Le constat";
 export const FACTS_TITLE = "La séance finit dans la voiture.";
 export const FACTS_LEAD =
-  "Ce n'est pas un problème d'organisation. C'est la forme du métier — et c'est là que le temps part.";
+  "Ce n'est pas un problème d'organisation. C'est la forme du métier d'ostéopathe animalier — et c'est là que le temps part.";
 
 export const FACTS = [
   {

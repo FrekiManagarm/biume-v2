@@ -37,7 +37,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         name: "description",
         content:
-          "Biume centralise le suivi des proprietaires, rendez-vous et rapports veterinaires.",
+          "Biume centralise le suivi des propriétaires, rendez-vous et rapports vétérinaires.",
+      },
+      // L'application ne doit jamais apparaitre dans les resultats de recherche :
+      // toute l'acquisition passe par biume.com. Le robots.txt de biume.com ne
+      // s'applique qu'a son propre hote, d'ou ce noindex + public/robots.txt.
+      {
+        name: "robots",
+        content: "noindex, nofollow",
       },
     ],
     links: [
