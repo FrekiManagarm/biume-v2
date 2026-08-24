@@ -1,5 +1,5 @@
 import { db } from "@biume/db";
-import { animals, audioCapture, pets } from "@biume/db/schema/index";
+import { audioCapture, pets } from "@biume/db/schema/index";
 import { eq } from "drizzle-orm";
 
 import { getR2AudioObjectStore } from "#/server/mobile/r2-audio-object-store.factory";
@@ -28,11 +28,10 @@ export async function createProductionTranscriptionDeps(): Promise<Transcription
           objectKey: audioCapture.objectKey,
           mimeType: audioCapture.mimeType,
           patientName: pets.name,
-          species: animals.code,
+          breed: pets.breed,
         })
         .from(audioCapture)
         .leftJoin(pets, eq(pets.id, audioCapture.patientId))
-        .leftJoin(animals, eq(animals.id, pets.type))
         .where(eq(audioCapture.id, captureId))
         .limit(1);
 
@@ -42,7 +41,7 @@ export async function createProductionTranscriptionDeps(): Promise<Transcription
         objectKey: row.objectKey,
         mimeType: row.mimeType,
         patientName: row.patientName ?? null,
-        species: row.species ?? null,
+        breed: row.breed ?? null,
       };
     },
   };

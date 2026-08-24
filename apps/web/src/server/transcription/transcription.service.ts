@@ -33,10 +33,18 @@ const silenceArtifacts = [
 
 export function buildTranscriptionPrompt(context: {
   patientName: string | null;
-  species: string | null;
+  breed: string | null;
 }): string {
+  // Mesuré le 24 août 2026 : sans le nom, « Filou » ressort en « fil ou » ; sans
+  // la race, « border collie » ressort en « bordé colis ». Le vocabulaire
+  // clinique, lui, passe grâce au lexique. Les noms propres sont le seul point
+  // faible, et l'amorçage les corrige.
   const subject = context.patientName
-    ? `L'animal ausculté s'appelle ${context.patientName}.`
+    ? [
+        `L'animal ausculté s'appelle ${context.patientName}`,
+        context.breed ? `, un ${context.breed}` : "",
+        ".",
+      ].join("")
     : "";
 
   const prompt = [
