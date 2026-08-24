@@ -63,6 +63,12 @@ export type CaptureServiceDependencies = {
   objectStore: AudioObjectStore;
   now: () => Date;
   hashOrganizationId: (organizationId: string) => string;
+  /**
+   * Appelé après qu'une dictée est confirmée dans le stockage. Facultatif : la
+   * capture n'a pas à savoir ce qui se passe ensuite, et les tests existants
+   * n'ont pas à le fournir.
+   */
+  onCaptureUploaded?: (captureId: string) => Promise<void>;
 };
 
 /**
@@ -319,6 +325,11 @@ export async function completeCapture(
   if (!confirmed) {
     throw new CaptureServiceError("conflict", "capture_not_completable");
   }
+
+  // Déclenché après la transition, jamais avant : une transcription lancée sur
+  // une capture dont la confirmation a échoué lirait un objet incomplet.
+  await dependencies.onCaptureUploaded?.(confirmed.id);
+
   return toCaptureResponse(confirmed);
 }
 

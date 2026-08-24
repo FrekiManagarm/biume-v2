@@ -27,8 +27,10 @@ export type StoredAudioObject = {
  * The capture domain depends on this port, never on a concrete storage SDK, so
  * the bucket implementation can be replaced without touching capture rules.
  *
- * The port intentionally offers no read or list capability: nothing in this
- * slice is allowed to hand out a durable URL to captured audio.
+ * Le port permet de lire les octets côté serveur — la transcription en dépend —
+ * mais toujours pas de distribuer une URL durable vers un audio de séance. La
+ * seule URL jamais émise est celle du téléversement, signée et valable dix
+ * minutes.
  */
 export interface AudioObjectStore {
   createPutUrl(
@@ -37,5 +39,7 @@ export interface AudioObjectStore {
     },
   ): Promise<SignedUpload>;
   head(key: string): Promise<StoredAudioObject | null>;
+  /** `null` si l'objet a déjà été purgé : ce n'est pas une erreur. */
+  getBytes(key: string): Promise<Uint8Array | null>;
   delete(key: string): Promise<void>;
 }
