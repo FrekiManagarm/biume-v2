@@ -145,6 +145,10 @@ export const checkAppointmentConflicts = createServerFn({ method: "GET" })
     const conflicts = await db.query.appointments.findMany({
       where: and(
         eq(appointments.organizationId, organization.id),
+        // Une séance annulée libère son créneau : la compter comme un conflit
+        // empêcherait le praticien de réutiliser une heure qu'il vient de
+        // libérer lui-même.
+        ne(appointments.status, "CANCELLED"),
         // Exclure le rendez-vous en cours de modification
         data.excludeAppointmentId
           ? ne(appointments.id, data.excludeAppointmentId)

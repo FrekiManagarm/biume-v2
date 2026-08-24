@@ -13,6 +13,7 @@ import {
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
+import type { ConflictCandidate } from "#/lib/dashboard/appointment-conflicts";
 
 import {
   AppointmentFormFields,
@@ -29,6 +30,8 @@ export type NewAppointmentDialogProps = {
     animal?: { name: string | null } | null;
   }>;
   selectedDate: Date;
+  /** L'agenda déjà chargé, pour signaler un chevauchement pendant la saisie. */
+  existingAppointments: ConflictCandidate[];
   onCreateAppointment: (input: {
     atHome: boolean;
     beginAt: Date;
@@ -41,6 +44,7 @@ export type NewAppointmentDialogProps = {
 };
 
 export function NewAppointmentDialog({
+  existingAppointments,
   isSubmitting,
   onCreateAppointment,
   onOpenChange,
@@ -120,6 +124,7 @@ export function NewAppointmentDialog({
               defaultDate={selectedDate}
               defaultStartTime="09:00"
               defaultEndTime="10:00"
+              existingAppointments={existingAppointments}
             />
 
             <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted px-4 py-3">

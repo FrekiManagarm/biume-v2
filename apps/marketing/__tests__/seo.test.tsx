@@ -192,3 +192,61 @@ describe("marketing SEO", () => {
     expect(html).not.toContain("MerchantReturnPolicy");
   });
 });
+
+describe("sitemap freshness", () => {
+  // Toutes les entrees portaient une date codee en dur (30/06 et 03/07/2026).
+  // Un lastmod uniforme et fige est un signal que Google apprend a ignorer.
+  test("blog entries carry their real frontmatter date", async () => {
+    const { blogPosts } = await import("../lib/blog-posts");
+    const entries = sitemap();
+
+    for (const post of blogPosts) {
+      const entry = entries.find((item) => item.url === post.href);
+
+      expect(entry).toBeDefined();
+      expect(new Date(entry!.lastModified as Date).toISOString().slice(0, 10)).toBe(
+        post.updatedAt.slice(0, 10),
+      );
+    }
+  });
+
+  test("static routes claim no modification date rather than a fake one", () => {
+    const staticEntries = sitemap().filter(
+      (entry) => !entry.url.startsWith("https://biume.com/blog/"),
+    );
+
+    expect(staticEntries.length).toBeGreaterThan(0);
+    for (const entry of staticEntries) {
+      expect(entry.lastModified).toBeUndefined();
+    }
+  });
+});
+
+describe("brand entity and app icons", () => {
+  test("home declares a root Organization entity, not just a nested provider", () => {
+    const html = renderToStaticMarkup(
+      <ImageConfigContext.Provider
+        value={{ ...imageConfigDefault, qualities: [55, 65, 75] }}
+      >
+        <HomePage />
+      </ImageConfigContext.Provider>,
+    );
+    const organisation = getJsonLdSchemas(html).find(
+      (schema) => schema["@type"] === "Organization",
+    );
+
+    expect(organisation).toBeDefined();
+    expect(organisation?.name).toBe("Biume");
+    expect(organisation?.url).toBe("https://biume.com");
+    expect(organisation?.logo).toBe("https://biume.com/brand/biume-logo.png");
+    // sameAs reste absent tant qu'aucun profil social n'existe reellement :
+    // inventer des URLs de profils casserait la validation du balisage.
+    expect(organisation?.sameAs).toBeUndefined();
+  });
+
+  test("root metadata wires the icons and manifest that already ship in public/", () => {
+    expect(rootMetadata.manifest).toBe("/manifest.webmanifest");
+    expect(JSON.stringify(rootMetadata.icons)).toContain("/apple-touch-icon.png");
+    expect(JSON.stringify(rootMetadata.icons)).toContain("/favicon-32x32.png");
+  });
+});

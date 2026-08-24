@@ -12,6 +12,7 @@ import {
 } from "#/components/ui/dialog";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
+import type { ConflictCandidate } from "#/lib/dashboard/appointment-conflicts";
 import type { DayAgendaAppointment } from "#/lib/dashboard/day-agenda";
 
 import {
@@ -37,6 +38,8 @@ export function resolveNoteForSubmit(
 
 export type EditAppointmentDialogProps = {
   appointment: DayAgendaAppointment | null;
+  /** L'agenda déjà chargé, pour signaler un chevauchement pendant la saisie. */
+  existingAppointments: ConflictCandidate[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: {
@@ -59,6 +62,7 @@ export type EditAppointmentDialogProps = {
  */
 export function EditAppointmentDialog({
   appointment,
+  existingAppointments,
   isSubmitting,
   onOpenChange,
   onSubmit,
@@ -113,6 +117,8 @@ export function EditAppointmentDialog({
                 defaultStartTime={formatTimeInput(appointment.beginAt)}
                 defaultEndTime={formatTimeInput(appointment.endAt)}
                 defaultAtHome={appointment.atHome ?? false}
+                existingAppointments={existingAppointments}
+                excludeAppointmentId={appointment.id}
               />
 
               <div className="grid gap-2">

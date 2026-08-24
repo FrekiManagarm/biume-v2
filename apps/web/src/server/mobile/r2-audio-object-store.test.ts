@@ -1,6 +1,7 @@
 import { captureUploadUrlTtlSeconds } from "@biume/contracts/capture";
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -169,5 +170,58 @@ describe("object deletion", () => {
     const store = createStore();
 
     await expect(store.delete(expectedObject.key)).resolves.toBeUndefined();
+  });
+});
+
+describe("lecture des octets", () => {
+  /**
+   * La rétention de vingt-quatre heures peut avoir purgé l'objet avant que la
+   * transcription ne s'exécute. Ce n'est pas une panne, et l'appelant doit
+   * pouvoir le distinguer d'une erreur de stockage.
+   */
+  it("retourne null quand l'objet a été purgé", async () => {
+    send.mockRejectedValueOnce(
+      Object.assign(new Error("NoSuchKey"), { name: "NoSuchKey" }),
+    );
+
+    expect(await createStore().getBytes("captures/absent/audio.m4a")).toBeNull();
+  });
+
+  it("retourne les octets d'un objet présent", async () => {
+    send.mockResolvedValueOnce({
+      Body: { transformToByteArray: async () => new Uint8Array([1, 2, 3]) },
+    });
+
+    expect(await createStore().getBytes("captures/present/audio.m4a")).toEqual(
+      new Uint8Array([1, 2, 3]),
+    );
+  });
+
+  it("demande bien l'objet au bon seau", async () => {
+    send.mockResolvedValueOnce({
+      Body: { transformToByteArray: async () => new Uint8Array([1]) },
+    });
+
+    await createStore().getBytes("captures/present/audio.m4a");
+
+    const [command] = send.mock.calls[0] as unknown as [GetObjectCommand];
+    expect(command).toBeInstanceOf(GetObjectCommand);
+    expect(command.input).toEqual({
+      Bucket: "biume-audio",
+      Key: "captures/present/audio.m4a",
+    });
+  });
+
+  it("propage une panne de stockage plutôt que de la masquer", async () => {
+    send.mockRejectedValueOnce(
+      Object.assign(new Error("InternalError"), {
+        name: "InternalError",
+        $metadata: { httpStatusCode: 500 },
+      }),
+    );
+
+    await expect(
+      createStore().getBytes("captures/present/audio.m4a"),
+    ).rejects.toThrow();
   });
 });

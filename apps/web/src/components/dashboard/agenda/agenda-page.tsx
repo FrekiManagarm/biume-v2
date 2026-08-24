@@ -118,6 +118,21 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
     [appointments, selectedDate],
   );
   const monthDays = useMemo(() => buildMonthDays(currentMonth), [currentMonth]);
+  /**
+   * Les candidats au chevauchement, tirés de l'agenda déjà chargé : détecter un
+   * conflit ne justifie pas une requête de plus.
+   */
+  const conflictCandidates = useMemo(
+    () =>
+      appointments.map((appointment) => ({
+        id: appointment.id,
+        beginAt: appointment.beginAt,
+        endAt: appointment.endAt,
+        status: appointment.status,
+        patientName: appointment.patient?.name ?? null,
+      })),
+    [appointments],
+  );
   const upcomingAppointments = useMemo(() => {
     const now = startOfDay(new Date());
 
@@ -368,6 +383,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
       </section>
 
       <NewAppointmentDialog
+        existingAppointments={conflictCandidates}
         isSubmitting={createAppointmentMutation.isPending}
         open={isNewAppointmentOpen}
         patients={patients}
@@ -380,6 +396,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
 
       <EditAppointmentDialog
         appointment={editingAppointment}
+        existingAppointments={conflictCandidates}
         isSubmitting={updateAppointmentMutation.isPending}
         open={editingAppointment !== null}
         onOpenChange={(open) => {

@@ -59,6 +59,7 @@ export function canFinalizeReport(states: ReportSectionStates) {
 
 export const reportStatuses = ["draft", "finalized", "sent"] as const;
 export const reportStatusSchema = z.enum(reportStatuses);
+export type ReportStatus = z.infer<typeof reportStatusSchema>;
 
 export type ReportContentSummary = {
   consultationReason: string;

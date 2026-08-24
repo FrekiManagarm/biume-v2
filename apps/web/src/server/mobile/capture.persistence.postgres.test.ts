@@ -109,6 +109,7 @@ describePostgres("mobile capture persistence against PostgreSQL", () => {
             metadata: { sha256: "a".repeat(64) },
           };
         },
+        getBytes: async (key) => (storedObjects.has(key) ? new Uint8Array() : null),
         delete: async (key) => {
           storedObjects.delete(key);
         },

@@ -1,6 +1,7 @@
 import { captureMimeType } from "@biume/contracts/capture";
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -77,6 +78,21 @@ export function createR2AudioObjectStore(
           metadata: response.Metadata ?? {},
         };
       } catch (error) {
+        if (isMissingObject(error)) return null;
+        throw error;
+      }
+    },
+
+    async getBytes(key) {
+      try {
+        const object = await client.send(
+          new GetObjectCommand({ Bucket: bucket, Key: key }),
+        );
+        const body = await object.Body?.transformToByteArray();
+        return body ?? null;
+      } catch (error) {
+        // Un objet purgé n'est pas une panne : la rétention de vingt-quatre
+        // heures fait exactement ça, et l'appelant doit pouvoir le distinguer.
         if (isMissingObject(error)) return null;
         throw error;
       }
