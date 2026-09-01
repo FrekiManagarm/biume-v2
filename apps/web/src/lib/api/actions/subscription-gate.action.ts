@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { Autumn } from "autumn-js";
+import { Autumn, AutumnError } from "autumn-js";
 import { z } from "zod";
 
 import { env } from "@biume/env/server";
+import { getSession } from "#/functions/auth.function";
 import { hasActiveOrTrialingSubscription } from "#/server/billing/subscription-gate";
 
 const getOrganizationSubscriptionGateSchema = z.object({
@@ -12,6 +13,12 @@ const getOrganizationSubscriptionGateSchema = z.object({
 export const getOrganizationSubscriptionGateFn = createServerFn({ method: "GET" })
   .validator(getOrganizationSubscriptionGateSchema)
   .handler(async ({ data }) => {
+    const session = await getSession();
+
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
     try {
       const client = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
       const customer = await client.customers.get({
@@ -24,6 +31,12 @@ export const getOrganizationSubscriptionGateFn = createServerFn({ method: "GET" 
         ),
       };
     } catch (error) {
+      if (error instanceof AutumnError && error.statusCode === 404) {
+        // Pas de customer Autumn pour cette organisation : elle n'a
+        // effectivement aucun abonnement.
+        return { hasActiveOrTrialingSubscription: false };
+      }
+
       // Fail-open : une panne Autumn ne doit jamais bloquer tout le
       // dashboard.
       console.error(
