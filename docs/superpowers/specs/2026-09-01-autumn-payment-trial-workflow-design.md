@@ -198,11 +198,36 @@ contre le comportement réel de l'API Autumn sur un customer déjà abonné).
   dashboard. À mesurer en implémentation ; si notable, un cache court côté
   session (quelques minutes) pourra être ajouté — non inclus dans cette
   spec pour rester au plus simple d'abord.
-- **Comportement Autumn en fin d'essai sans carte** (`cardRequired: false`) :
-  le statut exact que prend la subscription quand le trial expire sans moyen
-  de paiement (`canceled`, `incomplete`, autre) doit être vérifié contre
-  l'API réelle en implémentation — la logique de blocage doit couvrir tous
-  les statuts qui ne sont ni `active` ni `trialing`, pas seulement `canceled`.
+- **Comportement Autumn en fin d'essai sans carte** (`cardRequired: false`) —
+  **recherché a posteriori dans la documentation publique Autumn, faute
+  d'accès à un compte réel pendant l'implémentation.** La documentation
+  confirme explicitement le point qui motivait ce risque : « quand l'essai
+  expire, le client perd l'accès sauf s'il ajoute un moyen de paiement »
+  (trials doc). `hasActiveOrTrialingSubscription` utilise une *allowlist*
+  (`status` doit valoir `active` ou `trialing`) plutôt qu'une liste
+  d'exclusion — donc tout statut non reconnu (y compris un statut jamais vu
+  en développement) refuse l'accès par défaut, ce qui est le sens sûr pour
+  un paywall. Une incohérence existe entre deux pages de la doc Autumn : la
+  référence API ne documente que `active`/`scheduled` comme valeurs de
+  `status` (type `OpenEnum` côté SDK, donc d'autres chaînes peuvent
+  légitimement apparaître), tandis que la page conceptuelle des abonnements
+  liste explicitement `active`, `trialing`, `past_due`, `scheduled`,
+  `expired` — ce qui corrobore l'hypothèse déjà présente dans le code
+  préexistant (`settings.tsx`) que `trialing` est une valeur réelle. Le
+  correctif appliqué en revue finale exclut aussi les abonnements
+  `pastDue: true` (paiement en échec), qui restent `status: "active"` mais
+  ne doivent pas donner accès. Pour l'annulation en fin de période
+  (`cancel_end_of_cycle`), la doc confirme « l'abonnement reste actif
+  jusqu'à la fin de la période de facturation en cours » — la logique
+  actuelle ne coupe donc pas l'accès d'un client qui a déjà payé.
+  **Ce qui reste non vérifié empiriquement** (nécessite un vrai compte
+  Autumn, avec attente réelle ou un abonnement déjà expiré à inspecter) :
+  la valeur exacte de `status` observée en pratique une fois un essai sans
+  carte réellement expiré, et si la subscription disparaît du tableau
+  `customer.subscriptions` ou y reste avec un statut refusant l'accès —
+  dans les deux cas la logique actuelle (allowlist stricte) se comporte
+  correctement, mais une vérification live reste recommandée avant
+  d'activer le blocage dur en production.
 - **Idempotence du backfill** face à `billing.attach` sur un customer déjà
   abonné — à vérifier contre le comportement réel de l'API avant d'exécuter
   en production.
