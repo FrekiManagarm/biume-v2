@@ -12,7 +12,6 @@ import {
   LoaderCircle,
   Mail,
   Save,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -719,27 +718,42 @@ function NotificationsTab({ form }: { form: SettingsFormApi }) {
   );
 }
 
+const billingPlans = [
+  {
+    id: autumnPlanIds.allInclusiveMonthly,
+    label: "Mensuel",
+    priceLabel: "29,99 € / mois",
+  },
+  {
+    id: autumnPlanIds.allInclusiveYearly,
+    label: "Annuel",
+    priceLabel: "299,88 € / an",
+  },
+] as const;
+
 function BillingTab({
   attach,
   customer,
   updateSubscription,
+  blocked,
 }: {
   attach: ReturnType<typeof useCustomer>["attach"];
   customer: ReturnType<typeof useCustomer>["data"];
   updateSubscription: ReturnType<typeof useCustomer>["updateSubscription"];
+  blocked: boolean;
 }) {
-  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const activeSubscription = customer?.subscriptions?.find((subscription) =>
     ["active", "trialing"].includes(subscription.status),
   );
   const subscriptionStatus = getSubscriptionStatus(activeSubscription);
 
-  async function handleUpgrade() {
+  async function handleAttach(planId: string) {
     try {
-      setIsUpgrading(true);
+      setPendingPlanId(planId);
       await attach({
-        planId: autumnPlanIds.allInclusiveYearly,
+        planId,
         successUrl: `${window.location.origin}/dashboard/settings?tab=billing`,
       });
     } catch (error) {
@@ -749,7 +763,7 @@ function BillingTab({
           : "Impossible d'ouvrir la mise à niveau.",
       );
     } finally {
-      setIsUpgrading(false);
+      setPendingPlanId(null);
     }
   }
 
@@ -787,7 +801,17 @@ function BillingTab({
   }
 
   return (
-    <div className="grid gap-5">
+    <>
+      {blocked ? (
+        <div
+          role="alert"
+          className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
+        >
+          Votre période d'essai est terminée. Choisissez un plan ci-dessous
+          pour continuer à utiliser Biume.
+        </div>
+      ) : null}
+      <div className="grid gap-5">
       <Panel>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3">
@@ -837,24 +861,34 @@ function BillingTab({
           />
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button
-            type="button"
-            onClick={() => void handleUpgrade()}
-            disabled={isUpgrading}
-            className="h-10 active:scale-[0.98]"
-          >
-            {isUpgrading ? "Ouverture..." : "Mettre à niveau"}
-            {isUpgrading ? (
-              <LoaderCircle
-                className="size-4 animate-spin"
-                data-icon="inline-end"
-              />
-            ) : (
-              <Sparkles className="size-4" data-icon="inline-end" />
-            )}
-          </Button>
-          {activeSubscription ? (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {billingPlans.map((plan) => {
+            const isCurrentPlan = activeSubscription?.planId === plan.id;
+            const isPending = pendingPlanId === plan.id;
+
+            return (
+              <Button
+                key={plan.id}
+                type="button"
+                variant={isCurrentPlan ? "outline" : "default"}
+                onClick={() => void handleAttach(plan.id)}
+                disabled={pendingPlanId !== null || isCurrentPlan}
+                className="h-auto flex-col items-start gap-1 py-3 active:scale-[0.98]"
+              >
+                <span className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
+                  {plan.label}
+                  {isCurrentPlan ? <CheckCircle2 className="size-4" /> : null}
+                </span>
+                <span className="text-xs font-normal text-slate-500">
+                  {isPending ? "Ouverture..." : plan.priceLabel}
+                </span>
+              </Button>
+            );
+          })}
+        </div>
+
+        {activeSubscription ? (
+          <div className="mt-3">
             <Button
               type="button"
               variant="outline"
@@ -870,8 +904,8 @@ function BillingTab({
                 />
               ) : null}
             </Button>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </Panel>
 
       <Panel className="border-dashed">
@@ -890,7 +924,8 @@ function BillingTab({
           </div>
         </div>
       </Panel>
-    </div>
+      </div>
+    </>
   );
 }
 
