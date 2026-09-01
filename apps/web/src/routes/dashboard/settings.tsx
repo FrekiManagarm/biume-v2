@@ -78,25 +78,25 @@ const tabs: Array<{
   description: string;
   icon: typeof Building2;
 }> = [
-    {
-      id: "organization",
-      title: "Entreprise",
-      description: "Identité, langue et IA",
-      icon: Building2,
-    },
-    {
-      id: "notifications",
-      title: "Notifications",
-      description: "Préférences de contact",
-      icon: Bell,
-    },
-    {
-      id: "billing",
-      title: "Facturation",
-      description: "Plan et abonnement",
-      icon: CreditCard,
-    },
-  ];
+  {
+    id: "organization",
+    title: "Entreprise",
+    description: "Identité, langue et IA",
+    icon: Building2,
+  },
+  {
+    id: "notifications",
+    title: "Notifications",
+    description: "Préférences de contact",
+    icon: Bell,
+  },
+  {
+    id: "billing",
+    title: "Facturation",
+    description: "Plan et abonnement",
+    icon: CreditCard,
+  },
+];
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({
@@ -807,123 +807,123 @@ function BillingTab({
           role="alert"
           className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
         >
-          Votre période d'essai est terminée. Choisissez un plan ci-dessous
-          pour continuer à utiliser Biume.
+          Votre période d'essai est terminée. Choisissez un plan ci-dessous pour
+          continuer à utiliser Biume.
         </div>
       ) : null}
       <div className="grid gap-5">
-      <Panel>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
-              <Crown className="size-5" />
+        <Panel>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
+                <Crown className="size-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-emerald-700">
+                  Facturation
+                </p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+                  Abonnement actuel.
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  Consultez l'état du plan et gérez la montée en gamme. Les
+                  détails de factures seront réintroduits dans une prochaine
+                  version.
+                </p>
+              </div>
+            </div>
+
+            <StatusPill tone={subscriptionStatus.tone}>
+              {subscriptionStatus.label}
+            </StatusPill>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <BillingMetric
+              label="Plan"
+              value={activeSubscription?.plan?.name ?? "Aucun plan actif"}
+            />
+            <BillingMetric
+              label="Montant"
+              value={
+                activeSubscription?.plan?.price?.amount
+                  ? formatCurrency(activeSubscription.plan.price.amount * 100)
+                  : "Non facturé"
+              }
+            />
+            <BillingMetric
+              label="Prochaine échéance"
+              value={
+                activeSubscription?.currentPeriodEnd
+                  ? formatDate(activeSubscription.currentPeriodEnd)
+                  : "Non planifiée"
+              }
+            />
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {billingPlans.map((plan) => {
+              const isCurrentPlan = activeSubscription?.planId === plan.id;
+              const isPending = pendingPlanId === plan.id;
+
+              return (
+                <Button
+                  key={plan.id}
+                  type="button"
+                  variant={isCurrentPlan ? "outline" : "default"}
+                  onClick={() => void handleAttach(plan.id)}
+                  disabled={isPending || isCurrentPlan}
+                  className="h-auto flex-col items-start gap-1 py-3 active:scale-[0.98]"
+                >
+                  <span className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
+                    {plan.label}
+                    {isCurrentPlan ? <CheckCircle2 className="size-4" /> : null}
+                  </span>
+                  <span className="text-xs font-normal text-slate-500">
+                    {isPending ? "Ouverture..." : plan.priceLabel}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+
+          {activeSubscription ? (
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void handleCancelSubscription()}
+                disabled={isCancelling}
+                className="h-10 active:scale-[0.98]"
+              >
+                {isCancelling ? "Annulation..." : "Annuler en fin de période"}
+                {isCancelling ? (
+                  <LoaderCircle
+                    className="size-4 animate-spin"
+                    data-icon="inline-end"
+                  />
+                ) : null}
+              </Button>
+            </div>
+          ) : null}
+        </Panel>
+
+        <Panel className="border-dashed">
+          <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+              <CreditCard className="size-5" />
             </div>
             <div>
-              <p className="text-sm font-medium text-emerald-700">
-                Facturation
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                Abonnement actuel.
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Consultez l'état du plan et gérez la montée en gamme. Les
-                détails de factures seront réintroduits dans une prochaine
-                version.
+              <h3 className="font-semibold tracking-tight text-slate-950">
+                Historique de facturation
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Les factures et exports détaillés restent hors scope de cette
+                V1. La section est prête à recevoir l'historique Autumn ensuite.
               </p>
             </div>
           </div>
-
-          <StatusPill tone={subscriptionStatus.tone}>
-            {subscriptionStatus.label}
-          </StatusPill>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <BillingMetric
-            label="Plan"
-            value={activeSubscription?.plan?.name ?? "Aucun plan actif"}
-          />
-          <BillingMetric
-            label="Montant"
-            value={
-              activeSubscription?.plan?.price?.amount
-                ? formatCurrency(activeSubscription.plan.price.amount * 100)
-                : "Non facturé"
-            }
-          />
-          <BillingMetric
-            label="Prochaine échéance"
-            value={
-              activeSubscription?.currentPeriodEnd
-                ? formatDate(activeSubscription.currentPeriodEnd)
-                : "Non planifiée"
-            }
-          />
-        </div>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          {billingPlans.map((plan) => {
-            const isCurrentPlan = activeSubscription?.planId === plan.id;
-            const isPending = pendingPlanId === plan.id;
-
-            return (
-              <Button
-                key={plan.id}
-                type="button"
-                variant={isCurrentPlan ? "outline" : "default"}
-                onClick={() => void handleAttach(plan.id)}
-                disabled={isPending || isCurrentPlan}
-                className="h-auto flex-col items-start gap-1 py-3 active:scale-[0.98]"
-              >
-                <span className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
-                  {plan.label}
-                  {isCurrentPlan ? <CheckCircle2 className="size-4" /> : null}
-                </span>
-                <span className="text-xs font-normal text-slate-500">
-                  {isPending ? "Ouverture..." : plan.priceLabel}
-                </span>
-              </Button>
-            );
-          })}
-        </div>
-
-        {activeSubscription ? (
-          <div className="mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleCancelSubscription()}
-              disabled={isCancelling}
-              className="h-10 active:scale-[0.98]"
-            >
-              {isCancelling ? "Annulation..." : "Annuler en fin de période"}
-              {isCancelling ? (
-                <LoaderCircle
-                  className="size-4 animate-spin"
-                  data-icon="inline-end"
-                />
-              ) : null}
-            </Button>
-          </div>
-        ) : null}
-      </Panel>
-
-      <Panel className="border-dashed">
-        <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-            <CreditCard className="size-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold tracking-tight text-slate-950">
-              Historique de facturation
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Les factures et exports détaillés restent hors scope de cette V1.
-              La section est prête à recevoir l'historique Autumn ensuite.
-            </p>
-          </div>
-        </div>
-      </Panel>
+        </Panel>
       </div>
     </>
   );
@@ -1029,7 +1029,7 @@ function StatusPill({
       className={cn(
         "inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold",
         tone === "success" &&
-        "border-emerald-200 bg-emerald-50 text-emerald-800",
+          "border-emerald-200 bg-emerald-50 text-emerald-800",
         tone === "warning" && "border-amber-200 bg-amber-50 text-amber-800",
         tone === "danger" && "border-red-200 bg-red-50 text-red-700",
         tone === "neutral" && "border-slate-200 bg-slate-50 text-slate-600",
@@ -1088,8 +1088,8 @@ function formatDate(value: number | string | Date) {
 function getSubscriptionStatus(
   subscription:
     | NonNullable<
-      ReturnType<typeof useCustomer>["data"]
-    >["subscriptions"][number]
+        ReturnType<typeof useCustomer>["data"]
+      >["subscriptions"][number]
     | undefined,
 ): {
   label: string;

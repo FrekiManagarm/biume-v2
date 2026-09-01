@@ -178,7 +178,10 @@ function CreateOrganization() {
     // Best-effort : un échec ne doit pas empêcher l'accès à l'organisation
     // fraîchement créée, le paywall du dashboard rattrape sinon.
     await startOrganizationTrialFn({
-      data: { organizationId: result.data.id, organizationName: result.data.name },
+      data: {
+        organizationId: result.data.id,
+        organizationName: result.data.name,
+      },
     }).catch(() => {});
 
     window.location.replace("/dashboard");

@@ -10,7 +10,9 @@ const getOrganizationSubscriptionGateSchema = z.object({
   organizationId: z.string().min(1),
 });
 
-export const getOrganizationSubscriptionGateFn = createServerFn({ method: "GET" })
+export const getOrganizationSubscriptionGateFn = createServerFn({
+  method: "GET",
+})
   .validator(getOrganizationSubscriptionGateSchema)
   .handler(async ({ data }) => {
     const session = await getSession();

@@ -7,7 +7,9 @@ import { resolveDashboardBillingRedirect } from "./dashboard";
 
 describe("resolveDashboardBillingRedirect", () => {
   it("ne redirige pas avec un abonnement actif", () => {
-    expect(resolveDashboardBillingRedirect("/dashboard/agenda", true)).toBeNull();
+    expect(
+      resolveDashboardBillingRedirect("/dashboard/agenda", true),
+    ).toBeNull();
   });
 
   it("redirige vers /dashboard/settings sans abonnement", () => {
@@ -17,6 +19,8 @@ describe("resolveDashboardBillingRedirect", () => {
   });
 
   it("exempte /dashboard/settings", () => {
-    expect(resolveDashboardBillingRedirect("/dashboard/settings", false)).toBeNull();
+    expect(
+      resolveDashboardBillingRedirect("/dashboard/settings", false),
+    ).toBeNull();
   });
 });

@@ -52,7 +52,9 @@ for (const org of organizations) {
   });
 
   if (!owner?.user?.email) {
-    console.warn(`[backfill] ${org.id} (${org.name}) : aucun propriétaire avec email, ignorée`);
+    console.warn(
+      `[backfill] ${org.id} (${org.name}) : aucun propriétaire avec email, ignorée`,
+    );
     failed += 1;
     continue;
   }

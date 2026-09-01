@@ -50,16 +50,20 @@ describe("getBillingGateRedirectTarget", () => {
   });
 
   it("n'entre pas en boucle sur /dashboard/settings lui-même", () => {
-    expect(getBillingGateRedirectTarget("/dashboard/settings", false)).toBeNull();
+    expect(
+      getBillingGateRedirectTarget("/dashboard/settings", false),
+    ).toBeNull();
   });
 
   it("exempte aussi les sous-chemins de /dashboard/settings", () => {
-    expect(getBillingGateRedirectTarget("/dashboard/settings/team", false)).toBeNull();
+    expect(
+      getBillingGateRedirectTarget("/dashboard/settings/team", false),
+    ).toBeNull();
   });
 
   it("ne confond pas un chemin similaire avec un sous-chemin de /dashboard/settings", () => {
-    expect(getBillingGateRedirectTarget("/dashboard/settings-other", false)).toBe(
-      "/dashboard/settings",
-    );
+    expect(
+      getBillingGateRedirectTarget("/dashboard/settings-other", false),
+    ).toBe("/dashboard/settings");
   });
 });

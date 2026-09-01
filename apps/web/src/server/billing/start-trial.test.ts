@@ -1,11 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { startOrganizationTrial, TRIAL_DURATION_DAYS, type StartOrganizationTrialDeps } from "./start-trial";
+import {
+  startOrganizationTrial,
+  TRIAL_DURATION_DAYS,
+  type StartOrganizationTrialDeps,
+} from "./start-trial";
 import { autumnPlanIds } from "#/lib/constants/autumn-ids";
 
 const now = new Date("2026-09-01T10:00:00.000Z");
 
-function createDeps(overrides: Partial<StartOrganizationTrialDeps> = {}): StartOrganizationTrialDeps {
+function createDeps(
+  overrides: Partial<StartOrganizationTrialDeps> = {},
+): StartOrganizationTrialDeps {
   return {
     upsertCustomer: vi.fn(async () => {}),
     attachPlan: vi.fn(async () => {}),
@@ -46,7 +52,9 @@ describe("démarrage de l'essai Autumn", () => {
     const result = await startOrganizationTrial(deps, input);
 
     expect(result.trialStart).toBe(now.toISOString());
-    const expectedEnd = new Date(now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+    const expectedEnd = new Date(
+      now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000,
+    );
     expect(result.trialEnd).toBe(expectedEnd.toISOString());
     expect(deps.triggerTrialEmails).toHaveBeenCalledWith({
       organizationId: "org-1",
@@ -70,7 +78,9 @@ describe("démarrage de l'essai Autumn", () => {
 
     await expect(startOrganizationTrial(deps, input)).resolves.toEqual({
       trialStart: now.toISOString(),
-      trialEnd: new Date(now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      trialEnd: new Date(
+        now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     });
   });
 
@@ -81,6 +91,8 @@ describe("démarrage de l'essai Autumn", () => {
       }),
     });
 
-    await expect(startOrganizationTrial(deps, input)).rejects.toThrow("Autumn indisponible");
+    await expect(startOrganizationTrial(deps, input)).rejects.toThrow(
+      "Autumn indisponible",
+    );
   });
 });

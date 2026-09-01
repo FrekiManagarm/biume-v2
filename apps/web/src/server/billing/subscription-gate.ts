@@ -18,7 +18,10 @@ export function getBillingGateRedirectTarget(
     return null;
   }
 
-  if (pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/")) {
+  if (
+    pathname === "/dashboard/settings" ||
+    pathname.startsWith("/dashboard/settings/")
+  ) {
     return null;
   }
 
