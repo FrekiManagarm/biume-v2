@@ -7,7 +7,11 @@ import { getCurrentOrganization, getSession } from "#/functions/auth.function";
 import { reportQueryOptions } from "#/lib/api/queries/reports.query";
 import { Button } from "@biume/ui/components/button";
 import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
-import { getDashboardRedirectTarget, resolveDashboardBillingRedirect } from "./dashboard";
+import {
+  getDashboardRedirectTarget,
+  resolveDashboardBillingRedirect,
+} from "./dashboard";
+import { shouldCheckBillingGate } from "#/server/billing/subscription-gate";
 
 export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
   head: () => ({
@@ -19,7 +23,7 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
       },
     ],
   }),
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location, preload }) => {
     const session = await getSession();
 
     if (!session) {
@@ -43,22 +47,26 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
     }
 
     // Même remarque que dans `dashboard.tsx` : `activeOrganizationId` est
-    // sûr ici, `currentOrganization` reste nullable pour TypeScript.
-    const { hasActiveOrTrialingSubscription } =
-      await getOrganizationSubscriptionGateFn({
-        data: { organizationId: session.session.activeOrganizationId },
-      });
+    // sûr ici, `currentOrganization` reste nullable pour TypeScript. Et comme
+    // là-bas, le paywall reste hors des preloads (voir
+    // `shouldCheckBillingGate`).
+    if (shouldCheckBillingGate({ preload, pathname: location.pathname })) {
+      const { hasActiveOrTrialingSubscription } =
+        await getOrganizationSubscriptionGateFn({
+          data: { organizationId: session.session.activeOrganizationId },
+        });
 
-    const billingRedirectTarget = resolveDashboardBillingRedirect(
-      location.pathname,
-      hasActiveOrTrialingSubscription,
-    );
+      const billingRedirectTarget = resolveDashboardBillingRedirect(
+        location.pathname,
+        hasActiveOrTrialingSubscription,
+      );
 
-    if (billingRedirectTarget) {
-      throw redirect({
-        to: billingRedirectTarget,
-        search: { tab: "billing", blocked: true },
-      });
+      if (billingRedirectTarget) {
+        throw redirect({
+          to: billingRedirectTarget,
+          search: { tab: "billing", blocked: true },
+        });
+      }
     }
 
     return { org: currentOrganization };

@@ -17,7 +17,10 @@ import {
 } from "#/functions/auth.function";
 import { getSidebarDefaultOpen } from "#/functions/sidebar.function";
 import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
-import { getBillingGateRedirectTarget } from "#/server/billing/subscription-gate";
+import {
+  getBillingGateRedirectTarget,
+  shouldCheckBillingGate,
+} from "#/server/billing/subscription-gate";
 import type { Organization } from "@biume/db/schema/organization";
 import type { AuthSession } from "@biume/auth";
 
@@ -60,7 +63,7 @@ export const Route = createFileRoute("/dashboard")({
     ],
   }),
   component: RouteComponent,
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location, preload }) => {
     const session = await getSession();
 
     if (!session) {
@@ -90,21 +93,23 @@ export const Route = createFileRoute("/dashboard")({
     // après le `.catch(() => null)` — utiliser l'org directement produirait
     // une erreur de type sans apporter d'info supplémentaire, puisque
     // `getDashboardRedirectTarget` a déjà vérifié qu'ils coïncident.
-    const { hasActiveOrTrialingSubscription } =
-      await getOrganizationSubscriptionGateFn({
-        data: { organizationId: session.session.activeOrganizationId },
-      });
+    if (shouldCheckBillingGate({ preload, pathname: location.pathname })) {
+      const { hasActiveOrTrialingSubscription } =
+        await getOrganizationSubscriptionGateFn({
+          data: { organizationId: session.session.activeOrganizationId },
+        });
 
-    const billingRedirectTarget = resolveDashboardBillingRedirect(
-      location.pathname,
-      hasActiveOrTrialingSubscription,
-    );
+      const billingRedirectTarget = resolveDashboardBillingRedirect(
+        location.pathname,
+        hasActiveOrTrialingSubscription,
+      );
 
-    if (billingRedirectTarget) {
-      throw redirect({
-        to: billingRedirectTarget,
-        search: { tab: "billing", blocked: true },
-      });
+      if (billingRedirectTarget) {
+        throw redirect({
+          to: billingRedirectTarget,
+          search: { tab: "billing", blocked: true },
+        });
+      }
     }
 
     const [organizations, sidebarDefaultOpen] = await Promise.all([
