@@ -58,6 +58,11 @@ const notificationSettingsSchema = z.object({
 type OrganizationSettingsValues = z.infer<typeof organizationSettingsSchema>;
 type NotificationSettingsValues = z.infer<typeof notificationSettingsSchema>;
 type SettingsTabId = "organization" | "notifications" | "billing";
+
+const settingsSearchSchema = z.object({
+  tab: z.enum(["organization", "notifications", "billing"]).optional(),
+  blocked: z.boolean().optional(),
+});
 type FieldErrorValue = { message?: string } | string | undefined;
 type SettingsFormApi = any;
 type SettingsFieldApi = any;
@@ -104,6 +109,7 @@ export const Route = createFileRoute("/dashboard/settings")({
       },
     ],
   }),
+  validateSearch: settingsSearchSchema,
   ssr: true,
   loader: async () => {
     const [session, organization] = await Promise.all([
@@ -119,7 +125,10 @@ export const Route = createFileRoute("/dashboard/settings")({
 function SettingsPage() {
   const router = useRouter();
   const { session, organization } = Route.useLoaderData();
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("organization");
+  const search = Route.useSearch();
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(
+    search.tab ?? "organization",
+  );
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
 
   const { startUpload, isUploading } = useUploadThing(
@@ -286,6 +295,7 @@ function SettingsPage() {
                 attach={attach}
                 customer={customer}
                 updateSubscription={updateSubscription}
+                blocked={search.blocked ?? false}
               />
             ) : null}
           </section>
