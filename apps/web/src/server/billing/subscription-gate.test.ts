@@ -7,11 +7,15 @@ import {
 
 describe("hasActiveOrTrialingSubscription", () => {
   it("est vrai si une subscription est active", () => {
-    expect(hasActiveOrTrialingSubscription([{ status: "active" }])).toBe(true);
+    expect(
+      hasActiveOrTrialingSubscription([{ status: "active", pastDue: false }]),
+    ).toBe(true);
   });
 
   it("est vrai si une subscription est trialing", () => {
-    expect(hasActiveOrTrialingSubscription([{ status: "trialing" }])).toBe(true);
+    expect(
+      hasActiveOrTrialingSubscription([{ status: "trialing", pastDue: false }]),
+    ).toBe(true);
   });
 
   it("est faux si aucune subscription", () => {
@@ -20,7 +24,16 @@ describe("hasActiveOrTrialingSubscription", () => {
 
   it("est faux si toutes annulées/expirées", () => {
     expect(
-      hasActiveOrTrialingSubscription([{ status: "canceled" }, { status: "past_due" }]),
+      hasActiveOrTrialingSubscription([
+        { status: "canceled", pastDue: false },
+        { status: "past_due", pastDue: false },
+      ]),
+    ).toBe(false);
+  });
+
+  it("est faux si une subscription active a un paiement en retard", () => {
+    expect(
+      hasActiveOrTrialingSubscription([{ status: "active", pastDue: true }]),
     ).toBe(false);
   });
 });

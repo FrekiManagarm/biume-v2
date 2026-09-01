@@ -1,10 +1,12 @@
-export type SubscriptionForGate = { status: string };
+export type SubscriptionForGate = { status: string; pastDue: boolean };
 
 export function hasActiveOrTrialingSubscription(
   subscriptions: SubscriptionForGate[],
 ): boolean {
-  return subscriptions.some((subscription) =>
-    ["active", "trialing"].includes(subscription.status),
+  return subscriptions.some(
+    (subscription) =>
+      ["active", "trialing"].includes(subscription.status) &&
+      !subscription.pastDue,
   );
 }
 
