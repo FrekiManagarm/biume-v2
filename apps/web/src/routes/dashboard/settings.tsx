@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CreditCard,
   Crown,
+  ExternalLink,
   ImageIcon,
   LoaderCircle,
   Mail,
@@ -36,6 +37,10 @@ import {
   updateOrganization,
 } from "#/functions/organization.function";
 import { updateUserNotifications } from "#/functions/user.function";
+import {
+  toInvoiceHistoryRows,
+  type AutumnInvoice,
+} from "#/lib/billing/invoice-history";
 import { autumnFeatureIds, autumnPlanIds } from "#/lib/constants/autumn-ids";
 import { cn } from "#/lib/utils";
 import { useUploadThing } from "#/lib/utils/uploadthing";
@@ -731,6 +736,15 @@ const billingPlans = [
   },
 ] as const;
 
+/**
+ * Libellés affichés dans l'historique : une facture annonce un abonnement, pas
+ * une périodicité seule comme sur les boutons de souscription.
+ */
+const invoicePlanLabels: Record<string, string> = {
+  [autumnPlanIds.allInclusiveMonthly]: "Abonnement mensuel",
+  [autumnPlanIds.allInclusiveYearly]: "Abonnement annuel",
+};
+
 function BillingTab({
   attach,
   customer,
@@ -826,9 +840,8 @@ function BillingTab({
                   Abonnement actuel.
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Consultez l'état du plan et gérez la montée en gamme. Les
-                  détails de factures seront réintroduits dans une prochaine
-                  version.
+                  Consultez l'état du plan et gérez la montée en gamme. Vos
+                  factures sont listées juste en dessous.
                 </p>
               </div>
             </div>
@@ -879,7 +892,7 @@ function BillingTab({
                     {plan.label}
                     {isCurrentPlan ? <CheckCircle2 className="size-4" /> : null}
                   </span>
-                  <span className="text-xs font-normal text-slate-500">
+                  <span className="text-xs font-normal text-current/75">
                     {isPending ? "Ouverture..." : plan.priceLabel}
                   </span>
                 </Button>
@@ -908,24 +921,85 @@ function BillingTab({
           ) : null}
         </Panel>
 
-        <Panel className="border-dashed">
-          <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-              <CreditCard className="size-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold tracking-tight text-slate-950">
-                Historique de facturation
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Les factures et exports détaillés restent hors scope de cette
-                V1. La section est prête à recevoir l'historique Autumn ensuite.
-              </p>
-            </div>
-          </div>
-        </Panel>
+        <BillingHistoryPanel invoices={customer.invoices} />
       </div>
     </>
+  );
+}
+
+function BillingHistoryPanel({
+  invoices,
+}: {
+  invoices: AutumnInvoice[] | undefined;
+}) {
+  const rows = useMemo(
+    () => toInvoiceHistoryRows(invoices, invoicePlanLabels),
+    [invoices],
+  );
+
+  return (
+    <Panel>
+      <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+          <CreditCard className="size-5" />
+        </div>
+        <div>
+          <h3 className="font-semibold tracking-tight text-slate-950">
+            Historique de facturation
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Vos factures sont émises par Stripe via Autumn. Ouvrez-en une pour
+            la consulter, la télécharger en PDF ou régler un impayé.
+          </p>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+          Aucune facture pour le moment. Elles apparaîtront ici dès votre
+          premier paiement.
+        </p>
+      ) : (
+        <ul className="mt-5 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200">
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-950">
+                  {row.planLabel}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {formatDate(row.createdAt)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold tabular-nums text-slate-950">
+                  {formatCurrency(row.amountInCents, row.currency)}
+                </span>
+                <StatusPill tone={row.status.tone}>
+                  {row.status.label}
+                </StatusPill>
+                {row.hostedInvoiceUrl ? (
+                  <Button asChild variant="outline" size="sm">
+                    <a
+                      href={row.hostedInvoiceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Voir
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }
 
