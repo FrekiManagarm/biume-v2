@@ -872,7 +872,7 @@ function BillingTab({
                 type="button"
                 variant={isCurrentPlan ? "outline" : "default"}
                 onClick={() => void handleAttach(plan.id)}
-                disabled={pendingPlanId !== null || isCurrentPlan}
+                disabled={isPending || isCurrentPlan}
                 className="h-auto flex-col items-start gap-1 py-3 active:scale-[0.98]"
               >
                 <span className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
