@@ -15,23 +15,37 @@ describe("amorçage du modèle", () => {
   it("porte le lexique métier", () => {
     const prompt = buildTranscriptionPrompt({
       patientName: null,
-      species: null,
+      breed: null,
     });
 
     expect(prompt).toContain("sacro-iliaque");
     expect(prompt).toContain("lombaire");
   });
 
+  /**
+   * Mesuré sur une vraie dictée : sans la race dans l'amorçage, « border
+   * collie » est transcrit « bordé colis ». Elle est en base, il n'y a aucune
+   * raison de s'en priver.
+   */
+  it("nomme la race quand la fiche la connaît", () => {
+    expect(
+      buildTranscriptionPrompt({
+        patientName: "Filou",
+        breed: "border collie",
+      }),
+    ).toContain("border collie");
+  });
+
   it("nomme l'animal quand la fiche le connaît", () => {
     expect(
-      buildTranscriptionPrompt({ patientName: "Filou", species: "DOG" }),
+      buildTranscriptionPrompt({ patientName: "Filou", breed: "border collie" }),
     ).toContain("Filou");
   });
 
   it("reste valide quand la capture est libre", () => {
     const prompt = buildTranscriptionPrompt({
       patientName: null,
-      species: null,
+      breed: null,
     });
 
     expect(prompt.length).toBeGreaterThan(0);
@@ -45,7 +59,7 @@ describe("amorçage du modèle", () => {
    */
   it("reste sous la borne d'amorçage", () => {
     expect(
-      buildTranscriptionPrompt({ patientName: "Filou", species: "DOG" }).length,
+      buildTranscriptionPrompt({ patientName: "Filou", breed: "border collie" }).length,
     ).toBeLessThanOrEqual(1000);
   });
 });

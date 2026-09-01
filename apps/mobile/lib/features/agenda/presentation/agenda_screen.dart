@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/app_palette.dart';
@@ -32,6 +33,13 @@ class _AgendaView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vos séances')),
+      floatingActionButton: FloatingActionButton.extended(
+        // La capture libre : le PRODUCT.md la prévoit dès l'étape 1 du
+        // parcours, pour une séance qui n'était pas à l'agenda.
+        onPressed: () => context.push('/dicter'),
+        icon: const Icon(Icons.mic),
+        label: const Text('Dicter'),
+      ),
       body: SafeArea(
         child: BlocBuilder<AgendaCubit, AgendaState>(
           builder: (context, state) => switch (state) {
@@ -119,7 +127,12 @@ class _AppointmentCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: () {}, child: Text(label)),
+            FilledButton(
+              onPressed: appointment.isCancelled
+                  ? null
+                  : () => context.push('/dicter?rdv=${appointment.id}'),
+              child: Text(label),
+            ),
           ],
         ),
       ),
