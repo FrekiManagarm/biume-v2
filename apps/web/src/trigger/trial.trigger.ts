@@ -9,6 +9,7 @@ import TrialEndingReminderEmail from "@biume/emails/TrialEndingReminderEmail";
 import { db } from "@/lib/utils/db";
 import { organization as organizationSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
+import { env } from "@biume/env/server";
 
 const trialWorkflowSchema = z.object({
   organizationId: z.string(),
@@ -29,7 +30,7 @@ export const trialWorkflow = schemaTask({
 
     const trialEndDate = new Date(trialEnd);
     const contactEmail = "support@biume.com";
-    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?tab=billing`;
+    const cancelUrl = `${env.APP_URL}/dashboard/settings?tab=billing`;
 
     // Vérifier que l'organisation existe toujours
     const org = await db.query.organization.findFirst({
@@ -106,7 +107,7 @@ export const trialWorkflow = schemaTask({
         trialEndDate,
         daysRemaining: 5,
         contactEmail,
-        upgradeUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?tab=billing`,
+        upgradeUrl: `${env.APP_URL}/dashboard/settings?tab=billing`,
         cancelUrl,
       }) as React.ReactElement,
     );
@@ -136,7 +137,7 @@ export const trialWorkflow = schemaTask({
         trialEndDate,
         daysRemaining: 1,
         contactEmail,
-        upgradeUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?tab=billing`,
+        upgradeUrl: `${env.APP_URL}/dashboard/settings?tab=billing`,
         cancelUrl,
       }) as React.ReactElement,
     );

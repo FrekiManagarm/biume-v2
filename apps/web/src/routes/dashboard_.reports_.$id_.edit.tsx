@@ -6,7 +6,8 @@ import { EmptyPanel } from "#/components/dashboard/dashboard-shell";
 import { getCurrentOrganization, getSession } from "#/functions/auth.function";
 import { reportQueryOptions } from "#/lib/api/queries/reports.query";
 import { Button } from "@biume/ui/components/button";
-import { getDashboardRedirectTarget } from "./dashboard";
+import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
+import { getDashboardRedirectTarget, resolveDashboardBillingRedirect } from "./dashboard";
 
 export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
   head: () => ({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
       },
     ],
   }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const session = await getSession();
 
     if (!session) {
@@ -39,6 +40,25 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
 
     if (redirectTarget) {
       throw redirect({ to: redirectTarget });
+    }
+
+    // Même remarque que dans `dashboard.tsx` : `activeOrganizationId` est
+    // sûr ici, `currentOrganization` reste nullable pour TypeScript.
+    const { hasActiveOrTrialingSubscription } =
+      await getOrganizationSubscriptionGateFn({
+        data: { organizationId: session.session.activeOrganizationId },
+      });
+
+    const billingRedirectTarget = resolveDashboardBillingRedirect(
+      location.pathname,
+      hasActiveOrTrialingSubscription,
+    );
+
+    if (billingRedirectTarget) {
+      throw redirect({
+        to: billingRedirectTarget,
+        search: { tab: "billing", blocked: true },
+      });
     }
 
     return { org: currentOrganization };

@@ -14,3 +14,14 @@ describe("Autumn trial policy", () => {
     });
   });
 });
+
+describe("Autumn boolean feature items", () => {
+  test.each([
+    ["monthly", allInclusiveMonthly],
+    ["yearly", allInclusiveYearly],
+  ] as const)("%s plan grants boolean features without an included quantity", (_name, plan) => {
+    for (const item of plan.items ?? []) {
+      expect(item).not.toHaveProperty("included");
+    }
+  });
+});

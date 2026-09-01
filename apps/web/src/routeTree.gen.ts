@@ -9,59 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CreateOrganizationRouteImport } from './routes/create-organization'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SelectOrganizationRouteImport } from './routes/select-organization'
-import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
-import { Route as ApiVulgarisationRouteImport } from './routes/api/vulgarisation'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SelectOrganizationRouteImport } from './routes/select-organization'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CreateOrganizationRouteImport } from './routes/create-organization'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
-import { Route as DashboardAssistantRouteImport } from './routes/dashboard/assistant'
-import { Route as DashboardClientsRouteImport } from './routes/dashboard/clients'
-import { Route as DashboardPatientsRouteImport } from './routes/dashboard/patients'
-import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
-import { Route as ApiOwnerSplatRouteImport } from './routes/api/owner/$'
+import { Route as DashboardReportsRouteImport } from './routes/dashboard/reports'
+import { Route as DashboardPatientsRouteImport } from './routes/dashboard/patients'
+import { Route as DashboardClientsRouteImport } from './routes/dashboard/clients'
+import { Route as DashboardAssistantRouteImport } from './routes/dashboard/assistant'
+import { Route as DashboardAgendaRouteImport } from './routes/dashboard/agenda'
+import { Route as ApiVulgarisationRouteImport } from './routes/api/vulgarisation'
+import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DashboardReportsIdRouteImport } from './routes/dashboard/reports_.$id'
-import { Route as ApiMobileV1SplatRouteImport } from './routes/api/mobile/v1/$'
+import { Route as ApiOwnerSplatRouteImport } from './routes/api/owner/$'
+import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardReportsIdEditRouteImport } from './routes/dashboard_.reports_.$id_.edit'
+import { Route as ApiMobileV1SplatRouteImport } from './routes/api/mobile/v1/$'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CreateOrganizationRoute = CreateOrganizationRouteImport.update({
-  id: '/create-organization',
-  path: '/create-organization',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SelectOrganizationRoute = SelectOrganizationRouteImport.update({
-  id: '/select-organization',
-  path: '/select-organization',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SigninRoute = SigninRouteImport.update({
@@ -69,24 +44,34 @@ const SigninRoute = SigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+const SelectOrganizationRoute = SelectOrganizationRouteImport.update({
+  id: '/select-organization',
+  path: '/select-organization',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
-  id: '/api/uploadthing',
-  path: '/api/uploadthing',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiVulgarisationRoute = ApiVulgarisationRouteImport.update({
-  id: '/api/vulgarisation',
-  path: '/api/vulgarisation',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateOrganizationRoute = CreateOrganizationRouteImport.update({
+  id: '/create-organization',
+  path: '/create-organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -94,24 +79,9 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAssistantRoute = DashboardAssistantRouteImport.update({
-  id: '/assistant',
-  path: '/assistant',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardClientsRoute = DashboardClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPatientsRoute = DashboardPatientsRouteImport.update({
-  id: '/patients',
-  path: '/patients',
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardReportsRoute = DashboardReportsRouteImport.update({
@@ -119,24 +89,39 @@ const DashboardReportsRoute = DashboardReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const DashboardPatientsRoute = DashboardPatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
   getParentRoute: () => DashboardRoute,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+const DashboardClientsRoute = DashboardClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAssistantRoute = DashboardAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const ApiVulgarisationRoute = ApiVulgarisationRouteImport.update({
+  id: '/api/vulgarisation',
+  path: '/api/vulgarisation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
-  id: '/api/autumn/$',
-  path: '/api/autumn/$',
+const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
+  id: '/api/uploadthing',
+  path: '/api/uploadthing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiOwnerSplatRoute = ApiOwnerSplatRouteImport.update({
-  id: '/api/owner/$',
-  path: '/api/owner/$',
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
@@ -144,14 +129,29 @@ const DashboardReportsIdRoute = DashboardReportsIdRouteImport.update({
   path: '/reports/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
-const ApiMobileV1SplatRoute = ApiMobileV1SplatRouteImport.update({
-  id: '/api/mobile/v1/$',
-  path: '/api/mobile/v1/$',
+const ApiOwnerSplatRoute = ApiOwnerSplatRouteImport.update({
+  id: '/api/owner/$',
+  path: '/api/owner/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
+  id: '/api/autumn/$',
+  path: '/api/autumn/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardReportsIdEditRoute = DashboardReportsIdEditRouteImport.update({
   id: '/dashboard_/reports_/$id_/edit',
   path: '/dashboard/reports/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMobileV1SplatRoute = ApiMobileV1SplatRouteImport.update({
+  id: '/api/mobile/v1/$',
+  path: '/api/mobile/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -334,46 +334,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/create-organization': {
-      id: '/create-organization'
-      path: '/create-organization'
-      fullPath: '/create-organization'
-      preLoaderRoute: typeof CreateOrganizationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/select-organization': {
-      id: '/select-organization'
-      path: '/select-organization'
-      fullPath: '/select-organization'
-      preLoaderRoute: typeof SelectOrganizationRouteImport
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signin': {
@@ -383,32 +348,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
+    '/select-organization': {
+      id: '/select-organization'
+      path: '/select-organization'
+      fullPath: '/select-organization'
+      preLoaderRoute: typeof SelectOrganizationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/uploadthing': {
-      id: '/api/uploadthing'
-      path: '/api/uploadthing'
-      fullPath: '/api/uploadthing'
-      preLoaderRoute: typeof ApiUploadthingRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/vulgarisation': {
-      id: '/api/vulgarisation'
-      path: '/api/vulgarisation'
-      fullPath: '/api/vulgarisation'
-      preLoaderRoute: typeof ApiVulgarisationRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-organization': {
+      id: '/create-organization'
+      path: '/create-organization'
+      fullPath: '/create-organization'
+      preLoaderRoute: typeof CreateOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
@@ -418,32 +397,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/agenda': {
-      id: '/dashboard/agenda'
-      path: '/agenda'
-      fullPath: '/dashboard/agenda'
-      preLoaderRoute: typeof DashboardAgendaRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/assistant': {
-      id: '/dashboard/assistant'
-      path: '/assistant'
-      fullPath: '/dashboard/assistant'
-      preLoaderRoute: typeof DashboardAssistantRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/clients': {
-      id: '/dashboard/clients'
-      path: '/clients'
-      fullPath: '/dashboard/clients'
-      preLoaderRoute: typeof DashboardClientsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/patients': {
-      id: '/dashboard/patients'
-      path: '/patients'
-      fullPath: '/dashboard/patients'
-      preLoaderRoute: typeof DashboardPatientsRouteImport
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/reports': {
@@ -453,32 +411,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReportsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
+    '/dashboard/patients': {
+      id: '/dashboard/patients'
+      path: '/patients'
+      fullPath: '/dashboard/patients'
+      preLoaderRoute: typeof DashboardPatientsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
+    '/dashboard/clients': {
+      id: '/dashboard/clients'
+      path: '/clients'
+      fullPath: '/dashboard/clients'
+      preLoaderRoute: typeof DashboardClientsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/assistant': {
+      id: '/dashboard/assistant'
+      path: '/assistant'
+      fullPath: '/dashboard/assistant'
+      preLoaderRoute: typeof DashboardAssistantRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agenda': {
+      id: '/dashboard/agenda'
+      path: '/agenda'
+      fullPath: '/dashboard/agenda'
+      preLoaderRoute: typeof DashboardAgendaRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/vulgarisation': {
+      id: '/api/vulgarisation'
+      path: '/api/vulgarisation'
+      fullPath: '/api/vulgarisation'
+      preLoaderRoute: typeof ApiVulgarisationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/autumn/$': {
-      id: '/api/autumn/$'
-      path: '/api/autumn/$'
-      fullPath: '/api/autumn/$'
-      preLoaderRoute: typeof ApiAutumnSplatRouteImport
+    '/api/uploadthing': {
+      id: '/api/uploadthing'
+      path: '/api/uploadthing'
+      fullPath: '/api/uploadthing'
+      preLoaderRoute: typeof ApiUploadthingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/owner/$': {
-      id: '/api/owner/$'
-      path: '/api/owner/$'
-      fullPath: '/api/owner/$'
-      preLoaderRoute: typeof ApiOwnerSplatRouteImport
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/reports_/$id': {
@@ -488,11 +467,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReportsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/api/mobile/v1/$': {
-      id: '/api/mobile/v1/$'
-      path: '/api/mobile/v1/$'
-      fullPath: '/api/mobile/v1/$'
-      preLoaderRoute: typeof ApiMobileV1SplatRouteImport
+    '/api/owner/$': {
+      id: '/api/owner/$'
+      path: '/api/owner/$'
+      fullPath: '/api/owner/$'
+      preLoaderRoute: typeof ApiOwnerSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/autumn/$': {
+      id: '/api/autumn/$'
+      path: '/api/autumn/$'
+      fullPath: '/api/autumn/$'
+      preLoaderRoute: typeof ApiAutumnSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard_/reports_/$id_/edit': {
@@ -500,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/reports/$id/edit'
       fullPath: '/dashboard/reports/$id/edit'
       preLoaderRoute: typeof DashboardReportsIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mobile/v1/$': {
+      id: '/api/mobile/v1/$'
+      path: '/api/mobile/v1/$'
+      fullPath: '/api/mobile/v1/$'
+      preLoaderRoute: typeof ApiMobileV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -552,12 +552,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

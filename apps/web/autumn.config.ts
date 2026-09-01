@@ -49,27 +49,21 @@ export const allInclusiveMonthly = plan({
   items: [
     item({
       featureId: exportPdfProfessionnel.id,
-      included: 0,
     }),
     item({
       featureId: fichesClientsPatientsIllimits.id,
-      included: 0,
     }),
     item({
       featureId: iaVulgarisation.id,
-      included: 0,
     }),
     item({
       featureId: rapportsIllimits.id,
-      included: 0,
     }),
     item({
       featureId: suiviDeSantIntelligent.id,
-      included: 0,
     }),
     item({
       featureId: supportPrioritaire.id,
-      included: 0,
     }),
   ],
   freeTrial: {
@@ -89,27 +83,21 @@ export const allInclusiveYearly = plan({
   items: [
     item({
       featureId: exportPdfProfessionnel.id,
-      included: 0,
     }),
     item({
       featureId: fichesClientsPatientsIllimits.id,
-      included: 0,
     }),
     item({
       featureId: iaVulgarisation.id,
-      included: 0,
     }),
     item({
       featureId: rapportsIllimits.id,
-      included: 0,
     }),
     item({
       featureId: suiviDeSantIntelligent.id,
-      included: 0,
     }),
     item({
       featureId: supportPrioritaire.id,
-      included: 0,
     }),
   ],
   freeTrial: {
