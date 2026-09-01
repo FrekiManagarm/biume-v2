@@ -19,6 +19,10 @@ export const startOrganizationTrialFn = createServerFn({ method: "POST" })
       throw new Error("Unauthorized");
     }
 
+    if (data.organizationId !== session.session.activeOrganizationId) {
+      throw new Error("Forbidden");
+    }
+
     try {
       await startOrganizationTrial(createProductionStartTrialDeps(), {
         organizationId: data.organizationId,
