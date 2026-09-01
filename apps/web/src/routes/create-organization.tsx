@@ -21,6 +21,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { getSession } from "#/functions/auth.function";
 import { organization as organizationClient } from "#/lib/auth-client";
+import { startOrganizationTrialFn } from "#/lib/api/actions/trial.action";
 import { useUploadThing } from "#/lib/utils/uploadthing";
 
 export function createOrganizationSlug(name: string): string {
@@ -173,6 +174,12 @@ function CreateOrganization() {
       setIsPending(false);
       return;
     }
+
+    // Best-effort : un échec ne doit pas empêcher l'accès à l'organisation
+    // fraîchement créée, le paywall du dashboard rattrape sinon.
+    await startOrganizationTrialFn({
+      data: { organizationId: result.data.id, organizationName: result.data.name },
+    }).catch(() => {});
 
     window.location.replace("/dashboard");
   }
