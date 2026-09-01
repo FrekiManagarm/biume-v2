@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@biume/auth", () => ({ auth: { api: {} } }));
+vi.mock("@biume/env/server", () => ({ env: {} }));
 
 import { resolveDashboardBillingRedirect } from "./dashboard";
 
