@@ -74,7 +74,6 @@ export function createAuth() {
       },
     },
     plugins: [
-      tanstackStartCookies(),
       // Le client mobile ne gère pas de cookies : il lit le jeton dans
       // `set-auth-token` à la connexion et le renvoie en `Authorization`.
       bearer(),
@@ -92,6 +91,13 @@ export function createAuth() {
           owner,
         },
       }),
+      // Toujours en dernier. Ce plugin recopie les `Set-Cookie` accumulés
+      // dans le magasin de cookies de TanStack Start depuis un `hooks.after`
+      // — il ne voit donc que les cookies posés par les plugins qui le
+      // précèdent. Placé en tête, les cookies d'`organization` (organisation
+      // active) et des autres plugins étaient silencieusement perdus, et
+      // better-auth le signalait à chaque démarrage en production.
+      tanstackStartCookies(),
     ],
   });
 }

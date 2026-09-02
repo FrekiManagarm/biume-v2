@@ -49,10 +49,6 @@
         "typescript": "^5",
       },
     },
-    "apps/mobile": {
-      "name": "@biume/mobile",
-      "version": "1.0.0",
-    },
     "apps/web": {
       "name": "@biume/web",
       "dependencies": {
@@ -592,8 +588,6 @@
     "@biume/env": ["@biume/env@workspace:packages/env"],
 
     "@biume/marketing": ["@biume/marketing@workspace:apps/marketing"],
-
-    "@biume/mobile": ["@biume/mobile@workspace:apps/mobile"],
 
     "@biume/ui": ["@biume/ui@workspace:packages/ui"],
 
