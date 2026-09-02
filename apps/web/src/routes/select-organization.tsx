@@ -54,6 +54,42 @@ export const Route = createFileRoute("/select-organization")({
   component: SelectOrganization,
 });
 
+/**
+ * Démo d'inscription, sous le texte de la colonne de gauche.
+ *
+ * `preload="none"` est délibéré : le fichier pèse 19,7 Mo, et cette page est
+ * un simple aiguillage que la plupart des utilisateurs traversent sans
+ * s'arrêter. Seul le poster (47 Ko) part au chargement ; la vidéo n'est
+ * téléchargée qu'au clic sur lecture.
+ *
+ * Masquée sous `md` : sur mobile la colonne s'empile au-dessus de la liste
+ * des entreprises, et la vidéo repousserait hors écran l'action principale
+ * de la page — comme la ligne « Connecté en tant que » juste en dessous, qui
+ * suit déjà cette règle.
+ */
+function IntroVideo() {
+  return (
+    <figure className="mt-10 hidden md:block">
+      <video
+        className="w-full rounded-xl border border-border bg-card shadow-sm"
+        controls
+        preload="none"
+        playsInline
+        poster="/assets/images/biume-inscription-poster.jpg"
+        width={1584}
+        height={1080}
+      >
+        <source src="/assets/biume-inscription.mp4" type="video/mp4" />
+        Votre navigateur ne peut pas lire cette vidéo.
+      </video>
+      <figcaption className="mt-3 text-sm leading-6 text-muted-foreground">
+        Découvrir Biume en vidéo — création de compte et premiers pas
+        (1&nbsp;min, sous-titrée).
+      </figcaption>
+    </figure>
+  );
+}
+
 function SelectOrganization() {
   const navigate = useNavigate();
   const { session, organizations } = Route.useRouteContext();
@@ -123,6 +159,8 @@ function SelectOrganization() {
                 paramètres. Sélectionnez le bon espace avant d'entrer dans le
                 dashboard.
               </p>
+
+              <IntroVideo />
             </div>
           </div>
 
