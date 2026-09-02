@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
@@ -6,8 +7,8 @@ import {
   getOrganizations,
   getSession,
 } from "#/functions/auth.function";
-import { getSidebarDefaultOpen } from "#/functions/sidebar.function";
 import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
+import { readSidebarDefaultOpen } from "#/lib/sidebar-cookie";
 import { shouldCheckBillingGate } from "#/server/billing/subscription-gate";
 
 const dashboardShellSchema = z.object({
@@ -54,20 +55,18 @@ export const getDashboardShellFn = createServerFn({ method: "GET" })
       !data.preload &&
       shouldCheckBillingGate({ preload: false, pathname: data.pathname });
 
-    const [currentOrganization, organizations, sidebarDefaultOpen, gate] =
-      await Promise.all([
-        // `getFullOrganization` échoue quand la session pointe une
-        // organisation devenue inaccessible : `getDashboardRedirectTarget`
-        // traite ce `null` comme une invitation à re-choisir un espace.
-        getCurrentOrganization().catch(() => null),
-        getOrganizations(),
-        getSidebarDefaultOpen(),
-        checkBilling
-          ? getOrganizationSubscriptionGateFn({
-              data: { organizationId: activeOrganizationId },
-            })
-          : Promise.resolve({ hasActiveOrTrialingSubscription: true }),
-      ]);
+    const [currentOrganization, organizations, gate] = await Promise.all([
+      // `getFullOrganization` échoue quand la session pointe une
+      // organisation devenue inaccessible : `getDashboardRedirectTarget`
+      // traite ce `null` comme une invitation à re-choisir un espace.
+      getCurrentOrganization().catch(() => null),
+      getOrganizations(),
+      checkBilling
+        ? getOrganizationSubscriptionGateFn({
+            data: { organizationId: activeOrganizationId },
+          })
+        : Promise.resolve({ hasActiveOrTrialingSubscription: true }),
+    ]);
 
     return {
       session,
@@ -76,7 +75,9 @@ export const getDashboardShellFn = createServerFn({ method: "GET" })
       // et invitations compris.
       currentOrganizationId: currentOrganization?.id ?? null,
       organizations,
-      sidebarDefaultOpen,
+      sidebarDefaultOpen: readSidebarDefaultOpen(
+        getRequestHeaders().get("cookie"),
+      ),
       hasActiveOrTrialingSubscription: gate.hasActiveOrTrialingSubscription,
     };
   });
