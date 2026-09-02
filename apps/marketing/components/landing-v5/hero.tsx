@@ -13,6 +13,7 @@ import {
 import { BrowserFrame } from "../frames/browser-frame";
 import { PhoneFrame } from "../frames/phone-frame";
 import { webAppPath } from "../../lib/web-app-url";
+import { HeroAnatomyPreview } from "./anatomy-widget";
 import { Reveal } from "./motion";
 
 export function LandingV5Hero() {
@@ -94,7 +95,7 @@ export function LandingV5Hero() {
           }}
         >
           <BrowserFrame urlLabel="app.biume.com/seances/nashira">
-            <div className="flex text-left">
+            <div className="flex h-full text-left">
               <aside className="flex w-43 shrink-0 flex-col gap-1 border-r border-(--lv5-frame-border) bg-(--lv5-canvas) p-3">
                 {HERO_MOCK.nav.map((item) => {
                   const active = "active" in item && item.active;
@@ -164,6 +165,7 @@ export function LandingV5Hero() {
                         {HERO_MOCK.outStatus}
                       </span>
                     </div>
+                    <HeroAnatomyPreview />
                     {HERO_MOCK.out.map((paragraph) => (
                       <p
                         key={paragraph}

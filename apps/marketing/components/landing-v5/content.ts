@@ -69,6 +69,20 @@ export const HERO_PHONE_MOCK = {
   cta: "Répondre",
 } as const;
 
+/**
+ * Reprend, sous forme de schéma corporel, les zones déjà nommées dans les
+ * notes de la même séance : HERO_MOCK.raw ("tension chaîne thoraco-lombaire
+ * G>D") et SPECIMEN_STEPS[1].raw ("sacro-iliaque D sensible") — aucune
+ * donnée clinique inventée pour ce widget.
+ */
+export const HERO_ANATOMY_MOCK = {
+  label: "Schéma corporel",
+  zones: [
+    { label: "Thoraco-lombaire", note: "Tension" },
+    { label: "Sacro-iliaque", note: "Sensible" },
+  ],
+} as const;
+
 /* ── Bandeau de contextes de pratique ─────────────────────────── */
 
 export const TRADES = {
