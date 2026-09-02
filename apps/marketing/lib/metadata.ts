@@ -17,8 +17,18 @@ export const rootMetadata: Metadata = {
     "logiciel thérapeute animalier",
     "résumé propriétaire animal",
   ],
-  alternates: {
-    canonical: siteUrl,
+  // Pas d'`alternates` ici : dans l'App Router, toute page qui n'ecrase pas ce
+  // champ herite de la canonique declaree a la racine. Une canonique d'accueil
+  // posee globalement desindexe silencieusement les pages qui l'oublient.
+  // La canonique de l'accueil est declaree dans app/page.tsx.
+  // Ces fichiers vivaient deja dans public/ sans etre references nulle part.
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   openGraph: {
     title: "Logiciel de compte rendu pour ostéopathe animalier | Biume",

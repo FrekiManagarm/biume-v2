@@ -31,7 +31,7 @@ function createDeps(overrides: Partial<Mocked> = {}): TranscriptionDeps & Mocked
       objectKey: "captures/abc/audio.m4a",
       mimeType: "audio/mp4",
       patientName: "Filou",
-      species: "DOG",
+      breed: "border collie",
     })),
     objectStore: {
       getBytes: vi.fn(async () => new Uint8Array([1, 2, 3])),

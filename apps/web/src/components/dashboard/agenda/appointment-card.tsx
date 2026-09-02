@@ -45,21 +45,21 @@ export function AppointmentCard({
   const showFallbackLabel = primaryAction.kind !== "cancelled";
 
   return (
-    <article className="rounded-card border border-border bg-card p-4">
+    <article className="rounded-card border border-border bg-card p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             {formatTime(appointment.beginAt)} – {formatTime(appointment.endAt)}
-            <span className="ml-2">· {appointment.durationLabel}</span>
+            <span className="ml-1.5">· {appointment.durationLabel}</span>
           </p>
-          <h3 className="mt-1 truncate text-base font-semibold tracking-tight text-foreground">
+          <h3 className="mt-0.5 truncate text-sm font-semibold tracking-tight text-foreground">
             {appointment.patient?.name ?? "Animal non renseigné"}
           </h3>
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground">
             {appointment.patient?.owner?.name ?? "Propriétaire inconnu"}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <StatusPill tone={sessionTone[appointment.sessionState]}>
             {sessionStateLabel(appointment.sessionState)}
           </StatusPill>
@@ -67,12 +67,12 @@ export function AppointmentCard({
         </div>
       </div>
 
-      <div className="mt-3 grid gap-1.5 text-sm text-ink-muted">
-        <span className="flex items-center gap-2">
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+        <span className="flex items-center gap-1.5">
           <PawPrint className="size-3.5 text-muted-foreground" aria-hidden />
           {appointment.patient?.animal?.name ?? "Espèce non renseignée"}
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1.5">
           {appointment.atHome ? (
             <Home className="size-3.5 text-muted-foreground" aria-hidden />
           ) : (
@@ -80,23 +80,24 @@ export function AppointmentCard({
           )}
           {appointment.atHome ? "À domicile" : "Au cabinet"}
         </span>
-        {appointment.note ? (
-          <p className="mt-1 rounded-lg bg-muted px-3 py-2 text-sm leading-6">
-            {appointment.note}
-          </p>
-        ) : null}
       </div>
+      {appointment.note ? (
+        <p className="mt-2 rounded-lg bg-muted px-2.5 py-1.5 text-xs leading-5 text-ink-muted">
+          {appointment.note}
+        </p>
+      ) : null}
 
       {showPrimaryAction ? (
         <Button
-          className="mt-4 w-full sm:w-auto"
+          className="mt-2.5 w-full sm:w-auto"
           disabled={isPrimaryActionPending}
+          size="sm"
           onClick={() => onPrimaryAction(appointment)}
         >
           {primaryAction.label}
         </Button>
       ) : showFallbackLabel ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-2.5 text-xs text-muted-foreground">
           {primaryAction.label}
         </p>
       ) : null}

@@ -7,6 +7,7 @@ import '../features/agenda/presentation/agenda_screen.dart';
 import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
+import '../features/capture/presentation/recording_page.dart';
 
 /// La garde d'authentification est une redirection branchée sur le flux du
 /// cubit — une dizaine de lignes, là où un routeur impératif demanderait des
@@ -32,6 +33,11 @@ GoRouter buildAppRouter(AuthCubit auth) {
       GoRoute(
         path: '/entreprise',
         builder: (_, _) => const ChooseCompanyScreen(),
+      ),
+      GoRoute(
+        path: '/dicter',
+        builder: (_, state) =>
+            RecordingPage(appointmentId: state.uri.queryParameters['rdv']),
       ),
     ],
   );

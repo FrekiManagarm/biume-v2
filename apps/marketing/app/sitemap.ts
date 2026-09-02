@@ -29,18 +29,30 @@ const staticRoutes = [
 
 const routes = [...staticRoutes, ...blogPosts.map((post) => post.path)] as const;
 
+// Un lastmod identique et code en dur sur toutes les URLs est un signal que
+// Google apprend a ignorer. Les articles ont une vraie date de mise a jour dans
+// leur frontmatter ; les pages statiques n'en ont aucune de fiable, donc elles
+// n'en declarent pas — lastmod est optionnel, mentir ne l'est pas.
+const blogLastModifiedByPath = new Map(
+  blogPosts.map((post) => [post.path, new Date(post.updatedAt)]),
+);
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return routes.map((route) => ({
-    url: absoluteUrl(route),
-    lastModified: new Date(route.startsWith("/blog") ? "2026-07-03" : "2026-06-30"),
-    changeFrequency: route === "/" || route === "/blog" ? "weekly" : "monthly",
-    priority:
-      route === "/"
-        ? 1
-        : route === "/blog"
-          ? 0.8
-          : route.includes("osteopathe")
-            ? 0.9
-            : 0.7,
-  }));
+  return routes.map((route) => {
+    const lastModified = blogLastModifiedByPath.get(route);
+
+    return {
+      url: absoluteUrl(route),
+      ...(lastModified ? { lastModified } : {}),
+      changeFrequency: route === "/" || route === "/blog" ? "weekly" : "monthly",
+      priority:
+        route === "/"
+          ? 1
+          : route === "/blog"
+            ? 0.8
+            : route.includes("osteopathe")
+              ? 0.9
+              : 0.7,
+    };
+  });
 }

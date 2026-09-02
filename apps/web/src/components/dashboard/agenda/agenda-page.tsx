@@ -21,7 +21,6 @@ import {
 import {
   EmptyState,
   ListRow,
-  PageHeader,
   Panel,
   PanelHeader,
 } from "#/components/dashboard/kit";
@@ -204,16 +203,12 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
 
   return (
     <div className="grid w-full gap-5 pb-8">
-      <PageHeader
-        title="Agenda"
-        description="Coordonnez les rendez-vous et retrouvez, pour chaque séance, l'action qui l'attend."
-        actions={
-          <Button onClick={() => setIsNewAppointmentOpen(true)}>
-            Nouveau rendez-vous
-            <Plus className="size-4" data-icon="inline-end" />
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <Button onClick={() => setIsNewAppointmentOpen(true)}>
+          Nouveau rendez-vous
+          <Plus className="size-4" data-icon="inline-end" />
+        </Button>
+      </div>
 
       <section className="grid gap-5 xl:grid-cols-[1fr_24rem]">
         <Panel>
@@ -317,7 +312,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
               description={`Journée sélectionnée · ${dayModel.summary.appointmentCount} rendez-vous.`}
             />
 
-            <div className="grid gap-3">
+            <div className="grid max-h-[28rem] gap-3 overflow-y-auto pr-1">
               {dayModel.appointments.length > 0 ? (
                 dayModel.appointments.map((appointment) => (
                   <AppointmentCard

@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -10,6 +13,14 @@ import 'features/agenda/domain/agenda_repository.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/data/auth_repository_impl.dart';
 import 'features/auth/domain/auth_repository.dart';
+import 'features/capture/data/drift_capture_store.dart';
+import 'features/capture/data/file_capture_files.dart';
+import 'features/capture/data/http_capture_api.dart';
+import 'features/capture/data/record_audio_recorder.dart';
+import 'features/capture/domain/audio_recorder.dart';
+import 'features/capture/domain/capture_store.dart';
+import 'features/capture/domain/sync_engine.dart';
+import 'features/capture/domain/upload_client.dart';
 
 final getIt = GetIt.instance;
 
@@ -36,5 +47,24 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<AgendaRepository>(
       () => AgendaRepositoryImpl(getIt(), getIt()),
+    )
+    ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
+    ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
+    ..registerLazySingleton<CaptureApi>(() => HttpCaptureApi(getIt()))
+    // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
+    // de dictée en veut un neuf, et le précédent doit être libéré.
+    ..registerFactory<AudioRecorder>(RecordAudioRecorder.new)
+    ..registerLazySingleton(
+      () => SyncEngine(
+        store: getIt(),
+        api: getIt(),
+        files: getIt(),
+        isOnline: () async =>
+            !(await Connectivity().checkConnectivity()).contains(
+              ConnectivityResult.none,
+            ),
+        now: DateTime.now,
+        random: Random.secure().nextDouble,
+      ),
     );
 }

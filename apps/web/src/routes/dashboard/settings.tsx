@@ -8,11 +8,11 @@ import {
   CheckCircle2,
   CreditCard,
   Crown,
+  ExternalLink,
   ImageIcon,
   LoaderCircle,
   Mail,
   Save,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -37,6 +37,10 @@ import {
   updateOrganization,
 } from "#/functions/organization.function";
 import { updateUserNotifications } from "#/functions/user.function";
+import {
+  toInvoiceHistoryRows,
+  type AutumnInvoice,
+} from "#/lib/billing/invoice-history";
 import { autumnFeatureIds, autumnPlanIds } from "#/lib/constants/autumn-ids";
 import { cn } from "#/lib/utils";
 import { useUploadThing } from "#/lib/utils/uploadthing";
@@ -58,6 +62,11 @@ const notificationSettingsSchema = z.object({
 type OrganizationSettingsValues = z.infer<typeof organizationSettingsSchema>;
 type NotificationSettingsValues = z.infer<typeof notificationSettingsSchema>;
 type SettingsTabId = "organization" | "notifications" | "billing";
+
+const settingsSearchSchema = z.object({
+  tab: z.enum(["organization", "notifications", "billing"]).optional(),
+  blocked: z.boolean().optional(),
+});
 type FieldErrorValue = { message?: string } | string | undefined;
 type SettingsFormApi = any;
 type SettingsFieldApi = any;
@@ -74,25 +83,25 @@ const tabs: Array<{
   description: string;
   icon: typeof Building2;
 }> = [
-    {
-      id: "organization",
-      title: "Entreprise",
-      description: "Identité, langue et IA",
-      icon: Building2,
-    },
-    {
-      id: "notifications",
-      title: "Notifications",
-      description: "Préférences de contact",
-      icon: Bell,
-    },
-    {
-      id: "billing",
-      title: "Facturation",
-      description: "Plan et abonnement",
-      icon: CreditCard,
-    },
-  ];
+  {
+    id: "organization",
+    title: "Entreprise",
+    description: "Identité, langue et IA",
+    icon: Building2,
+  },
+  {
+    id: "notifications",
+    title: "Notifications",
+    description: "Préférences de contact",
+    icon: Bell,
+  },
+  {
+    id: "billing",
+    title: "Facturation",
+    description: "Plan et abonnement",
+    icon: CreditCard,
+  },
+];
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({
@@ -104,6 +113,7 @@ export const Route = createFileRoute("/dashboard/settings")({
       },
     ],
   }),
+  validateSearch: settingsSearchSchema,
   ssr: true,
   loader: async () => {
     const [session, organization] = await Promise.all([
@@ -119,7 +129,10 @@ export const Route = createFileRoute("/dashboard/settings")({
 function SettingsPage() {
   const router = useRouter();
   const { session, organization } = Route.useLoaderData();
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("organization");
+  const search = Route.useSearch();
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(
+    search.tab ?? "organization",
+  );
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
 
   const { startUpload, isUploading } = useUploadThing(
@@ -286,6 +299,7 @@ function SettingsPage() {
                 attach={attach}
                 customer={customer}
                 updateSubscription={updateSubscription}
+                blocked={search.blocked ?? false}
               />
             ) : null}
           </section>
@@ -709,27 +723,51 @@ function NotificationsTab({ form }: { form: SettingsFormApi }) {
   );
 }
 
+const billingPlans = [
+  {
+    id: autumnPlanIds.allInclusiveMonthly,
+    label: "Mensuel",
+    priceLabel: "29,99 € / mois",
+  },
+  {
+    id: autumnPlanIds.allInclusiveYearly,
+    label: "Annuel",
+    priceLabel: "299,88 € / an",
+  },
+] as const;
+
+/**
+ * Libellés affichés dans l'historique : une facture annonce un abonnement, pas
+ * une périodicité seule comme sur les boutons de souscription.
+ */
+const invoicePlanLabels: Record<string, string> = {
+  [autumnPlanIds.allInclusiveMonthly]: "Abonnement mensuel",
+  [autumnPlanIds.allInclusiveYearly]: "Abonnement annuel",
+};
+
 function BillingTab({
   attach,
   customer,
   updateSubscription,
+  blocked,
 }: {
   attach: ReturnType<typeof useCustomer>["attach"];
   customer: ReturnType<typeof useCustomer>["data"];
   updateSubscription: ReturnType<typeof useCustomer>["updateSubscription"];
+  blocked: boolean;
 }) {
-  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const activeSubscription = customer?.subscriptions?.find((subscription) =>
     ["active", "trialing"].includes(subscription.status),
   );
   const subscriptionStatus = getSubscriptionStatus(activeSubscription);
 
-  async function handleUpgrade() {
+  async function handleAttach(planId: string) {
     try {
-      setIsUpgrading(true);
+      setPendingPlanId(planId);
       await attach({
-        planId: autumnPlanIds.allInclusiveYearly,
+        planId,
         successUrl: `${window.location.origin}/dashboard/settings?tab=billing`,
       });
     } catch (error) {
@@ -739,7 +777,7 @@ function BillingTab({
           : "Impossible d'ouvrir la mise à niveau.",
       );
     } finally {
-      setIsUpgrading(false);
+      setPendingPlanId(null);
     }
   }
 
@@ -777,110 +815,191 @@ function BillingTab({
   }
 
   return (
-    <div className="grid gap-5">
-      <Panel>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
-              <Crown className="size-5" />
+    <>
+      {blocked ? (
+        <div
+          role="alert"
+          className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
+        >
+          Votre période d'essai est terminée. Choisissez un plan ci-dessous pour
+          continuer à utiliser Biume.
+        </div>
+      ) : null}
+      <div className="grid gap-5">
+        <Panel>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
+                <Crown className="size-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-emerald-700">
+                  Facturation
+                </p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+                  Abonnement actuel.
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  Consultez l'état du plan et gérez la montée en gamme. Vos
+                  factures sont listées juste en dessous.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-emerald-700">
-                Facturation
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-                Abonnement actuel.
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Consultez l'état du plan et gérez la montée en gamme. Les
-                détails de factures seront réintroduits dans une prochaine
-                version.
-              </p>
-            </div>
+
+            <StatusPill tone={subscriptionStatus.tone}>
+              {subscriptionStatus.label}
+            </StatusPill>
           </div>
 
-          <StatusPill tone={subscriptionStatus.tone}>
-            {subscriptionStatus.label}
-          </StatusPill>
-        </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <BillingMetric
+              label="Plan"
+              value={activeSubscription?.plan?.name ?? "Aucun plan actif"}
+            />
+            <BillingMetric
+              label="Montant"
+              value={
+                activeSubscription?.plan?.price?.amount
+                  ? formatCurrency(activeSubscription.plan.price.amount * 100)
+                  : "Non facturé"
+              }
+            />
+            <BillingMetric
+              label="Prochaine échéance"
+              value={
+                activeSubscription?.currentPeriodEnd
+                  ? formatDate(activeSubscription.currentPeriodEnd)
+                  : "Non planifiée"
+              }
+            />
+          </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <BillingMetric
-            label="Plan"
-            value={activeSubscription?.plan?.name ?? "Aucun plan actif"}
-          />
-          <BillingMetric
-            label="Montant"
-            value={
-              activeSubscription?.plan?.price?.amount
-                ? formatCurrency(activeSubscription.plan.price.amount * 100)
-                : "Non facturé"
-            }
-          />
-          <BillingMetric
-            label="Prochaine échéance"
-            value={
-              activeSubscription?.currentPeriodEnd
-                ? formatDate(activeSubscription.currentPeriodEnd)
-                : "Non planifiée"
-            }
-          />
-        </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {billingPlans.map((plan) => {
+              const isCurrentPlan = activeSubscription?.planId === plan.id;
+              const isPending = pendingPlanId === plan.id;
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button
-            type="button"
-            onClick={() => void handleUpgrade()}
-            disabled={isUpgrading}
-            className="h-10 active:scale-[0.98]"
-          >
-            {isUpgrading ? "Ouverture..." : "Mettre à niveau"}
-            {isUpgrading ? (
-              <LoaderCircle
-                className="size-4 animate-spin"
-                data-icon="inline-end"
-              />
-            ) : (
-              <Sparkles className="size-4" data-icon="inline-end" />
-            )}
-          </Button>
+              return (
+                <Button
+                  key={plan.id}
+                  type="button"
+                  variant={isCurrentPlan ? "outline" : "default"}
+                  onClick={() => void handleAttach(plan.id)}
+                  disabled={isPending || isCurrentPlan}
+                  className="h-auto flex-col items-start gap-1 py-3 active:scale-[0.98]"
+                >
+                  <span className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
+                    {plan.label}
+                    {isCurrentPlan ? <CheckCircle2 className="size-4" /> : null}
+                  </span>
+                  <span className="text-xs font-normal text-current/75">
+                    {isPending ? "Ouverture..." : plan.priceLabel}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+
           {activeSubscription ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleCancelSubscription()}
-              disabled={isCancelling}
-              className="h-10 active:scale-[0.98]"
-            >
-              {isCancelling ? "Annulation..." : "Annuler en fin de période"}
-              {isCancelling ? (
-                <LoaderCircle
-                  className="size-4 animate-spin"
-                  data-icon="inline-end"
-                />
-              ) : null}
-            </Button>
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void handleCancelSubscription()}
+                disabled={isCancelling}
+                className="h-10 active:scale-[0.98]"
+              >
+                {isCancelling ? "Annulation..." : "Annuler en fin de période"}
+                {isCancelling ? (
+                  <LoaderCircle
+                    className="size-4 animate-spin"
+                    data-icon="inline-end"
+                  />
+                ) : null}
+              </Button>
+            </div>
           ) : null}
-        </div>
-      </Panel>
+        </Panel>
 
-      <Panel className="border-dashed">
-        <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-            <CreditCard className="size-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold tracking-tight text-slate-950">
-              Historique de facturation
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Les factures et exports détaillés restent hors scope de cette V1.
-              La section est prête à recevoir l'historique Autumn ensuite.
-            </p>
-          </div>
+        <BillingHistoryPanel invoices={customer.invoices} />
+      </div>
+    </>
+  );
+}
+
+function BillingHistoryPanel({
+  invoices,
+}: {
+  invoices: AutumnInvoice[] | undefined;
+}) {
+  const rows = useMemo(
+    () => toInvoiceHistoryRows(invoices, invoicePlanLabels),
+    [invoices],
+  );
+
+  return (
+    <Panel>
+      <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-start">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+          <CreditCard className="size-5" />
         </div>
-      </Panel>
-    </div>
+        <div>
+          <h3 className="font-semibold tracking-tight text-slate-950">
+            Historique de facturation
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Vos factures sont émises par Stripe via Autumn. Ouvrez-en une pour
+            la consulter, la télécharger en PDF ou régler un impayé.
+          </p>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+          Aucune facture pour le moment. Elles apparaîtront ici dès votre
+          premier paiement.
+        </p>
+      ) : (
+        <ul className="mt-5 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200">
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-950">
+                  {row.planLabel}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {formatDate(row.createdAt)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold tabular-nums text-slate-950">
+                  {formatCurrency(row.amountInCents, row.currency)}
+                </span>
+                <StatusPill tone={row.status.tone}>
+                  {row.status.label}
+                </StatusPill>
+                {row.hostedInvoiceUrl ? (
+                  <Button asChild variant="outline" size="sm">
+                    <a
+                      href={row.hostedInvoiceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Voir
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }
 
@@ -984,7 +1103,7 @@ function StatusPill({
       className={cn(
         "inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold",
         tone === "success" &&
-        "border-emerald-200 bg-emerald-50 text-emerald-800",
+          "border-emerald-200 bg-emerald-50 text-emerald-800",
         tone === "warning" && "border-amber-200 bg-amber-50 text-amber-800",
         tone === "danger" && "border-red-200 bg-red-50 text-red-700",
         tone === "neutral" && "border-slate-200 bg-slate-50 text-slate-600",
@@ -1043,8 +1162,8 @@ function formatDate(value: number | string | Date) {
 function getSubscriptionStatus(
   subscription:
     | NonNullable<
-      ReturnType<typeof useCustomer>["data"]
-    >["subscriptions"][number]
+        ReturnType<typeof useCustomer>["data"]
+      >["subscriptions"][number]
     | undefined,
 ): {
   label: string;

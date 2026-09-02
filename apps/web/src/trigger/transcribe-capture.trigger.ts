@@ -29,7 +29,7 @@ export type TranscriptionDeps = {
     objectKey: string;
     mimeType: string;
     patientName: string | null;
-    species: string | null;
+    breed: string | null;
   } | null>;
   objectStore: { getBytes(key: string): Promise<Uint8Array | null> };
   transcriber: {
@@ -75,7 +75,7 @@ export async function runTranscription(
       mimeType: context.mimeType,
       prompt: buildTranscriptionPrompt({
         patientName: context.patientName,
-        species: context.species,
+        breed: context.breed,
       }),
     });
 
