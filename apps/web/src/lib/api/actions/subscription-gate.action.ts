@@ -4,7 +4,10 @@ import { z } from "zod";
 
 import { env } from "@biume/env/server";
 import { getSession } from "#/functions/auth.function";
-import { hasActiveOrTrialingSubscription } from "#/server/billing/subscription-gate";
+import {
+  hasActiveOrTrialingSubscription,
+  isBillingGateEnabled,
+} from "#/server/billing/subscription-gate";
 
 const getOrganizationSubscriptionGateSchema = z.object({
   organizationId: z.string().min(1),
@@ -19,6 +22,15 @@ export const getOrganizationSubscriptionGateFn = createServerFn({
 
     if (!session) {
       throw new Error("Unauthorized");
+    }
+
+    if (
+      !isBillingGateEnabled({
+        nodeEnv: env.NODE_ENV,
+        forceInDev: env.BILLING_GATE_IN_DEV,
+      })
+    ) {
+      return { hasActiveOrTrialingSubscription: true };
     }
 
     try {

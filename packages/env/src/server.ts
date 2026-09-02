@@ -21,6 +21,9 @@ export const env = createEnv({
     R2_AUDIO_BUCKET: z.string().min(1),
     MOBILE_TRUSTED_ORIGINS: z.string().default("biume://"),
     NODE_ENV: z.string(),
+    // Rallume le paywall d'abonnement en développement, où il est neutralisé
+    // par défaut (voir `isBillingGateEnabled`).
+    BILLING_GATE_IN_DEV: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

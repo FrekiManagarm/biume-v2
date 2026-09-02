@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getBillingGateRedirectTarget,
   hasActiveOrTrialingSubscription,
+  isBillingGateEnabled,
   shouldCheckBillingGate,
 } from "./subscription-gate";
 
@@ -114,5 +115,39 @@ describe("shouldCheckBillingGate", () => {
         pathname: "/dashboard/settings-other",
       }),
     ).toBe(true);
+  });
+});
+
+describe("isBillingGateEnabled", () => {
+  it("laisse passer le développement local", () => {
+    // Sans abonnement sur la base de dev, le paywall renvoyait sur la
+    // facturation à chaque navigation : impossible de travailler sur le
+    // reste du dashboard.
+    expect(isBillingGateEnabled({ nodeEnv: "development" })).toBe(false);
+  });
+
+  it("reste actif en production", () => {
+    expect(isBillingGateEnabled({ nodeEnv: "production" })).toBe(true);
+  });
+
+  it("reste actif dans tout environnement non identifié comme dev", () => {
+    // Staging, preview, test : le défaut sûr est d'appliquer le paywall.
+    expect(isBillingGateEnabled({ nodeEnv: "staging" })).toBe(true);
+    expect(isBillingGateEnabled({ nodeEnv: "test" })).toBe(true);
+  });
+
+  it("se rallume en dev quand on veut tester le paywall", () => {
+    expect(
+      isBillingGateEnabled({ nodeEnv: "development", forceInDev: "true" }),
+    ).toBe(true);
+  });
+
+  it("ne se rallume que sur la valeur exacte attendue", () => {
+    expect(
+      isBillingGateEnabled({ nodeEnv: "development", forceInDev: "" }),
+    ).toBe(false);
+    expect(
+      isBillingGateEnabled({ nodeEnv: "development", forceInDev: "false" }),
+    ).toBe(false);
   });
 });

@@ -10,6 +10,33 @@ export function hasActiveOrTrialingSubscription(
   );
 }
 
+/**
+ * Le paywall doit-il s'appliquer dans cet environnement ?
+ *
+ * Les organisations de la base de développement n'ont pas d'abonnement : le
+ * gate y renvoyait sur la facturation à chaque navigation, rendant le reste
+ * du dashboard inaccessible. On le neutralise donc en développement, et
+ * seulement là — tout autre environnement (production, staging, preview,
+ * test) garde le paywall par défaut.
+ *
+ * `BILLING_GATE_IN_DEV=true` le rallume pour travailler sur le paywall
+ * lui-même. Volontairement à sens unique : aucune variable ne permet de
+ * l'éteindre hors développement.
+ */
+export function isBillingGateEnabled({
+  nodeEnv,
+  forceInDev,
+}: {
+  nodeEnv: string;
+  forceInDev?: string;
+}): boolean {
+  if (nodeEnv !== "development") {
+    return true;
+  }
+
+  return forceInDev === "true";
+}
+
 function isBillingSettingsPath(pathname: string): boolean {
   return (
     pathname === "/dashboard/settings" ||
