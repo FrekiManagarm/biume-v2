@@ -26,7 +26,7 @@ describe("tenant-isolated creation wiring", () => {
 
     expect(createSource).toContain("createAppointmentWithPatientIsolation");
     expect(createSource).toContain("eq(pets.id, data.patientId)");
-    expect(createSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(createSource).toContain("eq(pets.organizationId, organizationId)");
   });
 
   test("createReport scopes its patient and coherent appointment before delegating the insert", () => {
@@ -41,10 +41,10 @@ describe("tenant-isolated creation wiring", () => {
 
     expect(createSource).toContain("createReportWithTenantIsolation");
     expect(createSource).toContain("eq(pets.id, patientId)");
-    expect(createSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(createSource).toContain("eq(pets.organizationId, organizationId)");
     expect(createSource).toContain("eq(appointments.id, appointmentId)");
     expect(createSource).toContain(
-      "eq(appointments.organizationId, organization.id)",
+      "eq(appointments.organizationId, organizationId)",
     );
     expect(createSource).toContain("eq(appointments.patientId, patientId)");
   });
@@ -60,7 +60,10 @@ describe("tenant-isolated creation wiring", () => {
     );
 
     expect(createSource).toContain(".validator(quickReportSchema)");
-    expect(createSource).toContain("organizationId: organization.id");
+    // `organizationId` est désormais une variable locale, insérée en
+    // raccourci : la présence de l'identifiant dans ce corps de fonction
+    // reste la preuve que l'insert est bien cloisonné.
+    expect(createSource).toContain("organizationId,");
     expect(createSource).toContain("createIdempotentQuickReport");
     expect(createSource).toContain("clientRequestId");
     expect(createSource).toContain("quickRequestFingerprint");
@@ -86,10 +89,10 @@ describe("tenant-isolated update wiring", () => {
     expect(updateSource).toContain("patientId !== undefined");
     expect(updateSource).toContain("eq(appointments.id, appointmentId)");
     expect(updateSource).toContain(
-      "eq(appointments.organizationId, organization.id)",
+      "eq(appointments.organizationId, organizationId)",
     );
     expect(updateSource).toContain("eq(pets.id, patientId)");
-    expect(updateSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(updateSource).toContain("eq(pets.organizationId, organizationId)");
   });
 
   test("updateReport scopes report, patient, and coherent current or requested appointment", () => {
@@ -104,15 +107,15 @@ describe("tenant-isolated update wiring", () => {
 
     expect(updateSource).toContain("updateReportWithTenantIsolation");
     expect(updateSource).toContain(
-      "eq(advancedReport.createdBy, organization.id)",
+      "eq(advancedReport.createdBy, organizationId)",
     );
     expect(updateSource).toContain("eq(pets.id, patientId)");
-    expect(updateSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(updateSource).toContain("eq(pets.organizationId, organizationId)");
     expect(updateSource).toContain(
       "eq(appointments.id, resolvedAppointmentId)",
     );
     expect(updateSource).toContain(
-      "eq(appointments.organizationId, organization.id)",
+      "eq(appointments.organizationId, organizationId)",
     );
     expect(updateSource).toContain("eq(appointments.patientId, patientId)");
   });
@@ -139,6 +142,6 @@ test("shared versions are scoped, revision-bound, and never updated", () => {
   expect(adapterSource).toContain("onConflictDoNothing");
   expect(adapterSource).not.toContain(".update(reportSharedVersion)");
   expect(handlerSource).toContain("createImmutableReportSharedVersion");
-  expect(handlerSource).toContain("organizationId: organization.id");
+  expect(handlerSource).toContain("organizationId,");
   expect(handlerSource).toContain("reportId: data.reportId");
 });

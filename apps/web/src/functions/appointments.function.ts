@@ -1,6 +1,6 @@
 import { db } from "@biume/db";
 import { and, eq, or, lte, gte, ne, inArray } from "drizzle-orm";
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import {
   createAppointmentWithPatientIsolation,
   updateAppointmentWithTenantIsolation,
@@ -69,12 +69,11 @@ const patientIdSchema = z.object({
 export const getAppointments = createServerFn({ method: "GET" })
   .validator(appointmentWindowSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const results = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         gte(appointments.beginAt, new Date(data.fromISO)),
         lte(appointments.beginAt, new Date(data.toISO)),
       ),
@@ -136,15 +135,14 @@ export const getAppointments = createServerFn({ method: "GET" })
 export const checkAppointmentConflicts = createServerFn({ method: "GET" })
   .validator(appointmentDateRangeSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     // Un rendez-vous est en conflit si :
     // - Il commence avant la fin du nouveau rendez-vous ET
     // - Il se termine après le début du nouveau rendez-vous
     const conflicts = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         // Une séance annulée libère son créneau : la compter comme un conflit
         // empêcherait le praticien de réutiliser une heure qu'il vient de
         // libérer lui-même.
@@ -186,15 +184,14 @@ export const checkAppointmentConflicts = createServerFn({ method: "GET" })
 export const createAppointment = createServerFn({ method: "POST" })
   .validator(createAppointmentSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     return createAppointmentWithPatientIsolation({
       findPatient: () =>
         db.query.pets.findFirst({
           where: and(
             eq(pets.id, data.patientId),
-            eq(pets.organizationId, organization.id),
+            eq(pets.organizationId, organizationId),
           ),
           columns: { id: true },
         }),
@@ -205,7 +202,7 @@ export const createAppointment = createServerFn({ method: "POST" })
             patientId: data.patientId,
             beginAt: data.beginAt,
             endAt: data.endAt,
-            organizationId: organization.id,
+            organizationId,
             atHome: data.atHome || false,
             note: data.note,
             status: "CREATED",
@@ -231,15 +228,17 @@ export const createAppointment = createServerFn({ method: "POST" })
                   appointmentId: values.appointmentId,
                   notes: "",
                   status: "draft",
-                  createdBy: organization.id,
+                  createdBy: organizationId,
                   createdAt: new Date(),
                 }),
-                db.insert(reportSectionState).values(
-                  buildReportSectionStateRows(
-                    reportId,
-                    createInitialReportSectionStates(),
+                db
+                  .insert(reportSectionState)
+                  .values(
+                    buildReportSectionStateRows(
+                      reportId,
+                      createInitialReportSectionStates(),
+                    ),
                   ),
-                ),
               ]);
 
               return reportId;
@@ -268,15 +267,14 @@ export const updateAppointment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { appointmentId, ...values } = data;
     const patientId = values.patientId;
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     return updateAppointmentWithTenantIsolation({
       findAppointment: () =>
         db.query.appointments.findFirst({
           where: and(
             eq(appointments.id, appointmentId),
-            eq(appointments.organizationId, organization.id),
+            eq(appointments.organizationId, organizationId),
           ),
           columns: { id: true },
         }),
@@ -286,7 +284,7 @@ export const updateAppointment = createServerFn({ method: "POST" })
               db.query.pets.findFirst({
                 where: and(
                   eq(pets.id, patientId),
-                  eq(pets.organizationId, organization.id),
+                  eq(pets.organizationId, organizationId),
                 ),
                 columns: { id: true },
               })
@@ -301,7 +299,7 @@ export const updateAppointment = createServerFn({ method: "POST" })
           .where(
             and(
               eq(appointments.id, appointmentId),
-              eq(appointments.organizationId, organization.id),
+              eq(appointments.organizationId, organizationId),
             ),
           )
           .returning();
@@ -319,13 +317,12 @@ export const deleteAppointment = createServerFn({ method: "POST" })
   .validator(appointmentIdSchema)
   .handler(async ({ data }) => {
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
       const linkedReports = await db.query.advancedReport.findMany({
         where: and(
           eq(advancedReport.appointmentId, data.appointmentId),
-          eq(advancedReport.createdBy, organization.id),
+          eq(advancedReport.createdBy, organizationId),
         ),
         columns: {
           id: true,
@@ -361,7 +358,7 @@ export const deleteAppointment = createServerFn({ method: "POST" })
         .where(
           and(
             eq(appointments.id, data.appointmentId),
-            eq(appointments.organizationId, organization.id),
+            eq(appointments.organizationId, organizationId),
           ),
         )
         .returning();
@@ -378,8 +375,7 @@ export const deleteAppointment = createServerFn({ method: "POST" })
  */
 export const getTodayAppointments = createServerFn({ method: "GET" }).handler(
   async () => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const today = new Date();
     const dayStart = startOfDay(today);
@@ -387,7 +383,7 @@ export const getTodayAppointments = createServerFn({ method: "GET" }).handler(
 
     const results = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         gte(appointments.beginAt, dayStart),
         lte(appointments.beginAt, dayEnd),
       ),
@@ -428,8 +424,7 @@ export const getTodayAppointments = createServerFn({ method: "GET" }).handler(
 export const getAppointmentsWithoutReport = createServerFn({ method: "GET" })
   .validator(daysBackSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - data.daysBack);
@@ -437,7 +432,7 @@ export const getAppointmentsWithoutReport = createServerFn({ method: "GET" })
     // Récupérer tous les rendez-vous complétés depuis cutoffDate
     const completedAppointments = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         eq(appointments.status, "COMPLETED"),
         gte(appointments.beginAt, cutoffDate),
       ),
@@ -483,12 +478,11 @@ export const getAppointmentsWithoutReport = createServerFn({ method: "GET" })
 export const getAppointmentsByPatientId = createServerFn({ method: "GET" })
   .validator(patientIdSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const results = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         eq(appointments.patientId, data.patientId),
       ),
       orderBy: (appointments, { desc }) => [desc(appointments.beginAt)],

@@ -35,7 +35,7 @@ describe("client mutation authorization", () => {
       "utf8",
     );
     const organizationScopeCount = (
-      source.match(/eq\(clients\.organizationId, organization\.id\)/g) ?? []
+      source.match(/eq\(clients\.organizationId, organizationId\)/g) ?? []
     ).length;
     const deleteSource = source.slice(
       source.indexOf("export const deleteClient"),
@@ -44,10 +44,10 @@ describe("client mutation authorization", () => {
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);
     expect(source).toContain("Client introuvable ou inaccessible.");
     expect(deleteSource).toContain(
-      "eq(clients.organizationId, organization.id)",
+      "eq(clients.organizationId, organizationId)",
     );
     expect(deleteSource).toContain("deleteClientWithPatientIsolation");
-    expect(deleteSource).toContain("ne(pets.organizationId, organization.id)");
+    expect(deleteSource).toContain("ne(pets.organizationId, organizationId)");
     expect(deleteSource).toContain("isNull(pets.organizationId)");
     expect(source).toContain("getClientRelationsForOrganization");
     expect(deleteSource).toContain("findScopedPatients");

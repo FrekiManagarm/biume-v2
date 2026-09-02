@@ -4,7 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq, ilike, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import {
   createClientSchema,
   deleteClientSchema,
@@ -38,14 +38,10 @@ export type GetAllClientsParams = z.infer<typeof getAllClientsParams>;
 export const getAllClients = createServerFn({ method: "GET" })
   .validator(getAllClientsParams)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      throw new Error("Organization not found");
-    }
-
+    const organizationId = await requireOrganizationId();
     const { search = "", page = 1, limit = 250 } = data;
     const trimmedSearch = search.trim();
-    const baseCondition = eq(clients.organizationId, organization.id);
+    const baseCondition = eq(clients.organizationId, organizationId);
     const where =
       trimmedSearch.length > 0
         ? and(
@@ -61,7 +57,7 @@ export const getAllClients = createServerFn({ method: "GET" })
     return db.query.clients.findMany({
       where,
       orderBy: [desc(clients.createdAt)],
-      with: getClientRelationsForOrganization(organization.id),
+      with: getClientRelationsForOrganization(organizationId),
       limit,
       offset: Math.max(0, (page - 1) * limit),
     }) as unknown as Promise<Client[]>;
@@ -70,11 +66,7 @@ export const getAllClients = createServerFn({ method: "GET" })
 export const createClient = createServerFn({ method: "POST" })
   .validator(createClientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      throw new Error("Organization not found");
-    }
-
+    const organizationId = await requireOrganizationId();
     const [createdClient] = await db
       .insert(clients)
       .values({
@@ -85,7 +77,7 @@ export const createClient = createServerFn({ method: "POST" })
         city: data.city || null,
         zip: data.zip || null,
         country: data.country || null,
-        organizationId: organization.id,
+        organizationId,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -97,11 +89,7 @@ export const createClient = createServerFn({ method: "POST" })
 export const updateClient = createServerFn({ method: "POST" })
   .validator(updateClientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      throw new Error("Organization not found");
-    }
-
+    const organizationId = await requireOrganizationId();
     const [updatedClient] = await db
       .update(clients)
       .set({
@@ -117,7 +105,7 @@ export const updateClient = createServerFn({ method: "POST" })
       .where(
         and(
           eq(clients.id, data.id),
-          eq(clients.organizationId, organization.id),
+          eq(clients.organizationId, organizationId),
         ),
       )
       .returning();
@@ -132,17 +120,13 @@ export const updateClient = createServerFn({ method: "POST" })
 export const deleteClient = createServerFn({ method: "POST" })
   .validator(deleteClientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      throw new Error("Organization not found");
-    }
-
+    const organizationId = await requireOrganizationId();
     return deleteClientWithPatientIsolation({
       findClient: () =>
         db.query.clients.findFirst({
           where: and(
             eq(clients.id, data.id),
-            eq(clients.organizationId, organization.id),
+            eq(clients.organizationId, organizationId),
           ),
           columns: { id: true },
         }),
@@ -152,7 +136,7 @@ export const deleteClient = createServerFn({ method: "POST" })
             eq(pets.ownerId, data.id),
             or(
               isNull(pets.organizationId),
-              ne(pets.organizationId, organization.id),
+              ne(pets.organizationId, organizationId),
             ),
           ),
           columns: { id: true },
@@ -161,7 +145,7 @@ export const deleteClient = createServerFn({ method: "POST" })
         db.query.pets.findMany({
           where: and(
             eq(pets.ownerId, data.id),
-            eq(pets.organizationId, organization.id),
+            eq(pets.organizationId, organizationId),
           ),
           columns: { id: true, organizationId: true },
           with: {
@@ -191,14 +175,14 @@ export const deleteClient = createServerFn({ method: "POST" })
             },
           },
         }),
-      organizationId: organization.id,
+      organizationId,
       deleteClient: async () => {
         const [deletedClient] = await db
           .delete(clients)
           .where(
             and(
               eq(clients.id, data.id),
-              eq(clients.organizationId, organization.id),
+              eq(clients.organizationId, organizationId),
             ),
           )
           .returning({ id: clients.id });

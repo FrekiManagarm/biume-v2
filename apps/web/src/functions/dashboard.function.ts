@@ -1,7 +1,7 @@
 import { and, eq, gte, desc } from "drizzle-orm";
 import { db } from "@biume/db";
 import { clients, pets, animals, advancedReport } from "@biume/db/schema/index";
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
@@ -33,8 +33,7 @@ function getStartDateFromDaysAgo(days: number): Date {
 export const countNewClientsLastNDays = createServerFn({ method: "GET" })
   .validator(newClientsDaysInputSchema)
   .handler(async ({ data }) => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const start = getStartDateFromDaysAgo(data.days);
 
@@ -42,7 +41,10 @@ export const countNewClientsLastNDays = createServerFn({ method: "GET" })
       .select({ id: clients.id })
       .from(clients)
       .where(
-        and(eq(clients.organizationId, org.id), gte(clients.createdAt, start)),
+        and(
+          eq(clients.organizationId, organizationId),
+          gte(clients.createdAt, start),
+        ),
       );
 
     return rows.length;
@@ -51,8 +53,7 @@ export const countNewClientsLastNDays = createServerFn({ method: "GET" })
 export const countSentReportsLastNDays = createServerFn({ method: "GET" })
   .validator(daysInputSchema)
   .handler(async ({ data }) => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const start = getStartDateFromDaysAgo(data.days);
 
@@ -61,7 +62,7 @@ export const countSentReportsLastNDays = createServerFn({ method: "GET" })
       .from(advancedReport)
       .where(
         and(
-          eq(advancedReport.createdBy, org.id),
+          eq(advancedReport.createdBy, organizationId),
           eq(advancedReport.status, "sent"),
           gte(advancedReport.createdAt, start),
         ),
@@ -72,15 +73,14 @@ export const countSentReportsLastNDays = createServerFn({ method: "GET" })
 
 export const countDraftReports = createServerFn({ method: "GET" }).handler(
   async () => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const rows = await db
       .select({ id: advancedReport.id })
       .from(advancedReport)
       .where(
         and(
-          eq(advancedReport.createdBy, org.id),
+          eq(advancedReport.createdBy, organizationId),
           eq(advancedReport.status, "draft"),
         ),
       );
@@ -115,8 +115,7 @@ function toAbsoluteDelta(current: number, previous: number): MetricDelta {
 export const getNewClientsMetric = createServerFn({ method: "GET" })
   .validator(newClientsDaysInputSchema)
   .handler(async ({ data }): Promise<MetricResult> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
     const start = getStartDateFromDaysAgo(data.days);
     const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
@@ -126,7 +125,7 @@ export const getNewClientsMetric = createServerFn({ method: "GET" })
         .from(clients)
         .where(
           and(
-            eq(clients.organizationId, org.id),
+            eq(clients.organizationId, organizationId),
             gte(clients.createdAt, start),
           ),
         ),
@@ -135,7 +134,7 @@ export const getNewClientsMetric = createServerFn({ method: "GET" })
         .from(clients)
         .where(
           and(
-            eq(clients.organizationId, org.id),
+            eq(clients.organizationId, organizationId),
             gte(clients.createdAt, prevStart),
           ),
         ),
@@ -156,8 +155,7 @@ export const getNewClientsMetric = createServerFn({ method: "GET" })
 export const getNewPatientsMetric = createServerFn({ method: "GET" })
   .validator(newClientsDaysInputSchema)
   .handler(async ({ data }): Promise<MetricResult> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
     const start = getStartDateFromDaysAgo(data.days);
     const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
@@ -166,13 +164,19 @@ export const getNewPatientsMetric = createServerFn({ method: "GET" })
         .select({ id: pets.id })
         .from(pets)
         .where(
-          and(eq(pets.organizationId, org.id), gte(pets.createdAt, start)),
+          and(
+            eq(pets.organizationId, organizationId),
+            gte(pets.createdAt, start),
+          ),
         ),
       db
         .select({ id: pets.id })
         .from(pets)
         .where(
-          and(eq(pets.organizationId, org.id), gte(pets.createdAt, prevStart)),
+          and(
+            eq(pets.organizationId, organizationId),
+            gte(pets.createdAt, prevStart),
+          ),
         ),
     ]);
 
@@ -186,8 +190,7 @@ export const getNewPatientsMetric = createServerFn({ method: "GET" })
 export const getSentReportsMetric = createServerFn({ method: "GET" })
   .validator(daysInputSchema)
   .handler(async ({ data }): Promise<MetricResult> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
     const start = getStartDateFromDaysAgo(data.days);
     const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
@@ -197,7 +200,7 @@ export const getSentReportsMetric = createServerFn({ method: "GET" })
         .from(advancedReport)
         .where(
           and(
-            eq(advancedReport.createdBy, org.id),
+            eq(advancedReport.createdBy, organizationId),
             eq(advancedReport.status, "sent"),
             gte(advancedReport.createdAt, start),
           ),
@@ -207,7 +210,7 @@ export const getSentReportsMetric = createServerFn({ method: "GET" })
         .from(advancedReport)
         .where(
           and(
-            eq(advancedReport.createdBy, org.id),
+            eq(advancedReport.createdBy, organizationId),
             eq(advancedReport.status, "sent"),
             gte(advancedReport.createdAt, prevStart),
           ),
@@ -224,8 +227,7 @@ export const getSentReportsMetric = createServerFn({ method: "GET" })
 export const getDraftReportsMetric = createServerFn({ method: "GET" })
   .validator(daysInputSchema)
   .handler(async ({ data }): Promise<MetricResult> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
     const start = getStartDateFromDaysAgo(data.days);
     const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
@@ -235,7 +237,7 @@ export const getDraftReportsMetric = createServerFn({ method: "GET" })
         .from(advancedReport)
         .where(
           and(
-            eq(advancedReport.createdBy, org.id),
+            eq(advancedReport.createdBy, organizationId),
             eq(advancedReport.status, "draft"),
             gte(advancedReport.createdAt, start),
           ),
@@ -245,7 +247,7 @@ export const getDraftReportsMetric = createServerFn({ method: "GET" })
         .from(advancedReport)
         .where(
           and(
-            eq(advancedReport.createdBy, org.id),
+            eq(advancedReport.createdBy, organizationId),
             eq(advancedReport.status, "draft"),
             gte(advancedReport.createdAt, prevStart),
           ),
@@ -268,8 +270,7 @@ export type SpeciesItem = {
 
 export const getClienteleBySpecies = createServerFn({ method: "GET" }).handler(
   async (): Promise<SpeciesItem[]> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     // Récupérer tous les pets de l'organisation avec leur animal pour catégorisation
     const rows = await db
@@ -279,7 +280,7 @@ export const getClienteleBySpecies = createServerFn({ method: "GET" }).handler(
       })
       .from(pets)
       .leftJoin(animals, eq(pets.type, animals.id))
-      .where(eq(pets.organizationId, org.id));
+      .where(eq(pets.organizationId, organizationId));
 
     const buckets = {
       Chiens: 0,
@@ -380,8 +381,7 @@ function formatRelativeTime(date: Date): string {
 export const getRecentActivity = createServerFn({ method: "GET" })
   .validator(limitInputSchema)
   .handler(async ({ data }): Promise<RecentActivityItem[]> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     // Rapports envoyés ou finalisés récents
     const reports = await db
@@ -392,14 +392,14 @@ export const getRecentActivity = createServerFn({ method: "GET" })
         createdAt: advancedReport.createdAt,
       })
       .from(advancedReport)
-      .where(and(eq(advancedReport.createdBy, org.id)))
+      .where(and(eq(advancedReport.createdBy, organizationId)))
       .orderBy(advancedReport.createdAt);
     // Neon/Drizzle ne supporte pas tous les modifs ici: on limitera après merge
     // Nouveaux patients récents
     const recentPets = await db
       .select({ id: pets.id, name: pets.name, createdAt: pets.createdAt })
       .from(pets)
-      .where(eq(pets.organizationId, org.id))
+      .where(eq(pets.organizationId, organizationId))
       .orderBy(pets.createdAt);
     const reportEvents: RecentActivityItem[] = reports
       .filter((r) => r.createdAt)
@@ -457,8 +457,7 @@ export type RecentReport = {
 export const getRecentReports = createServerFn({ method: "GET" })
   .validator(recentReportsLimitInputSchema)
   .handler(async ({ data }): Promise<RecentReport[]> => {
-    const org = await getCurrentOrganization();
-    if (!org) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const rows = await db
       .select({
@@ -471,7 +470,7 @@ export const getRecentReports = createServerFn({ method: "GET" })
       })
       .from(advancedReport)
       .leftJoin(pets, eq(advancedReport.patientId, pets.id))
-      .where(eq(advancedReport.createdBy, org.id))
+      .where(eq(advancedReport.createdBy, organizationId))
       .orderBy(desc(advancedReport.createdAt))
       .limit(data.limit);
 

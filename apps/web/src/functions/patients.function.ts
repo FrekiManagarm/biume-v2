@@ -4,7 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import {
   createPatientSchema,
   deletePatientSchema,
@@ -50,12 +50,11 @@ export type AnimalOption = {
 export const getAllPatients = createServerFn({ method: "GET" })
   .validator(getAllPatientsParams)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const { search = "", page = 1, limit = 10 } = data;
 
-    const baseCondition = eq(pets.organizationId, organization.id);
+    const baseCondition = eq(pets.organizationId, organizationId);
     const where =
       search.trim().length > 0
         ? and(
@@ -97,15 +96,14 @@ export const getAllAnimals = createServerFn({ method: "GET" }).handler(
 export const createPatient = createServerFn({ method: "POST" })
   .validator(createPatientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     return createPatientWithOwnerIsolation({
       findOwner: () =>
         db.query.clients.findFirst({
           where: and(
             eq(clients.id, data.ownerId),
-            eq(clients.organizationId, organization.id),
+            eq(clients.organizationId, organizationId),
           ),
           columns: { id: true },
         }),
@@ -123,7 +121,7 @@ export const createPatient = createServerFn({ method: "POST" })
             height: data.height,
             description: data.description || null,
             chippedNumber: data.chippedNumber,
-            organizationId: organization.id,
+            organizationId,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -137,13 +135,12 @@ export const createPatient = createServerFn({ method: "POST" })
 export const updatePatient = createServerFn({ method: "POST" })
   .validator(updatePatientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const owner = await db.query.clients.findFirst({
       where: and(
         eq(clients.id, data.ownerId),
-        eq(clients.organizationId, organization.id),
+        eq(clients.organizationId, organizationId),
       ),
       columns: {
         id: true,
@@ -170,9 +167,7 @@ export const updatePatient = createServerFn({ method: "POST" })
           data.chippedNumber === undefined ? undefined : data.chippedNumber,
         updatedAt: new Date(),
       })
-      .where(
-        and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
-      )
+      .where(and(eq(pets.id, data.id), eq(pets.organizationId, organizationId)))
       .returning();
 
     if (!updatedPatient) {
@@ -185,15 +180,14 @@ export const updatePatient = createServerFn({ method: "POST" })
 export const deletePatient = createServerFn({ method: "POST" })
   .validator(deletePatientSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     return deletePatientWithDependencyIsolation({
       findPatient: () =>
         db.query.pets.findFirst({
           where: and(
             eq(pets.id, data.id),
-            eq(pets.organizationId, organization.id),
+            eq(pets.organizationId, organizationId),
           ),
           columns: { id: true, organizationId: true },
           with: {
@@ -223,12 +217,12 @@ export const deletePatient = createServerFn({ method: "POST" })
             },
           },
         }),
-      organizationId: organization.id,
+      organizationId,
       deletePatient: async () => {
         const [deletedPatient] = await db
           .delete(pets)
           .where(
-            and(eq(pets.id, data.id), eq(pets.organizationId, organization.id)),
+            and(eq(pets.id, data.id), eq(pets.organizationId, organizationId)),
           )
           .returning({ id: pets.id });
 
@@ -244,14 +238,10 @@ export const deletePatient = createServerFn({ method: "POST" })
 export const getPatientById = createServerFn({ method: "GET" })
   .validator(patientIdSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const patient = await db.query.pets.findFirst({
-      where: and(
-        eq(pets.id, data.id),
-        eq(pets.organizationId, organization.id),
-      ),
+      where: and(eq(pets.id, data.id), eq(pets.organizationId, organizationId)),
       with: {
         owner: true,
         animal: true,

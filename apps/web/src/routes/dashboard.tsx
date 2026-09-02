@@ -10,17 +10,8 @@ import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header";
 import { DashboardPageBanner } from "#/components/dashboard/layout/dashboard-page-banner";
 import { cn } from "@biume/ui/lib/utils";
-import {
-  getCurrentOrganization,
-  getOrganizations,
-  getSession,
-} from "#/functions/auth.function";
-import { getSidebarDefaultOpen } from "#/functions/sidebar.function";
-import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
-import {
-  getBillingGateRedirectTarget,
-  shouldCheckBillingGate,
-} from "#/server/billing/subscription-gate";
+import { getDashboardShellFn } from "#/lib/api/actions/dashboard-shell.action";
+import { getBillingGateRedirectTarget } from "#/server/billing/subscription-gate";
 import type { Organization } from "@biume/db/schema/organization";
 import type { AuthSession } from "@biume/auth";
 
@@ -64,60 +55,44 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: RouteComponent,
   beforeLoad: async ({ location, preload }) => {
-    const session = await getSession();
+    // Un seul aller-retour pour tout le contexte du shell (voir
+    // `getDashboardShellFn`), au lieu des cinq appels sérialisés d'avant.
+    const shell = await getDashboardShellFn({
+      data: { pathname: location.pathname, preload },
+    });
 
-    if (!session) {
-      throw redirect({ to: "/signin" });
-    }
-
-    if (!session.session.activeOrganizationId) {
-      throw redirect({ to: "/select-organization" });
-    }
-
-    const currentOrganization = await getCurrentOrganization().catch(
-      () => null,
-    );
-
-    const redirectTarget = getDashboardRedirectTarget(
-      session,
-      currentOrganization,
-    );
+    const redirectTarget = getDashboardRedirectTarget(shell.session, {
+      id: shell.currentOrganizationId,
+    });
 
     if (redirectTarget) {
       throw redirect({ to: redirectTarget });
     }
 
-    // `session.session.activeOrganizationId` est garanti non-null ici (le
-    // premier throw plus haut couvre le cas contraire), contrairement à
-    // `currentOrganization` qui reste `Organization | null` pour TypeScript
-    // après le `.catch(() => null)` — utiliser l'org directement produirait
-    // une erreur de type sans apporter d'info supplémentaire, puisque
-    // `getDashboardRedirectTarget` a déjà vérifié qu'ils coïncident.
-    if (shouldCheckBillingGate({ preload, pathname: location.pathname })) {
-      const { hasActiveOrTrialingSubscription } =
-        await getOrganizationSubscriptionGateFn({
-          data: { organizationId: session.session.activeOrganizationId },
-        });
-
-      const billingRedirectTarget = resolveDashboardBillingRedirect(
-        location.pathname,
-        hasActiveOrTrialingSubscription,
-      );
-
-      if (billingRedirectTarget) {
-        throw redirect({
-          to: billingRedirectTarget,
-          search: { tab: "billing", blocked: true },
-        });
-      }
+    if (!shell.session) {
+      // Inatteignable : `getDashboardRedirectTarget` renvoie déjà "/signin"
+      // sans session. Le garde sert à TypeScript, qui ne peut pas déduire
+      // le rétrécissement depuis la fonction pure.
+      throw redirect({ to: "/signin" });
     }
 
-    const [organizations, sidebarDefaultOpen] = await Promise.all([
-      getOrganizations(),
-      getSidebarDefaultOpen(),
-    ]);
+    const billingRedirectTarget = resolveDashboardBillingRedirect(
+      location.pathname,
+      shell.hasActiveOrTrialingSubscription,
+    );
 
-    return { session, organizations, sidebarDefaultOpen };
+    if (billingRedirectTarget) {
+      throw redirect({
+        to: billingRedirectTarget,
+        search: { tab: "billing", blocked: true },
+      });
+    }
+
+    return {
+      session: shell.session,
+      organizations: shell.organizations,
+      sidebarDefaultOpen: shell.sidebarDefaultOpen,
+    };
   },
 });
 

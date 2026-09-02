@@ -110,7 +110,7 @@ describe("patient mutation authorization", () => {
       "utf8",
     );
     const organizationScopeCount = (
-      source.match(/eq\(pets\.organizationId, organization\.id\)/g) ?? []
+      source.match(/eq\(pets\.organizationId, organizationId\)/g) ?? []
     ).length;
     const updateSource = source.slice(
       source.indexOf("export const updatePatient"),
@@ -126,14 +126,14 @@ describe("patient mutation authorization", () => {
     );
 
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);
-    expect(source).toContain("eq(clients.organizationId, organization.id)");
+    expect(source).toContain("eq(clients.organizationId, organizationId)");
     expect(source).toContain("Propriétaire introuvable ou inaccessible.");
     expect(source).toContain("Patient introuvable ou inaccessible.");
     expect(createSource).toContain(
-      "eq(clients.organizationId, organization.id)",
+      "eq(clients.organizationId, organizationId)",
     );
     expect(createSource).toContain("createPatientWithOwnerIsolation");
-    expect(deleteSource).toContain("eq(pets.organizationId, organization.id)");
+    expect(deleteSource).toContain("eq(pets.organizationId, organizationId)");
     expect(deleteSource).toContain("deletePatientWithDependencyIsolation");
     expect(deleteSource).toContain("appointments");
     expect(deleteSource).toContain("reports");

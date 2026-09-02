@@ -7,7 +7,7 @@ import {
   quickReportSchema,
   type ReportSectionStates,
 } from "@biume/contracts/report";
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import z from "zod";
 import {
@@ -132,10 +132,7 @@ export type AdvancedReportListItem = Awaited<
   ReturnType<typeof loadAllReportRows>
 >[number];
 
-async function loadReportDetailRow(
-  organizationId: string,
-  reportId: string,
-) {
+async function loadReportDetailRow(organizationId: string, reportId: string) {
   return db.query.advancedReport.findFirst({
     where: and(
       eq(advancedReport.id, reportId),
@@ -176,14 +173,10 @@ export const getLatestReports = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { limit } = data;
 
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      throw new Error("Organization not found");
-    }
-
+    const organizationId = await requireOrganizationId();
     // Récupérer les rapports simples
     const advancedReports = await db.query.advancedReport.findMany({
-      where: eq(advancedReport.createdBy, organization.id),
+      where: eq(advancedReport.createdBy, organizationId),
       orderBy: [desc(advancedReport.createdAt)],
       limit,
       with: {
@@ -228,16 +221,12 @@ export const getAllReports = createServerFn({ method: "GET" })
   .validator(getAllReportsParams)
   .handler(async ({ data }) => {
     try {
-      const organization = await getCurrentOrganization();
-
-      if (!organization) {
-        throw new Error("Organization not found");
-      }
+      const organizationId = await requireOrganizationId();
 
       const { search = "", status = "tous" } = data;
 
       return loadAllReportRows({
-        organizationId: organization.id,
+        organizationId,
         search,
         status,
       });
@@ -254,15 +243,14 @@ export const createReport = createServerFn({ method: "POST" })
     const patientId = petId ?? "";
 
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
       return createReportWithTenantIsolation({
         findPatient: () =>
           db.query.pets.findFirst({
             where: and(
               eq(pets.id, patientId),
-              eq(pets.organizationId, organization.id),
+              eq(pets.organizationId, organizationId),
             ),
             columns: { id: true },
           }),
@@ -271,7 +259,7 @@ export const createReport = createServerFn({ method: "POST" })
               db.query.appointments.findFirst({
                 where: and(
                   eq(appointments.id, appointmentId),
-                  eq(appointments.organizationId, organization.id),
+                  eq(appointments.organizationId, organizationId),
                   eq(appointments.patientId, patientId),
                 ),
                 columns: { id: true },
@@ -288,7 +276,7 @@ export const createReport = createServerFn({ method: "POST" })
               appointmentId: appointmentId || null,
               notes,
               status: "draft",
-              createdBy: organization.id,
+              createdBy: organizationId,
               createdAt: new Date(),
             }),
             db
@@ -313,8 +301,7 @@ export const createReport = createServerFn({ method: "POST" })
 export const createQuickReport = createServerFn({ method: "POST" })
   .validator(quickReportSchema)
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const findByKey = async ({
       organizationId,
@@ -341,14 +328,10 @@ export const createQuickReport = createServerFn({ method: "POST" })
     };
 
     const result = await createIdempotentQuickReport(
-      { organizationId: organization.id, input: data },
+      { organizationId, input: data },
       {
         findByKey,
-        createAtomic: async ({
-          organizationId,
-          input,
-          requestFingerprint,
-        }) => {
+        createAtomic: async ({ organizationId, input, requestFingerprint }) => {
           const rows = buildQuickReportRows({
             organizationId,
             input,
@@ -392,10 +375,9 @@ export const getReportById = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
-      const report = await loadReportDetailRow(organization.id, data.reportId);
+      const report = await loadReportDetailRow(organizationId, data.reportId);
 
       if (!report) throw new Error("Report not found");
 
@@ -434,8 +416,7 @@ export const updateReport = createServerFn({ method: "POST" })
     const patientId = petId ?? "";
 
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
       return updateReportWithTenantIsolation({
         findReport: async () => {
@@ -448,7 +429,7 @@ export const updateReport = createServerFn({ method: "POST" })
             .where(
               and(
                 eq(advancedReport.id, reportId),
-                eq(advancedReport.createdBy, organization.id),
+                eq(advancedReport.createdBy, organizationId),
               ),
             )
             .limit(1)
@@ -460,7 +441,7 @@ export const updateReport = createServerFn({ method: "POST" })
           db.query.pets.findFirst({
             where: and(
               eq(pets.id, patientId),
-              eq(pets.organizationId, organization.id),
+              eq(pets.organizationId, organizationId),
             ),
             columns: { id: true },
           }),
@@ -472,7 +453,7 @@ export const updateReport = createServerFn({ method: "POST" })
           const appointment = await db.query.appointments.findFirst({
             where: and(
               eq(appointments.id, resolvedAppointmentId),
-              eq(appointments.organizationId, organization.id),
+              eq(appointments.organizationId, organizationId),
               eq(appointments.patientId, patientId),
             ),
             columns: { id: true },
@@ -562,9 +543,12 @@ export const updateReport = createServerFn({ method: "POST" })
             },
             {
               persistAtomic: async () => {
-                const result = await db.execute<{ id: string; revision: number }>(
+                const result = await db.execute<{
+                  id: string;
+                  revision: number;
+                }>(
                   buildAtomicReportUpdateStatement({
-                    organizationId: organization.id,
+                    organizationId,
                     reportId: ownedReport.id,
                     expectedRevision,
                     title,
@@ -668,12 +652,11 @@ const reportSharedVersionPorts: ReportSharedVersionPorts = {
 export const createReportSharedVersion = createServerFn({ method: "POST" })
   .validator(z.object({ reportId: z.string().min(1) }))
   .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const persisted = await createImmutableReportSharedVersion(
       {
-        organizationId: organization.id,
+        organizationId,
         reportId: data.reportId,
         createdAt: new Date(),
       },
@@ -755,14 +738,13 @@ export const deleteReport = createServerFn({ method: "POST" })
   .validator(z.object({ reportId: z.string() }))
   .handler(async ({ data }) => {
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
       // Vérifier que le rapport existe et appartient à l'organisation
       const report = await db.query.advancedReport.findFirst({
         where: and(
           eq(advancedReport.id, data.reportId),
-          eq(advancedReport.createdBy, organization.id),
+          eq(advancedReport.createdBy, organizationId),
         ),
       });
 
@@ -821,14 +803,13 @@ export const getPatientAnatomicalHistory = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     try {
-      const organization = await getCurrentOrganization();
-      if (!organization) throw new Error("Organization not found");
+      const organizationId = await requireOrganizationId();
 
       // Construire les conditions de filtrage
       const conditions = [
         eq(advancedReport.patientId, data.petId),
         eq(advancedReport.status, "finalized"),
-        eq(advancedReport.createdBy, organization.id),
+        eq(advancedReport.createdBy, organizationId),
         eq(anatomicalIssue.anatomicalPartId, data.anatomicalPartId),
       ];
 

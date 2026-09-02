@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db } from "@biume/db";
 import { appointments } from "@biume/db/schema/index";
-import { getCurrentOrganization } from "#/functions/auth.function";
+import { requireOrganizationId } from "#/server/auth/organization-scope";
 import type { AgendaAppointmentInput } from "#/lib/dashboard/day-agenda";
 
 const dashboardAgendaDaySchema = z.object({
@@ -19,15 +19,14 @@ export type DashboardAgendaDayResult = {
 export const getDashboardAgendaDay = createServerFn({ method: "GET" })
   .validator(dashboardAgendaDaySchema)
   .handler(async ({ data }): Promise<DashboardAgendaDayResult> => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+    const organizationId = await requireOrganizationId();
 
     const dayStart = startOfLocalDay(data.date);
     const dayEnd = endOfLocalDay(data.date);
 
     const rows = await db.query.appointments.findMany({
       where: and(
-        eq(appointments.organizationId, organization.id),
+        eq(appointments.organizationId, organizationId),
         gte(appointments.beginAt, dayStart),
         lte(appointments.beginAt, dayEnd),
       ),
