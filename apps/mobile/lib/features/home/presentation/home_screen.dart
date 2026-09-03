@@ -43,7 +43,10 @@ class HomeScreen extends StatelessWidget {
                 // Navigation volontaire : la garde du routeur doit la
                 // laisser passer plutôt que de renvoyer aussitôt à l'accueil.
                 'entreprise' => context.push('/entreprise', extra: 'volontaire'),
-                _ => context.read<AuthCubit>().signOut(),
+                // Cas explicite plutôt qu'un `_` par défaut : une troisième
+                // entrée ne doit jamais déconnecter en silence.
+                'deconnexion' => context.read<AuthCubit>().signOut(),
+                _ => null,
               },
               itemBuilder: (_) => const [
                 PopupMenuItem(
