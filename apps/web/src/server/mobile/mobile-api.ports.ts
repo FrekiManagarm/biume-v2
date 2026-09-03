@@ -26,6 +26,7 @@ import {
   gte,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lte,
   or,
@@ -47,7 +48,7 @@ import {
   normalizeReportSectionStates,
 } from "#/functions/report-domain";
 import { createInitialReportSectionStates } from "@biume/contracts/report";
-import { classifyTodo } from "./todo.service";
+import { classifyTodo, todoCaptureStatuses } from "./todo.service";
 import { todoPageSize } from "@biume/contracts/mobile-todo";
 import type { Transcript, TranscriptStatus } from "@biume/contracts/transcript";
 import type {
@@ -712,6 +713,7 @@ export async function createProductionMobileApiPorts(
           captureId: audioCapture.id,
           reportId: audioCapture.reportId,
           appointmentId: audioCapture.appointmentId,
+          captureStatus: audioCapture.status,
           updatedAt: audioCapture.updatedAt,
           patientName: pets.name,
           transcriptStatus: captureTranscript.status,
@@ -724,7 +726,14 @@ export async function createProductionMobileApiPorts(
         .where(
           and(
             eq(audioCapture.organizationId, actor.organizationId),
-            eq(audioCapture.status, "uploaded"),
+            // `expired` est retenu comme `uploaded` : la purge de l'audio,
+            // au bout de 24 h, ne doit pas retirer de la liste une dictée
+            // dont le travail n'est pas terminé. `uploadedAt` non nul écarte
+            // les captures expirées avant même d'être arrivées : elles n'ont
+            // ni transcription ni rapport, et occuperaient une place dans la
+            // page au détriment d'une dictée réelle.
+            inArray(audioCapture.status, [...todoCaptureStatuses]),
+            isNotNull(audioCapture.uploadedAt),
             gte(audioCapture.createdAt, since),
           ),
         )
@@ -767,6 +776,7 @@ export async function createProductionMobileApiPorts(
           transcriptStatus: row.transcriptStatus as TranscriptStatus | null,
           proposalCount: row.reportId ? (countByReport.get(row.reportId) ?? 0) : 0,
           sectionStates: states ? normalizeReportSectionStates(states) : null,
+          audioExpired: row.captureStatus === "expired",
         });
         if (!kind) return [];
         return [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyTodo, type TodoSource } from "./todo.service";
+import { classifyTodo, todoCaptureStatuses, type TodoSource } from "./todo.service";
 
 const resolved = { clinical: "confirmed", anatomical: "not_applicable", recommendations: "confirmed", notes: "not_applicable" } as const;
 const pending = { ...resolved, clinical: "proposed" } as const;
@@ -11,6 +11,7 @@ function source(overrides: Partial<TodoSource> = {}): TodoSource {
     transcriptStatus: "ready",
     proposalCount: 0,
     sectionStates: null,
+    audioExpired: false,
     ...overrides,
   };
 }
@@ -38,5 +39,33 @@ describe("classement d'une dictée", () => {
   });
   it("dit prêt à envoyer quand tout est décidé", () => {
     expect(classifyTodo(source({ proposalCount: 3, sectionStates: resolved }))).toBe("ready_to_send");
+  });
+});
+
+describe("dictée dont l'audio a expiré", () => {
+  it("reste listée : la transcription et le rapport, eux, existent toujours", () => {
+    expect(
+      classifyTodo(source({ audioExpired: true, transcriptStatus: "ready", proposalCount: 0 })),
+    ).toBe("transcript_to_review");
+    expect(
+      classifyTodo(
+        source({ audioExpired: true, transcriptStatus: "corrected", proposalCount: 3, sectionStates: pending }),
+      ),
+    ).toBe("report_to_validate");
+    expect(
+      classifyTodo(
+        source({ audioExpired: true, transcriptStatus: "corrected", proposalCount: 3, sectionStates: resolved }),
+      ),
+    ).toBe("ready_to_send");
+  });
+
+  it("sort de la liste quand rien n'a jamais été transcrit", () => {
+    expect(
+      classifyTodo(source({ audioExpired: true, transcriptStatus: null, reportId: null, reportStatus: null })),
+    ).toBeNull();
+  });
+
+  it("est retenue par la requête au même titre qu'une dictée envoyée", () => {
+    expect([...todoCaptureStatuses].sort()).toEqual(["expired", "uploaded"]);
   });
 });
