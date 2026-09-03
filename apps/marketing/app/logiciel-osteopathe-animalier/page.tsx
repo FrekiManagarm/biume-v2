@@ -16,9 +16,9 @@ export default function ProductSeoPage() {
       eyebrow="Logiciel ostéopathe animalier"
       title={
         <>
-          Votre regard métier, jusqu’au{" "}
+          Le logiciel ostéopathe animalier qui va{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-            propriétaire.
+            jusqu’au propriétaire.
           </span>
         </>
       }

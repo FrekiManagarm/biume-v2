@@ -16,7 +16,7 @@ export default function PricingSeoPage() {
       eyebrow="Tarif logiciel ostéopathe animalier"
       title={
         <>
-          Un prix simple pour rendre votre{" "}
+          Un tarif ostéopathe animalier simple, pour un{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             suivi plus professionnel
           </span>

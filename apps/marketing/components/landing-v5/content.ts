@@ -19,7 +19,7 @@ export const TRIAL_NOTE =
 export const NAV_LINKS = [
   { href: "#produit", label: "Compte rendu" },
   { href: "#fonctions", label: "Fonctions" },
-  { href: "#mobile", label: "Mobile" },
+  { href: "#atelier", label: "Atelier" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#questions", label: "Questions" },
 ] as const;
@@ -30,7 +30,7 @@ export const HERO_PILL_BADGE = "Nouveau";
 export const HERO_PILL_TEXT =
   "Le compte rendu propriétaire de l'ostéopathe animalier";
 
-export const HERO_TITLE_LINE_1 = "Vos notes de praticien animalier,";
+export const HERO_TITLE_LINE_1 = "Vos notes d'ostéopathe animalier,";
 export const HERO_TITLE_LINE_2 = "un compte rendu prêt à envoyer.";
 
 export const HERO_LEAD =
@@ -207,6 +207,55 @@ export const SPECIMEN_STEPS = [
   },
 ] as const;
 
+/* ── L'atelier (poste de travail) ─────────────────────────────── */
+
+export const ATELIER_EYEBROW = "Le module de rédaction";
+export const ATELIER_TITLE = "Chaque compte rendu a son poste de travail.";
+export const ATELIER_LEAD =
+  "Quatre sections suivies une à une, un schéma corporel qui garde vos observations précises, l'historique de l'animal sous la main — tout reste au même endroit, du début à l'envoi.";
+
+export const ATELIER_WORKSPACE = {
+  title: "Quatre sections, un état par section",
+  body: "Clinique, anatomique, recommandations, notes : chaque section garde son propre statut jusqu'à ce que vous l'ayez confirmée.",
+  progressLabel: "3 sections sur 4 traitées",
+  progressPercent: 75,
+  sections: [
+    { label: "Clinique", state: "confirmed" },
+    { label: "Anatomique", state: "confirmed", active: true },
+    { label: "Recommandations", state: "needs_confirmation" },
+    { label: "Notes", state: "proposed" },
+  ],
+  anatomyLabel: "Schéma corporel",
+  anatomyZone: "Thoraco-lombaire",
+  anatomySide: "Côté gauche",
+  anatomySeverity: "Très marquée",
+} as const;
+
+export const ATELIER_HISTORY = {
+  title: "L'historique reste sous la main",
+  body: "Les séances précédentes de l'animal, avec la récurrence d'une même zone quand elle revient.",
+  rows: [
+    { when: "14 mars", label: "Tension thoraco-lombaire", recurrence: "Récurrence élevée" },
+    { when: "18 févr.", label: "Sacro-iliaque sensible", recurrence: "Récurrence moyenne" },
+    { when: "3 janv.", label: "Raideur post-transport", recurrence: "Récurrence faible" },
+  ],
+} as const;
+
+export const ATELIER_VERSIONS = {
+  title: "Deux écritures, un seul geste",
+  body: "La version praticien reste précise ; celle du propriétaire est prête au même endroit, avec son propre statut.",
+  practitioner: {
+    label: "Version praticien",
+    status: "Confirmée",
+    extract: "Tension chaîne T-L G>D, restriction D14-L1.",
+  },
+  owner: {
+    label: "Version propriétaire",
+    status: "Prêt",
+    extract: "Une zone de tension le long du dos, plus marquée à gauche.",
+  },
+} as const;
+
 /* ── Fonctions (3 blocs) ──────────────────────────────────────── */
 
 export const FEATURES_EYEBROW = "Fonctions";
@@ -218,28 +267,28 @@ export const FEATURES = [
     title: "Vous notez comme d'habitude",
     body: "Abréviations, sigles, syntaxe télégraphique, ordre libre : Biume part de vos notes telles qu'elles sont.",
     link: "En savoir plus sur la prise de notes",
-    phoneLabel: "Vos notes",
-    phoneRaw: "mot : raideur post-transport, refus incurvation D",
-    phoneCta: "Générer le compte rendu",
+    panelLabel: "Vos notes",
+    panelRaw: "mot : raideur post-transport, refus incurvation D",
+    panelCta: "Générer le compte rendu",
   },
   {
     n: "02",
     title: "Vous relisez passage par passage",
     body: "Chaque passage est relu séparément et reste modifiable jusqu'à l'envoi. Rien ne part sans votre validation.",
     link: "En savoir plus sur la relecture",
-    phoneStates: ["Motif — Validé", "Examen — Validé", "Suites — À relire"],
-    phoneExtract:
+    panelStates: ["Motif — Validé", "Examen — Validé", "Suites — À relire"],
+    panelExtract:
       "Vous m'avez appelé parce que Nashira semblait gênée depuis environ trois semaines.",
-    phoneActions: ["Corriger", "Valider"],
+    panelActions: ["Corriger", "Valider"],
   },
   {
     n: "03",
     title: "Vous envoyez, le suivi démarre",
     body: "Une fois validé, le document part au propriétaire. Le questionnaire de suivi et le rappel de contrôle se programment tout seuls.",
     link: "En savoir plus sur le suivi",
-    phoneStatus: "Envoyé · 14:02",
-    phoneFollowUp: "Questionnaire programmé · J+2",
-    phoneControl: "Contrôle du 4 avril",
+    panelStatus: "Envoyé · 14:02",
+    panelFollowUp: "Questionnaire programmé · J+2",
+    panelControl: "Contrôle du 4 avril",
   },
 ] as const;
 
@@ -248,15 +297,9 @@ export const FEATURES = [
 export const MOBILE_EYEBROW = "Sur le terrain";
 export const MOBILE_TITLE = "Votre activité tient dans une poche.";
 export const MOBILE_LEAD =
-  "Les rendez-vous du jour, la séance à clôturer, le compte rendu prêt à envoyer — tout tient sur l'écran que vous avez déjà en main.";
+  "Les rendez-vous du jour et le compte rendu prêt à envoyer tiennent sur l'écran que vous avez déjà en main.";
 
-export const MOBILE_SCREENS = [
-  { label: "Agenda du jour" },
-  { label: "Vos notes" },
-  { label: "Compte rendu prêt à envoyer" },
-  { label: "Suivi · J+2" },
-  { label: "Historique" },
-] as const;
+export const MOBILE_SCREENS = [{ label: "Compte rendu prêt à envoyer" }] as const;
 
 export const MOBILE_PERIMETER = [
   {
@@ -266,10 +309,6 @@ export const MOBILE_PERIMETER = [
   {
     title: "Dossiers en deux champs",
     body: "Un propriétaire et un animal créés en deux champs, complétés au fil des séances.",
-  },
-  {
-    title: "Historique de l'animal",
-    body: "Les comptes rendus précédents, disponibles pendant la séance.",
   },
   {
     title: "PDF et envoi par e-mail",

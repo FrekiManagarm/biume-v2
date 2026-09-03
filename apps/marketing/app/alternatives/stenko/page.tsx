@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative Stenko",
+  title: "Alternative à Stenko pour ostéopathe animalier",
   description:
     "Comparez Stenko et Biume: agenda, propriétaires, patients, documents, résumé propriétaire et timeline animal côté Biume pour praticiens.",
   path: "/alternatives/stenko",

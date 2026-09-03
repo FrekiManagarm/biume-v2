@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative MyPawScribe",
+  title: "Alternative à MyPawScribe pour ostéopathe animalier",
   description:
     "Comparez MyPawScribe et Biume: scribe vétérinaire d'un côté; agenda, propriétaires, patients et suivi côté Biume pour thérapeutes animaliers.",
   path: "/alternatives/mypawscribe",

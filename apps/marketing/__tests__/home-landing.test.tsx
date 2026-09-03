@@ -34,6 +34,7 @@ describe("Biume homepage (landing-v5, SaaS moderne)", () => {
     const html = renderWithLandingImageConfig(<HomePage />);
     const markers = [
       "produit",
+      "atelier",
       "fonctions",
       "mobile",
       "proprietaire",
@@ -73,7 +74,7 @@ describe("Biume homepage (landing-v5, SaaS moderne)", () => {
     );
 
     expect(new Set(ids).size).toBe(ids.length);
-    for (const target of ["produit", "fonctions", "mobile", "tarifs", "questions"]) {
+    for (const target of ["produit", "fonctions", "atelier", "tarifs", "questions"]) {
       expect(navigationTargets).toContain(target);
     }
   });

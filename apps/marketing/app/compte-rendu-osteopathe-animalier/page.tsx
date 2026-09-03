@@ -16,7 +16,7 @@ export default function ReportSeoPage() {
       eyebrow="Compte rendu ostéopathe animalier"
       title={
         <>
-          Des comptes rendus que les propriétaires{" "}
+          Le compte rendu ostéopathe animalier que les propriétaires{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             comprennent vraiment
           </span>

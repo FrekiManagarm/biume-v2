@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative Animalib",
+  title: "Alternative à Animalib pour ostéopathe animalier",
   description:
     "Comparez Animalib et Biume: agenda, propriétaires, patients, documents, comptes rendus, relances et suivi post-séance pour praticiens animaliers.",
   path: "/alternatives/animalib",

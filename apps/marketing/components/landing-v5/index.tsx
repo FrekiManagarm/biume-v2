@@ -1,5 +1,6 @@
 import "./landing-v5.css";
 
+import { LandingV5Atelier } from "./atelier";
 import { LandingV5Bento } from "./bento";
 import { LandingV5Boundaries } from "./boundaries";
 import { LandingV5Close } from "./close";
@@ -29,6 +30,7 @@ export function LandingV5() {
           <LandingV5Facts />
           <LandingV5Bento />
           <LandingV5ReportTabs />
+          <LandingV5Atelier />
           <LandingV5Features />
           <LandingV5MobileArc />
           <LandingV5Owner />

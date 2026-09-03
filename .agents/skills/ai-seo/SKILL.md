@@ -1,8 +1,8 @@
 ---
 name: ai-seo
-description: "When the user wants to optimize content for AI search engines, get cited by LLMs, or appear in AI-generated answers. Also use when the user mentions 'AI SEO,' 'AEO,' 'GEO,' 'LLMO,' 'answer engine optimization,' 'generative engine optimization,' 'LLM optimization,' 'AI Overviews,' 'optimize for ChatGPT,' 'optimize for Perplexity,' 'AI citations,' 'AI visibility,' 'zero-click search,' 'how do I show up in AI answers,' 'LLM mentions,' 'optimize for Claude/Gemini,' 'llms.txt,' 'OKF,' 'Open Knowledge Format,' 'knowledge bundle,' or 'agent-readable site.' Use this whenever someone wants their content to be cited or surfaced by AI assistants and AI search engines. For traditional technical and on-page SEO audits, see seo-audit. For structured data implementation, see schema."
+description: "When the user wants to optimize content for AI search engines, get cited by LLMs, or appear in AI-generated answers. Also use when the user mentions 'AI SEO,' 'AEO,' 'GEO,' 'LLMO,' 'answer engine optimization,' 'generative engine optimization,' 'LLM optimization,' 'AI Overviews,' 'optimize for ChatGPT,' 'optimize for Perplexity,' 'AI citations,' 'AI visibility,' 'zero-click search,' 'how do I show up in AI answers,' 'LLM mentions,' 'optimize for Claude/Gemini,' 'llms.txt,' 'llms-full.txt,' 'OKF,' 'Open Knowledge Format,' 'knowledge bundle,' 'agent-readable site,' 'agent readiness,' 'is my site agent-ready,' or 'WebMCP.' Use this whenever someone wants their content to be cited or surfaced by AI assistants and AI search engines. For traditional technical and on-page SEO audits, see seo-audit. For structured data implementation, see schema."
 metadata:
-  version: 2.1.0
+  version: 2.4.0
 ---
 
 # AI SEO
@@ -251,18 +251,20 @@ AI systems don't just cite your website — they cite where you appear.
 
 **Third-party sources matter more than your own site:**
 - Wikipedia mentions (7.8% of all ChatGPT citations)
-- Reddit discussions (1.8% of ChatGPT citations)
+- Reddit discussions (volatile: ~1.8% of ChatGPT citations historically, but nearly wiped from ChatGPT by Aug 2026 retrieval changes — still retrieved elsewhere; see the volatility section in [references/agent-readiness.md](references/agent-readiness.md))
 - Industry publications and guest posts
 - Review sites (G2, Capterra, TrustRadius for B2B SaaS)
 - YouTube (frequently cited by Google AI Overviews)
+- Podcasts (episodes get transcribed, show notes published — both get crawled and cited)
 - Quora answers
 
 **Actions:**
 - Ensure your Wikipedia page is accurate and current
-- Participate authentically in Reddit communities
+- Participate authentically in Reddit communities — but as one surface in a portfolio, never the whole strategy (citation mixes shift overnight with retrieval updates)
 - Get featured in industry roundups and comparison articles
 - Maintain updated profiles on relevant review platforms
-- Create YouTube content for key how-to queries
+- Create YouTube content for key how-to queries — models don't watch the video, they read the text layer around it; see [references/youtube-ai-citations.md](references/youtube-ai-citations.md) for the full anatomy (transcript, captions, chapters, description, pinned comment)
+- Guest on podcasts in your category (prep with the public-relations skill's podcast guest prep)
 - Answer relevant Quora questions with depth
 
 ### Machine-Readable Files for AI Agents
@@ -272,6 +274,8 @@ AI systems don't just cite your website — they cite where you appear.
 > **Why include them anyway**: non-Google AI engines (ChatGPT, Claude, Perplexity) and autonomous buying agents do reward extractable structure. The files below help with those engines without harming Google.
 
 AI agents aren't just answering questions — they're becoming buyers. When an AI agent evaluates tools on behalf of a user, it needs structured, parseable information. If your pricing is locked in a JavaScript-rendered page or a "contact sales" wall, agents will skip you and recommend competitors whose information they can actually read.
+
+**Audit this layer first**: [references/agent-readiness.md](references/agent-readiness.md) — the access/discovery/parseability checklist, free scoring tools (`npx is-agentic`, Frase's checker), Markdown content negotiation + `Link` headers, `llms-full.txt`, and the emerging agent-*actionable* layer (WebMCP).
 
 Add these machine-readable files to your site root:
 
@@ -381,6 +385,8 @@ Not all content is equally citable. Prioritize these formats:
 - Content without dates or author attribution
 - PDF-only content (harder for AI to parse)
 
+**Citation ≠ recommendation.** Getting cited means your content was useful to consult; getting *recommended* — onto the buyer's actual shortlist — is governed by web-wide consensus (reviews, forums, analysts, press) and is largely independent of your own content. Self-promotional "best [category]" listicles can even backfire for emerging brands: in one 100-query B2B study, 69% of the AI Overview citations that self-promotional listicles earned came in answers that recommended competitors instead of the publishing brand. See [references/citations-vs-recommendations.md](references/citations-vs-recommendations.md) for the visibility ladder (retrieved → cited → mentioned → recommended), stage-dependent buyer's-guide strategy, what earns recommendations, and the attribution blind spot.
+
 ---
 
 ## Monitoring AI Visibility
@@ -393,6 +399,7 @@ Not all content is equally citable. Prioritize these formats:
 | Brand citation rate | How often you're cited in AI answers | AI visibility tools (see below) |
 | Share of AI voice | Your citations vs. competitors | Peec AI, Otterly, ZipTie |
 | Citation sentiment | How AI describes your brand | Manual review + monitoring tools |
+| Recommendation rate | Whether you're on the shortlist, not just cited (see [citations-vs-recommendations.md](references/citations-vs-recommendations.md)) | Prompt tracking + mention framing |
 | Source attribution | Which of your pages get cited | Track referral traffic from AI sources |
 
 ### AI Visibility Monitoring Tools

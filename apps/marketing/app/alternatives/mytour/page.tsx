@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative MyTour",
+  title: "Alternative à MyTour pour ostéopathe animalier",
   description:
     "Comparez MyTour et Biume: tournées côté MyTour; agenda, propriétaires, patients et suivi post-séance côté Biume pour praticiens mobiles.",
   path: "/alternatives/mytour",

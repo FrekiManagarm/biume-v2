@@ -1,4 +1,5 @@
 import {
+  attachCaptureRequestSchema,
   captureResponseSchema,
   completeCaptureRequestSchema,
   createCaptureRequestSchema,
@@ -181,6 +182,21 @@ export const cancelCaptureRoute = createRoute({
   request: { params: captureIdParamsSchema },
   responses: {
     204: { description: "Dictée annulée" },
+    ...errorResponses,
+  },
+});
+
+export const attachCaptureRoute = createRoute({
+  method: "post",
+  path: "/captures/{captureId}/attach",
+  security,
+  summary: "Rattacher une capture libre à un animal et créer son brouillon",
+  request: {
+    params: captureIdParamsSchema,
+    body: { content: json(attachCaptureRequestSchema) },
+  },
+  responses: {
+    200: { description: "Capture rattachée", content: json(captureResponseSchema) },
     ...errorResponses,
   },
 });

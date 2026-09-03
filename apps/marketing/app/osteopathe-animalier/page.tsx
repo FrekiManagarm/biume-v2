@@ -3,7 +3,7 @@ import { SeoPage } from "../../components/seo-page";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Ostéopathe animalier",
+  title: "Ostéopathe animalier : organiser séances et suivi",
   description:
     "Ressources pour ostéopathe animalier: organiser ses séances, clarifier ses comptes rendus, suivre les propriétaires et valoriser chaque visite.",
   path: "/osteopathe-animalier",
