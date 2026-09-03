@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/telemetry/telemetry.dart';
 import '../../../injection_container.dart';
 import '../../capture/domain/capture_store.dart';
 import '../domain/transcript_repository.dart';
@@ -26,9 +27,11 @@ class TranscriptPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          TranscriptCubit(getIt<TranscriptRepository>(), getIt<CaptureStore>())
-            ..load(captureId),
+      create: (_) => TranscriptCubit(
+        getIt<TranscriptRepository>(),
+        getIt<CaptureStore>(),
+        telemetry: getIt<Telemetry>(),
+      )..load(captureId),
       child: TranscriptScreen(
         captureId: captureId,
         needsPatient: needsPatient,

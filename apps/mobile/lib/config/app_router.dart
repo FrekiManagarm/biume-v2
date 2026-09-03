@@ -69,8 +69,10 @@ GoRouter buildAppRouter(AuthCubit auth) {
       ),
       GoRoute(
         path: '/comptes-rendus/:reportId/suivi',
-        builder: (_, state) =>
-            FollowUpSchedulePage(reportId: state.pathParameters['reportId']!),
+        builder: (_, state) => FollowUpSchedulePage(
+          reportId: state.pathParameters['reportId']!,
+          captureId: state.uri.queryParameters['capture'],
+        ),
       ),
     ],
   );

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
+import 'package:biume_mobile/core/telemetry/journey_events.dart';
+import 'package:biume_mobile/core/telemetry/telemetry.dart';
 import 'package:biume_mobile/features/report/domain/proposal.dart';
 import 'package:biume_mobile/features/report/domain/report_repository.dart';
 import 'package:biume_mobile/features/report/presentation/report_cubit.dart';
@@ -41,12 +43,13 @@ ReportProposals propositions({
     name: 'Camille Roux',
     email: 'camille@example.org',
   ),
+  String? captureId,
 }) => ReportProposals(
   reportId: 'report-1',
   status: status,
   patientName: 'Filou',
   owner: owner,
-  captureId: null,
+  captureId: captureId,
   transcript: 'Filou présente une tension lombaire à droite.',
   proposals: items,
   sections:
@@ -61,9 +64,11 @@ ReportProposals propositions({
 
 void main() {
   late MockReportRepository repository;
+  late List<ProductEvent> evenements;
 
   setUp(() {
     repository = MockReportRepository();
+    evenements = [];
     registerFallbackValue(SectionState.proposed);
     registerFallbackValue(ReportSection.clinical);
   });
@@ -192,7 +197,9 @@ void main() {
       var calls = 0;
       when(() => repository.load(any())).thenAnswer((_) async {
         calls++;
-        return Success(calls < 3 ? propositions(items: const []) : propositions());
+        return Success(
+          calls < 3 ? propositions(items: const []) : propositions(),
+        );
       });
     },
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
@@ -200,21 +207,31 @@ void main() {
     expect: () => [
       const ReportLoading(),
       const ReportPreparing(),
-      isA<ReportLoaded>().having((s) => s.data.proposals.length, 'propositions', 1),
+      isA<ReportLoaded>().having(
+        (s) => s.data.proposals.length,
+        'propositions',
+        1,
+      ),
     ],
   );
 
   blocTest<ReportCubit, ReportState>(
     'renonce à attendre après le nombre maximal d\'interrogations',
     setUp: () {
-      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions(items: const [])));
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(propositions(items: const [])));
     },
-    build: () => ReportCubit(repository, pollInterval: Duration.zero, maxPolls: 2),
+    build: () =>
+        ReportCubit(repository, pollInterval: Duration.zero, maxPolls: 2),
     act: (cubit) => cubit.load('report-1'),
     expect: () => [
       const ReportLoading(),
       const ReportPreparing(),
-      isA<ReportLoaded>().having((s) => s.message, 'message', contains('plus long que prévu')),
+      isA<ReportLoaded>().having(
+        (s) => s.message,
+        'message',
+        contains('plus long que prévu'),
+      ),
     ],
   );
 
@@ -222,7 +239,8 @@ void main() {
     'n\'attend pas sur un rapport finalisé sans proposition',
     setUp: () {
       when(() => repository.load(any())).thenAnswer(
-        (_) async => Success(propositions(items: const [], status: ReportStatus.sent)),
+        (_) async =>
+            Success(propositions(items: const [], status: ReportStatus.sent)),
       );
     },
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
@@ -233,9 +251,13 @@ void main() {
   blocTest<ReportCubit, ReportState>(
     'finalise et envoie',
     setUp: () {
-      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions(sections: toutesDecidees)));
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(propositions(sections: toutesDecidees)),
+      );
       when(() => repository.finalize('report-1', sendToOwner: true)).thenAnswer(
-        (_) async => const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
+        (_) async => const Success(
+          FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true),
+        ),
       );
     },
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
@@ -243,18 +265,37 @@ void main() {
       await cubit.load('report-1');
       await cubit.finalize(sendToOwner: true);
     },
-    verify: (cubit) => expect(cubit.state, isA<ReportFinalized>().having((s) => s.outcome.sentToOwner, 'envoyé', true)),
+    verify: (cubit) => expect(
+      cubit.state,
+      isA<ReportFinalized>().having(
+        (s) => s.outcome.sentToOwner,
+        'envoyé',
+        true,
+      ),
+    ),
   );
 
   blocTest<ReportCubit, ReportState>(
     'complète l\'e-mail puis finalise',
     setUp: () {
       when(() => repository.load(any())).thenAnswer(
-        (_) async => Success(propositions(sections: toutesDecidees, owner: const ReportOwner(id: 'owner-1', name: 'Camille Roux', email: null))),
+        (_) async => Success(
+          propositions(
+            sections: toutesDecidees,
+            owner: const ReportOwner(
+              id: 'owner-1',
+              name: 'Camille Roux',
+              email: null,
+            ),
+          ),
+        ),
       );
-      when(() => repository.updateOwnerEmail('owner-1', 'camille@example.org')).thenAnswer((_) async => const Success(null));
+      when(() => repository.updateOwnerEmail('owner-1', 'camille@example.org'))
+          .thenAnswer((_) async => const Success(null));
       when(() => repository.finalize('report-1', sendToOwner: true)).thenAnswer(
-        (_) async => const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
+        (_) async => const Success(
+          FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true),
+        ),
       );
     },
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
@@ -271,14 +312,17 @@ void main() {
   blocTest<ReportCubit, ReportState>(
     'refuse de finaliser tant qu\'une section reste à vérifier',
     setUp: () {
-      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions()));
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(propositions()));
     },
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
     act: (cubit) async {
       await cubit.load('report-1');
       await cubit.finalize(sendToOwner: true);
     },
-    verify: (_) => verifyNever(() => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner'))),
+    verify: (_) => verifyNever(
+      () => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner')),
+    ),
   );
 
   /// L'écran de préparation dit au praticien qu'il peut partir. S'il le fait
@@ -298,47 +342,129 @@ void main() {
     await expectLater(loadFuture, completes);
   });
 
-  test('finalize ne plante pas si le cubit est fermé pendant la requête', () async {
-    when(() => repository.load(any()))
-        .thenAnswer((_) async => Success(propositions(sections: toutesDecidees)));
-    final completer = Completer<Result<FinalizeOutcome>>();
-    when(
-      () => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner')),
-    ).thenAnswer((_) => completer.future);
+  test(
+    'finalize ne plante pas si le cubit est fermé pendant la requête',
+    () async {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(propositions(sections: toutesDecidees)),
+      );
+      final completer = Completer<Result<FinalizeOutcome>>();
+      when(
+        () =>
+            repository.finalize(any(), sendToOwner: any(named: 'sendToOwner')),
+      ).thenAnswer((_) => completer.future);
 
-    final cubit = ReportCubit(repository);
-    await cubit.load('report-1');
-    final finalizeFuture = cubit.finalize(sendToOwner: true);
+      final cubit = ReportCubit(repository);
+      await cubit.load('report-1');
+      final finalizeFuture = cubit.finalize(sendToOwner: true);
 
-    await cubit.close();
-    completer.complete(
-      const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
-    );
+      await cubit.close();
+      completer.complete(
+        const Success(
+          FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true),
+        ),
+      );
 
-    await expectLater(finalizeFuture, completes);
-  });
+      await expectLater(finalizeFuture, completes);
+    },
+  );
 
   /// Même mécanisme, sur un geste déclenché par un bouton de carte
   /// (« Valider ») plutôt que par le chargement initial de l'écran.
-  test('confirm ne plante pas si le cubit est fermé pendant la requête', () async {
-    when(() => repository.load(any()))
-        .thenAnswer((_) async => Success(propositions()));
-    final completer = Completer<Result<ReportProposals>>();
-    when(
-      () => repository.decide(
-        reportId: any(named: 'reportId'),
-        proposalId: any(named: 'proposalId'),
-        decision: any(named: 'decision'),
-      ),
-    ).thenAnswer((_) => completer.future);
+  test(
+    'confirm ne plante pas si le cubit est fermé pendant la requête',
+    () async {
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(propositions()));
+      final completer = Completer<Result<ReportProposals>>();
+      when(
+        () => repository.decide(
+          reportId: any(named: 'reportId'),
+          proposalId: any(named: 'proposalId'),
+          decision: any(named: 'decision'),
+        ),
+      ).thenAnswer((_) => completer.future);
 
-    final cubit = ReportCubit(repository);
-    await cubit.load('report-1');
-    final confirmFuture = cubit.confirm('proposal-1');
+      final cubit = ReportCubit(repository);
+      await cubit.load('report-1');
+      final confirmFuture = cubit.confirm('proposal-1');
 
-    await cubit.close();
-    completer.complete(Success(propositions()));
+      await cubit.close();
+      completer.complete(Success(propositions()));
 
-    await expectLater(confirmFuture, completes);
-  });
+      await expectLater(confirmFuture, completes);
+    },
+  );
+
+  /// Dernier moment du parcours porté par ce cubit : la finalisation, sous
+  /// l'identifiant de capture qui relie ce geste à la dictée qui l'a précédé.
+  blocTest<ReportCubit, ReportState>(
+    "trace la finalisation sous l'identifiant de capture",
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async =>
+            Success(propositions(sections: toutesDecidees, captureId: 'c-1')),
+      );
+      when(() => repository.finalize('report-1', sendToOwner: true)).thenAnswer(
+        (_) async => const Success(
+          FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true),
+        ),
+      );
+    },
+    build: () {
+      final telemetry = Telemetry(sink: evenements.add);
+      return ReportCubit(
+        repository,
+        pollInterval: Duration.zero,
+        telemetry: telemetry,
+      );
+    },
+    act: (cubit) async {
+      await cubit.load('report-1');
+      await cubit.finalize(sendToOwner: true);
+    },
+    verify: (_) {
+      expect(evenements, hasLength(1));
+      expect(evenements.single.name, JourneyEvents.reportFinalized);
+      expect(evenements.single.journeyId, 'c-1');
+      expect(evenements.single.properties, {
+        'reportId': 'report-1',
+        'sentToOwner': true,
+      });
+    },
+  );
+
+  /// Sans identifiant de capture — un compte rendu créé sur le web, par
+  /// exemple — le parcours de télémétrie retombe sur l'identifiant de
+  /// rapport.
+  blocTest<ReportCubit, ReportState>(
+    "retombe sur l'identifiant de rapport sans identifiant de capture",
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(propositions(sections: toutesDecidees)),
+      );
+      when(
+        () => repository.finalize('report-1', sendToOwner: false),
+      ).thenAnswer(
+        (_) async => const Success(
+          FinalizeOutcome(status: ReportStatus.finalized, sentToOwner: false),
+        ),
+      );
+    },
+    build: () {
+      final telemetry = Telemetry(sink: evenements.add);
+      return ReportCubit(
+        repository,
+        pollInterval: Duration.zero,
+        telemetry: telemetry,
+      );
+    },
+    act: (cubit) async {
+      await cubit.load('report-1');
+      await cubit.finalize(sendToOwner: false);
+    },
+    verify: (_) {
+      expect(evenements.single.journeyId, 'report-1');
+    },
+  );
 }

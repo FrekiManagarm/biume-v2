@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/result.dart';
+import '../../../core/telemetry/journey_events.dart';
+import '../../../core/telemetry/telemetry.dart';
 import '../../capture/domain/capture_store.dart';
 import '../domain/transcript.dart';
 import '../domain/transcript_repository.dart';
@@ -124,11 +126,13 @@ class TranscriptValidated extends TranscriptState {
 }
 
 class TranscriptCubit extends Cubit<TranscriptState> {
-  TranscriptCubit(this._repository, this._store)
-    : super(const TranscriptInitial());
+  TranscriptCubit(this._repository, this._store, {Telemetry? telemetry})
+    : _telemetry = telemetry ?? Telemetry(),
+      super(const TranscriptInitial());
 
   final TranscriptRepository _repository;
   final CaptureStore _store;
+  final Telemetry _telemetry;
 
   Future<void> load(String captureId) async {
     emit(const TranscriptLoading());
@@ -190,6 +194,13 @@ class TranscriptCubit extends Cubit<TranscriptState> {
     if (!current.transcript.isCorrectable) return;
 
     var transcript = current.transcript;
+    _telemetry.emit(
+      ProductEvent(
+        name: JourneyEvents.transcriptValidated,
+        journeyId: transcript.captureId,
+        properties: {'textChanged': text != transcript.text},
+      ),
+    );
     emit(TranscriptValidating(transcript));
 
     if (text != transcript.text) {
@@ -233,6 +244,13 @@ class TranscriptCubit extends Cubit<TranscriptState> {
           DateTime.now(),
         );
         if (isClosed) return;
+        _telemetry.emit(
+          ProductEvent(
+            name: JourneyEvents.extractionRequested,
+            journeyId: transcript.captureId,
+            properties: {'reportId': value},
+          ),
+        );
         emit(TranscriptValidated(value));
       case Err(:final failure):
         emit(

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ids/uuid.dart';
+import '../../../core/telemetry/journey_events.dart';
+import '../../../core/telemetry/telemetry.dart';
 import '../../../injection_container.dart';
 import '../domain/audio_recorder.dart';
 import '../domain/capture_store.dart';
@@ -32,6 +34,20 @@ class RecordingPage extends StatelessWidget {
         now: DateTime.now,
         newId: uuidV4,
         onSaved: (capture) async {
+          // Premier moment du parcours : c'est l'identifiant de cette
+          // capture qui relie, ensuite, la validation de la transcription,
+          // l'extraction, la finalisation et le suivi.
+          getIt<Telemetry>().emit(
+            ProductEvent(
+              name: JourneyEvents.dictationSaved,
+              journeyId: capture.id,
+              properties: {
+                'durationMs': capture.durationMs,
+                'byteSize': capture.byteSize,
+              },
+            ),
+          );
+
           await getIt<CaptureStore>().create(
             id: capture.id,
             appointmentId: capture.appointmentId,

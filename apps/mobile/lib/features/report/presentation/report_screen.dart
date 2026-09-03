@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/app_palette.dart';
+import '../../../core/telemetry/telemetry.dart';
 import '../../../injection_container.dart';
 import '../domain/proposal.dart';
 import '../domain/report_repository.dart';
@@ -20,7 +21,9 @@ class ReportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ReportCubit(getIt<ReportRepository>())..load(reportId),
+      create: (_) =>
+          ReportCubit(getIt<ReportRepository>(), telemetry: getIt<Telemetry>())
+            ..load(reportId),
       child: const ReportScreen(),
     );
   }
@@ -72,9 +75,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: CircularProgressIndicator(),
               ),
               ReportPreparing() => _Preparing(palette: palette),
-              ReportUnavailable(:final message) => Center(
-                child: Text(message),
-              ),
+              ReportUnavailable(:final message) => Center(child: Text(message)),
               ReportLoaded() => _Proposals(state),
               ReportFinalized() => const Center(
                 child: CircularProgressIndicator(),
@@ -291,8 +292,9 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final proposals =
-        data.proposals.where((p) => p.section == section).toList();
+    final proposals = data.proposals
+        .where((p) => p.section == section)
+        .toList();
     final sectionState = data.sections[section] ?? SectionState.empty;
 
     return Padding(
@@ -396,8 +398,9 @@ class _ProposalCard extends StatelessWidget {
                     child: FilledButton(
                       onPressed: busy
                           ? null
-                          : () =>
-                                context.read<ReportCubit>().confirm(proposal.id),
+                          : () => context.read<ReportCubit>().confirm(
+                              proposal.id,
+                            ),
                       child: const Text('Valider'),
                     ),
                   ),
@@ -406,8 +409,9 @@ class _ProposalCard extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: busy
                           ? null
-                          : () =>
-                                context.read<ReportCubit>().dismiss(proposal.id),
+                          : () => context.read<ReportCubit>().dismiss(
+                              proposal.id,
+                            ),
                       child: const Text('Sans objet'),
                     ),
                   ),

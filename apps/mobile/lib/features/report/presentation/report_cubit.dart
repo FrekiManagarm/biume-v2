@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/result.dart';
+import '../../../core/telemetry/journey_events.dart';
+import '../../../core/telemetry/telemetry.dart';
 import '../domain/proposal.dart';
 import '../domain/report_repository.dart';
 
@@ -64,11 +66,14 @@ class ReportCubit extends Cubit<ReportState> {
     this._repository, {
     this.pollInterval = const Duration(seconds: 3),
     this.maxPolls = 40,
-  }) : super(const ReportInitial());
+    Telemetry? telemetry,
+  }) : _telemetry = telemetry ?? Telemetry(),
+       super(const ReportInitial());
 
   final ReportRepository _repository;
   final Duration pollInterval;
   final int maxPolls;
+  final Telemetry _telemetry;
 
   /// Après « Valider la transcription », les propositions arrivent dans les
   /// secondes qui suivent. On interroge tant qu'il n'y en a pas, à intervalle
@@ -97,8 +102,7 @@ class ReportCubit extends Cubit<ReportState> {
             emit(
               ReportLoaded(
                 value,
-                message:
-                    "La préparation prend plus long que prévu. Revenez dans un instant depuis « À traiter ».",
+                message: "La préparation prend plus long que prévu. Revenez dans un instant depuis « À traiter ».",
               ),
             );
             return;
@@ -166,6 +170,16 @@ class ReportCubit extends Cubit<ReportState> {
     if (isClosed) return;
     switch (result) {
       case Success(:final value):
+        _telemetry.emit(
+          ProductEvent(
+            name: JourneyEvents.reportFinalized,
+            journeyId: current.data.captureId ?? current.data.reportId,
+            properties: {
+              'reportId': current.data.reportId,
+              'sentToOwner': value.sentToOwner,
+            },
+          ),
+        );
         emit(ReportFinalized(reportId: current.data.reportId, outcome: value));
       case Err(:final failure):
         emit(ReportLoaded(current.data, message: failure.message));

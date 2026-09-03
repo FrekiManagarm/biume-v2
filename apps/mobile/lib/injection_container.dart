@@ -2,12 +2,14 @@ import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import 'config/app_environment.dart';
 import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
+import 'core/telemetry/telemetry.dart';
 import 'features/agenda/data/agenda_repository_impl.dart';
 import 'features/agenda/domain/agenda_repository.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
@@ -42,6 +44,19 @@ final getIt = GetIt.instance;
 /// laquelle la couche domaine existe — avant toute considération de pureté.
 Future<void> configureDependencies() async {
   getIt
+    // Le puits reste local en développement : un simple affichage en
+    // console. Le transport vers un outil d'analyse est du ressort d'un lot
+    // ultérieur — c'est `installSink` qui permet de le brancher sans toucher
+    // aux appelants.
+    ..registerLazySingleton(
+      () => Telemetry(
+        sink: kDebugMode
+            ? (e) => debugPrint(
+                '[telemetry] ${e.name} ${e.journeyId} ${e.properties}',
+              )
+            : null,
+      ),
+    )
     ..registerLazySingleton(() => const FlutterSecureStorage())
     ..registerLazySingleton(() => TokenStore(getIt()))
     ..registerLazySingleton<Dio>(

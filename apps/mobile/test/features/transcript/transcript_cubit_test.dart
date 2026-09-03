@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
+import 'package:biume_mobile/core/telemetry/journey_events.dart';
+import 'package:biume_mobile/core/telemetry/telemetry.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
 import 'package:biume_mobile/features/transcript/domain/transcript.dart';
 import 'package:biume_mobile/features/transcript/domain/transcript_repository.dart';
@@ -253,10 +255,7 @@ void main() {
 
       final cubit = TranscriptCubit(repository, store);
       await cubit.load('capture-1');
-      final validateFuture = cubit.validate(
-        text: prete.text,
-        patientId: null,
-      );
+      final validateFuture = cubit.validate(text: prete.text, patientId: null);
 
       await cubit.close();
       completer.complete(const Success('report-1'));
@@ -264,4 +263,74 @@ void main() {
       await expectLater(validateFuture, completes);
     },
   );
+
+  /// Les deux moments du parcours portés par ce cubit : la validation de la
+  /// transcription puis la demande d'extraction, sous l'identifiant de
+  /// capture qui les relie l'un à l'autre et au reste du parcours.
+  test(
+    "trace la validation puis l'extraction sous l'identifiant de capture",
+    () async {
+      final evenements = <ProductEvent>[];
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(prete));
+      when(() => repository.extract('capture-1'))
+          .thenAnswer((_) async => const Success('report-1'));
+
+      final cubit = TranscriptCubit(
+        repository,
+        store,
+        telemetry: Telemetry(sink: evenements.add),
+      );
+      await cubit.load('capture-1');
+      await cubit.validate(text: prete.text, patientId: null);
+
+      expect(evenements, hasLength(2));
+      expect(evenements[0].name, JourneyEvents.transcriptValidated);
+      expect(evenements[0].journeyId, captureId);
+      expect(evenements[0].properties, {'textChanged': false});
+      expect(evenements[1].name, JourneyEvents.extractionRequested);
+      expect(evenements[1].journeyId, captureId);
+      expect(evenements[1].properties, {'reportId': 'report-1'});
+    },
+  );
+
+  test(
+    'signale un texte modifié quand la correction diffère de la source',
+    () async {
+      final evenements = <ProductEvent>[];
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(prete));
+      when(() => repository.correct('capture-1', 'Texte corrigé'))
+          .thenAnswer((_) async => const Success(corrigee));
+      when(() => repository.extract('capture-1'))
+          .thenAnswer((_) async => const Success('report-1'));
+
+      final cubit = TranscriptCubit(
+        repository,
+        store,
+        telemetry: Telemetry(sink: evenements.add),
+      );
+      await cubit.load('capture-1');
+      await cubit.validate(text: 'Texte corrigé', patientId: null);
+
+      expect(evenements.first.properties, {'textChanged': true});
+    },
+  );
+
+  test("n'émet pas d'extraction demandée si l'extraction échoue", () async {
+    final evenements = <ProductEvent>[];
+    when(() => repository.load(any())).thenAnswer((_) async => Success(prete));
+    when(() => repository.extract(any()))
+        .thenAnswer((_) async => const Err(NetworkFailure()));
+
+    final cubit = TranscriptCubit(
+      repository,
+      store,
+      telemetry: Telemetry(sink: evenements.add),
+    );
+    await cubit.load('capture-1');
+    await cubit.validate(text: prete.text, patientId: null);
+
+    expect(evenements.map((e) => e.name), [JourneyEvents.transcriptValidated]);
+  });
 }
