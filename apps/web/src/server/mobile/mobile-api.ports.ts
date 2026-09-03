@@ -945,22 +945,26 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
         timeZone: "Europe/Paris",
       }).format(capture.createdAt)}`;
 
-      await db.insert(advancedReport).values({
-        id: reportId,
-        title,
-        consultationReason: "",
-        patientId: patient.id,
-        appointmentId: null,
-        notes: "",
-        status: "draft",
-        createdBy: actor.organizationId,
-        createdAt: now,
-      });
-      await db
-        .insert(reportSectionState)
-        .values(
-          buildReportSectionStateRows(reportId, createInitialReportSectionStates()),
-        );
+      // Un seul batch : un rapport sans ses états de section ne pourrait
+      // jamais être finalisé, et ne serait jamais revendiqué par une capture.
+      await db.batch([
+        db.insert(advancedReport).values({
+          id: reportId,
+          title,
+          consultationReason: "",
+          patientId: patient.id,
+          appointmentId: null,
+          notes: "",
+          status: "draft",
+          createdBy: actor.organizationId,
+          createdAt: now,
+        }),
+        db
+          .insert(reportSectionState)
+          .values(
+            buildReportSectionStateRows(reportId, createInitialReportSectionStates()),
+          ),
+      ] as const);
 
       // Le prédicat `isNull(reportId)` fait office de verrou : deux
       // rattachements concurrents ne produisent qu'un rapport vivant.

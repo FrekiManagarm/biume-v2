@@ -540,6 +540,7 @@ export function createMobileApiApp(
   methodNotAllowed("/captures/:captureId");
   methodNotAllowed("/captures/:captureId/upload-session");
   methodNotAllowed("/captures/:captureId/complete");
+  methodNotAllowed("/captures/:captureId/attach");
   methodNotAllowed("/owners");
   methodNotAllowed("/patients");
   methodNotAllowed("/patients/:patientId/history");
