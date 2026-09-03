@@ -6204,6 +6204,48 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "finalized",
+                        "sent"
+                      ]
+                    },
+                    "patientName": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "captureId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uuid"
+                    },
                     "transcript": {
                       "type": "string"
                     },
@@ -6348,6 +6390,10 @@
                   },
                   "required": [
                     "reportId",
+                    "status",
+                    "patientName",
+                    "owner",
+                    "captureId",
                     "transcript",
                     "items",
                     "sections"
@@ -6871,6 +6917,48 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "finalized",
+                        "sent"
+                      ]
+                    },
+                    "patientName": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "captureId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uuid"
+                    },
                     "transcript": {
                       "type": "string"
                     },
@@ -7015,6 +7103,10 @@
                   },
                   "required": [
                     "reportId",
+                    "status",
+                    "patientName",
+                    "owner",
+                    "captureId",
                     "transcript",
                     "items",
                     "sections"
@@ -7569,6 +7661,48 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "finalized",
+                        "sent"
+                      ]
+                    },
+                    "patientName": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "captureId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uuid"
+                    },
                     "transcript": {
                       "type": "string"
                     },
@@ -7713,6 +7847,10 @@
                   },
                   "required": [
                     "reportId",
+                    "status",
+                    "patientName",
+                    "owner",
+                    "captureId",
                     "transcript",
                     "items",
                     "sections"
@@ -8272,6 +8410,48 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "finalized",
+                        "sent"
+                      ]
+                    },
+                    "patientName": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "captureId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uuid"
+                    },
                     "transcript": {
                       "type": "string"
                     },
@@ -8416,6 +8596,10 @@
                   },
                   "required": [
                     "reportId",
+                    "status",
+                    "patientName",
+                    "owner",
+                    "captureId",
                     "transcript",
                     "items",
                     "sections"
