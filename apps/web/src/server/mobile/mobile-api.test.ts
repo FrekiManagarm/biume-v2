@@ -88,6 +88,7 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
       uploadedAt: "2026-07-19T10:05:00.000Z",
     })),
     cancelCapture: vi.fn(async () => {}),
+    attachCapture: vi.fn(async () => captureResponse),
     // Ports des fiches, ajoutés avec les endpoints métier. Ce fichier ne les
     // exerce pas : ils sont couverts par `mobile-api.records.test.ts`.
     listOwners: vi.fn(async () => ({ items: [], nextCursor: null })),

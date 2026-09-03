@@ -17,6 +17,8 @@ const capture = {
   mimeType: "audio/mp4" as const,
   byteSize: 4_096,
   sha256: "a".repeat(64),
+  objectKey: `captures/org-1-hash/${captureId}/audio.m4a`,
+  objectEtag: '"etag-1"',
   status: "uploaded" as const,
   attemptCount: 1,
   lastErrorCode: null,

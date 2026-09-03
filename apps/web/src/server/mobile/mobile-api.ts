@@ -7,6 +7,7 @@ import {
   mobileCapturesResponseSchema,
   mobileSessionResponseSchema,
   uploadSessionResponseSchema,
+  type AttachCaptureRequest,
   type CaptureErrorCode,
   type CaptureResponse,
   type MobileAppointmentsResponse,
@@ -59,6 +60,7 @@ import {
 import {
   agendaQuerySchema,
   appointmentsRoute,
+  attachCaptureRoute,
   cancelCaptureRoute,
   completeCaptureRoute,
   createCaptureRoute,
@@ -127,6 +129,11 @@ export type MobileApiPorts = {
     request: z.infer<typeof completeCaptureRequestSchema>,
   ): Promise<CaptureResponse>;
   cancelCapture(actor: CaptureActor, captureId: string): Promise<void>;
+  attachCapture(
+    actor: CaptureActor,
+    captureId: string,
+    request: AttachCaptureRequest,
+  ): Promise<CaptureResponse>;
   listOwners(
     actor: CaptureActor,
     query: { limit: number; cursor: string | null; search: string | null },
@@ -517,6 +524,15 @@ export function createMobileApiApp(
   app.openapi(cancelCaptureRoute, async (c) => {
     await ports.cancelCapture(c.get("actor"), c.req.valid("param").captureId);
     return c.body(null, 204, noStore);
+  });
+
+  app.openapi(attachCaptureRoute, async (c) => {
+    const attached = await ports.attachCapture(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, captureResponseSchema, attached);
   });
 
   methodNotAllowed("/appointments");

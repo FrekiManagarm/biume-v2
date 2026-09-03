@@ -14,6 +14,7 @@ function createPorts(): MobileApiPorts {
     createUploadSession: vi.fn(),
     completeCapture: vi.fn(),
     cancelCapture: vi.fn(),
+    attachCapture: vi.fn(),
   } as unknown as MobileApiPorts;
 }
 
@@ -29,6 +30,7 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/appointments/{appointmentId}/move",
       "/api/mobile/v1/captures",
       "/api/mobile/v1/captures/{captureId}",
+      "/api/mobile/v1/captures/{captureId}/attach",
       "/api/mobile/v1/captures/{captureId}/complete",
       "/api/mobile/v1/captures/{captureId}/transcript",
       "/api/mobile/v1/captures/{captureId}/upload-session",

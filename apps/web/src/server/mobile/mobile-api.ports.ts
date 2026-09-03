@@ -13,6 +13,7 @@ import {
   reportShareLink,
   pets,
   reportProposal,
+  reportSectionState,
 } from "@biume/db/schema/index";
 import {
   and,
@@ -32,11 +33,14 @@ import {
   completeCapture,
   createCapture,
   createUploadSession,
+  toCaptureResponse,
   type CaptureActor,
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
+import { buildReportSectionStateRows } from "#/functions/report-domain";
+import { createInitialReportSectionStates } from "@biume/contracts/report";
 import type { Transcript } from "@biume/contracts/transcript";
 import type {
   Proposal,
@@ -907,6 +911,85 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       completeCapture(actor, captureId, request, dependencies),
     cancelCapture: (actor, captureId) =>
       cancelCapture(actor, captureId, dependencies),
+
+    async attachCapture(actor, captureId, request) {
+      const scope = { id: captureId, organizationId: actor.organizationId };
+      const capture = await repository.findCapture(scope);
+      if (!capture) throw new MobileRequestError("not_found");
+
+      // Idempotent sur le même animal ; contradictoire sur un autre. Une
+      // extraction déjà faite s'appuie sur ce rapport : on ne le déplace pas.
+      if (capture.reportId) {
+        if (capture.patientId === request.patientId) {
+          return toCaptureResponse(capture);
+        }
+        throw new MobileRequestError("conflict");
+      }
+
+      const [patient] = await db
+        .select({ id: pets.id })
+        .from(pets)
+        .where(
+          and(
+            eq(pets.id, request.patientId),
+            eq(pets.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+      if (!patient) throw new MobileRequestError("not_found");
+
+      const now = new Date();
+      const reportId = crypto.randomUUID();
+      const title = `Séance du ${new Intl.DateTimeFormat("fr-FR", {
+        dateStyle: "long",
+        timeZone: "Europe/Paris",
+      }).format(capture.createdAt)}`;
+
+      await db.insert(advancedReport).values({
+        id: reportId,
+        title,
+        consultationReason: "",
+        patientId: patient.id,
+        appointmentId: null,
+        notes: "",
+        status: "draft",
+        createdBy: actor.organizationId,
+        createdAt: now,
+      });
+      await db
+        .insert(reportSectionState)
+        .values(
+          buildReportSectionStateRows(reportId, createInitialReportSectionStates()),
+        );
+
+      // Le prédicat `isNull(reportId)` fait office de verrou : deux
+      // rattachements concurrents ne produisent qu'un rapport vivant.
+      const [claimed] = await db
+        .update(audioCapture)
+        .set({ patientId: patient.id, reportId, updatedAt: now })
+        .where(
+          and(
+            eq(audioCapture.id, captureId),
+            eq(audioCapture.organizationId, actor.organizationId),
+            isNull(audioCapture.reportId),
+          ),
+        )
+        .returning({ id: audioCapture.id });
+
+      if (!claimed) {
+        await db.delete(advancedReport).where(eq(advancedReport.id, reportId));
+        const current = await repository.findCapture(scope);
+        if (!current) throw new MobileRequestError("not_found");
+        if (current.patientId !== request.patientId) {
+          throw new MobileRequestError("conflict");
+        }
+        return toCaptureResponse(current);
+      }
+
+      const refreshed = await repository.findCapture(scope);
+      if (!refreshed) throw new MobileRequestError("not_found");
+      return toCaptureResponse(refreshed);
+    },
   };
 }
 
