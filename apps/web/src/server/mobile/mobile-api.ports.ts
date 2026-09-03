@@ -178,8 +178,17 @@ async function readReportProposals(
   reportId: string,
 ): Promise<ReportProposalsResponse | null> {
   const [report] = await db
-    .select({ id: advancedReport.id })
+    .select({
+      id: advancedReport.id,
+      status: advancedReport.status,
+      patientName: pets.name,
+      ownerId: clients.id,
+      ownerName: clients.name,
+      ownerEmail: clients.email,
+    })
     .from(advancedReport)
+    .leftJoin(pets, eq(pets.id, advancedReport.patientId))
+    .leftJoin(clients, eq(clients.id, pets.ownerId))
     .where(
       and(
         eq(advancedReport.id, reportId),
@@ -211,6 +220,14 @@ async function readReportProposals(
 
   return {
     reportId,
+    status: report.status,
+    patientName: report.patientName ?? "Animal sans nom",
+    owner: {
+      id: report.ownerId ?? "",
+      name: report.ownerName ?? "Propriétaire sans nom",
+      email: report.ownerEmail ?? null,
+    },
+    captureId: captureId ?? null,
     transcript: transcript?.text ?? "",
     items,
     sections: deriveSectionStates(items),
