@@ -1,7 +1,14 @@
 import { randomUUID } from "node:crypto";
 
 import { captureRetentionMs } from "@biume/contracts/capture";
-import { audioCapture } from "@biume/db/schema/index";
+import type { OwnerReportSnapshot } from "@biume/contracts/report";
+import {
+  advancedReport,
+  audioCapture,
+  clients,
+  reportShareLink,
+  reportSharedVersion,
+} from "@biume/db/schema/index";
 import { and, eq, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
@@ -19,6 +26,7 @@ import {
   type CaptureActor,
   type CaptureServiceDependencies,
 } from "./capture.service";
+import type { CaptureDatabase } from "./capture.repository";
 
 const databaseUrl = process.env.MOBILE_CAPTURE_TEST_DATABASE_URL;
 const describePostgres = databaseUrl ? describe : describe.skip;
@@ -232,5 +240,174 @@ describePostgres("mobile capture persistence against PostgreSQL", () => {
 
     expect(expired.map((row) => row.id)).toContain(expiredId);
     expect(expired.map((row) => row.id)).not.toContain(freshId);
+  });
+});
+
+// `./mobile-api.ports` pulls in `@biume/db` and every mobile port (R2, e-mail,
+// extraction…), which validate the whole server environment on import. It is
+// loaded inside `beforeAll` so this file stays importable — and skippable —
+// without a configured environment.
+describePostgres("jeton de partage d'un rapport", () => {
+  const client = new Client({ connectionString: databaseUrl });
+  const suffix = randomUUID();
+  const organizationId = `org-share-${suffix}`;
+  const otherOrganizationId = `org-share-other-${suffix}`;
+  const ownerId = `owner-share-${suffix}`;
+  const otherOwnerId = `owner-share-other-${suffix}`;
+  const reportOneId = `report-share-one-${suffix}`;
+  const reportTwoId = `report-share-two-${suffix}`;
+  const otherReportId = `report-share-other-${suffix}`;
+
+  let database: CaptureDatabase;
+  let findReportShareToken: (
+    typeof import("./mobile-api.ports")
+  )["findReportShareToken"];
+
+  function snapshot(reportId: string, reportRevision: number): OwnerReportSnapshot {
+    return {
+      reportId,
+      reportRevision,
+      title: "Consultation",
+      animal: { id: "animal-1", name: "Nala" },
+      owner: { id: "owner-1", name: "Camille" },
+      consultationReason: "Contrôle annuel",
+      clinical: [],
+      anatomical: [],
+      recommendations: [],
+      notes: "",
+      createdAt: "2026-07-19T09:00:00.000Z",
+    };
+  }
+
+  /**
+   * Chaque appel pose une nouvelle version immuable du rapport (une révision
+   * distincte, comme le ferait une vraie finalisation répétée) et le lien de
+   * partage qui la porte.
+   */
+  async function shareReport(
+    reportId: string,
+    organizationIdForVersion: string,
+    ownerIdForLink: string,
+    token: string,
+    reportRevision: number,
+    options: { createdAt: Date; revokedAt?: Date },
+  ) {
+    const [version] = await database
+      .insert(reportSharedVersion)
+      .values({
+        reportId,
+        organizationId: organizationIdForVersion,
+        reportRevision,
+        snapshot: snapshot(reportId, reportRevision),
+      })
+      .returning({ id: reportSharedVersion.id });
+
+    await database.insert(reportShareLink).values({
+      token,
+      sharedVersionId: version.id,
+      ownerId: ownerIdForLink,
+      createdAt: options.createdAt,
+      revokedAt: options.revokedAt ?? null,
+    });
+  }
+
+  const now = new Date("2026-07-19T10:00:00.000Z");
+
+  beforeAll(async () => {
+    await client.connect();
+    await client.query("BEGIN");
+
+    ({ findReportShareToken } = await import("./mobile-api.ports"));
+    database = drizzle(client);
+
+    for (const [id, name] of [
+      [organizationId, "Cabinet A"],
+      [otherOrganizationId, "Cabinet B"],
+    ]) {
+      await client.query(
+        'INSERT INTO "organizations" ("id", "name") VALUES ($1, $2)',
+        [id, name],
+      );
+    }
+
+    await database.insert(clients).values([
+      { id: ownerId, organizationId },
+      { id: otherOwnerId, organizationId: otherOrganizationId },
+    ]);
+
+    await database.insert(advancedReport).values([
+      { id: reportOneId, createdBy: organizationId, title: "Consultation" },
+      { id: reportTwoId, createdBy: organizationId, title: "Consultation" },
+      { id: otherReportId, createdBy: otherOrganizationId, title: "Consultation" },
+    ]);
+
+    // Un rapport avec trois versions/liens : une ancienne, une récente, et
+    // une plus récente encore mais révoquée. Le jeton attendu est celui de la
+    // version récente non révoquée.
+    await shareReport(reportOneId, organizationId, ownerId, "token-one-old", 1, {
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    });
+    await shareReport(reportOneId, organizationId, ownerId, "token-one-current", 2, {
+      createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+    });
+    await shareReport(reportOneId, organizationId, ownerId, "token-one-revoked", 3, {
+      createdAt: now,
+      revokedAt: now,
+    });
+
+    // Un second rapport de la même organisation, avec son propre lien : la
+    // fonction ne doit jamais renvoyer le jeton d'un autre rapport.
+    await shareReport(reportTwoId, organizationId, ownerId, "token-two", 1, {
+      createdAt: now,
+    });
+
+    // Un rapport d'une autre organisation, avec son propre lien actif.
+    await shareReport(otherReportId, otherOrganizationId, otherOwnerId, "token-other", 1, {
+      createdAt: now,
+    });
+  });
+
+  afterAll(async () => {
+    await client.query("ROLLBACK");
+    await client.end();
+  });
+
+  it("renvoie le jeton le plus récent non révoqué du rapport demandé", async () => {
+    await expect(
+      findReportShareToken(database, { organizationId, reportId: reportOneId }),
+    ).resolves.toBe("token-one-current");
+  });
+
+  it("distingue les jetons de deux rapports de la même organisation", async () => {
+    await expect(
+      findReportShareToken(database, { organizationId, reportId: reportTwoId }),
+    ).resolves.toBe("token-two");
+  });
+
+  it("ne renvoie jamais le jeton d'un rapport d'une autre organisation", async () => {
+    await expect(
+      findReportShareToken(database, {
+        organizationId,
+        reportId: otherReportId,
+      }),
+    ).resolves.toBeNull();
+  });
+
+  it("renvoie le jeton d'un rapport à son organisation propriétaire", async () => {
+    await expect(
+      findReportShareToken(database, {
+        organizationId: otherOrganizationId,
+        reportId: otherReportId,
+      }),
+    ).resolves.toBe("token-other");
+  });
+
+  it("renvoie null pour un rapport inexistant", async () => {
+    await expect(
+      findReportShareToken(database, {
+        organizationId,
+        reportId: "report-share-unknown",
+      }),
+    ).resolves.toBeNull();
   });
 });
