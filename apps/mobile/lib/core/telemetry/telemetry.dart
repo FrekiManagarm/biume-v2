@@ -41,7 +41,6 @@ const Set<String> allowedTelemetryProperties = {
   'reportId',
   'sentToOwner',
   'textChanged',
-  'kind',
 };
 
 // ignore_for_file: prefer_initializing_formals

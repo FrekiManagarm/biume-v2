@@ -394,7 +394,7 @@ export async function createProductionMobileApiPorts(
     },
   };
 
-  return {
+  const ports: MobileApiPorts = {
     async authenticate(headers) {
       const session = await auth.api.getSession({ headers });
       if (!session) return null;
@@ -713,6 +713,7 @@ export async function createProductionMobileApiPorts(
           captureId: audioCapture.id,
           reportId: audioCapture.reportId,
           appointmentId: audioCapture.appointmentId,
+          patientId: audioCapture.patientId,
           captureStatus: audioCapture.status,
           updatedAt: audioCapture.updatedAt,
           patientName: pets.name,
@@ -777,6 +778,7 @@ export async function createProductionMobileApiPorts(
           proposalCount: row.reportId ? (countByReport.get(row.reportId) ?? 0) : 0,
           sectionStates: states ? normalizeReportSectionStates(states) : null,
           audioExpired: row.captureStatus === "expired",
+          hasPatient: row.patientId !== null,
         });
         if (!kind) return [];
         return [
@@ -1215,7 +1217,10 @@ export async function createProductionMobileApiPorts(
           title,
           consultationReason: "",
           patientId: patient.id,
-          appointmentId: null,
+          // Le rendez-vous de la capture, quand elle en a un : un rapport
+          // détaché du rendez-vous qui l'a produit serait un second dossier
+          // pour la même séance.
+          appointmentId: capture.appointmentId,
           notes: "",
           status: "draft",
           createdBy: actor.organizationId,
@@ -1263,8 +1268,19 @@ export async function createProductionMobileApiPorts(
         organizationId: actor.organizationId,
       });
       if (!capture) throw new MobileRequestError("not_found");
-      // Sans rapport, l'extraction n'a nulle part où écrire : rattacher d'abord.
-      if (!capture.reportId) throw new MobileRequestError("conflict");
+      // Sans rapport, l'extraction n'a nulle part où écrire. Quand l'animal
+      // est déjà connu — une capture née d'un rendez-vous créé sans rapport —
+      // il n'y a personne à qui le demander : le brouillon se crée ici, sur
+      // cet animal-là. Ne rien faire laisserait le praticien devant un écran
+      // dont le seul bouton échoue.
+      let reportId = capture.reportId;
+      if (!reportId && capture.patientId) {
+        const attached = await ports.attachCapture(actor, captureId, {
+          patientId: capture.patientId,
+        });
+        reportId = attached.reportId;
+      }
+      if (!reportId) throw new MobileRequestError("conflict");
 
       const transcript = await readTranscript(actor, captureId);
       if (
@@ -1274,10 +1290,12 @@ export async function createProductionMobileApiPorts(
         throw new MobileRequestError("conflict");
       }
 
-      await triggerExtraction(capture.reportId, captureId);
-      return { captureId, reportId: capture.reportId };
+      await triggerExtraction(reportId, captureId);
+      return { captureId, reportId };
     },
   };
+
+  return ports;
 }
 
 type MobileApiPortsCaptureErrorCode = NonNullable<

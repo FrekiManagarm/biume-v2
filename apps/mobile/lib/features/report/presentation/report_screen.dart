@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../config/app_palette.dart';
 import '../../../core/telemetry/telemetry.dart';
 import '../../../injection_container.dart';
+import '../domain/owner_email.dart';
 import '../domain/proposal.dart';
 import '../domain/report_repository.dart';
 import 'report_cubit.dart';
@@ -222,11 +223,26 @@ class _MissingEmailSheet extends StatefulWidget {
 
 class _MissingEmailSheetState extends State<_MissingEmailSheet> {
   final _controller = TextEditingController();
+  String? _erreur;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Validée sur place. Une adresse vide ou malformée reviendrait du serveur
+  /// en message générique, après un aller-retour, et sans dire quoi corriger.
+  void _enregistrerEtEnvoyer() {
+    final erreur = ownerEmailError(_controller.text);
+    if (erreur != null) {
+      setState(() => _erreur = erreur);
+      return;
+    }
+
+    final cubit = context.read<ReportCubit>();
+    Navigator.of(context).pop();
+    cubit.addOwnerEmailThenFinalize(normalizeOwnerEmail(_controller.text));
   }
 
   @override
@@ -252,14 +268,18 @@ class _MissingEmailSheetState extends State<_MissingEmailSheet> {
           TextField(
             controller: _controller,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(hintText: 'Adresse e-mail'),
+            autocorrect: false,
+            decoration: InputDecoration(
+              hintText: 'Adresse e-mail',
+              errorText: _erreur,
+            ),
+            onChanged: (_) {
+              if (_erreur != null) setState(() => _erreur = null);
+            },
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              cubit.addOwnerEmailThenFinalize(_controller.text);
-            },
+            onPressed: _enregistrerEtEnvoyer,
             child: const Text('Enregistrer et envoyer'),
           ),
           TextButton(

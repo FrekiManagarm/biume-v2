@@ -194,13 +194,10 @@ class TranscriptCubit extends Cubit<TranscriptState> {
     if (!current.transcript.isCorrectable) return;
 
     var transcript = current.transcript;
-    _telemetry.emit(
-      ProductEvent(
-        name: JourneyEvents.transcriptValidated,
-        journeyId: transcript.captureId,
-        properties: {'textChanged': text != transcript.text},
-      ),
-    );
+    // Relevé avant la correction, émis seulement à la fin : la mesure porte
+    // sur ce que le praticien a fait, mais elle ne compte que les validations
+    // qui ont abouti.
+    final textChanged = text != transcript.text;
     emit(TranscriptValidating(transcript));
 
     if (text != transcript.text) {
@@ -244,6 +241,16 @@ class TranscriptCubit extends Cubit<TranscriptState> {
           DateTime.now(),
         );
         if (isClosed) return;
+        // Ici seulement : la correction est enregistrée, l'animal rattaché,
+        // l'extraction lancée. Émis à l'entrée, l'événement comptait aussi
+        // les séquences qui échouaient ensuite.
+        _telemetry.emit(
+          ProductEvent(
+            name: JourneyEvents.transcriptValidated,
+            journeyId: transcript.captureId,
+            properties: {'textChanged': textChanged},
+          ),
+        );
         _telemetry.emit(
           ProductEvent(
             name: JourneyEvents.extractionRequested,

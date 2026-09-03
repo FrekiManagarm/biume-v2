@@ -317,7 +317,10 @@ void main() {
     },
   );
 
-  test("n'émet pas d'extraction demandée si l'extraction échoue", () async {
+  /// La validation n'est un moment du parcours que si elle a abouti. Émise
+  /// avant la correction et l'extraction, elle comptait aussi les séquences
+  /// qui échouent ensuite, et la mesure était fausse.
+  test("n'émet rien quand l'extraction échoue", () async {
     final evenements = <ProductEvent>[];
     when(() => repository.load(any())).thenAnswer((_) async => Success(prete));
     when(() => repository.extract(any()))
@@ -331,6 +334,24 @@ void main() {
     await cubit.load('capture-1');
     await cubit.validate(text: prete.text, patientId: null);
 
-    expect(evenements.map((e) => e.name), [JourneyEvents.transcriptValidated]);
+    expect(evenements, isEmpty);
+  });
+
+  test("n'émet rien quand l'enregistrement de la correction échoue", () async {
+    final evenements = <ProductEvent>[];
+    when(() => repository.load(any())).thenAnswer((_) async => Success(prete));
+    when(() => repository.correct(any(), any()))
+        .thenAnswer((_) async => const Err(NetworkFailure()));
+
+    final cubit = TranscriptCubit(
+      repository,
+      store,
+      telemetry: Telemetry(sink: evenements.add),
+    );
+    await cubit.load('capture-1');
+    await cubit.validate(text: 'Texte corrigé', patientId: null);
+
+    expect(evenements, isEmpty);
+    verifyNever(() => repository.extract(any()));
   });
 }

@@ -12,6 +12,7 @@ function source(overrides: Partial<TodoSource> = {}): TodoSource {
     proposalCount: 0,
     sectionStates: null,
     audioExpired: false,
+    hasPatient: false,
     ...overrides,
   };
 }
@@ -67,5 +68,29 @@ describe("dictée dont l'audio a expiré", () => {
 
   it("est retenue par la requête au même titre qu'une dictée envoyée", () => {
     expect([...todoCaptureStatuses].sort()).toEqual(["expired", "uploaded"]);
+  });
+});
+
+describe("capture dont l'animal est déjà connu", () => {
+  /// Une capture née d'un rendez-vous porte déjà son animal. Si le rendez-vous
+  /// n'a pas de rapport, elle n'a pas de `reportId` pour autant — et demander
+  /// de la rattacher créerait un second rapport, détaché du rendez-vous.
+  it("ne demande pas de rattacher un animal déjà connu", () => {
+    expect(
+      classifyTodo(
+        source({ reportId: null, reportStatus: null, hasPatient: true, transcriptStatus: "ready" }),
+      ),
+    ).toBe("transcript_to_review");
+    expect(
+      classifyTodo(
+        source({ reportId: null, reportStatus: null, hasPatient: true, transcriptStatus: "running" }),
+      ),
+    ).toBe("transcribing");
+  });
+
+  it("demande encore le rattachement d'une capture libre", () => {
+    expect(
+      classifyTodo(source({ reportId: null, reportStatus: null, transcriptStatus: "ready" })),
+    ).toBe("to_attach");
   });
 });

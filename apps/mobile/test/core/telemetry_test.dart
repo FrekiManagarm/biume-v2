@@ -60,6 +60,21 @@ void main() {
     );
   });
 
+  /// Une liste blanche doit décrire ce qui existe : `kind` y figurait alors
+  /// qu'aucun événement ne le porte, et un champ blanchi sans usage est une
+  /// porte ouverte pour ce qui passera un jour sous son nom.
+  test("le genre d'un élément de liste ne passe pas", () {
+    telemetry.emit(
+      const ProductEvent(
+        name: JourneyEvents.extractionRequested,
+        journeyId: 'c-1',
+        properties: {'kind': 'ready_to_send', 'reportId': 'r-1'},
+      ),
+    );
+
+    expect(recus.single.properties.keys, ['reportId']);
+  });
+
   test('sentToOwner et reportId passent la liste blanche', () {
     ProductEvent? sent;
     Telemetry(sink: (e) => sent = e).emit(

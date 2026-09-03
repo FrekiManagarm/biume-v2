@@ -26,6 +26,8 @@ export type TodoSource = {
   sectionStates: ReportSectionStates | null;
   /** L'audio a été purgé. La transcription et le rapport, eux, sont intacts. */
   audioExpired: boolean;
+  /** Un animal est déjà attaché à la capture, avec ou sans rapport. */
+  hasPatient: boolean;
 };
 
 /**
@@ -41,7 +43,10 @@ export function classifyTodo(source: TodoSource): TodoItemKind | null {
   if (source.audioExpired && source.transcriptStatus === null) return null;
   if (source.transcriptStatus === "inaudible") return "inaudible";
   if (source.transcriptStatus === "failed") return "transcription_failed";
-  if (!source.reportId) return "to_attach";
+  // Rattacher, c'est nommer l'animal. Une capture née d'un rendez-vous le
+  // connaît déjà, même quand ce rendez-vous n'a pas de rapport : le
+  // redemander ferait créer un second rapport, détaché du rendez-vous.
+  if (!source.reportId && !source.hasPatient) return "to_attach";
   if (
     source.transcriptStatus === null ||
     source.transcriptStatus === "pending" ||

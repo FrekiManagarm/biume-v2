@@ -213,6 +213,27 @@ void main() {
       find.widgetWithText(TextButton, 'Finaliser sans envoyer'),
       findsOneWidget,
     );
+
+    // Une adresse vide ou malformée est refusée sur place, avec ce qu'il faut
+    // corriger : un aller-retour serveur pour revenir en message générique
+    // ferait perdre le geste au praticien.
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text("Indiquez l'adresse e-mail du propriétaire."),
+      findsOneWidget,
+    );
+    expect(find.byType(TextField), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'camille');
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    verifyNever(() => repository.updateOwnerEmail(any(), any()));
   });
 
   testWidgets(
