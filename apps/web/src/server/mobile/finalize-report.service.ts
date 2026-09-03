@@ -81,13 +81,19 @@ export async function finalizeReport(
   const existing = await ports.findActiveLink({ sharedVersionId: version.id, ownerId: owner.id });
 
   /**
-   * Un jeton n'est frappé que sur le chemin qui l'envoie dans la seconde qui
-   * suit. Sans cette garde, chaque révision figeait une version neuve, sur
-   * laquelle aucun lien n'existe, et un secret de plus naissait sur le même
-   * propriétaire sans lui être jamais transmis ni jamais révoqué.
+   * Un lien par version figée, jamais un par exécution. La version est
+   * idempotente sur la révision du rapport : rappeler `finalize` sans avoir
+   * rien changé retombe sur la même version, dont le lien vient d'être
+   * retrouvé — rien n'est frappé une seconde fois. Un jeton neuf ne naît que
+   * là où un document neuf est né, et il appartient à ce document.
+   *
+   * Il est frappé même quand rien n'est envoyé : « Finaliser sans envoyer »
+   * finalise le rapport et **laisse le lien exister**. C'est ce lien que la
+   * programmation du suivi exige, et c'est par lui que le praticien enverra
+   * le compte rendu depuis le web une fois l'adresse complétée.
    */
   let token = existing?.token ?? null;
-  if (!token && canSend) {
+  if (!token) {
     token = ports.generateToken();
     await ports.insertLink({ token, sharedVersionId: version.id, ownerId: owner.id });
   }

@@ -119,11 +119,15 @@ describe("finaliser et partager", () => {
 
   /**
    * Le cas le plus coûteux : un praticien qui appuie deux fois. Le second geste
-   * ne doit ni renvoyer, ni frapper de jeton — sinon un secret vivant resterait
-   * ouvert sur le propriétaire sans lui avoir jamais été transmis.
+   * ne doit rien renvoyer, et ne doit pas frapper un second jeton sur la même
+   * version figée — sinon un secret vivant resterait ouvert sur le
+   * propriétaire sans lui avoir jamais été transmis.
    */
   it("ne renvoie rien sur un rapport déjà envoyé, même si l'envoi est demandé", async () => {
-    const ports = createPorts({ loadReport: vi.fn(async () => report({ status: "sent" })) });
+    const ports = createPorts({
+      loadReport: vi.fn(async () => report({ status: "sent" })),
+      findActiveLink: vi.fn(async () => ({ token: "jeton-du-premier-envoi" })),
+    });
     const result = await finalizeReport(request, ports);
 
     expect(ports.sendEmail).not.toHaveBeenCalled();
@@ -133,15 +137,63 @@ describe("finaliser et partager", () => {
   });
 
   /**
-   * Une révision suivante fige une version neuve, sur laquelle aucun lien
-   * n'existe. Sans envoi à la clé, frapper un jeton ici l'abandonnerait vivant.
+   * « Finaliser sans envoyer » doit laisser un lien derrière lui : c'est ce
+   * lien que le suivi lit pour se programmer, et c'est par lui que le
+   * praticien enverra le compte rendu depuis le web une fois l'adresse
+   * complétée. Sans lui, l'écran de suivi n'a plus qu'une issue : « Pas de
+   * suivi pour cette séance ».
    */
-  it("ne frappe aucun jeton quand il n'y a rien à envoyer", async () => {
+  it("frappe le lien même quand rien n'est envoyé", async () => {
     const ports = createPorts();
+    const result = await finalizeReport({ ...request, sendToOwner: false }, ports);
+
+    expect(ports.insertLink).toHaveBeenCalledWith({
+      token: "jeton-secret",
+      sharedVersionId: "version-1",
+      ownerId: "owner-1",
+    });
+    expect(ports.sendEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ reportId: "report-1", status: "finalized", sentToOwner: false });
+  });
+
+  it("frappe le lien quand le propriétaire n'a pas d'adresse", async () => {
+    const ports = createPorts({
+      loadReport: vi.fn(async () =>
+        report({ patient: { name: "Filou", owner: { id: "owner-1", name: "Camille Roux", email: null } } }),
+      ),
+    });
+    await finalizeReport(request, ports);
+
+    expect(ports.insertLink).toHaveBeenCalledTimes(1);
+    expect(ports.sendEmail).not.toHaveBeenCalled();
+  });
+
+  /**
+   * La garde qui tient : un lien par version figée, pas un par exécution. La
+   * version est idempotente sur la révision du rapport, donc rappeler
+   * `finalize` sans rien changer retombe sur la même version, dont le lien
+   * existe déjà.
+   */
+  it("n'accumule pas de jeton quand le praticien finalise deux fois", async () => {
+    const links = new Map<string, string>();
+    let minted = 0;
+    const ports = createPorts({
+      findActiveLink: vi.fn(async ({ sharedVersionId, ownerId }) => {
+        const token = links.get(`${sharedVersionId}:${ownerId}`);
+        return token ? { token } : null;
+      }),
+      insertLink: vi.fn(async ({ token, sharedVersionId, ownerId }) => {
+        links.set(`${sharedVersionId}:${ownerId}`, token);
+      }),
+      generateToken: vi.fn(() => `jeton-${++minted}`),
+    });
+
+    await finalizeReport({ ...request, sendToOwner: false }, ports);
+    await finalizeReport({ ...request, sendToOwner: false }, ports);
     await finalizeReport({ ...request, sendToOwner: false }, ports);
 
-    expect(ports.generateToken).not.toHaveBeenCalled();
-    expect(ports.insertLink).not.toHaveBeenCalled();
+    expect(ports.insertLink).toHaveBeenCalledTimes(1);
+    expect(links.size).toBe(1);
   });
 
   it("refuse un rapport sans propriétaire", async () => {
