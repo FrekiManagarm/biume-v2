@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/report/domain/proposal.dart';
@@ -278,4 +280,41 @@ void main() {
     },
     verify: (_) => verifyNever(() => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner'))),
   );
+
+  /// L'écran de préparation dit au praticien qu'il peut partir. S'il le fait
+  /// pendant que `load` interroge le serveur, `BlocProvider` ferme le cubit
+  /// avant que la réponse ne revienne : émettre dessus lèverait un
+  /// `StateError` non rattrapé.
+  test('load ne plante pas si le cubit est fermé pendant la requête', () async {
+    final completer = Completer<Result<ReportProposals>>();
+    when(() => repository.load(any())).thenAnswer((_) => completer.future);
+
+    final cubit = ReportCubit(repository);
+    final loadFuture = cubit.load('report-1');
+
+    await cubit.close();
+    completer.complete(Success(propositions()));
+
+    await expectLater(loadFuture, completes);
+  });
+
+  test('finalize ne plante pas si le cubit est fermé pendant la requête', () async {
+    when(() => repository.load(any()))
+        .thenAnswer((_) async => Success(propositions(sections: toutesDecidees)));
+    final completer = Completer<Result<FinalizeOutcome>>();
+    when(
+      () => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner')),
+    ).thenAnswer((_) => completer.future);
+
+    final cubit = ReportCubit(repository);
+    await cubit.load('report-1');
+    final finalizeFuture = cubit.finalize(sendToOwner: true);
+
+    await cubit.close();
+    completer.complete(
+      const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
+    );
+
+    await expectLater(finalizeFuture, completes);
+  });
 }

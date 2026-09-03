@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
@@ -234,5 +236,32 @@ void main() {
       await cubit.validate(text: '', patientId: null);
     },
     verify: (_) => verifyNever(() => repository.extract(any())),
+  );
+
+  /// L'écran de validation invite lui aussi le praticien à partir. S'il le
+  /// fait pendant que `validate` interroge le serveur, `BlocProvider` ferme
+  /// le cubit avant que la réponse ne revienne : émettre dessus lèverait un
+  /// `StateError` non rattrapé.
+  test(
+    'validate ne plante pas si le cubit est fermé pendant la requête',
+    () async {
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => Success(prete));
+      final completer = Completer<Result<String>>();
+      when(() => repository.extract('capture-1'))
+          .thenAnswer((_) => completer.future);
+
+      final cubit = TranscriptCubit(repository, store);
+      await cubit.load('capture-1');
+      final validateFuture = cubit.validate(
+        text: prete.text,
+        patientId: null,
+      );
+
+      await cubit.close();
+      completer.complete(const Success('report-1'));
+
+      await expectLater(validateFuture, completes);
+    },
   );
 }

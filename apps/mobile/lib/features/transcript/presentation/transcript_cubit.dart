@@ -185,7 +185,13 @@ class TranscriptCubit extends Cubit<TranscriptState> {
     emit(TranscriptValidating(transcript));
 
     if (text != transcript.text) {
-      switch (await _repository.correct(transcript.captureId, text)) {
+      final result = await _repository.correct(transcript.captureId, text);
+      // Le praticien reste libre de quitter cet écran pendant l'attente :
+      // `BlocProvider` ferme alors le cubit avant que la requête ne
+      // revienne. Émettre sur un cubit fermé lève un `StateError` que
+      // personne n'attraperait ici.
+      if (isClosed) return;
+      switch (result) {
         case Success(:final value):
           transcript = value;
         case Err(:final failure):
@@ -197,9 +203,12 @@ class TranscriptCubit extends Cubit<TranscriptState> {
     }
 
     if (patientId != null) {
-      if (await _repository.attach(transcript.captureId, patientId) case Err(
-        :final failure,
-      )) {
+      final attachResult = await _repository.attach(
+        transcript.captureId,
+        patientId,
+      );
+      if (isClosed) return;
+      if (attachResult case Err(:final failure)) {
         emit(
           TranscriptReady(transcript, draft: text, message: failure.message),
         );
@@ -207,12 +216,15 @@ class TranscriptCubit extends Cubit<TranscriptState> {
       }
     }
 
-    switch (await _repository.extract(transcript.captureId)) {
+    final extractResult = await _repository.extract(transcript.captureId);
+    if (isClosed) return;
+    switch (extractResult) {
       case Success(:final value):
         await _store.markExtractionRequested(
           transcript.captureId,
           DateTime.now(),
         );
+        if (isClosed) return;
         emit(TranscriptValidated(value));
       case Err(:final failure):
         emit(

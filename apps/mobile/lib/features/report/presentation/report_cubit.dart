@@ -78,6 +78,11 @@ class ReportCubit extends Cubit<ReportState> {
     emit(const ReportLoading());
     for (var attempt = 0; ; attempt++) {
       final result = await _repository.load(reportId);
+      // Le praticien reste libre de quitter cet écran pendant l'attente :
+      // `BlocProvider` ferme alors le cubit avant que la requête ne
+      // revienne. Émettre sur un cubit fermé lève un `StateError` que
+      // personne n'attraperait ici.
+      if (isClosed) return;
       switch (result) {
         case Err(:final failure):
           emit(ReportUnavailable(failure.message));
@@ -151,10 +156,14 @@ class ReportCubit extends Cubit<ReportState> {
       return;
     }
     emit(ReportLoaded(current.data, busy: true));
-    switch (await _repository.finalize(
+    final result = await _repository.finalize(
       current.data.reportId,
       sendToOwner: sendToOwner,
-    )) {
+    );
+    // Même geste, même risque : le praticien a pu quitter l'écran pendant
+    // que la finalisation était en vol.
+    if (isClosed) return;
+    switch (result) {
       case Success(:final value):
         emit(ReportFinalized(reportId: current.data.reportId, outcome: value));
       case Err(:final failure):
@@ -168,8 +177,14 @@ class ReportCubit extends Cubit<ReportState> {
     final current = state;
     if (current is! ReportLoaded) return;
     emit(ReportLoaded(current.data, busy: true));
-    if (await _repository.updateOwnerEmail(current.data.owner.id, email)
-        case Err(:final failure)) {
+    final result = await _repository.updateOwnerEmail(
+      current.data.owner.id,
+      email,
+    );
+    // Premier des deux appels enchaînés : la garde couvre celui-ci, `finalize`
+    // couvre le second par sa propre garde.
+    if (isClosed) return;
+    if (result case Err(:final failure)) {
       emit(ReportLoaded(current.data, message: failure.message));
       return;
     }
