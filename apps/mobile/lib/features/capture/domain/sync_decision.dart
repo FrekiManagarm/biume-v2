@@ -13,6 +13,7 @@ class SyncCandidate {
     required this.attemptCount,
     required this.nextAttemptAt,
     required this.expiresAt,
+    this.patientId,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class SyncCandidate {
   final int attemptCount;
   final DateTime? nextAttemptAt;
   final DateTime expiresAt;
+  final String? patientId;
 }
 
 /// Décision pure : aucune entrée-sortie, donc testable sans réseau ni base.

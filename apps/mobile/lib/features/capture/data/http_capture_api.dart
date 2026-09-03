@@ -69,6 +69,19 @@ class HttpCaptureApi implements CaptureApi {
   }
 
   @override
+  Future<Result<void>> attach(String captureId, String patientId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/api/mobile/v1/captures/$captureId/attach',
+        data: {'patientId': patientId},
+      );
+      return const Success(null);
+    } on DioException catch (error) {
+      return Err(failureFromDioException(error));
+    }
+  }
+
+  @override
   Future<Result<String>> putBytes(
     UploadSession session,
     List<int> bytes,

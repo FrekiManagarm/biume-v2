@@ -18,9 +18,10 @@ import 'recording_screen.dart';
 /// Séparé de l'écran pour que celui-ci reste testable sans conteneur
 /// d'injection — et pour qu'un oubli de câblage se voie.
 class RecordingPage extends StatelessWidget {
-  const RecordingPage({this.appointmentId, super.key});
+  const RecordingPage({this.appointmentId, this.patientId, super.key});
 
   final String? appointmentId;
+  final String? patientId;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +41,7 @@ class RecordingPage extends StatelessWidget {
             filePath: capture.filePath,
             createdAt: capture.createdAt,
             expiresAt: computeExpiry(capture.createdAt),
+            patientId: patientId,
           );
 
           // La dictée entre en file dès sa validation, puis part si le réseau

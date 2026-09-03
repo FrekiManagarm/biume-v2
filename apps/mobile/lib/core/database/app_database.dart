@@ -40,6 +40,15 @@ class LocalCaptures extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get expiresAt => dateTime()();
 
+  /// Animal choisi pour une capture libre. Écrit localement, envoyé au
+  /// serveur juste après la déclaration : c'est la seule « écriture » hors
+  /// ligne, et elle appartient à la dictée en file, pas au cache.
+  TextColumn get patientId => text().nullable()();
+
+  /// Le moment où « Valider la transcription » a été pressé. Sert à afficher
+  /// « Biume prépare le compte rendu » sans que le serveur ait à le savoir.
+  DateTimeColumn get extractionRequestedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -92,7 +101,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await migrator.addColumn(localCaptures, localCaptures.patientId);
+        await migrator.addColumn(
+          localCaptures,
+          localCaptures.extractionRequestedAt,
+        );
+      }
+    },
+  );
 
   /// Vide **uniquement** le cache de lecture. La file de dictées n'est jamais
   /// touchée ici : elle porte du travail que le praticien ne peut pas refaire.

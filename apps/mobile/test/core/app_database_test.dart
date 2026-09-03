@@ -1,4 +1,5 @@
 import 'package:biume_mobile/core/database/app_database.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -85,5 +86,25 @@ void main() {
         .first;
 
     expect(autreJour, isEmpty);
+  });
+
+  test('conserve l\'animal rattaché à une dictée en file', () async {
+    await db.into(db.localCaptures).insert(
+      LocalCapturesCompanion.insert(
+        id: 'c-1',
+        status: LocalCaptureStatus.queued,
+        durationMs: 1000,
+        byteSize: 10,
+        sha256: 'x',
+        createdAt: DateTime.utc(2026, 9, 3),
+        expiresAt: DateTime.utc(2026, 9, 4),
+        patientId: const Value('pet-1'),
+      ),
+    );
+    final row = await (db.select(
+      db.localCaptures,
+    )..where((c) => c.id.equals('c-1'))).getSingle();
+    expect(row.patientId, 'pet-1');
+    expect(row.extractionRequestedAt, isNull);
   });
 }

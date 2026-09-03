@@ -20,6 +20,7 @@ class DriftCaptureStore implements CaptureStore {
     required String filePath,
     required DateTime createdAt,
     required DateTime expiresAt,
+    String? patientId,
   }) async {
     await _db
         .into(_db.localCaptures)
@@ -36,6 +37,7 @@ class DriftCaptureStore implements CaptureStore {
             filePath: Value(filePath),
             createdAt: createdAt,
             expiresAt: expiresAt,
+            patientId: Value(patientId),
           ),
         );
   }
@@ -91,10 +93,23 @@ class DriftCaptureStore implements CaptureStore {
             attemptCount: row.attemptCount,
             nextAttemptAt: row.nextAttemptAt,
             expiresAt: row.expiresAt,
+            patientId: row.patientId,
           ),
         )
         .toList();
   }
+
+  @override
+  Future<void> attachPatient(String id, String patientId) =>
+      (_db.update(_db.localCaptures)..where((c) => c.id.equals(id))).write(
+        LocalCapturesCompanion(patientId: Value(patientId)),
+      );
+
+  @override
+  Future<void> markExtractionRequested(String id, DateTime at) =>
+      (_db.update(_db.localCaptures)..where((c) => c.id.equals(id))).write(
+        LocalCapturesCompanion(extractionRequestedAt: Value(at)),
+      );
 
   @override
   Future<LocalCapture?> byId(String id) =>
