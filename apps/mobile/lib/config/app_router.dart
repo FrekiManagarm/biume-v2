@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/agenda/presentation/agenda_screen.dart';
 import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/capture/presentation/recording_page.dart';
 import '../features/followup/presentation/follow_up_schedule_page.dart';
+import '../features/home/presentation/home_screen.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/transcript/presentation/transcript_page.dart';
@@ -27,12 +27,19 @@ GoRouter buildAppRouter(AuthCubit auth) {
         AuthInitial() || AuthChecking() => null,
         AuthUnauthenticated() => path == '/connexion' ? null : '/connexion',
         AuthNeedsCompany() => path == '/entreprise' ? null : '/entreprise',
-        AuthAuthenticated() =>
-          path == '/connexion' || path == '/entreprise' ? '/' : null,
+        AuthAuthenticated() => switch (path) {
+          '/connexion' => '/',
+          // Une navigation volontaire vers `/entreprise` (le menu du compte,
+          // via `context.push('/entreprise', extra: 'volontaire')`) doit
+          // passer : seule une arrivée directe sur cette route sans ce
+          // marqueur est renvoyée à l'accueil.
+          '/entreprise' => state.extra == 'volontaire' ? null : '/',
+          _ => null,
+        },
       };
     },
     routes: [
-      GoRoute(path: '/', builder: (_, _) => const AgendaScreen()),
+      GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
       GoRoute(path: '/connexion', builder: (_, _) => const SignInScreen()),
       GoRoute(
         path: '/entreprise',

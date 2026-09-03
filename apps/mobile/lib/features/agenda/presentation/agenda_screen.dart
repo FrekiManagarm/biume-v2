@@ -4,26 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/app_palette.dart';
-import '../../../injection_container.dart';
-import '../domain/agenda_repository.dart';
 import '../domain/appointment.dart';
 import 'agenda_cubit.dart';
 
-class AgendaScreen extends StatelessWidget {
-  const AgendaScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          AgendaCubit(getIt<AgendaRepository>())..load(DateTime.now()),
-      child: const _AgendaView(),
-    );
-  }
-}
-
-class _AgendaView extends StatelessWidget {
-  const _AgendaView();
+/// Le contenu de l'agenda du jour, sans `Scaffold` ni `AppBar` : il vit dans
+/// la liste défilante de l'accueil, sous « À traiter ». Un `BlocProvider<
+/// AgendaCubit>` doit exister au-dessus.
+class AgendaBody extends StatelessWidget {
+  const AgendaBody({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,62 +19,59 @@ class _AgendaView extends StatelessWidget {
         ? AppPalette.dark
         : AppPalette.light;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Vos séances')),
-      floatingActionButton: FloatingActionButton.extended(
-        // La capture libre : le PRODUCT.md la prévoit dès l'étape 1 du
-        // parcours, pour une séance qui n'était pas à l'agenda.
-        onPressed: () => context.push('/dicter'),
-        icon: const Icon(Icons.mic),
-        label: const Text('Dicter'),
-      ),
-      body: SafeArea(
-        child: BlocBuilder<AgendaCubit, AgendaState>(
-          builder: (context, state) => switch (state) {
-            AgendaInitial() || AgendaLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            AgendaLoaded(:final appointments, :final offlineMessage) => Column(
-              children: [
-                if (offlineMessage != null)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: palette.warningSurface,
-                      border: Border.all(color: palette.warningBorder),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    // Le message dit « ces données peuvent dater », jamais
-                    // « il n'y a rien » : la liste reste affichée.
-                    child: Text(
-                      "$offlineMessage Voici votre dernier agenda connu.",
-                      style: TextStyle(color: palette.ink),
-                    ),
-                  ),
-                Expanded(
-                  child: appointments.isEmpty
-                      ? Center(
-                          child: Text(
-                            "Aucune séance aujourd'hui.",
-                            style: TextStyle(color: palette.inkMuted),
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: appointments.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) =>
-                              _AppointmentCard(appointments[index]),
-                        ),
-                ),
-              ],
-            ),
-          },
+    return BlocBuilder<AgendaCubit, AgendaState>(
+      builder: (context, state) => switch (state) {
+        AgendaInitial() || AgendaLoading() => const Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(child: CircularProgressIndicator()),
         ),
-      ),
+        AgendaLoaded(:final appointments, :final offlineMessage) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Vos séances',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              if (offlineMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: palette.warningSurface,
+                    border: Border.all(color: palette.warningBorder),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  // Le message dit « ces données peuvent dater », jamais
+                  // « il n'y a rien » : la liste reste affichée.
+                  child: Text(
+                    "$offlineMessage Voici votre dernier agenda connu.",
+                    style: TextStyle(color: palette.ink),
+                  ),
+                ),
+              if (appointments.isEmpty)
+                Text(
+                  "Aucune séance aujourd'hui.",
+                  style: TextStyle(color: palette.inkMuted),
+                )
+              else
+                // Non défilante : elle vit dans le `ListView` de l'accueil,
+                // qui porte le seul défilement de l'écran.
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: appointments.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      _AppointmentCard(appointments[index]),
+                ),
+            ],
+          ),
+        ),
+      },
     );
   }
 }
