@@ -43,6 +43,16 @@ class FakeCaptureStore implements CaptureStore {
     String? patientId,
   }) => throw UnimplementedError();
 
+  final transitions =
+      <
+        ({
+          String id,
+          LocalCaptureStatus to,
+          int? attemptCount,
+          String? errorCode,
+        })
+      >[];
+
   @override
   Future<bool> transition(
     String id,
@@ -50,7 +60,15 @@ class FakeCaptureStore implements CaptureStore {
     int? attemptCount,
     String? errorCode,
     DateTime? nextAttemptAt,
-  }) => throw UnimplementedError();
+  }) async {
+    transitions.add((
+      id: id,
+      to: to,
+      attemptCount: attemptCount,
+      errorCode: errorCode,
+    ));
+    return true;
+  }
 
   @override
   Future<List<SyncCandidate>> pending() => throw UnimplementedError();
@@ -131,17 +149,18 @@ void main() {
     },
     build: () => TodoCubit(store, api, pollInterval: Duration.zero),
     act: (cubit) => cubit.start(),
-    verify: (cubit) => expect(
-      cubit.state.items.map((i) => i.captureId),
-      ['c-local', 'c-srv'],
-    ),
+    verify: (cubit) =>
+        expect(cubit.state.items.map((i) => i.captureId), ['c-local', 'c-srv']),
   );
 
   blocTest<TodoCubit, TodoState>(
     'affiche « Biume prépare le compte rendu » juste après la validation',
     setUp: () {
       store.emitAll([
-        localUploaded('c-1', extractionRequestedAt: DateTime(2026, 9, 3, 10, 0)),
+        localUploaded(
+          'c-1',
+          extractionRequestedAt: DateTime(2026, 9, 3, 10, 0),
+        ),
       ]);
       when(() => api.list()).thenAnswer(
         (_) async => Success([serverItem(TodoKind.transcriptToReview, 'c-1')]),
@@ -154,14 +173,18 @@ void main() {
       now: () => DateTime(2026, 9, 3, 10, 1),
     ),
     act: (cubit) => cubit.start(),
-    verify: (cubit) => expect(cubit.state.items.single.kind, TodoKind.preparing),
+    verify: (cubit) =>
+        expect(cubit.state.items.single.kind, TodoKind.preparing),
   );
 
   blocTest<TodoCubit, TodoState>(
     'la marque locale disparaît une fois la fenêtre passée',
     setUp: () {
       store.emitAll([
-        localUploaded('c-1', extractionRequestedAt: DateTime(2026, 9, 3, 10, 0)),
+        localUploaded(
+          'c-1',
+          extractionRequestedAt: DateTime(2026, 9, 3, 10, 0),
+        ),
       ]);
       when(() => api.list()).thenAnswer(
         (_) async => Success([serverItem(TodoKind.transcriptToReview, 'c-1')]),
@@ -182,7 +205,8 @@ void main() {
     'garde la liste et dit hors ligne quand le serveur ne répond pas',
     setUp: () {
       store.emitAll([localQueued('c-local')]);
-      when(() => api.list()).thenAnswer((_) async => const Err(NetworkFailure()));
+      when(() => api.list())
+          .thenAnswer((_) async => const Err(NetworkFailure()));
     },
     build: () => TodoCubit(store, api, pollInterval: Duration.zero),
     act: (cubit) => cubit.start(),
@@ -191,6 +215,27 @@ void main() {
       expect(cubit.state.offlineMessage, 'Connexion indisponible.');
     },
   );
+
+  /// Le praticien appuie sur « Envoi impossible, appuyez pour réessayer » :
+  /// la dictée doit réellement repartir en file. Sans cette transition, le
+  /// moteur de synchronisation ne la reprend jamais — il ne lit que `queued`
+  /// et `uploading` — et le geste est inerte.
+  test('remet en file une dictée abandonnée, compteur remis à zéro', () async {
+    when(() => api.list()).thenAnswer((_) async => const Success(<TodoItem>[]));
+    final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+
+    await cubit.retryUpload('c-1');
+
+    expect(store.transitions, [
+      (
+        id: 'c-1',
+        to: LocalCaptureStatus.queued,
+        attemptCount: 0,
+        errorCode: null,
+      ),
+    ]);
+    await cubit.close();
+  });
 
   test("n'émet plus après la fermeture du cubit", () async {
     store.emitAll([localQueued('c-local')]);
@@ -225,46 +270,43 @@ void main() {
   /// l'abonnement). C'est exactement la fenêtre que `isClosed` seul ne
   /// couvre pas, puisqu'il ne devient vrai qu'à l'exécution de
   /// `super.close()`, en tout dernier.
-  test(
-    "n'émet plus si la requête en vol répond pendant que close() attend "
-    "l'annulation de l'abonnement",
-    () async {
-      store.emitAll([localQueued('c-local')]);
-      final completer = Completer<Result<List<TodoItem>>>();
-      when(() => api.list()).thenAnswer((_) => completer.future);
+  test("n'émet plus si la requête en vol répond pendant que close() attend "
+      "l'annulation de l'abonnement", () async {
+    store.emitAll([localQueued('c-local')]);
+    final completer = Completer<Result<List<TodoItem>>>();
+    when(() => api.list()).thenAnswer((_) => completer.future);
 
-      final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
-      final states = <TodoState>[];
-      final subscription = cubit.stream.listen(states.add);
+    final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+    final states = <TodoState>[];
+    final subscription = cubit.stream.listen(states.add);
 
-      cubit.start();
-      // La file locale a eu le temps de se publier ; le `refresh()` a
-      // démarré sa requête, mais elle n'a pas encore répondu — elle reste en
-      // vol.
-      await Future<void>.delayed(Duration.zero);
-      final apresFileLocale = List<TodoState>.of(states);
+    cubit.start();
+    // La file locale a eu le temps de se publier ; le `refresh()` a
+    // démarré sa requête, mais elle n'a pas encore répondu — elle reste en
+    // vol.
+    await Future<void>.delayed(Duration.zero);
+    final apresFileLocale = List<TodoState>.of(states);
 
-      // `close()` démarre : elle pose son drapeau, annule le minuteur, puis
-      // suspend sur `await _subscription?.cancel()`. C'est cette attente que
-      // la réponse va traverser, avant que `super.close()` — et donc
-      // `isClosed` — n'ait eu lieu.
-      final closeFuture = cubit.close();
-      // Un contenu différent de ce qui est déjà publié : si l'émission
-      // tardive passe la garde, `Cubit.emit` ne peut pas la confondre avec
-      // un doublon et l'avaler silencieusement — elle doit apparaître comme
-      // un état de plus, ou faire planter `emit` si le cubit est déjà
-      // réellement fermé à ce moment-là. Les deux font rougir ce test.
-      completer.complete(
-        Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
-      );
-      await closeFuture;
+    // `close()` démarre : elle pose son drapeau, annule le minuteur, puis
+    // suspend sur `await _subscription?.cancel()`. C'est cette attente que
+    // la réponse va traverser, avant que `super.close()` — et donc
+    // `isClosed` — n'ait eu lieu.
+    final closeFuture = cubit.close();
+    // Un contenu différent de ce qui est déjà publié : si l'émission
+    // tardive passe la garde, `Cubit.emit` ne peut pas la confondre avec
+    // un doublon et l'avaler silencieusement — elle doit apparaître comme
+    // un état de plus, ou faire planter `emit` si le cubit est déjà
+    // réellement fermé à ce moment-là. Les deux font rougir ce test.
+    completer.complete(
+      Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
+    );
+    await closeFuture;
 
-      // Laisse la continuation de `refresh()`, si elle a échappé au drapeau,
-      // le temps de s'exécuter et d'émettre.
-      await Future<void>.delayed(Duration.zero);
+    // Laisse la continuation de `refresh()`, si elle a échappé au drapeau,
+    // le temps de s'exécuter et d'émettre.
+    await Future<void>.delayed(Duration.zero);
 
-      expect(states, apresFileLocale);
-      await subscription.cancel();
-    },
-  );
+    expect(states, apresFileLocale);
+    await subscription.cancel();
+  });
 }

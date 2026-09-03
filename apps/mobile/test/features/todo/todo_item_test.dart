@@ -20,9 +20,18 @@ void main() {
   });
 
   test('mène à l\'écran qui répond au geste', () {
-    expect(item(TodoKind.transcriptToReview).route, '/dictees/c-1/transcription');
-    expect(item(TodoKind.toAttach).route, '/dictees/c-1/transcription?rattacher=1');
-    expect(item(TodoKind.reportToValidate, reportId: 'r-1').route, '/comptes-rendus/r-1');
+    expect(
+      item(TodoKind.transcriptToReview).route,
+      '/dictees/c-1/transcription',
+    );
+    expect(
+      item(TodoKind.toAttach).route,
+      '/dictees/c-1/transcription?rattacher=1',
+    );
+    expect(
+      item(TodoKind.reportToValidate, reportId: 'r-1').route,
+      '/comptes-rendus/r-1',
+    );
     expect(item(TodoKind.transcribing).route, isNull);
   });
 

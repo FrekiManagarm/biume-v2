@@ -12,7 +12,21 @@ import 'todo_cubit.dart';
 /// « À traiter » : la première chose que l'ostéopathe lit en ouvrant
 /// l'application. Un `BlocProvider<TodoCubit>` doit exister au-dessus.
 class TodoSection extends StatelessWidget {
-  const TodoSection({super.key});
+  const TodoSection({this.onForegroundRefresh = refreshForeground, super.key});
+
+  /// Ce que la reprise d'une dictée bloquée relance après l'avoir remise en
+  /// file. Injectable pour que la section reste testable sans conteneur
+  /// d'injection ; en production c'est le rafraîchissement de premier plan.
+  final Future<void> Function() onForegroundRefresh;
+
+  /// Le praticien décide de reprendre : la dictée retourne en file, puis la
+  /// synchronisation repart. L'ordre compte — le moteur ne reprend que ce qui
+  /// est en file.
+  Future<void> _reprendre(BuildContext context, String captureId) async {
+    final cubit = context.read<TodoCubit>();
+    await cubit.retryUpload(captureId);
+    await onForegroundRefresh();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +60,7 @@ class TodoSection extends StatelessWidget {
                 ),
               ),
             if (state.items.isEmpty)
-              Text(
-                'Rien à traiter.',
-                style: TextStyle(color: palette.inkMuted),
-              )
+              Text('Rien à traiter.', style: TextStyle(color: palette.inkMuted))
             else
               ...state.items.map(
                 (item) => Padding(
@@ -62,7 +73,7 @@ class TodoSection extends StatelessWidget {
                           ? null
                           : const Icon(Icons.chevron_right),
                       onTap: item.kind == TodoKind.uploadBlocked
-                          ? () => unawaited(refreshForeground())
+                          ? () => unawaited(_reprendre(context, item.captureId))
                           : item.route == null
                           ? null
                           : () => context.push(item.route!),

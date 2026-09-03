@@ -96,12 +96,27 @@ class TodoCubit extends Cubit<TodoState> {
     // tournée.
     if (!_shuttingDown &&
         state.items.any(
-          (i) => i.kind == TodoKind.transcribing || i.kind == TodoKind.preparing,
+          (i) =>
+              i.kind == TodoKind.transcribing || i.kind == TodoKind.preparing,
         )) {
       _timer = Timer(pollInterval, () {
         if (!_shuttingDown) unawaited(refresh());
       });
     }
+  }
+
+  /// Reprise décidée par un humain, et non nouvelle tentative automatique
+  /// après un abandon : le compteur repart de zéro, sinon la temporisation
+  /// exponentielle replacerait aussitôt la dictée hors de portée du moteur.
+  ///
+  /// Sans cette transition, le geste « appuyez pour réessayer » était inerte :
+  /// le moteur de synchronisation ne reprend que `queued` et `uploading`.
+  Future<void> retryUpload(String captureId) async {
+    await _store.transition(
+      captureId,
+      LocalCaptureStatus.queued,
+      attemptCount: 0,
+    );
   }
 
   void _publish(String? offlineMessage) {
@@ -142,7 +157,9 @@ class TodoCubit extends Cubit<TodoState> {
       return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
     });
 
-    emit(TodoState(items: [...local, ...remote], offlineMessage: offlineMessage));
+    emit(
+      TodoState(items: [...local, ...remote], offlineMessage: offlineMessage),
+    );
   }
 
   @override

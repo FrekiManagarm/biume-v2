@@ -1,3 +1,4 @@
+import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
@@ -23,6 +24,7 @@ Future<void> monter(
   MockCaptureStore store,
   MockTodoApi api, {
   void Function(String)? onNavigate,
+  Future<void> Function()? onForegroundRefresh,
 }) async {
   final router = GoRouter(
     initialLocation: '/',
@@ -30,9 +32,15 @@ Future<void> monter(
       GoRoute(
         path: '/',
         builder: (_, _) => BlocProvider(
-          create: (_) => TodoCubit(store, api, pollInterval: Duration.zero)
-            ..start(),
-          child: const Scaffold(body: SingleChildScrollView(child: TodoSection())),
+          create: (_) =>
+              TodoCubit(store, api, pollInterval: Duration.zero)..start(),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: TodoSection(
+                onForegroundRefresh: onForegroundRefresh ?? () async {},
+              ),
+            ),
+          ),
         ),
       ),
       GoRoute(
@@ -60,6 +68,8 @@ Future<void> monter(
 void main() {
   late MockCaptureStore store;
   late MockTodoApi api;
+
+  setUpAll(() => registerFallbackValue(LocalCaptureStatus.queued));
 
   setUp(() {
     store = MockCaptureStore();
@@ -111,15 +121,69 @@ void main() {
     expect(find.text('Rien à traiter.'), findsOneWidget);
   });
 
-  testWidgets('un échec réseau garde la liste et affiche le bandeau hors ligne', (
-    tester,
-  ) async {
-    when(() => api.list()).thenAnswer((_) async => const Err(NetworkFailure()));
+  testWidgets(
+    'un échec réseau garde la liste et affiche le bandeau hors ligne',
+    (tester) async {
+      when(() => api.list())
+          .thenAnswer((_) async => const Err(NetworkFailure()));
 
-    await monter(tester, store, api);
+      await monter(tester, store, api);
 
-    expect(find.textContaining('Connexion indisponible'), findsOneWidget);
-  });
+      expect(find.textContaining('Connexion indisponible'), findsOneWidget);
+    },
+  );
+
+  /// Le geste de reprise doit remettre la dictée en file **avant** de
+  /// relancer la synchronisation : le moteur ne reprend que `queued` et
+  /// `uploading`, jamais une dictée abandonnée.
+  testWidgets(
+    'la reprise d\'une dictée bloquée la remet en file puis synchronise',
+    (tester) async {
+      when(() => api.list())
+          .thenAnswer((_) async => const Success(<TodoItem>[]));
+      when(() => store.watchAll()).thenAnswer(
+        (_) => Stream.value([
+          LocalCapture(
+            id: 'c-1',
+            status: LocalCaptureStatus.needsAction,
+            durationMs: 12000,
+            byteSize: 400000,
+            sha256: 'sha',
+            attemptCount: 5,
+            createdAt: DateTime(2026, 9, 3, 9),
+            expiresAt: DateTime(2026, 9, 4, 9),
+          ),
+        ]),
+      );
+
+      final gestes = <String>[];
+      when(
+        () => store.transition(
+          any(),
+          any(),
+          attemptCount: any(named: 'attemptCount'),
+        ),
+      ).thenAnswer((invocation) async {
+        gestes.add(
+          'file:${invocation.positionalArguments[1]}'
+          ':${invocation.namedArguments[#attemptCount]}',
+        );
+        return true;
+      });
+
+      await monter(
+        tester,
+        store,
+        api,
+        onForegroundRefresh: () async => gestes.add('synchronise'),
+      );
+
+      await tester.tap(find.text(todoLabels[TodoKind.uploadBlocked]!));
+      await tester.pumpAndSettle();
+
+      expect(gestes, ['file:LocalCaptureStatus.queued:0', 'synchronise']);
+    },
+  );
 
   testWidgets('ouvre l\'écran qui répond au geste', (tester) async {
     when(() => api.list()).thenAnswer(
