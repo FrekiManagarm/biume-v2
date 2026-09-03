@@ -8,6 +8,7 @@ import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/capture/presentation/recording_page.dart';
+import '../features/followup/presentation/follow_up_schedule_page.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/transcript/presentation/transcript_page.dart';
@@ -58,6 +59,11 @@ GoRouter buildAppRouter(AuthCubit auth) {
         path: '/comptes-rendus/:reportId',
         builder: (_, state) =>
             ReportPage(reportId: state.pathParameters['reportId']!),
+      ),
+      GoRoute(
+        path: '/comptes-rendus/:reportId/suivi',
+        builder: (_, state) =>
+            FollowUpSchedulePage(reportId: state.pathParameters['reportId']!),
       ),
     ],
   );
