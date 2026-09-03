@@ -23,6 +23,8 @@ import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
 import 'features/records/data/patient_repository_impl.dart';
 import 'features/records/domain/patient_repository.dart';
+import 'features/transcript/data/http_transcript_repository.dart';
+import 'features/transcript/domain/transcript_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -56,6 +58,9 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
     ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
     ..registerLazySingleton<CaptureApi>(() => HttpCaptureApi(getIt()))
+    ..registerLazySingleton<TranscriptRepository>(
+      () => HttpTranscriptRepository(getIt()),
+    )
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
     // de dictée en veut un neuf, et le précédent doit être libéré.
     ..registerFactory<AudioRecorder>(RecordAudioRecorder.new)
@@ -64,10 +69,8 @@ Future<void> configureDependencies() async {
         store: getIt(),
         api: getIt(),
         files: getIt(),
-        isOnline: () async =>
-            !(await Connectivity().checkConnectivity()).contains(
-              ConnectivityResult.none,
-            ),
+        isOnline: () async => !(await Connectivity().checkConnectivity())
+            .contains(ConnectivityResult.none),
         now: DateTime.now,
         random: Random.secure().nextDouble,
       ),

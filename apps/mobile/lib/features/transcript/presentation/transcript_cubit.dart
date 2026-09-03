@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/result.dart';
+import '../../capture/domain/capture_store.dart';
 import '../domain/transcript.dart';
 import '../domain/transcript_repository.dart';
 
@@ -93,10 +94,41 @@ class TranscriptUnavailable extends TranscriptState {
   int get hashCode => Object.hash(6, message);
 }
 
+/// La séquence corriger/rattacher/extraire est en cours : le bouton unique
+/// attend, et rien d'autre ne se passe pendant ce temps.
+class TranscriptValidating extends TranscriptState {
+  const TranscriptValidating(this.transcript);
+
+  final Transcript transcript;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TranscriptValidating && other.transcript == transcript;
+
+  @override
+  int get hashCode => Object.hash(7, transcript);
+}
+
+/// L'extraction est lancée côté serveur. Le praticien passe au suivi.
+class TranscriptValidated extends TranscriptState {
+  const TranscriptValidated(this.reportId);
+
+  final String reportId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TranscriptValidated && other.reportId == reportId;
+
+  @override
+  int get hashCode => Object.hash(8, reportId);
+}
+
 class TranscriptCubit extends Cubit<TranscriptState> {
-  TranscriptCubit(this._repository) : super(const TranscriptInitial());
+  TranscriptCubit(this._repository, this._store)
+    : super(const TranscriptInitial());
 
   final TranscriptRepository _repository;
+  final CaptureStore _store;
 
   Future<void> load(String captureId) async {
     emit(const TranscriptLoading());
@@ -133,6 +165,58 @@ class TranscriptCubit extends Cubit<TranscriptState> {
             draft: text,
             message: failure.message,
           ),
+        );
+    }
+  }
+
+  /// Un seul bouton : enregistre la correction s'il y en a une, rattache
+  /// l'animal s'il a été choisi, puis lance l'extraction. L'ordre est celui de
+  /// la spécification : on corrige la source avant d'en extraire quoi que ce
+  /// soit.
+  Future<void> validate({
+    required String text,
+    required String? patientId,
+  }) async {
+    final current = state;
+    if (current is! TranscriptReady) return;
+    if (!current.transcript.isCorrectable) return;
+
+    var transcript = current.transcript;
+    emit(TranscriptValidating(transcript));
+
+    if (text != transcript.text) {
+      switch (await _repository.correct(transcript.captureId, text)) {
+        case Success(:final value):
+          transcript = value;
+        case Err(:final failure):
+          emit(
+            TranscriptReady(transcript, draft: text, message: failure.message),
+          );
+          return;
+      }
+    }
+
+    if (patientId != null) {
+      if (await _repository.attach(transcript.captureId, patientId) case Err(
+        :final failure,
+      )) {
+        emit(
+          TranscriptReady(transcript, draft: text, message: failure.message),
+        );
+        return;
+      }
+    }
+
+    switch (await _repository.extract(transcript.captureId)) {
+      case Success(:final value):
+        await _store.markExtractionRequested(
+          transcript.captureId,
+          DateTime.now(),
+        );
+        emit(TranscriptValidated(value));
+      case Err(:final failure):
+        emit(
+          TranscriptReady(transcript, draft: text, message: failure.message),
         );
     }
   }

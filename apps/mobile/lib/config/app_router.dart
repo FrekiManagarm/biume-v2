@@ -9,6 +9,7 @@ import '../features/auth/presentation/choose_company_screen.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/capture/presentation/recording_page.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
+import '../features/transcript/presentation/transcript_page.dart';
 
 /// La garde d'authentification est une redirection branchée sur le flux du
 /// cubit — une dizaine de lignes, là où un routeur impératif demanderait des
@@ -43,6 +44,14 @@ GoRouter buildAppRouter(AuthCubit auth) {
       GoRoute(
         path: '/animaux/choisir',
         builder: (_, _) => const PatientPickerPage(),
+      ),
+      GoRoute(
+        path: '/dictees/:captureId/transcription',
+        builder: (_, state) => TranscriptPage(
+          captureId: state.pathParameters['captureId']!,
+          needsPatient: state.uri.queryParameters['rattacher'] == '1',
+          appointmentId: state.uri.queryParameters['rdv'],
+        ),
       ),
     ],
   );
