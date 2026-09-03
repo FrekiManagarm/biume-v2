@@ -38,6 +38,10 @@ import {
   type FollowUp,
   type ScheduleFollowUpRequest,
 } from "@biume/contracts/followup";
+import {
+  todoResponseSchema,
+  type TodoResponse,
+} from "@biume/contracts/mobile-todo";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -89,6 +93,7 @@ import {
   patientHistoryRoute,
   patientsRoute,
   sessionRoute,
+  todoRoute,
   updateOwnerEmailRoute,
   uploadSessionRoute,
 } from "./mobile-api.routes";
@@ -230,6 +235,7 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     followUpId: string,
   ): Promise<FollowUp>;
+  listTodo(actor: CaptureActor): Promise<TodoResponse>;
 };
 
 function parseAgendaQuery(
@@ -429,6 +435,11 @@ export function createMobileApiApp(
     return validated(c, 200, followUpSchema, handled);
   });
 
+  app.openapi(todoRoute, async (c) => {
+    const todo = await ports.listTodo(c.get("actor"));
+    return validated(c, 200, todoResponseSchema, todo);
+  });
+
   app.openapi(reportProposalsRoute, async (c) => {
     const found = await ports.getReportProposals(
       c.get("actor"),
@@ -604,6 +615,7 @@ export function createMobileApiApp(
   methodNotAllowed("/reports/:reportId/followup");
   methodNotAllowed("/followups/actionable");
   methodNotAllowed("/followups/:followUpId/handled");
+  methodNotAllowed("/todo");
 
   app.notFound((c) => fail(c, "not_found"));
 

@@ -109,6 +109,7 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
     scheduleFollowUp: vi.fn(),
     listActionableFollowUps: vi.fn(async () => ({ items: [], nextCursor: null })),
     markFollowUpHandled: vi.fn(),
+    listTodo: vi.fn(async () => ({ items: [] })),
     ...overrides,
   };
 }

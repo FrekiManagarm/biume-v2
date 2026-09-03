@@ -25,6 +25,7 @@ import {
   gt,
   gte,
   ilike,
+  inArray,
   isNull,
   lte,
   or,
@@ -41,9 +42,14 @@ import {
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
-import { buildReportSectionStateRows } from "#/functions/report-domain";
+import {
+  buildReportSectionStateRows,
+  normalizeReportSectionStates,
+} from "#/functions/report-domain";
 import { createInitialReportSectionStates } from "@biume/contracts/report";
-import type { Transcript } from "@biume/contracts/transcript";
+import { classifyTodo } from "./todo.service";
+import { todoPageSize } from "@biume/contracts/mobile-todo";
+import type { Transcript, TranscriptStatus } from "@biume/contracts/transcript";
 import type {
   Proposal,
   ReportProposalsResponse,
@@ -694,6 +700,88 @@ export async function createProductionMobileApiPorts(
       if (!handled) throw new MobileRequestError("not_found");
 
       return handled;
+    },
+
+    async listTodo(actor) {
+      // Trente jours : une dictée plus ancienne non traitée est un cas de
+      // support, pas une ligne de liste.
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const rows = await db
+        .select({
+          captureId: audioCapture.id,
+          reportId: audioCapture.reportId,
+          appointmentId: audioCapture.appointmentId,
+          updatedAt: audioCapture.updatedAt,
+          patientName: pets.name,
+          transcriptStatus: captureTranscript.status,
+          reportStatus: advancedReport.status,
+        })
+        .from(audioCapture)
+        .leftJoin(captureTranscript, eq(captureTranscript.captureId, audioCapture.id))
+        .leftJoin(advancedReport, eq(advancedReport.id, audioCapture.reportId))
+        .leftJoin(pets, eq(pets.id, audioCapture.patientId))
+        .where(
+          and(
+            eq(audioCapture.organizationId, actor.organizationId),
+            eq(audioCapture.status, "uploaded"),
+            gte(audioCapture.createdAt, since),
+          ),
+        )
+        .orderBy(desc(audioCapture.createdAt))
+        .limit(todoPageSize);
+
+      const reportIds = rows
+        .map((row) => row.reportId)
+        .filter((id): id is string => id !== null);
+
+      const proposalCounts = reportIds.length
+        ? await db
+            .select({ reportId: reportProposal.reportId, total: count() })
+            .from(reportProposal)
+            .where(inArray(reportProposal.reportId, reportIds))
+            .groupBy(reportProposal.reportId)
+        : [];
+      const stateRows = reportIds.length
+        ? await db
+            .select({
+              reportId: reportSectionState.reportId,
+              section: reportSectionState.section,
+              state: reportSectionState.state,
+            })
+            .from(reportSectionState)
+            .where(inArray(reportSectionState.reportId, reportIds))
+        : [];
+
+      const countByReport = new Map(proposalCounts.map((row) => [row.reportId, Number(row.total)]));
+      const statesByReport = new Map<string, typeof stateRows>();
+      for (const row of stateRows) {
+        statesByReport.set(row.reportId, [...(statesByReport.get(row.reportId) ?? []), row]);
+      }
+
+      const items = rows.flatMap((row) => {
+        const states = row.reportId ? statesByReport.get(row.reportId) : undefined;
+        const kind = classifyTodo({
+          reportId: row.reportId,
+          reportStatus: row.reportStatus,
+          transcriptStatus: row.transcriptStatus as TranscriptStatus | null,
+          proposalCount: row.reportId ? (countByReport.get(row.reportId) ?? 0) : 0,
+          sectionStates: states ? normalizeReportSectionStates(states) : null,
+        });
+        if (!kind) return [];
+        return [
+          {
+            kind,
+            captureId: row.captureId,
+            reportId: row.reportId,
+            appointmentId: row.appointmentId,
+            patientName: row.patientName ?? null,
+            updatedAt: row.updatedAt.toISOString(),
+          },
+        ];
+      });
+
+      return { items };
     },
 
     async getReportProposals(actor, reportId) {

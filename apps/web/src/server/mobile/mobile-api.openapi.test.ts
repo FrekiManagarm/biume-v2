@@ -48,6 +48,7 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/reports/{reportId}/proposals/{proposalId}/decision",
       "/api/mobile/v1/reports/{reportId}/sections/{section}/decision",
       "/api/mobile/v1/session",
+      "/api/mobile/v1/todo",
     ]);
   });
 

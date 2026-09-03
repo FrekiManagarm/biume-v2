@@ -39,6 +39,7 @@ import {
   followUpSchema,
   scheduleFollowUpRequestSchema,
 } from "@biume/contracts/followup";
+import { todoResponseSchema } from "@biume/contracts/mobile-todo";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -531,6 +532,17 @@ export const markFollowUpHandledRoute = createRoute({
   request: { params: followUpIdParamsSchema },
   responses: {
     200: { description: "Suivi traité", content: json(followUpSchema) },
+    ...errorResponses,
+  },
+});
+
+export const todoRoute = createRoute({
+  method: "get",
+  path: "/todo",
+  security,
+  summary: "Tout ce qui attend un geste du praticien",
+  responses: {
+    200: { description: "Éléments à traiter", content: json(todoResponseSchema) },
     ...errorResponses,
   },
 });
