@@ -55,7 +55,11 @@ export function NewAppointmentDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    // Capturé avant le `await` : React remet `currentTarget` à null dès que le
+    // gestionnaire rend la main, et `event.currentTarget.reset()` levait donc
+    // une TypeError à chaque création réussie.
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const patientId = String(formData.get("patientId") ?? "");
     const date = String(formData.get("date") ?? "");
     const startTime = String(formData.get("startTime") ?? "");
@@ -76,7 +80,7 @@ export function NewAppointmentDialog({
     });
 
     onOpenChange(false);
-    event.currentTarget.reset();
+    form.reset();
   }
 
   return (

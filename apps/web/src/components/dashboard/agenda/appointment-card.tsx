@@ -38,11 +38,9 @@ export function AppointmentCard({
   isPrimaryActionPending = false,
 }: AppointmentCardProps) {
   const { primaryAction } = appointment;
-  const showPrimaryAction =
-    primaryAction.kind !== "cancelled" && primaryAction.kind !== "upcoming";
   // Pour une séance annulée, la pastille d'état porte déjà « Annulé » : un
   // second libellé identique en dessous ferait doublon sans rien ajouter.
-  const showFallbackLabel = primaryAction.kind !== "cancelled";
+  const showPrimaryAction = primaryAction.kind !== "cancelled";
 
   return (
     <article className="rounded-card border border-border bg-card p-3">
@@ -96,10 +94,6 @@ export function AppointmentCard({
         >
           {primaryAction.label}
         </Button>
-      ) : showFallbackLabel ? (
-        <p className="mt-2.5 text-xs text-muted-foreground">
-          {primaryAction.label}
-        </p>
       ) : null}
     </article>
   );

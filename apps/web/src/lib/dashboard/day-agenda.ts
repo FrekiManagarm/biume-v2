@@ -19,7 +19,7 @@ export type AgendaReportState =
 
 export type AgendaActionKind =
   | "cancelled"
-  | "upcoming"
+  | "open_report"
   | "prepare_report"
   | "create_report"
   | "fill_report"
@@ -157,9 +157,17 @@ export function getAgendaPrimaryAction(
       : { kind: "fill_report", label: "Remplir le compte rendu" };
   }
 
-  return reportState === "absent"
-    ? { kind: "prepare_report", label: "Préparer le compte rendu" }
-    : { kind: "upcoming", label: "Séance à venir" };
+  if (reportState === "absent") {
+    return { kind: "prepare_report", label: "Préparer le compte rendu" };
+  }
+
+  /**
+   * Le compte rendu préparé à la prise de rendez-vous est encore vide, mais il
+   * existe : la carte de sa séance est le chemin le plus court vers lui.
+   * « Séance à venir » y menait à un cul-de-sac — le praticien cochait la case
+   * et ne retrouvait jamais le compte rendu qu'elle avait créé.
+   */
+  return { kind: "open_report", label: "Ouvrir le compte rendu" };
 }
 
 export function buildDayAgendaModel({

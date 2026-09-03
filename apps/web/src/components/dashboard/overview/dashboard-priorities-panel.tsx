@@ -83,10 +83,7 @@ function PriorityRow({ priority }: { priority: DashboardPriorityItem }) {
 }
 
 function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
-  if (
-    priority.actionKind === "cancelled" ||
-    priority.actionKind === "upcoming"
-  ) {
+  if (priority.actionKind === "cancelled") {
     return null;
   }
 

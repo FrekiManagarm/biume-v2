@@ -49,7 +49,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
 import { cn } from "#/lib/utils";
 
-type ReportStatus = "brouillon" | "finalisé" | "envoyé";
+type ReportStatus = "préparé" | "brouillon" | "finalisé" | "envoyé";
 
 interface ReportsTableProps {
   reports: AdvancedReportListItem[];
@@ -59,7 +59,10 @@ interface ReportsTableProps {
 const getReportStatus = (report: AdvancedReportListItem): ReportStatus => {
   switch (report.status) {
     case "draft":
-      return "brouillon";
+      // Le compte rendu préparé à la prise de rendez-vous est un brouillon dont
+      // pas une ligne n'a encore été écrite : le dire évite de le confondre
+      // avec un compte rendu laissé en plan.
+      return report.isPrepared ? "préparé" : "brouillon";
     case "finalized":
       return "finalisé";
     case "sent":
@@ -72,6 +75,10 @@ const getReportStatus = (report: AdvancedReportListItem): ReportStatus => {
 // Fonction helper pour le badge de statut
 const getStatusBadge = (status: ReportStatus) => {
   const variants = {
+    préparé: {
+      label: "Préparé",
+      className: "border-slate-200 bg-slate-50 text-slate-600",
+    },
     brouillon: {
       label: "Brouillon",
       className: "border-amber-200 bg-amber-50 text-amber-800",

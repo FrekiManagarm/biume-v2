@@ -101,10 +101,10 @@ describe("getAgendaPrimaryAction", () => {
     });
   });
 
-  test("avant la séance, un brouillon vide n'appelle aucune action", () => {
+  test("avant la séance, un compte rendu préparé s'ouvre depuis la carte", () => {
     expect(getAgendaPrimaryAction("scheduled", "empty")).toEqual({
-      kind: "upcoming",
-      label: "Séance à venir",
+      kind: "open_report",
+      label: "Ouvrir le compte rendu",
     });
   });
 

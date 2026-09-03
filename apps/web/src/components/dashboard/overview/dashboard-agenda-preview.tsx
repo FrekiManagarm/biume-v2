@@ -187,10 +187,7 @@ function AgendaPreviewRow({
 
 function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   const reportId = appointment.primaryAction.reportId;
-  if (
-    appointment.primaryAction.kind === "cancelled" ||
-    appointment.primaryAction.kind === "upcoming"
-  ) {
+  if (appointment.primaryAction.kind === "cancelled") {
     return (
       <span className="text-sm font-medium text-slate-500 md:text-right">
         {appointment.primaryAction.label}

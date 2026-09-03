@@ -113,19 +113,20 @@ async function loadAllReportRows({
 
   /**
    * Un compte rendu créé automatiquement avec son rendez-vous n'a encore rien
-   * dedans. Il vit sur son rendez-vous dans l'agenda et n'entre dans cette
-   * liste que lorsque le praticien y a écrit quelque chose — sinon la liste se
-   * remplirait d'une coquille par séance planifiée.
+   * dedans. Il reste dans la liste — le praticien qui coche « préparer le
+   * compte rendu » doit le retrouver ici — mais `isPrepared` permet de le
+   * marquer « Préparé » plutôt que « Brouillon », pour distinguer la coquille
+   * qui attend d'un brouillon réellement commencé.
    */
-  return rows.filter(
-    (row) =>
-      !isReportEmpty({
-        consultationReason: row.consultationReason,
-        notes: row.notes,
-        anatomicalIssueCount: row.anatomicalIssues.length,
-        recommendationCount: row.recommendations.length,
-      }),
-  );
+  return rows.map((row) => ({
+    ...row,
+    isPrepared: isReportEmpty({
+      consultationReason: row.consultationReason,
+      notes: row.notes,
+      anatomicalIssueCount: row.anatomicalIssues.length,
+      recommendationCount: row.recommendations.length,
+    }),
+  }));
 }
 
 export type AdvancedReportListItem = Awaited<

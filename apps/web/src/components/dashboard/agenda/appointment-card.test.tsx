@@ -57,13 +57,9 @@ describe("AppointmentCard", () => {
     expect(screen.getByText("Terminé")).toBeTruthy();
   });
 
-  test("une séance à venir se lit « Prévu » et ne propose pas de bouton", () => {
-    // Adaptation documentée (voir task-10-brief.md, remarque sous l'étape 1) :
-    // avec `reports: []`, l'absence de compte rendu produit `prepare_report`
-    // ("Préparer le compte rendu"), pas `upcoming` — l'intention du plan est
-    // de vérifier l'état "rien ne presse avant la séance", donc on fournit un
-    // brouillon de compte rendu vide (déjà préparé, rien à afficher comme
-    // urgent) pour obtenir `upcoming`.
+  test("une séance à venir se lit « Prévu » et ouvre son compte rendu préparé", () => {
+    // Le compte rendu vide créé avec le rendez-vous n'apparaît pas encore dans
+    // la bibliothèque : cette carte est le seul chemin vers lui.
     render(
       <AppointmentCard
         appointment={cardFor({
@@ -86,8 +82,8 @@ describe("AppointmentCard", () => {
 
     expect(screen.getByText("Prévu")).toBeTruthy();
     expect(
-      screen.queryByRole("button", { name: /compte rendu/i }),
-    ).toBeNull();
+      screen.getByRole("button", { name: "Ouvrir le compte rendu" }),
+    ).toBeTruthy();
   });
 
   test("une séance annulée n'expose aucune action", () => {

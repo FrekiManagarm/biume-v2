@@ -114,8 +114,7 @@ export function DayAgendaCard({ appointment }: DayAgendaCardProps) {
       </div>
 
       <div className="flex items-center justify-start md:justify-end">
-        {appointment.primaryAction.kind === "cancelled" ||
-        appointment.primaryAction.kind === "upcoming" ? (
+        {appointment.primaryAction.kind === "cancelled" ? (
           <span className="text-sm font-medium text-slate-500">
             {appointment.primaryAction.label}
           </span>
