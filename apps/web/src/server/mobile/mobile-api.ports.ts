@@ -53,6 +53,14 @@ import {
   type FollowUp,
 } from "@biume/contracts/followup";
 import { validateDueDate } from "#/server/followup/followup.service";
+import { createImmutableReportSharedVersion } from "#/functions/report-shared-version.service";
+import { reportSharedVersionPorts } from "#/server/report/report-shared-version.ports";
+import { generateShareToken } from "#/server/owner/owner-access.service";
+import {
+  finalizeReport,
+  type FinalizeReportPorts,
+} from "./finalize-report.service";
+import { sendNewReportEmail } from "./report-email";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
@@ -323,7 +331,10 @@ async function readFollowUp(
   };
 }
 
-export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> {
+export async function createProductionMobileApiPorts(
+  overrides: { sendReportEmail?: FinalizeReportPorts["sendEmail"] } = {},
+): Promise<MobileApiPorts> {
+  const sendReportEmail = overrides.sendReportEmail ?? sendNewReportEmail;
   const { auth } = await import("@biume/auth");
   const repository = createCaptureRepository();
   const dependencies: CaptureServiceDependencies = {
@@ -702,6 +713,74 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       const source = fromProposal?.id ?? fromCapture?.id;
       if (source) await triggerExtraction(reportId, source);
       return current;
+    },
+
+    async finalizeReport(actor, reportId, request) {
+      return finalizeReport(
+        { organizationId: actor.organizationId, reportId, sendToOwner: request.sendToOwner, now: new Date() },
+        {
+          async loadReport(scope) {
+            const row = await db.query.advancedReport.findFirst({
+              where: and(
+                eq(advancedReport.id, scope.reportId),
+                eq(advancedReport.createdBy, scope.organizationId),
+              ),
+              with: { patient: { with: { owner: true } }, sectionStates: true },
+            });
+            if (!row) return null;
+            return {
+              id: row.id,
+              status: row.status,
+              sectionStates: row.sectionStates.map((s) => ({ section: s.section, state: s.state })),
+              patient: row.patient
+                ? {
+                    name: row.patient.name,
+                    owner: row.patient.owner
+                      ? { id: row.patient.owner.id, name: row.patient.owner.name, email: row.patient.owner.email }
+                      : null,
+                  }
+                : null,
+            };
+          },
+          async markStatus(scope, status, at) {
+            await db
+              .update(advancedReport)
+              .set({ status, updatedAt: at })
+              .where(
+                and(
+                  eq(advancedReport.id, scope.reportId),
+                  eq(advancedReport.createdBy, scope.organizationId),
+                ),
+              );
+          },
+          async createSharedVersion(scope, at) {
+            const version = await createImmutableReportSharedVersion(
+              { organizationId: scope.organizationId, reportId: scope.reportId, createdAt: at },
+              reportSharedVersionPorts,
+            );
+            return { id: version.id };
+          },
+          async findActiveLink({ sharedVersionId, ownerId }) {
+            const [link] = await db
+              .select({ token: reportShareLink.token })
+              .from(reportShareLink)
+              .where(
+                and(
+                  eq(reportShareLink.sharedVersionId, sharedVersionId),
+                  eq(reportShareLink.ownerId, ownerId),
+                  isNull(reportShareLink.revokedAt),
+                ),
+              )
+              .limit(1);
+            return link ?? null;
+          },
+          async insertLink(link) {
+            await db.insert(reportShareLink).values(link);
+          },
+          generateToken: generateShareToken,
+          sendEmail: sendReportEmail,
+        },
+      );
     },
 
     async getTranscript(actor, captureId) {

@@ -28,6 +28,8 @@ import {
 import {
   decideProposalRequestSchema,
   decideSectionRequestSchema,
+  finalizeReportRequestSchema,
+  finalizeReportResponseSchema,
   reportProposalsResponseSchema,
 } from "@biume/contracts/proposal";
 import { reportSectionIds } from "@biume/contracts/report";
@@ -445,6 +447,21 @@ export const regenerateProposalsRoute = createRoute({
       description: "Propositions à jour",
       content: json(reportProposalsResponseSchema),
     },
+    ...errorResponses,
+  },
+});
+
+export const finalizeReportRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/finalize",
+  security,
+  summary: "Finaliser le compte rendu, le figer et l'envoyer au propriétaire",
+  request: {
+    params: reportIdParamsSchema,
+    body: { content: json(finalizeReportRequestSchema) },
+  },
+  responses: {
+    200: { description: "Rapport finalisé", content: json(finalizeReportResponseSchema) },
     ...errorResponses,
   },
 });

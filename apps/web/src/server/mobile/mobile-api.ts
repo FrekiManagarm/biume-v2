@@ -22,9 +22,12 @@ import {
   type Transcript,
 } from "@biume/contracts/transcript";
 import {
+  finalizeReportResponseSchema,
   reportProposalsResponseSchema,
   type DecideProposalRequest,
   type DecideSectionRequest,
+  type FinalizeReportRequest,
+  type FinalizeReportResponse,
   type ReportProposalsResponse,
 } from "@biume/contracts/proposal";
 import type { ReportSectionId } from "@biume/contracts/report";
@@ -73,6 +76,7 @@ import {
   decideProposalRoute,
   decideSectionRoute,
   extractCaptureRoute,
+  finalizeReportRoute,
   markFollowUpHandledRoute,
   scheduleFollowUpRoute,
   regenerateProposalsRoute,
@@ -201,6 +205,11 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     reportId: string,
   ): Promise<ReportProposalsResponse>;
+  finalizeReport(
+    actor: CaptureActor,
+    reportId: string,
+    request: FinalizeReportRequest,
+  ): Promise<FinalizeReportResponse>;
   scheduleFollowUp(
     actor: CaptureActor,
     reportId: string,
@@ -454,6 +463,15 @@ export function createMobileApiApp(
     return validated(c, 200, reportProposalsResponseSchema, refreshed);
   });
 
+  app.openapi(finalizeReportRoute, async (c) => {
+    const finalized = await ports.finalizeReport(
+      c.get("actor"),
+      c.req.valid("param").reportId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, finalizeReportResponseSchema, finalized);
+  });
+
   app.openapi(getTranscriptRoute, async (c) => {
     const found = await ports.getTranscript(
       c.get("actor"),
@@ -565,6 +583,7 @@ export function createMobileApiApp(
   methodNotAllowed("/reports/:reportId/proposals");
   methodNotAllowed("/reports/:reportId/proposals/:proposalId/decision");
   methodNotAllowed("/reports/:reportId/sections/:section/decision");
+  methodNotAllowed("/reports/:reportId/finalize");
   methodNotAllowed("/reports/:reportId/followup");
   methodNotAllowed("/followups/actionable");
   methodNotAllowed("/followups/:followUpId/handled");
