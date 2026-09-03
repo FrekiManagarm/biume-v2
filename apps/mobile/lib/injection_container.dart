@@ -23,6 +23,8 @@ import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
 import 'features/records/data/patient_repository_impl.dart';
 import 'features/records/domain/patient_repository.dart';
+import 'features/report/data/http_report_repository.dart';
+import 'features/report/domain/report_repository.dart';
 import 'features/transcript/data/http_transcript_repository.dart';
 import 'features/transcript/domain/transcript_repository.dart';
 
@@ -60,6 +62,9 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<CaptureApi>(() => HttpCaptureApi(getIt()))
     ..registerLazySingleton<TranscriptRepository>(
       () => HttpTranscriptRepository(getIt()),
+    )
+    ..registerLazySingleton<ReportRepository>(
+      () => HttpReportRepository(getIt()),
     )
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
     // de dictée en veut un neuf, et le précédent doit être libéré.
