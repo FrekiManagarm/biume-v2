@@ -3,6 +3,7 @@ import {
   captureResponseSchema,
   completeCaptureRequestSchema,
   createCaptureRequestSchema,
+  extractCaptureResponseSchema,
   mobileApiErrorSchema,
   mobileAppointmentsResponseSchema,
   mobileCapturesResponseSchema,
@@ -340,6 +341,18 @@ export const correctTranscriptRoute = createRoute({
       description: "Transcription corrigée",
       content: json(transcriptSchema),
     },
+    ...errorResponses,
+  },
+});
+
+export const extractCaptureRoute = createRoute({
+  method: "post",
+  path: "/captures/{captureId}/extract",
+  security,
+  summary: "Valider la transcription et lancer l'extraction du compte rendu",
+  request: { params: captureIdParamsSchema },
+  responses: {
+    200: { description: "Extraction lancée", content: json(extractCaptureResponseSchema) },
     ...errorResponses,
   },
 });

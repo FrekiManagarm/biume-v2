@@ -155,6 +155,19 @@ async function readTranscript(
 }
 
 
+/**
+ * Déclenche l'extraction du compte rendu. Partagée entre la validation de la
+ * transcription et la régénération : les deux chemins lancent exactement la
+ * même tâche, jamais une variante dupliquée.
+ */
+async function triggerExtraction(reportId: string, captureId: string) {
+  const { tasks } = await import("@trigger.dev/sdk/v3");
+  const { extractReportTaskId } = await import(
+    "#/trigger/extract-report.trigger"
+  );
+  await tasks.trigger(extractReportTaskId, { reportId, captureId });
+}
+
 function toProposal(row: typeof reportProposal.$inferSelect): Proposal {
   return {
     id: row.id,
@@ -666,21 +679,28 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
 
-      const captureId = await db
+      // Sans proposition existante, la source est la capture du rapport, pas
+      // une proposition : la toute première extraction n'en a encore laissé
+      // aucune.
+      const [fromProposal] = await db
         .select({ id: reportProposal.captureId })
         .from(reportProposal)
         .where(eq(reportProposal.reportId, reportId))
         .limit(1);
+      const [fromCapture] = await db
+        .select({ id: audioCapture.id })
+        .from(audioCapture)
+        .where(
+          and(
+            eq(audioCapture.reportId, reportId),
+            eq(audioCapture.organizationId, actor.organizationId),
+          ),
+        )
+        .orderBy(desc(audioCapture.createdAt))
+        .limit(1);
 
-      const source = captureId[0]?.id;
-      if (source) {
-        const { tasks } = await import("@trigger.dev/sdk/v3");
-        const { extractReportTaskId } = await import(
-          "#/trigger/extract-report.trigger"
-        );
-        await tasks.trigger(extractReportTaskId, { reportId, captureId: source });
-      }
-
+      const source = fromProposal?.id ?? fromCapture?.id;
+      if (source) await triggerExtraction(reportId, source);
       return current;
     },
 
@@ -993,6 +1013,27 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       const refreshed = await repository.findCapture(scope);
       if (!refreshed) throw new MobileRequestError("not_found");
       return toCaptureResponse(refreshed);
+    },
+
+    async extractCapture(actor, captureId) {
+      const capture = await repository.findCapture({
+        id: captureId,
+        organizationId: actor.organizationId,
+      });
+      if (!capture) throw new MobileRequestError("not_found");
+      // Sans rapport, l'extraction n'a nulle part où écrire : rattacher d'abord.
+      if (!capture.reportId) throw new MobileRequestError("conflict");
+
+      const transcript = await readTranscript(actor, captureId);
+      if (
+        !transcript ||
+        (transcript.status !== "ready" && transcript.status !== "corrected")
+      ) {
+        throw new MobileRequestError("conflict");
+      }
+
+      await triggerExtraction(capture.reportId, captureId);
+      return { captureId, reportId: capture.reportId };
     },
   };
 }

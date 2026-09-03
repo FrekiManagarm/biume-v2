@@ -32,6 +32,7 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/captures/{captureId}",
       "/api/mobile/v1/captures/{captureId}/attach",
       "/api/mobile/v1/captures/{captureId}/complete",
+      "/api/mobile/v1/captures/{captureId}/extract",
       "/api/mobile/v1/captures/{captureId}/transcript",
       "/api/mobile/v1/captures/{captureId}/upload-session",
       "/api/mobile/v1/followups/actionable",

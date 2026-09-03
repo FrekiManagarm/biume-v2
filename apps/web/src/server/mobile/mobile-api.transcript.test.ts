@@ -1,3 +1,4 @@
+import { extractCaptureResponseSchema } from "@biume/contracts/capture";
 import { transcriptSchema } from "@biume/contracts/transcript";
 import { describe, expect, it, vi } from "vitest";
 
@@ -30,6 +31,7 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
       text: "Tension lombaire droite.",
       correctedAt: "2026-08-21T10:05:00.000Z",
     })),
+    extractCapture: vi.fn(async () => ({ captureId, reportId: "report-1" })),
     ...overrides,
   } as unknown as MobileApiPorts;
 }
@@ -46,6 +48,14 @@ function request(method: "GET" | "POST", body?: unknown, id = captureId) {
       body: body ? JSON.stringify(body) : undefined,
     },
   );
+}
+
+function post(path: string, body: unknown) {
+  return new Request(`https://biume.test/api/mobile/v1${path}`, {
+    method: "POST",
+    headers: { authorization: "Bearer jeton", "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
 describe("lecture de la transcription", () => {
@@ -129,5 +139,27 @@ describe("correction de la transcription", () => {
 
     expect(response.status).toBe(409);
     expect((await response.json()).retryable).toBe(false);
+  });
+});
+
+describe("validation de la transcription", () => {
+  it("lance l'extraction et renvoie le rapport visé", async () => {
+    const ports = createPorts();
+    const response = await createMobileApiHandler(ports)(
+      post(`/captures/${captureId}/extract`, {}),
+    );
+    expect(response.status).toBe(200);
+    expect(extractCaptureResponseSchema.parse(await response.json()).reportId).toBe("report-1");
+  });
+
+  it("refuse une capture sans rapport", async () => {
+    const response = await createMobileApiHandler(
+      createPorts({
+        extractCapture: vi.fn(async () => {
+          throw new MobileRequestError("conflict");
+        }),
+      }),
+    )(post(`/captures/${captureId}/extract`, {}));
+    expect(response.status).toBe(409);
   });
 });

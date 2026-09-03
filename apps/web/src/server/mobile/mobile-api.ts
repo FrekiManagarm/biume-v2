@@ -2,6 +2,7 @@ import {
   captureResponseSchema,
   completeCaptureRequestSchema,
   createCaptureRequestSchema,
+  extractCaptureResponseSchema,
   mobileAppointmentsPageSize,
   mobileAppointmentsResponseSchema,
   mobileCapturesResponseSchema,
@@ -10,6 +11,7 @@ import {
   type AttachCaptureRequest,
   type CaptureErrorCode,
   type CaptureResponse,
+  type ExtractCaptureResponse,
   type MobileAppointmentsResponse,
   type MobileCapturesResponse,
   type UploadSessionResponse,
@@ -70,6 +72,7 @@ import {
   actionableFollowUpsRoute,
   decideProposalRoute,
   decideSectionRoute,
+  extractCaptureRoute,
   markFollowUpHandledRoute,
   scheduleFollowUpRoute,
   regenerateProposalsRoute,
@@ -134,6 +137,10 @@ export type MobileApiPorts = {
     captureId: string,
     request: AttachCaptureRequest,
   ): Promise<CaptureResponse>;
+  extractCapture(
+    actor: CaptureActor,
+    captureId: string,
+  ): Promise<ExtractCaptureResponse>;
   listOwners(
     actor: CaptureActor,
     query: { limit: number; cursor: string | null; search: string | null },
@@ -465,6 +472,14 @@ export function createMobileApiApp(
     return validated(c, 200, transcriptSchema, corrected);
   });
 
+  app.openapi(extractCaptureRoute, async (c) => {
+    const started = await ports.extractCapture(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+    );
+    return validated(c, 200, extractCaptureResponseSchema, started);
+  });
+
   app.openapi(moveAppointmentRoute, async (c) => {
     const result = await ports.moveAppointment(
       c.get("actor"),
@@ -546,6 +561,7 @@ export function createMobileApiApp(
   methodNotAllowed("/patients/:patientId/history");
   methodNotAllowed("/appointments/:appointmentId/move");
   methodNotAllowed("/captures/:captureId/transcript");
+  methodNotAllowed("/captures/:captureId/extract");
   methodNotAllowed("/reports/:reportId/proposals");
   methodNotAllowed("/reports/:reportId/proposals/:proposalId/decision");
   methodNotAllowed("/reports/:reportId/sections/:section/decision");
