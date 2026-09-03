@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   anchorMatchesTranscript,
   decideProposalRequestSchema,
+  finalizeReportResponseSchema,
   proposalSchema,
+  reportProposalsResponseSchema,
   reportSectionLabels,
   transcriptAnchorSchema,
 } from "./proposal";
@@ -139,5 +141,32 @@ describe("libellés métier", () => {
     expect(reportSectionLabels.needs_confirmation).toBe("À vérifier");
     expect(reportSectionLabels.confirmed).toBe("Validé");
     expect(reportSectionLabels.not_applicable).toBe("Sans objet");
+  });
+});
+
+describe("réponse des propositions", () => {
+  it("porte l'animal, le propriétaire et l'état du rapport", () => {
+    const parsed = reportProposalsResponseSchema.parse({
+      reportId: "report-1",
+      status: "draft",
+      patientName: "Filou",
+      owner: { id: "owner-1", name: "Camille Roux", email: null },
+      captureId: null,
+      transcript: "",
+      items: [],
+      sections: {
+        clinical: "empty",
+        anatomical: "empty",
+        recommendations: "empty",
+        notes: "empty",
+      },
+    });
+    expect(parsed.owner.email).toBeNull();
+  });
+
+  it("refuse un état de rapport inconnu à la finalisation", () => {
+    expect(() =>
+      finalizeReportResponseSchema.parse({ reportId: "r", status: "shared", sentToOwner: true }),
+    ).toThrow();
   });
 });

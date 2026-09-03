@@ -96,6 +96,12 @@ export type CreateMobileOwnerRequest = z.infer<
   typeof createMobileOwnerRequestSchema
 >;
 
+/** Sert le garde-fou de finalisation : ne modifie que l'e-mail. */
+export const updateOwnerEmailRequestSchema = z
+  .object({ email: z.email() })
+  .strict();
+export type UpdateOwnerEmailRequest = z.infer<typeof updateOwnerEmailRequestSchema>;
+
 /**
  * Création minimale assumée. Le praticien en clientèle connaît le nom et
  * l'espèce ; tout le reste se complète plus tard, sur le web ou sur la fiche.

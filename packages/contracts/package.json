@@ -8,6 +8,7 @@
     "./capture": "./src/capture.ts",
     "./report": "./src/report.ts",
     "./mobile-records": "./src/mobile-records.ts",
+    "./mobile-todo": "./src/mobile-todo.ts",
     "./transcript": "./src/transcript.ts",
     "./proposal": "./src/proposal.ts",
     "./followup": "./src/followup.ts",

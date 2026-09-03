@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   reportSectionIdSchema,
   reportSectionStateSchema,
+  reportStatusSchema,
   type ReportSectionState,
 } from "./report";
 
@@ -65,9 +66,23 @@ export type Proposal = z.infer<typeof proposalSchema>;
 
 export const reportProposalsPageSize = 100;
 
+export const reportOwnerSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string(),
+    email: z.string().nullable(),
+  })
+  .strict();
+export type ReportOwner = z.infer<typeof reportOwnerSchema>;
+
 export const reportProposalsResponseSchema = z
   .object({
     reportId: z.string().min(1),
+    status: reportStatusSchema,
+    patientName: z.string(),
+    owner: reportOwnerSchema,
+    /** Identifiant de parcours de la télémétrie : la capture d'origine. */
+    captureId: z.uuid().nullable(),
     transcript: z.string(),
     items: z.array(proposalSchema).max(reportProposalsPageSize),
     sections: z.record(reportSectionIdSchema, reportSectionStateSchema),
@@ -76,6 +91,21 @@ export const reportProposalsResponseSchema = z
 export type ReportProposalsResponse = z.infer<
   typeof reportProposalsResponseSchema
 >;
+
+/** Un seul geste : finaliser, figer, lier, envoyer. */
+export const finalizeReportRequestSchema = z
+  .object({ sendToOwner: z.boolean() })
+  .strict();
+export type FinalizeReportRequest = z.infer<typeof finalizeReportRequestSchema>;
+
+export const finalizeReportResponseSchema = z
+  .object({
+    reportId: z.string().min(1),
+    status: reportStatusSchema,
+    sentToOwner: z.boolean(),
+  })
+  .strict();
+export type FinalizeReportResponse = z.infer<typeof finalizeReportResponseSchema>;
 
 /**
  * Un praticien confirme ou écarte. Il ne remet jamais une proposition « en
