@@ -4,6 +4,45 @@ enum ReportSection { clinical, anatomical, recommendations, notes }
 
 enum SectionState { empty, proposed, needsConfirmation, confirmed, notApplicable }
 
+/// États d'un compte rendu, imposés par le contrat serveur.
+enum ReportStatus { draft, finalized, sent }
+
+ReportStatus reportStatusFrom(String value) => switch (value) {
+  'finalized' => ReportStatus.finalized,
+  'sent' => ReportStatus.sent,
+  _ => ReportStatus.draft,
+};
+
+SectionState sectionStateFrom(String value) => switch (value) {
+  'proposed' => SectionState.proposed,
+  'needs_confirmation' => SectionState.needsConfirmation,
+  'confirmed' => SectionState.confirmed,
+  'not_applicable' => SectionState.notApplicable,
+  _ => SectionState.empty,
+};
+
+String sectionStateToApi(SectionState state) => switch (state) {
+  SectionState.empty => 'empty',
+  SectionState.proposed => 'proposed',
+  SectionState.needsConfirmation => 'needs_confirmation',
+  SectionState.confirmed => 'confirmed',
+  SectionState.notApplicable => 'not_applicable',
+};
+
+ReportSection reportSectionFrom(String value) => switch (value) {
+  'anatomical' => ReportSection.anatomical,
+  'recommendations' => ReportSection.recommendations,
+  'notes' => ReportSection.notes,
+  _ => ReportSection.clinical,
+};
+
+String sectionToApi(ReportSection section) => switch (section) {
+  ReportSection.clinical => 'clinical',
+  ReportSection.anatomical => 'anatomical',
+  ReportSection.recommendations => 'recommendations',
+  ReportSection.notes => 'notes',
+};
+
 /// Ce que le praticien lit. Jamais l'état machine : « proposed » ne veut rien
 /// dire pour un ostéopathe, « À vérifier » lui dit quoi faire.
 const Map<SectionState, String> sectionLabels = {
@@ -20,6 +59,31 @@ const Map<ReportSection, String> sectionTitles = {
   ReportSection.recommendations: 'Recommandations',
   ReportSection.notes: 'Notes',
 };
+
+/// Le propriétaire de l'animal — destinataire du compte rendu. L'e-mail est
+/// une fiche, pas une édition de rapport : le mobile peut la compléter sans
+/// jamais réécrire le contenu du compte rendu.
+@immutable
+class ReportOwner {
+  const ReportOwner({required this.id, required this.name, this.email});
+
+  final String id;
+  final String name;
+  final String? email;
+
+  ReportOwner withEmail(String email) =>
+      ReportOwner(id: id, name: name, email: email);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ReportOwner &&
+      other.id == id &&
+      other.name == name &&
+      other.email == email;
+
+  @override
+  int get hashCode => Object.hash(id, name, email);
+}
 
 @immutable
 class TranscriptAnchor {
