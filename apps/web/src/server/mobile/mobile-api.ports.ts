@@ -1217,10 +1217,14 @@ export async function createProductionMobileApiPorts(
           title,
           consultationReason: "",
           patientId: patient.id,
-          // Le rendez-vous de la capture, quand elle en a un : un rapport
-          // détaché du rendez-vous qui l'a produit serait un second dossier
-          // pour la même séance.
-          appointmentId: capture.appointmentId,
+          // Jamais le rendez-vous de la capture. Rien n'empêche deux dictées
+          // sur la même séance — une tournée hors ligne où l'on dicte deux
+          // fois avant de synchroniser — et aucun index unique ne garde cette
+          // colonne : deux brouillons porteraient le même rendez-vous.
+          // L'historique de l'animal joint les rapports sur le rendez-vous et
+          // afficherait la séance deux fois, et `findAppointmentContext` en
+          // choisirait un au hasard.
+          appointmentId: null,
           notes: "",
           status: "draft",
           createdBy: actor.organizationId,
@@ -1268,6 +1272,19 @@ export async function createProductionMobileApiPorts(
         organizationId: actor.organizationId,
       });
       if (!capture) throw new MobileRequestError("not_found");
+
+      // Contrôlé avant toute écriture : une transcription en attente, échouée
+      // ou inaudible n'extrait rien, et le brouillon créé juste avant serait
+      // un rapport vide abandonné. Le bouton unique du mobile n'atteint pas
+      // ce chemin, l'API si.
+      const transcript = await readTranscript(actor, captureId);
+      if (
+        !transcript ||
+        (transcript.status !== "ready" && transcript.status !== "corrected")
+      ) {
+        throw new MobileRequestError("conflict");
+      }
+
       // Sans rapport, l'extraction n'a nulle part où écrire. Quand l'animal
       // est déjà connu — une capture née d'un rendez-vous créé sans rapport —
       // il n'y a personne à qui le demander : le brouillon se crée ici, sur
@@ -1281,14 +1298,6 @@ export async function createProductionMobileApiPorts(
         reportId = attached.reportId;
       }
       if (!reportId) throw new MobileRequestError("conflict");
-
-      const transcript = await readTranscript(actor, captureId);
-      if (
-        !transcript ||
-        (transcript.status !== "ready" && transcript.status !== "corrected")
-      ) {
-        throw new MobileRequestError("conflict");
-      }
 
       await triggerExtraction(reportId, captureId);
       return { captureId, reportId };
