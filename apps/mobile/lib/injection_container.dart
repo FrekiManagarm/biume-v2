@@ -21,6 +21,8 @@ import 'features/capture/domain/audio_recorder.dart';
 import 'features/capture/domain/capture_store.dart';
 import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
+import 'features/records/data/patient_repository_impl.dart';
+import 'features/records/domain/patient_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -47,6 +49,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<AgendaRepository>(
       () => AgendaRepositoryImpl(getIt(), getIt()),
+    )
+    ..registerLazySingleton<PatientRepository>(
+      () => PatientRepositoryImpl(getIt(), getIt()),
     )
     ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
     ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
