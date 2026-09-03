@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/ids/uuid.dart';
 import '../../../injection_container.dart';
 import '../domain/audio_recorder.dart';
 import '../domain/capture_store.dart';
@@ -28,7 +29,7 @@ class RecordingPage extends StatelessWidget {
         recorder: getIt<AudioRecorder>(),
         files: getIt<CaptureFiles>(),
         now: DateTime.now,
-        newId: () => UniqueKey().toString(),
+        newId: uuidV4,
         onSaved: (capture) async {
           await getIt<CaptureStore>().create(
             id: capture.id,
