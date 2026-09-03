@@ -55,7 +55,10 @@ class AgendaLoaded extends AgendaState {
       other is AgendaLoaded &&
       other.day == day &&
       other.offlineMessage == offlineMessage &&
-      const ListEquality<Appointment>().equals(other.appointments, appointments);
+      const ListEquality<Appointment>().equals(
+        other.appointments,
+        appointments,
+      );
 
   @override
   int get hashCode => Object.hash(
@@ -75,6 +78,17 @@ class AgendaCubit extends Cubit<AgendaState> {
   StreamSubscription<List<Appointment>>? _subscription;
   DateTime? _day;
 
+  // `isClosed` ne devient vrai qu'à l'exécution de `super.close()`, et notre
+  // `close()` l'appelle en dernier, après avoir attendu l'annulation de
+  // `_subscription`. Une réponse qui arrive pendant cette attente verrait
+  // encore `isClosed` à `false` et passerait la garde. Ce drapeau, posé au
+  // tout début de `close()`, couvre cette fenêtre : toute garde doit le lire
+  // en plus de `isClosed`. Les deux gestes qui démontent ce cubit en pleine
+  // requête — changer d'entreprise, se déconnecter — passent par là.
+  bool _closing = false;
+
+  bool get _shuttingDown => isClosed || _closing;
+
   Future<void> load(DateTime day) async {
     _day = day;
     emit(const AgendaLoading());
@@ -83,27 +97,29 @@ class AgendaCubit extends Cubit<AgendaState> {
     // ligne, et se met à jour tout seul quand le rafraîchissement écrit.
     await _subscription?.cancel();
     _subscription = _repository.watchDay(day).listen((appointments) {
-      if (_day != day) return;
+      if (_shuttingDown || _day != day) return;
       final current = state;
       emit(
         AgendaLoaded(
           day: day,
           appointments: appointments,
-          offlineMessage:
-              current is AgendaLoaded ? current.offlineMessage : null,
+          offlineMessage: current is AgendaLoaded
+              ? current.offlineMessage
+              : null,
         ),
       );
     });
 
     final result = await _repository.refresh(day);
     if (result case Err(:final failure)) {
-      if (_day != day) return;
+      if (_shuttingDown || _day != day) return;
       final current = state;
       emit(
         AgendaLoaded(
           day: day,
-          appointments:
-              current is AgendaLoaded ? current.appointments : const [],
+          appointments: current is AgendaLoaded
+              ? current.appointments
+              : const [],
           offlineMessage: failure.message,
         ),
       );
@@ -112,6 +128,10 @@ class AgendaCubit extends Cubit<AgendaState> {
 
   @override
   Future<void> close() async {
+    // Posé avant la moindre annulation : c'est ce qui ferme la fenêtre entre
+    // le début de `close()` et l'exécution de `super.close()`, pendant
+    // laquelle `isClosed` mentirait encore.
+    _closing = true;
     await _subscription?.cancel();
     return super.close();
   }

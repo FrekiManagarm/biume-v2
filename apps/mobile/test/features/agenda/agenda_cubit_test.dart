@@ -112,4 +112,36 @@ void main() {
       AgendaLoaded(day: DateTime.utc(2026, 8, 22), appointments: const []),
     ],
   );
+
+  /// Ce lot fait de l'agenda le cubit de l'écran d'accueil, et ajoute les deux
+  /// gestes qui le démontent en pleine requête : changer d'entreprise et se
+  /// déconnecter. `close()` attend l'annulation de l'abonnement avant
+  /// `super.close()`, donc `isClosed` est encore faux pendant cette attente :
+  /// une réponse qui arrive là passerait la garde et émettrait sur un cubit
+  /// en train de se fermer.
+  test("n'émet plus si le rafraîchissement répond pendant que close() attend "
+      "l'annulation de l'abonnement", () async {
+    final completer = Completer<Result<void>>();
+    when(() => repository.watchDay(any()))
+        .thenAnswer((_) => Stream.value([seance]));
+    when(() => repository.refresh(any())).thenAnswer((_) => completer.future);
+
+    final cubit = AgendaCubit(repository);
+    final states = <AgendaState>[];
+    final subscription = cubit.stream.listen(states.add);
+
+    unawaited(cubit.load(jour));
+    // Le cache s'est publié ; la requête réseau, elle, reste en vol.
+    await Future<void>.delayed(Duration.zero);
+    final apresCache = List<AgendaState>.of(states);
+
+    final closeFuture = cubit.close();
+    // Un échec : c'est le seul chemin où `load` émet après la requête.
+    completer.complete(const Err(NetworkFailure()));
+    await closeFuture;
+    await Future<void>.delayed(Duration.zero);
+
+    expect(states, apresCache);
+    await subscription.cancel();
+  });
 }
