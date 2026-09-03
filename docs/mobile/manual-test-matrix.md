@@ -114,3 +114,173 @@ La purge des 24 heures se vérifie avec une horloge non production injectée.
 | 12 | Purge locale et R2 à 24 h (horloge injectée) | — | — |
 | 13 | Reprises répétées : une seule ligne en base, un seul objet | — | — |
 | 14 | Inspection télémétrie : aucune donnée personnelle ni clinique | — | — |
+
+## Parcours signature (lot A)
+
+**Non exécuté.** Le lot A ferme la boucle complète : dictée, transcription,
+compte rendu, envoi au propriétaire, suivi. Les sept scénarios ci-dessous
+vérifient ce parcours sur téléphone réel, avec une vraie voix. Ils sont
+écrits pour quelqu'un qui n'a pas suivi le développement : chaque scénario
+dit ce qu'il faut préparer avant de commencer, les gestes à faire, et ce
+qu'on doit voir à l'écran. Aucune lecture de code n'est nécessaire.
+
+**Démarrer le serveur et l'application :**
+
+```bash
+bun --filter @biume/web dev
+```
+
+Puis, dans un autre terminal, depuis `apps/mobile` :
+
+```bash
+flutter run --dart-define-from-file=dart_define/local.json
+```
+
+**Préparatifs communs, à faire une fois avant de commencer :**
+
+- un compte praticien connecté, avec une organisation active ;
+- un rendez-vous programmé **aujourd'hui**, dans l'agenda, pour un animal existant ;
+- un animal dont le propriétaire n'a **pas** d'adresse e-mail enregistrée — le garde-fou du scénario 4 ne se déclenche que dans ce cas. Si aucune fiche de test ne convient, en créer une (nom et coordonnées fictifs, jamais ceux d'un client réel) ;
+- un second animal dans le même cas (sans e-mail), pour le scénario 6, qui a besoin de sa propre dictée ;
+- avoir ouvert l'application **en ligne** juste avant de commencer : le cache des animaux (utilisé hors ligne au scénario 2) ne se remplit qu'à l'ouverture en ligne, jamais à la demande.
+
+Pendant tous les scénarios : les libellés affichés doivent être en français
+et décrire un geste ou un état compréhensible (« Dictée en attente d'envoi »,
+« Biume transcrit votre dictée »...). Si un nom d'état serveur brut apparaît
+à l'écran (`proposed`, `ready`, `to_attach`...), c'est une anomalie à noter,
+pas un détail.
+
+**Chronométrage.** Les scénarios 1 à 3 mesurent le temps actif consigné à la
+section 9 de `docs/superpowers/specs/2026-09-03-mobile-v1-completion-design.md`.
+Démarrer le chronomètre à la fin de la dictée réelle (juste après avoir
+arrêté l'enregistrement, avant de valider). L'arrêter dès que les
+propositions du compte rendu apparaissent à l'écran, à la fin du scénario 3.
+Noter aussi la durée de la dictée elle-même. Les interruptions extérieures
+(appel, question d'un collègue, temps de préparer l'appareil) ne comptent
+pas : mettre le chronomètre en pause, ou refaire le passage si l'interruption
+fausse trop la mesure.
+
+### Scénario 1 — Dictée depuis un rendez-vous du jour
+
+**Préparatifs :** le rendez-vous du jour préparé plus haut ; application en ligne.
+
+**Étapes :**
+1. Depuis l'accueil, ouvrir le rendez-vous du jour.
+2. Appuyer sur « Dicter » et enregistrer une dictée réelle d'environ une minute (résumé d'une séance, à voix haute).
+3. Valider la dictée.
+4. Revenir à l'accueil.
+
+**On doit voir :**
+- l'élément apparaît dans « À traiter » avec le libellé « Dictée en attente d'envoi » ;
+- il disparaît une fois l'envoi terminé (quelques secondes, réseau normal) ;
+- il réapparaît avec le libellé « Biume transcrit votre dictée ».
+
+### Scénario 2 — Capture libre hors ligne, rattachement au retour du réseau
+
+**Préparatifs :** mode avion pas encore activé ; l'application a été ouverte en ligne juste avant (cache des animaux rempli).
+
+**Étapes :**
+1. Activer le mode avion sur le téléphone.
+2. Depuis l'accueil, lancer une capture libre (dicter sans passer par un rendez-vous) et dicter environ une minute.
+3. Choisir un animal dans le sélecteur — la liste doit s'afficher depuis le cache, sans réseau.
+4. Valider.
+5. Vérifier que l'élément reste sur « Dictée en attente d'envoi » tant que le mode avion est actif.
+6. Couper le mode avion.
+
+**On doit voir :**
+- hors ligne, l'élément affiche « Dictée en attente d'envoi » et ne bouge pas ;
+- une fois le réseau revenu, l'élément passe à « Biume transcrit votre dictée », puis à « Transcription à relire ».
+
+### Scénario 3 — Corriger la transcription et lancer l'extraction
+
+**Préparatifs :** un élément en « Transcription à relire », issu du scénario 1 ou 2. Démarrer le chronomètre (voir plus haut) au moment de valider la dictée qui a produit cette transcription, s'il ne l'est pas déjà.
+
+**Étapes :**
+1. Ouvrir l'élément « Transcription à relire ».
+2. Corriger un mot dans le texte affiché.
+3. Appuyer sur « Valider la transcription » — c'est le seul bouton de l'écran.
+
+**On doit voir :**
+- l'écran bascule vers le compte rendu, avec un état « Biume prépare le compte rendu » ;
+- après quelques instants, les propositions du compte rendu apparaissent, section par section. Arrêter le chronomètre ici et noter la durée.
+
+### Scénario 4 — Finaliser et partager, propriétaire sans e-mail
+
+**Préparatifs :** le compte rendu en propositions du scénario 3, pour l'animal dont le propriétaire n'a pas d'e-mail.
+
+**Étapes :**
+1. Confirmer ou écarter chaque proposition jusqu'à ce que tout soit décidé.
+2. Vérifier que le statut affiché est « Prêt à envoyer ».
+3. Appuyer sur « Finaliser et partager ».
+4. Au garde-fou e-mail, choisir « Ajouter son e-mail », saisir une adresse de test, puis « Enregistrer et envoyer ».
+
+**On doit voir :**
+- avant tout envoi, l'application signale l'absence d'adresse et propose « Ajouter son e-mail » ou « Finaliser sans envoyer » — jamais d'envoi silencieux ;
+- une fois l'adresse ajoutée et l'envoi confirmé, un e-mail arrive à cette adresse, avec un lien vers le compte rendu (`/r/<token>`) ;
+- ouvrir ce lien affiche le compte rendu partagé.
+
+### Scénario 5 — Programmer le suivi
+
+**Préparatifs :** suite immédiate du scénario 4.
+
+**Étapes :**
+1. Sur l'écran de suivi qui s'affiche après la finalisation, vérifier l'échéance préremplie.
+2. Appuyer sur « Programmer le suivi ».
+3. Revenir à l'accueil.
+
+**On doit voir :**
+- retour à l'accueil sans erreur ;
+- l'élément correspondant à ce compte rendu a disparu de « À traiter ».
+
+### Scénario 6 — Finaliser sans envoyer
+
+**Préparatifs :** le second animal sans e-mail, préparé en amont. Il faut refaire une dictée complète (scénarios 1 à 3, en version courte) pour obtenir un nouveau compte rendu en propositions.
+
+**Étapes :**
+1. Dicter, valider la transcription, décider chaque proposition jusqu'à « Prêt à envoyer ».
+2. Appuyer sur « Finaliser et partager ».
+3. Au garde-fou e-mail, choisir cette fois « Finaliser sans envoyer ».
+4. Sur l'écran de suivi, appuyer sur « Programmer le suivi ».
+
+**On doit voir :**
+- le compte rendu passe à un statut finalisé, sans qu'aucun e-mail ne parte ;
+- aucun e-mail n'est reçu pour cette séance ;
+- la programmation du suivi réussit quand même — le lien de partage existe même sans envoi.
+
+### Scénario 7 — Fermeture forcée pendant la préparation du compte rendu
+
+**Préparatifs :** une nouvelle dictée courte, prête à être validée (répéter le début du scénario 1 ou 2 jusqu'à « Transcription à relire »).
+
+**Étapes :**
+1. Corriger si besoin, puis appuyer sur « Valider la transcription ».
+2. Dès que l'état « Biume prépare le compte rendu » s'affiche, fermer complètement l'application (pas une simple mise en arrière-plan — la tuer depuis le gestionnaire de tâches du téléphone).
+3. Relancer l'application.
+
+**On doit voir :**
+- l'élément est présent dans « À traiter », avec un libellé cohérent avec son état réel (pas d'écran vide, pas d'élément orphelin) ;
+- ni la dictée ni la transcription ne sont perdues.
+
+### Build de distribution (TestFlight)
+
+```bash
+cd apps/mobile && flutter build ipa --dart-define=BIUME_API_URL=https://biume.app
+```
+
+Cette commande exige un compte développeur Apple configuré sur la machine
+qui construit l'app (signature et provisionnement). S'il n'est pas
+disponible, le dire clairement dans le résultat ci-dessous plutôt que de
+consigner un échec technique — ce n'est pas la même chose. Quand la commande
+réussit, l'envoi vers TestFlight se fait à la main via Transporter.
+
+### Résultats
+
+| Scénario | Date | Testeur | Plateforme | Appareil | Résultat | Preuve |
+|----------|------|---------|------------|----------|----------|--------|
+| 1 — Dictée depuis un rendez-vous | — | — | — | — | non exécuté | — |
+| 2 — Capture libre hors ligne | — | — | — | — | non exécuté | — |
+| 3 — Correction et extraction | — | — | — | — | non exécuté | — |
+| 4 — Finaliser et partager, sans e-mail | — | — | — | — | non exécuté | — |
+| 5 — Programmer le suivi | — | — | — | — | non exécuté | — |
+| 6 — Finaliser sans envoyer | — | — | — | — | non exécuté | — |
+| 7 — Fermeture forcée pendant la préparation | — | — | — | — | non exécuté | — |
+| Build TestFlight | — | — | — | — | non exécuté | — |

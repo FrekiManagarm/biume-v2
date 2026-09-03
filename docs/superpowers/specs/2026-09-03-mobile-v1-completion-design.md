@@ -244,4 +244,13 @@ Le parcours signature complet est **chronométré** à la fin du lot A, sur tél
 
 ## 9. Temps actif mesuré
 
-_À compléter à la fin du lot A._
+Le temps actif compte le parcours du praticien, de la fin de la dictée
+réelle jusqu'au compte rendu (brouillon) prêt à relire — les propositions
+affichées à l'écran, avant toute décision. Les interruptions extérieures
+(appel, question, temps de préparer l'appareil) ne comptent pas. Protocole
+détaillé : scénarios 1 à 3 de la section « Parcours signature (lot A) » de
+`docs/mobile/manual-test-matrix.md`. Objectif à battre : **cinq minutes**.
+
+| Date | Praticien / testeur | Durée de la dictée | Temps actif (fin de dictée → brouillon prêt à relire) |
+| --- | --- | --- | --- |
+| — | — | — | — |
