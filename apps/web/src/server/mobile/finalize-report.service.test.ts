@@ -52,6 +52,7 @@ describe("finaliser et partager", () => {
       petName: "Filou",
       reportDate: "3 septembre 2026",
       token: "jeton-secret",
+      idempotencyKey: "report-1:version-1",
     });
     expect(ports.markStatus).toHaveBeenNthCalledWith(2, { organizationId: "org-1", reportId: "report-1" }, "sent", now);
     expect(result).toEqual({ reportId: "report-1", status: "sent", sentToOwner: true });
@@ -103,6 +104,44 @@ describe("finaliser et partager", () => {
     const ports = createPorts({ loadReport: vi.fn(async () => report({ status: "sent" })) });
     await finalizeReport({ ...request, sendToOwner: false }, ports);
     expect(ports.markStatus).not.toHaveBeenCalledWith(expect.anything(), "finalized", expect.anything());
+  });
+
+  it("n'envoie pas sur une adresse vide", async () => {
+    const ports = createPorts({
+      loadReport: vi.fn(async () =>
+        report({ patient: { name: "Filou", owner: { id: "owner-1", name: "Camille Roux", email: "   " } } }),
+      ),
+    });
+    const result = await finalizeReport(request, ports);
+    expect(ports.sendEmail).not.toHaveBeenCalled();
+    expect(result.sentToOwner).toBe(false);
+  });
+
+  /**
+   * Le cas le plus coûteux : un praticien qui appuie deux fois. Le second geste
+   * ne doit ni renvoyer, ni frapper de jeton — sinon un secret vivant resterait
+   * ouvert sur le propriétaire sans lui avoir jamais été transmis.
+   */
+  it("ne renvoie rien sur un rapport déjà envoyé, même si l'envoi est demandé", async () => {
+    const ports = createPorts({ loadReport: vi.fn(async () => report({ status: "sent" })) });
+    const result = await finalizeReport(request, ports);
+
+    expect(ports.sendEmail).not.toHaveBeenCalled();
+    expect(ports.generateToken).not.toHaveBeenCalled();
+    expect(ports.insertLink).not.toHaveBeenCalled();
+    expect(result).toEqual({ reportId: "report-1", status: "sent", sentToOwner: false });
+  });
+
+  /**
+   * Une révision suivante fige une version neuve, sur laquelle aucun lien
+   * n'existe. Sans envoi à la clé, frapper un jeton ici l'abandonnerait vivant.
+   */
+  it("ne frappe aucun jeton quand il n'y a rien à envoyer", async () => {
+    const ports = createPorts();
+    await finalizeReport({ ...request, sendToOwner: false }, ports);
+
+    expect(ports.generateToken).not.toHaveBeenCalled();
+    expect(ports.insertLink).not.toHaveBeenCalled();
   });
 
   it("refuse un rapport sans propriétaire", async () => {

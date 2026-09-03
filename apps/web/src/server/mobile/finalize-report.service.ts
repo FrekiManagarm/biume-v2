@@ -34,6 +34,12 @@ export type FinalizeReportPorts = {
     petName: string;
     reportDate: string;
     token: string;
+    /**
+     * Rejouée à l'identique après une coupure, la même clé rend le second
+     * appel inoffensif chez le fournisseur : le propriétaire ne reçoit pas
+     * deux fois le même compte rendu.
+     */
+    idempotencyKey: string;
   }): Promise<void>;
 };
 
@@ -61,6 +67,11 @@ export async function finalizeReport(
   const owner = report.patient?.owner;
   if (!report.patient || !owner) throw new MobileRequestError("conflict");
 
+  // La colonne d'adresse est un `text` nullable sans contrainte : une chaîne
+  // vide y passe aussi bien qu'un `NULL`, et n'est pas une adresse.
+  const email = owner.email?.trim() ?? "";
+  const canSend = request.sendToOwner && email !== "" && report.status !== "sent";
+
   if (report.status === "draft") {
     await ports.markStatus(scope, "finalized", request.now);
   }
@@ -68,23 +79,32 @@ export async function finalizeReport(
   const version = await ports.createSharedVersion(scope, request.now);
 
   const existing = await ports.findActiveLink({ sharedVersionId: version.id, ownerId: owner.id });
-  const token = existing?.token ?? ports.generateToken();
-  if (!existing) {
+
+  /**
+   * Un jeton n'est frappé que sur le chemin qui l'envoie dans la seconde qui
+   * suit. Sans cette garde, chaque révision figeait une version neuve, sur
+   * laquelle aucun lien n'existe, et un secret de plus naissait sur le même
+   * propriétaire sans lui être jamais transmis ni jamais révoqué.
+   */
+  let token = existing?.token ?? null;
+  if (!token && canSend) {
+    token = ports.generateToken();
     await ports.insertLink({ token, sharedVersionId: version.id, ownerId: owner.id });
   }
 
-  const canSend = request.sendToOwner && owner.email !== null && report.status !== "sent";
-  if (canSend) {
+  if (canSend && token) {
     await ports.sendEmail({
-      to: owner.email as string,
+      to: email,
       clientName: owner.name ?? "cher client",
       petName: report.patient.name,
       reportDate: dateFormatter.format(request.now),
       token,
+      idempotencyKey: `${request.reportId}:${version.id}`,
     });
     await ports.markStatus(scope, "sent", request.now);
   }
 
-  const status: ReportStatus = canSend || report.status === "sent" ? "sent" : "finalized";
-  return { reportId: request.reportId, status, sentToOwner: canSend };
+  const sent = canSend && token !== null;
+  const status: ReportStatus = sent || report.status === "sent" ? "sent" : "finalized";
+  return { reportId: request.reportId, status, sentToOwner: sent };
 }
