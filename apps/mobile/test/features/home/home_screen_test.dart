@@ -38,15 +38,12 @@ void main() {
     registerFallbackValue(DateTime(2026, 9, 3));
 
     when(() => store.watchAll()).thenAnswer((_) => const Stream.empty());
-    when(
-      () => todoApi.list(),
-    ).thenAnswer((_) async => const Success(<TodoItem>[]));
-    when(
-      () => agendaRepository.watchDay(any()),
-    ).thenAnswer((_) => Stream.value(const []));
-    when(
-      () => agendaRepository.refresh(any()),
-    ).thenAnswer((_) async => const Success(null));
+    when(() => todoApi.list())
+        .thenAnswer((_) async => const Success(<TodoItem>[]));
+    when(() => agendaRepository.watchDay(any()))
+        .thenAnswer((_) => Stream.value(const []));
+    when(() => agendaRepository.refresh(any()))
+        .thenAnswer((_) async => const Success(null));
     when(() => authRepository.signOut()).thenAnswer((_) async {});
 
     getIt
@@ -86,7 +83,7 @@ void main() {
 
     await tester.pumpWidget(
       BlocProvider(
-        create: (_) => AuthCubit(authRepository),
+        create: (_) => AuthCubit(authRepository, clearReadCache: () async {}),
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -94,17 +91,16 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets(
-    'empile À traiter puis l\'agenda, avec Dicter seul en bas',
-    (tester) async {
-      await monter(tester);
+  testWidgets('empile À traiter puis l\'agenda, avec Dicter seul en bas', (
+    tester,
+  ) async {
+    await monter(tester);
 
-      expect(find.text('À traiter'), findsOneWidget);
-      expect(find.text('Vos séances'), findsOneWidget);
-      expect(find.widgetWithText(FloatingActionButton, 'Dicter'), findsOneWidget);
-      expect(find.byType(BottomNavigationBar), findsNothing);
-    },
-  );
+    expect(find.text('À traiter'), findsOneWidget);
+    expect(find.text('Vos séances'), findsOneWidget);
+    expect(find.widgetWithText(FloatingActionButton, 'Dicter'), findsOneWidget);
+    expect(find.byType(BottomNavigationBar), findsNothing);
+  });
 
   testWidgets(
     'le menu du compte propose de changer d\'entreprise et de se déconnecter',
@@ -123,9 +119,8 @@ void main() {
     "changer d'entreprise ramène à l'accueil une fois le choix fait",
     (tester) async {
       const autreCabinet = Company(id: 'org-2', name: 'Autre cabinet');
-      when(() => authRepository.listCompanies()).thenAnswer(
-        (_) async => const Success([autreCabinet]),
-      );
+      when(() => authRepository.listCompanies())
+          .thenAnswer((_) async => const Success([autreCabinet]));
       when(() => authRepository.setActiveCompany('org-2')).thenAnswer(
         (_) async => const Success(
           PractitionerSession(userId: 'user-1', company: autreCabinet),

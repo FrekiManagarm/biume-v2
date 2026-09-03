@@ -9,31 +9,33 @@ void main() {
   setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
   tearDown(() => db.close());
 
-  Future<void> insertCapture(String id, LocalCaptureStatus status) =>
-      db.into(db.localCaptures).insert(
-            LocalCapturesCompanion.insert(
-              id: id,
-              status: status,
-              durationMs: 120000,
-              byteSize: 1048576,
-              sha256: 'a' * 64,
-              createdAt: DateTime.utc(2026, 8, 21),
-              expiresAt: DateTime.utc(2026, 8, 22),
-            ),
-          );
+  Future<void> insertCapture(String id, LocalCaptureStatus status) => db
+      .into(db.localCaptures)
+      .insert(
+        LocalCapturesCompanion.insert(
+          id: id,
+          status: status,
+          durationMs: 120000,
+          byteSize: 1048576,
+          sha256: 'a' * 64,
+          createdAt: DateTime.utc(2026, 8, 21),
+          expiresAt: DateTime.utc(2026, 8, 22),
+        ),
+      );
 
-  Future<void> insertAppointment(String id) =>
-      db.into(db.cachedAppointments).insert(
-            CachedAppointmentsCompanion.insert(
-              id: id,
-              patientId: 'pet-1',
-              patientName: 'Filou',
-              species: 'DOG',
-              beginAt: DateTime.utc(2026, 8, 21, 9),
-              endAt: DateTime.utc(2026, 8, 21, 10),
-              status: 'CONFIRMED',
-            ),
-          );
+  Future<void> insertAppointment(String id) => db
+      .into(db.cachedAppointments)
+      .insert(
+        CachedAppointmentsCompanion.insert(
+          id: id,
+          patientId: 'pet-1',
+          patientName: 'Filou',
+          species: 'DOG',
+          beginAt: DateTime.utc(2026, 8, 21, 9),
+          endAt: DateTime.utc(2026, 8, 21, 10),
+          status: 'CONFIRMED',
+        ),
+      );
 
   test('conserve une dictée mise en file', () async {
     await insertCapture('capture-1', LocalCaptureStatus.queued);
@@ -49,11 +51,31 @@ void main() {
   test('vider le cache ne touche pas la file de dictées', () async {
     await insertCapture('capture-1', LocalCaptureStatus.queued);
     await insertAppointment('appointment-1');
+    await db
+        .into(db.cachedOwners)
+        .insert(
+          CachedOwnersCompanion.insert(id: 'owner-1', name: 'Camille Roux'),
+        );
+    await db
+        .into(db.cachedPatients)
+        .insert(
+          CachedPatientsCompanion.insert(
+            id: 'pet-1',
+            ownerId: 'owner-1',
+            ownerName: 'Camille Roux',
+            name: 'Filou',
+            species: 'DOG',
+          ),
+        );
 
     await db.clearReadCache();
 
     expect(await db.select(db.localCaptures).get(), hasLength(1));
     expect(await db.select(db.cachedAppointments).get(), isEmpty);
+    // Ce sont ces deux tables qui exposeraient les clients d'un cabinet dans
+    // un autre si elles survivaient à un changement d'entreprise.
+    expect(await db.select(db.cachedOwners).get(), isEmpty);
+    expect(await db.select(db.cachedPatients).get(), isEmpty);
   });
 
   test("émet un flux quand l'agenda en cache change", () async {
@@ -89,18 +111,20 @@ void main() {
   });
 
   test('conserve l\'animal rattaché à une dictée en file', () async {
-    await db.into(db.localCaptures).insert(
-      LocalCapturesCompanion.insert(
-        id: 'c-1',
-        status: LocalCaptureStatus.queued,
-        durationMs: 1000,
-        byteSize: 10,
-        sha256: 'x',
-        createdAt: DateTime.utc(2026, 9, 3),
-        expiresAt: DateTime.utc(2026, 9, 4),
-        patientId: const Value('pet-1'),
-      ),
-    );
+    await db
+        .into(db.localCaptures)
+        .insert(
+          LocalCapturesCompanion.insert(
+            id: 'c-1',
+            status: LocalCaptureStatus.queued,
+            durationMs: 1000,
+            byteSize: 10,
+            sha256: 'x',
+            createdAt: DateTime.utc(2026, 9, 3),
+            expiresAt: DateTime.utc(2026, 9, 4),
+            patientId: const Value('pet-1'),
+          ),
+        );
     final row = await (db.select(
       db.localCaptures,
     )..where((c) => c.id.equals('c-1'))).getSingle();

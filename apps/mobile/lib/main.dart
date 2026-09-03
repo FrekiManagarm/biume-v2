@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'config/app_palette.dart';
 import 'config/app_router.dart';
 import 'config/app_theme.dart';
+import 'core/database/app_database.dart';
 import 'core/lifecycle/foreground_refresh.dart';
 import 'features/auth/domain/auth_repository.dart';
 import 'features/auth/presentation/auth_cubit.dart';
@@ -42,7 +43,10 @@ class _BiumeAppState extends State<BiumeApp> {
   @override
   void initState() {
     super.initState();
-    _auth = AuthCubit(getIt<AuthRepository>())..start();
+    _auth = AuthCubit(
+      getIt<AuthRepository>(),
+      clearReadCache: getIt<AppDatabase>().clearReadCache,
+    )..start();
     // Session prête = premier moment où le sélecteur d'animaux et la file de
     // dictées doivent être à jour, avant même que le praticien touche un
     // écran.
