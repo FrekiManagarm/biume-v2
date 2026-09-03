@@ -31,6 +31,14 @@ const leo = Patient(
   species: 'RABBIT',
 );
 
+const noisette = Patient(
+  id: 'patient-4',
+  ownerId: 'owner-4',
+  ownerName: 'Marc Lecœur',
+  name: 'Noisette',
+  species: 'CAT',
+);
+
 void main() {
   late MockPatientRepository repository;
 
@@ -77,6 +85,24 @@ void main() {
         (s) => s.visible.map((p) => p.name),
         'filtré',
         ['Léo'],
+      ),
+    ],
+  );
+
+  blocTest<PatientPickerCubit, PatientPickerState>(
+    'trouve « Lecœur » en tapant « lecoeur », œ se repliant sur deux lettres',
+    setUp: () {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex, noisette]));
+    },
+    build: () => PatientPickerCubit(repository)..start(),
+    act: (cubit) => cubit.search('lecoeur'),
+    skip: 1,
+    expect: () => [
+      isA<PatientPickerState>().having(
+        (s) => s.visible.map((p) => p.name),
+        'filtré',
+        ['Noisette'],
       ),
     ],
   );

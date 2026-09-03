@@ -67,6 +67,22 @@ class PatientPickerScreen extends StatelessWidget {
                   }
 
                   final visible = state.visible;
+                  // Le cache est plein mais la recherche ne donne rien : ce
+                  // n'est pas le même silence qu'un cache vide, il faut le
+                  // dire aussi, sans quoi la liste vide se lit comme un
+                  // écran gelé.
+                  if (visible.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'Aucun animal ne correspond à cette recherche.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
                   return ListView.builder(
                     itemCount: visible.length,
                     itemBuilder: (context, index) {

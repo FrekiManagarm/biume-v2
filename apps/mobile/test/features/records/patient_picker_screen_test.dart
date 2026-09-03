@@ -135,4 +135,26 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'dit que la recherche ne donne rien, sans écran gelé',
+    (tester) async {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex]));
+
+      await ouvrirLeSelecteur(tester, repository);
+
+      await tester.enterText(find.byType(TextField), 'zzz');
+      await tester.pump();
+
+      expect(
+        find.text('Aucun animal ne correspond à cette recherche.'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Connectez-vous une fois au réseau'),
+        findsNothing,
+      );
+    },
+  );
 }

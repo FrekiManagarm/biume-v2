@@ -29,6 +29,8 @@ class PatientPickerState {
 }
 
 /// Minuscules et accents retirés : « Léo » se trouve en tapant « leo ».
+/// `œ` se replie en deux caractères (« oe ») — c'est le seul cas de la
+/// liste : un propriétaire nommé « Lecœur » se trouve en tapant « lecoeur ».
 String _fold(String value) => value
     .toLowerCase()
     .replaceAll(RegExp('[àáâä]'), 'a')
@@ -36,7 +38,9 @@ String _fold(String value) => value
     .replaceAll(RegExp('[îï]'), 'i')
     .replaceAll(RegExp('[ôö]'), 'o')
     .replaceAll(RegExp('[ùûü]'), 'u')
-    .replaceAll('ç', 'c');
+    .replaceAll('ÿ', 'y')
+    .replaceAll('ç', 'c')
+    .replaceAll('œ', 'oe');
 
 /// Sélectionne l'animal d'une dictée libre parmi le cache local.
 ///
