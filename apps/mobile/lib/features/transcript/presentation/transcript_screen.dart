@@ -237,7 +237,9 @@ class _Inaudible extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           FilledButton(
-            onPressed: () => context.push('/dicter?rdv=$appointmentId'),
+            onPressed: () => context.push(
+              appointmentId == null ? '/dicter' : '/dicter?rdv=$appointmentId',
+            ),
             child: const Text('Réenregistrer'),
           ),
         ],

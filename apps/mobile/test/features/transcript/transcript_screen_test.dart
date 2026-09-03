@@ -36,6 +36,8 @@ Future<void> ouvrirLEcran(
   MockTranscriptRepository repository,
   MockCaptureStore store, {
   bool needsPatient = false,
+  String? appointmentId,
+  void Function(Uri)? onDicter,
 }) async {
   final router = GoRouter(
     initialLocation: '/dictees/$captureId/transcription',
@@ -47,7 +49,7 @@ Future<void> ouvrirLEcran(
           child: TranscriptScreen(
             captureId: captureId,
             needsPatient: needsPatient,
-            appointmentId: null,
+            appointmentId: appointmentId,
           ),
         ),
       ),
@@ -59,7 +61,13 @@ Future<void> ouvrirLEcran(
         path: '/comptes-rendus/:reportId',
         builder: (_, _) => const SizedBox.shrink(),
       ),
-      GoRoute(path: '/dicter', builder: (_, _) => const SizedBox.shrink()),
+      GoRoute(
+        path: '/dicter',
+        builder: (_, state) {
+          onDicter?.call(state.uri);
+          return const SizedBox.shrink();
+        },
+      ),
     ],
   );
 
@@ -126,4 +134,33 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     expect(find.text("Rien n'a été capté."), findsOneWidget);
   });
+
+  /// Une dictée libre inaudible n'a pas de rendez-vous : réenregistrer ne
+  /// doit jamais envoyer la chaîne littérale « null » au routeur, qui la
+  /// transmettrait ensuite au serveur comme un identifiant de rendez-vous.
+  /// C'est le chemin de récupération d'un praticien qui a déjà perdu une
+  /// dictée : il ne doit pas être cassé par une interpolation naïve.
+  testWidgets(
+    "réenregistrer une dictée libre inaudible n'envoie pas rdv=null",
+    (tester) async {
+      when(() => repository.load(any()))
+          .thenAnswer((_) async => const Success(inaudible));
+
+      Uri? uriDicter;
+      await ouvrirLEcran(
+        tester,
+        repository,
+        store,
+        appointmentId: null,
+        onDicter: (uri) => uriDicter = uri,
+      );
+
+      await tester.tap(find.text('Réenregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(uriDicter, isNotNull);
+      expect(uriDicter!.queryParameters.containsKey('rdv'), isFalse);
+      expect(uriDicter.toString(), '/dicter');
+    },
+  );
 }
