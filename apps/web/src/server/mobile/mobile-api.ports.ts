@@ -14,6 +14,7 @@ import {
   pets,
   reportProposal,
   reportSectionState,
+  reportSharedVersion,
 } from "@biume/db/schema/index";
 import {
   and,
@@ -64,7 +65,10 @@ import { sendNewReportEmail } from "./report-email";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
-import { createCaptureRepository } from "./capture.repository";
+import {
+  createCaptureRepository,
+  type CaptureDatabase,
+} from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
 import {
   toHistoryEntry,
@@ -280,6 +284,35 @@ async function syncAndReread(
 }
 
 
+/**
+ * Le jeton d'un suivi doit être celui du rapport demandé, et de personne
+ * d'autre. La jointure passe par `reportSharedVersion`, qui porte à la fois le
+ * rapport et son locataire : un lien d'une autre organisation n'est pas
+ * seulement improbable, il est hors de portée de la requête.
+ */
+export async function findReportShareToken(
+  database: CaptureDatabase,
+  scope: { organizationId: string; reportId: string },
+): Promise<string | null> {
+  const [link] = await database
+    .select({ token: reportShareLink.token })
+    .from(reportShareLink)
+    .innerJoin(
+      reportSharedVersion,
+      eq(reportSharedVersion.id, reportShareLink.sharedVersionId),
+    )
+    .where(
+      and(
+        eq(reportSharedVersion.reportId, scope.reportId),
+        eq(reportSharedVersion.organizationId, scope.organizationId),
+        isNull(reportShareLink.revokedAt),
+      ),
+    )
+    .orderBy(desc(reportShareLink.createdAt))
+    .limit(1);
+  return link?.token ?? null;
+}
+
 async function readFollowUp(
   actor: CaptureActor,
   followUpId: string,
@@ -297,9 +330,11 @@ async function readFollowUp(
       ownerName: clients.name,
     })
     .from(followUp)
-    .leftJoin(reportShareLink, eq(reportShareLink.token, followUp.shareToken))
-    .leftJoin(clients, eq(clients.id, reportShareLink.ownerId))
-    .leftJoin(pets, eq(pets.ownerId, clients.id))
+    // Le nom de l'animal vient du rapport suivi, pas de « n'importe quel
+    // animal du propriétaire » : la jointure précédente en tirait un au hasard.
+    .innerJoin(advancedReport, eq(advancedReport.id, followUp.reportId))
+    .leftJoin(pets, eq(pets.id, advancedReport.patientId))
+    .leftJoin(clients, eq(clients.id, pets.ownerId))
     .where(
       and(
         eq(followUp.id, followUpId),
@@ -571,7 +606,7 @@ export async function createProductionMobileApiPorts(
 
     async scheduleFollowUp(actor, reportId, request) {
       const [report] = await db
-        .select({ id: advancedReport.id })
+        .select({ id: advancedReport.id, status: advancedReport.status })
         .from(advancedReport)
         .where(
           and(
@@ -588,17 +623,22 @@ export async function createProductionMobileApiPorts(
         throw new MobileRequestError("validation");
       }
 
-      const [link] = await db
-        .select({ token: reportShareLink.token })
-        .from(reportShareLink)
-        .limit(1);
+      // Un suivi porte un lien vers le compte rendu : sans rapport finalisé,
+      // le propriétaire recevrait un questionnaire sur un document qu'il n'a
+      // jamais reçu.
+      if (report.status === "draft") throw new MobileRequestError("conflict");
+      const shareToken = await findReportShareToken(db, {
+        organizationId: actor.organizationId,
+        reportId,
+      });
+      if (!shareToken) throw new MobileRequestError("conflict");
 
       const id = crypto.randomUUID();
       await db.insert(followUp).values({
         id,
         reportId,
         organizationId: actor.organizationId,
-        shareToken: link?.token ?? null,
+        shareToken,
         questionnaire: request.questionnaire ?? defaultFollowUpQuestionnaire,
         dueAt: new Date(request.dueAt),
       });

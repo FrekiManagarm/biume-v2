@@ -130,6 +130,27 @@ describe("programmation du suivi", () => {
     expect(response.status).toBe(400);
   });
 
+  /**
+   * Un rapport en brouillon n'a pas de version figée, donc pas de lien : le
+   * propriétaire recevrait un questionnaire sur un document qu'il n'a jamais
+   * reçu.
+   */
+  it("refuse de programmer sur un rapport en brouillon", async () => {
+    const ports = createPorts({
+      scheduleFollowUp: vi.fn(async () => {
+        throw new MobileRequestError("conflict");
+      }),
+    });
+    const response = await createMobileApiHandler(ports)(
+      post("/reports/report-1/followup", {
+        dueAt: inDays(7),
+        questionnaire: defaultFollowUpQuestionnaire,
+      }),
+    );
+
+    expect(response.status).toBe(409);
+  });
+
   it("refuse de programmer sur un rapport d'une autre organisation", async () => {
     const ports = createPorts({
       scheduleFollowUp: vi.fn(async () => {
