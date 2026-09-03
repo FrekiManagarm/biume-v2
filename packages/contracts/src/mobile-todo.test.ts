@@ -27,7 +27,26 @@ describe("contrat « à traiter »", () => {
     ).toThrow();
   });
 
-  it("borne la liste à cent éléments", () => {
-    expect(todoResponseSchema.shape.items._zod.def.checks?.length ?? 1).toBeGreaterThan(0);
+  function buildItems(total: number) {
+    return Array.from({ length: total }, (_, index) => ({
+      kind: "to_attach" as const,
+      captureId: `2f1e5c2e-4b7d-4a55-9d4a-1c0a8f5b${String(index).padStart(4, "0")}`,
+      reportId: null,
+      appointmentId: null,
+      patientName: null,
+      updatedAt: "2026-09-03T10:00:00.000Z",
+    }));
+  }
+
+  it("accepte cent éléments", () => {
+    expect(() =>
+      todoResponseSchema.parse({ items: buildItems(100) }),
+    ).not.toThrow();
+  });
+
+  it("refuse cent-un éléments", () => {
+    expect(() =>
+      todoResponseSchema.parse({ items: buildItems(101) }),
+    ).toThrow();
   });
 });
