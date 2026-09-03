@@ -18,6 +18,12 @@ class ReportLoading extends ReportState {
   const ReportLoading();
 }
 
+/// L'extraction serveur est en cours : le cubit interroge en boucle courte.
+/// Le praticien reste libre de partir, aucun écran ne l'enferme.
+class ReportPreparing extends ReportState {
+  const ReportPreparing();
+}
+
 class ReportLoaded extends ReportState {
   const ReportLoaded(this.data, {this.message, this.busy = false});
 
@@ -32,17 +38,72 @@ class ReportUnavailable extends ReportState {
   final String message;
 }
 
+/// Le compte rendu vient d'être finalisé (et éventuellement envoyé). L'écran
+/// quitte cette route pour le suivi.
+class ReportFinalized extends ReportState {
+  const ReportFinalized({required this.reportId, required this.outcome});
+
+  final String reportId;
+  final FinalizeOutcome outcome;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ReportFinalized &&
+      other.reportId == reportId &&
+      other.outcome == outcome;
+
+  @override
+  int get hashCode => Object.hash(reportId, outcome);
+}
+
 /// Le mobile **valide, il n'édite pas**. Les seules écritures possibles ici
 /// sont des décisions : confirmer, écarter, ou régénérer ce qui n'a pas encore
-/// été décidé. Aucune méthode ne réécrit le texte d'une proposition.
+/// été décidé — puis finaliser et éventuellement envoyer.
 class ReportCubit extends Cubit<ReportState> {
-  ReportCubit(this._repository) : super(const ReportInitial());
+  ReportCubit(
+    this._repository, {
+    this.pollInterval = const Duration(seconds: 3),
+    this.maxPolls = 40,
+  }) : super(const ReportInitial());
 
   final ReportRepository _repository;
+  final Duration pollInterval;
+  final int maxPolls;
 
+  /// Après « Valider la transcription », les propositions arrivent dans les
+  /// secondes qui suivent. On interroge tant qu'il n'y en a pas, à intervalle
+  /// court, et on cesse au bout du nombre d'essais prévu : le praticien reste
+  /// libre de partir, « À traiter » le rappellera.
   Future<void> load(String reportId) async {
     emit(const ReportLoading());
-    _apply(await _repository.load(reportId), fallback: null);
+    for (var attempt = 0; ; attempt++) {
+      final result = await _repository.load(reportId);
+      switch (result) {
+        case Err(:final failure):
+          emit(ReportUnavailable(failure.message));
+          return;
+        case Success(:final value):
+          final waiting = value.proposals.isEmpty && !value.isReadOnly;
+          if (!waiting) {
+            emit(ReportLoaded(value));
+            return;
+          }
+          if (attempt >= maxPolls - 1) {
+            emit(
+              ReportLoaded(
+                value,
+                message:
+                    "La préparation prend plus long que prévu. Revenez dans un instant depuis « À traiter ».",
+              ),
+            );
+            return;
+          }
+          if (state is! ReportPreparing) emit(const ReportPreparing());
+          if (isClosed) return;
+          await Future<void>.delayed(pollInterval);
+          if (isClosed) return;
+      }
+    }
   }
 
   Future<void> confirm(String proposalId) =>
@@ -80,6 +141,40 @@ class ReportCubit extends Cubit<ReportState> {
       await _repository.regenerate(current.data.reportId),
       fallback: current.data,
     );
+  }
+
+  Future<void> finalize({required bool sendToOwner}) async {
+    final current = state;
+    if (current is! ReportLoaded ||
+        !current.data.canFinalize ||
+        current.data.isReadOnly) {
+      return;
+    }
+    emit(ReportLoaded(current.data, busy: true));
+    switch (await _repository.finalize(
+      current.data.reportId,
+      sendToOwner: sendToOwner,
+    )) {
+      case Success(:final value):
+        emit(ReportFinalized(reportId: current.data.reportId, outcome: value));
+      case Err(:final failure):
+        emit(ReportLoaded(current.data, message: failure.message));
+    }
+  }
+
+  /// Le garde-fou e-mail : compléter la fiche, puis envoyer. Deux appels, un
+  /// seul geste pour le praticien.
+  Future<void> addOwnerEmailThenFinalize(String email) async {
+    final current = state;
+    if (current is! ReportLoaded) return;
+    emit(ReportLoaded(current.data, busy: true));
+    if (await _repository.updateOwnerEmail(current.data.owner.id, email)
+        case Err(:final failure)) {
+      emit(ReportLoaded(current.data, message: failure.message));
+      return;
+    }
+    emit(ReportLoaded(current.data.withOwnerEmail(email)));
+    await finalize(sendToOwner: true);
   }
 
   Future<void> _decide(String proposalId, SectionState decision) async {

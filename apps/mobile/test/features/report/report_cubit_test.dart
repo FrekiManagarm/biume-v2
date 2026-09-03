@@ -23,11 +23,28 @@ const proposition = Proposal(
   anchor: ancre,
 );
 
+const toutesDecidees = {
+  ReportSection.clinical: SectionState.confirmed,
+  ReportSection.anatomical: SectionState.notApplicable,
+  ReportSection.recommendations: SectionState.confirmed,
+  ReportSection.notes: SectionState.notApplicable,
+};
+
 ReportProposals propositions({
   List<Proposal> items = const [proposition],
   Map<ReportSection, SectionState>? sections,
+  ReportStatus status = ReportStatus.draft,
+  ReportOwner owner = const ReportOwner(
+    id: 'owner-1',
+    name: 'Camille Roux',
+    email: 'camille@example.org',
+  ),
 }) => ReportProposals(
   reportId: 'report-1',
+  status: status,
+  patientName: 'Filou',
+  owner: owner,
+  captureId: null,
   transcript: 'Filou présente une tension lombaire à droite.',
   proposals: items,
   sections:
@@ -165,5 +182,100 @@ void main() {
       expect(state.data.proposals, hasLength(1));
       expect(state.message, 'Connexion indisponible.');
     },
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'attend l\'extraction puis affiche les propositions',
+    setUp: () {
+      var calls = 0;
+      when(() => repository.load(any())).thenAnswer((_) async {
+        calls++;
+        return Success(calls < 3 ? propositions(items: const []) : propositions());
+      });
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero),
+    act: (cubit) => cubit.load('report-1'),
+    expect: () => [
+      const ReportLoading(),
+      const ReportPreparing(),
+      isA<ReportLoaded>().having((s) => s.data.proposals.length, 'propositions', 1),
+    ],
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'renonce à attendre après le nombre maximal d\'interrogations',
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions(items: const [])));
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero, maxPolls: 2),
+    act: (cubit) => cubit.load('report-1'),
+    expect: () => [
+      const ReportLoading(),
+      const ReportPreparing(),
+      isA<ReportLoaded>().having((s) => s.message, 'message', contains('plus long que prévu')),
+    ],
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'n\'attend pas sur un rapport finalisé sans proposition',
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(propositions(items: const [], status: ReportStatus.sent)),
+      );
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero),
+    act: (cubit) => cubit.load('report-1'),
+    expect: () => [const ReportLoading(), isA<ReportLoaded>()],
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'finalise et envoie',
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions(sections: toutesDecidees)));
+      when(() => repository.finalize('report-1', sendToOwner: true)).thenAnswer(
+        (_) async => const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
+      );
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero),
+    act: (cubit) async {
+      await cubit.load('report-1');
+      await cubit.finalize(sendToOwner: true);
+    },
+    verify: (cubit) => expect(cubit.state, isA<ReportFinalized>().having((s) => s.outcome.sentToOwner, 'envoyé', true)),
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'complète l\'e-mail puis finalise',
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(propositions(sections: toutesDecidees, owner: const ReportOwner(id: 'owner-1', name: 'Camille Roux', email: null))),
+      );
+      when(() => repository.updateOwnerEmail('owner-1', 'camille@example.org')).thenAnswer((_) async => const Success(null));
+      when(() => repository.finalize('report-1', sendToOwner: true)).thenAnswer(
+        (_) async => const Success(FinalizeOutcome(status: ReportStatus.sent, sentToOwner: true)),
+      );
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero),
+    act: (cubit) async {
+      await cubit.load('report-1');
+      await cubit.addOwnerEmailThenFinalize('camille@example.org');
+    },
+    verify: (_) => verifyInOrder([
+      () => repository.updateOwnerEmail('owner-1', 'camille@example.org'),
+      () => repository.finalize('report-1', sendToOwner: true),
+    ]),
+  );
+
+  blocTest<ReportCubit, ReportState>(
+    'refuse de finaliser tant qu\'une section reste à vérifier',
+    setUp: () {
+      when(() => repository.load(any())).thenAnswer((_) async => Success(propositions()));
+    },
+    build: () => ReportCubit(repository, pollInterval: Duration.zero),
+    act: (cubit) async {
+      await cubit.load('report-1');
+      await cubit.finalize(sendToOwner: true);
+    },
+    verify: (_) => verifyNever(() => repository.finalize(any(), sendToOwner: any(named: 'sendToOwner'))),
   );
 }
