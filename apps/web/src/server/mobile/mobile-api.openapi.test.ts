@@ -38,6 +38,7 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/followups/actionable",
       "/api/mobile/v1/followups/{followUpId}/handled",
       "/api/mobile/v1/owners",
+      "/api/mobile/v1/owners/{ownerId}/email",
       "/api/mobile/v1/patients",
       "/api/mobile/v1/patients/{patientId}/history",
       "/api/mobile/v1/reports/{reportId}/finalize",

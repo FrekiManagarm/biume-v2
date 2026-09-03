@@ -20,6 +20,7 @@ import {
   mobilePatientsResponseSchema,
   moveAppointmentRequestSchema,
   moveAppointmentResponseSchema,
+  updateOwnerEmailRequestSchema,
 } from "@biume/contracts/mobile-records";
 import {
   correctTranscriptRequestSchema,
@@ -288,6 +289,25 @@ export const createPatientRoute = createRoute({
   request: { body: { content: json(createMobilePatientRequestSchema) } },
   responses: {
     201: { description: "Animal créé", content: json(mobilePatientSchema) },
+    ...errorResponses,
+  },
+});
+
+export const ownerIdParamsSchema = z.object({
+  ownerId: z.string().min(1).openapi({ param: { name: "ownerId", in: "path" } }),
+});
+
+export const updateOwnerEmailRoute = createRoute({
+  method: "post",
+  path: "/owners/{ownerId}/email",
+  security,
+  summary: "Compléter l'e-mail d'un propriétaire",
+  request: {
+    params: ownerIdParamsSchema,
+    body: { content: json(updateOwnerEmailRequestSchema) },
+  },
+  responses: {
+    200: { description: "Propriétaire mis à jour", content: json(mobileOwnerSchema) },
     ...errorResponses,
   },
 });

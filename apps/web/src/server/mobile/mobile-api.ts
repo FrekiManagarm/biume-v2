@@ -61,6 +61,7 @@ import {
   type MobilePatientsResponse,
   type MoveAppointmentRequest,
   type MoveAppointmentResponse,
+  type UpdateOwnerEmailRequest,
 } from "@biume/contracts/mobile-records";
 import {
   agendaQuerySchema,
@@ -88,6 +89,7 @@ import {
   patientHistoryRoute,
   patientsRoute,
   sessionRoute,
+  updateOwnerEmailRoute,
   uploadSessionRoute,
 } from "./mobile-api.routes";
 
@@ -176,6 +178,11 @@ export type MobileApiPorts = {
     appointmentId: string,
     slot: MoveAppointmentRequest,
   ): Promise<MoveAppointmentResponse>;
+  updateOwnerEmail(
+    actor: CaptureActor,
+    ownerId: string,
+    request: UpdateOwnerEmailRequest,
+  ): Promise<MobileOwner>;
   getTranscript(
     actor: CaptureActor,
     captureId: string,
@@ -512,6 +519,15 @@ export function createMobileApiApp(
     return validated(c, 201, mobileOwnerSchema, created);
   });
 
+  app.openapi(updateOwnerEmailRoute, async (c) => {
+    const updated = await ports.updateOwnerEmail(
+      c.get("actor"),
+      c.req.valid("param").ownerId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, mobileOwnerSchema, updated);
+  });
+
   app.openapi(createPatientRoute, async (c) => {
     const created = await ports.createPatient(
       c.get("actor"),
@@ -578,6 +594,7 @@ export function createMobileApiApp(
   methodNotAllowed("/patients");
   methodNotAllowed("/patients/:patientId/history");
   methodNotAllowed("/appointments/:appointmentId/move");
+  methodNotAllowed("/owners/:ownerId/email");
   methodNotAllowed("/captures/:captureId/transcript");
   methodNotAllowed("/captures/:captureId/extract");
   methodNotAllowed("/reports/:reportId/proposals");

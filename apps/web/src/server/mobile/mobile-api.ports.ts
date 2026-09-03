@@ -19,6 +19,7 @@ import {
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   gt,
@@ -937,6 +938,30 @@ export async function createProductionMobileApiPorts(
       if (!created) throw new MobileRequestError("server_error", { retryable: true });
 
       return toMobileOwner({ ...created, patientCount: 0 });
+    },
+
+    async updateOwnerEmail(actor, ownerId, request) {
+      const [updated] = await db
+        .update(clients)
+        .set({ email: request.email })
+        .where(
+          and(eq(clients.id, ownerId), eq(clients.organizationId, actor.organizationId)),
+        )
+        .returning({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          phone: clients.phone,
+          city: clients.city,
+        });
+      if (!updated) throw new MobileRequestError("not_found");
+
+      const [counted] = await db
+        .select({ patientCount: count() })
+        .from(pets)
+        .where(eq(pets.ownerId, ownerId));
+
+      return toMobileOwner({ ...updated, patientCount: counted?.patientCount ?? 0 });
     },
 
     async createPatient(actor, request) {
