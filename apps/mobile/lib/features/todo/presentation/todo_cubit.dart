@@ -59,9 +59,19 @@ class TodoCubit extends Cubit<TodoState> {
   StreamSubscription<List<LocalCapture>>? _subscription;
   Timer? _timer;
 
+  // `isClosed` ne devient vrai qu'à l'exécution de `super.close()`, et notre
+  // `close()` l'appelle en dernier, après avoir attendu l'annulation de
+  // `_subscription`. Une réponse qui arrive pendant cette attente verrait
+  // encore `isClosed` à `false` et passerait la garde. Ce drapeau, posé au
+  // tout début de `close()`, couvre cette fenêtre : toute garde doit le lire
+  // en plus de `isClosed`.
+  bool _closing = false;
+
+  bool get _shuttingDown => isClosed || _closing;
+
   void start() {
     _subscription = _store.watchAll().listen((rows) {
-      if (isClosed) return;
+      if (_shuttingDown) return;
       _local = rows;
       _publish(state.offlineMessage);
     });
@@ -70,7 +80,7 @@ class TodoCubit extends Cubit<TodoState> {
 
   Future<void> refresh() async {
     final result = await _api.list();
-    if (isClosed) return;
+    if (_shuttingDown) return;
     switch (result) {
       case Success(:final value):
         _remote = value;
@@ -84,18 +94,18 @@ class TodoCubit extends Cubit<TodoState> {
     // cours » : sinon le retour au premier plan suffit, et un téléphone qui
     // interroge le serveur sans raison vide sa batterie dans une journée de
     // tournée.
-    if (!isClosed &&
+    if (!_shuttingDown &&
         state.items.any(
           (i) => i.kind == TodoKind.transcribing || i.kind == TodoKind.preparing,
         )) {
       _timer = Timer(pollInterval, () {
-        if (!isClosed) unawaited(refresh());
+        if (!_shuttingDown) unawaited(refresh());
       });
     }
   }
 
   void _publish(String? offlineMessage) {
-    if (isClosed) return;
+    if (_shuttingDown) return;
 
     final now = _now();
     final requestedAt = {
@@ -137,6 +147,10 @@ class TodoCubit extends Cubit<TodoState> {
 
   @override
   Future<void> close() async {
+    // Posé avant la moindre annulation : c'est ce qui ferme la fenêtre entre
+    // le début de `close()` et l'exécution de `super.close()`, pendant
+    // laquelle `isClosed` mentirait encore.
+    _closing = true;
     _timer?.cancel();
     await _subscription?.cancel();
     return super.close();

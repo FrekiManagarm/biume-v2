@@ -216,4 +216,55 @@ void main() {
     expect(states.length, avantFermeture);
     await subscription.cancel();
   });
+
+  /// Le cas ci-dessus ne prouve rien à lui seul : un tour complet de boucle
+  /// d'événements avant `close()` laisse toujours le `refresh()` initial déjà
+  /// terminé. Ici, la requête reste délibérément en vol — pilotée par un
+  /// `Completer` — jusqu'à ce que `close()` ait déjà commencé (posé son
+  /// drapeau, annulé le minuteur, et soit en train d'attendre l'annulation de
+  /// l'abonnement). C'est exactement la fenêtre que `isClosed` seul ne
+  /// couvre pas, puisqu'il ne devient vrai qu'à l'exécution de
+  /// `super.close()`, en tout dernier.
+  test(
+    "n'émet plus si la requête en vol répond pendant que close() attend "
+    "l'annulation de l'abonnement",
+    () async {
+      store.emitAll([localQueued('c-local')]);
+      final completer = Completer<Result<List<TodoItem>>>();
+      when(() => api.list()).thenAnswer((_) => completer.future);
+
+      final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+      final states = <TodoState>[];
+      final subscription = cubit.stream.listen(states.add);
+
+      cubit.start();
+      // La file locale a eu le temps de se publier ; le `refresh()` a
+      // démarré sa requête, mais elle n'a pas encore répondu — elle reste en
+      // vol.
+      await Future<void>.delayed(Duration.zero);
+      final apresFileLocale = List<TodoState>.of(states);
+
+      // `close()` démarre : elle pose son drapeau, annule le minuteur, puis
+      // suspend sur `await _subscription?.cancel()`. C'est cette attente que
+      // la réponse va traverser, avant que `super.close()` — et donc
+      // `isClosed` — n'ait eu lieu.
+      final closeFuture = cubit.close();
+      // Un contenu différent de ce qui est déjà publié : si l'émission
+      // tardive passe la garde, `Cubit.emit` ne peut pas la confondre avec
+      // un doublon et l'avaler silencieusement — elle doit apparaître comme
+      // un état de plus, ou faire planter `emit` si le cubit est déjà
+      // réellement fermé à ce moment-là. Les deux font rougir ce test.
+      completer.complete(
+        Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
+      );
+      await closeFuture;
+
+      // Laisse la continuation de `refresh()`, si elle a échappé au drapeau,
+      // le temps de s'exécuter et d'émettre.
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states, apresFileLocale);
+      await subscription.cancel();
+    },
+  );
 }

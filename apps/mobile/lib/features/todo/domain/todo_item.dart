@@ -88,4 +88,30 @@ class TodoItem {
     appointmentId: appointmentId,
     patientName: patientName,
   );
+
+  // `captureId` seul ne suffit pas à identifier ce qu'affiche l'élément : son
+  // genre change au cours de sa vie (`transcriptToReview` devient
+  // `preparing`, par exemple), et deux publications avec le même
+  // `captureId` mais un genre différent sont deux états visuels distincts.
+  // Comparer sur chaque champ est ce qui laisse `Cubit.emit` déduplique
+  // correctement deux publications réellement identiques.
+  @override
+  bool operator ==(Object other) =>
+      other is TodoItem &&
+      other.kind == kind &&
+      other.captureId == captureId &&
+      other.reportId == reportId &&
+      other.appointmentId == appointmentId &&
+      other.patientName == patientName &&
+      other.updatedAt == updatedAt;
+
+  @override
+  int get hashCode => Object.hash(
+    kind,
+    captureId,
+    reportId,
+    appointmentId,
+    patientName,
+    updatedAt,
+  );
 }
