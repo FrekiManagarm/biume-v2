@@ -125,14 +125,15 @@ class ReportCubit extends Cubit<ReportState> {
     if (current is! ReportLoaded) return;
 
     emit(ReportLoaded(current.data, busy: true));
-    _apply(
-      await _repository.decideSection(
-        reportId: current.data.reportId,
-        section: section,
-        decision: decision,
-      ),
-      fallback: current.data,
+    final result = await _repository.decideSection(
+      reportId: current.data.reportId,
+      section: section,
+      decision: decision,
     );
+    // Même geste, même risque : le praticien a pu quitter l'écran pendant
+    // que la décision était en vol.
+    if (isClosed) return;
+    _apply(result, fallback: current.data);
   }
 
   /// Régénérer est une action **explicite** du praticien, et elle ne touche que
@@ -142,10 +143,10 @@ class ReportCubit extends Cubit<ReportState> {
     if (current is! ReportLoaded) return;
 
     emit(ReportLoaded(current.data, busy: true));
-    _apply(
-      await _repository.regenerate(current.data.reportId),
-      fallback: current.data,
-    );
+    final result = await _repository.regenerate(current.data.reportId);
+    // Même geste, même risque.
+    if (isClosed) return;
+    _apply(result, fallback: current.data);
   }
 
   Future<void> finalize({required bool sendToOwner}) async {
@@ -197,14 +198,15 @@ class ReportCubit extends Cubit<ReportState> {
     if (current is! ReportLoaded) return;
 
     emit(ReportLoaded(current.data, busy: true));
-    _apply(
-      await _repository.decide(
-        reportId: current.data.reportId,
-        proposalId: proposalId,
-        decision: decision,
-      ),
-      fallback: current.data,
+    final result = await _repository.decide(
+      reportId: current.data.reportId,
+      proposalId: proposalId,
+      decision: decision,
     );
+    // Même geste, même risque : le praticien a pu quitter l'écran pendant
+    // que la décision était en vol.
+    if (isClosed) return;
+    _apply(result, fallback: current.data);
   }
 
   void _apply(Result<ReportProposals> result, {ReportProposals? fallback}) {

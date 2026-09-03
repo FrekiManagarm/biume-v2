@@ -317,4 +317,28 @@ void main() {
 
     await expectLater(finalizeFuture, completes);
   });
+
+  /// Même mécanisme, sur un geste déclenché par un bouton de carte
+  /// (« Valider ») plutôt que par le chargement initial de l'écran.
+  test('confirm ne plante pas si le cubit est fermé pendant la requête', () async {
+    when(() => repository.load(any()))
+        .thenAnswer((_) async => Success(propositions()));
+    final completer = Completer<Result<ReportProposals>>();
+    when(
+      () => repository.decide(
+        reportId: any(named: 'reportId'),
+        proposalId: any(named: 'proposalId'),
+        decision: any(named: 'decision'),
+      ),
+    ).thenAnswer((_) => completer.future);
+
+    final cubit = ReportCubit(repository);
+    await cubit.load('report-1');
+    final confirmFuture = cubit.confirm('proposal-1');
+
+    await cubit.close();
+    completer.complete(Success(propositions()));
+
+    await expectLater(confirmFuture, completes);
+  });
 }

@@ -134,6 +134,11 @@ class TranscriptCubit extends Cubit<TranscriptState> {
     emit(const TranscriptLoading());
 
     final result = await _repository.load(captureId);
+    // Le praticien reste libre de quitter cet écran pendant l'attente :
+    // `BlocProvider` ferme alors le cubit avant que la requête ne revienne.
+    // Émettre sur un cubit fermé lève un `StateError` que personne
+    // n'attraperait ici.
+    if (isClosed) return;
     switch (result) {
       case Err(:final failure):
         emit(TranscriptUnavailable(failure.message));
@@ -155,6 +160,9 @@ class TranscriptCubit extends Cubit<TranscriptState> {
       text,
     );
 
+    // Même geste, même risque : le praticien a pu quitter l'écran pendant
+    // que la correction était en vol.
+    if (isClosed) return;
     switch (result) {
       case Success(:final value):
         emit(TranscriptReady(value));
