@@ -53,10 +53,19 @@ class PatientPickerCubit extends Cubit<PatientPickerState> {
   final PatientRepository _repository;
   StreamSubscription<List<Patient>>? _subscription;
 
+  // `isClosed` ne devient vrai qu'à l'exécution de `super.close()`, et notre
+  // `close()` l'appelle en dernier, après avoir attendu l'annulation de
+  // `_subscription`. Un événement du flux qui arrive pendant cette attente
+  // verrait encore `isClosed` à `false` et passerait la garde — une
+  // exception dans un écouteur de flux n'est rattrapée par personne. Ce
+  // drapeau, posé au tout début de `close()`, couvre cette fenêtre.
+  bool _closing = false;
+
   void start() {
-    _subscription = _repository.watchAll().listen(
-      (all) => emit(PatientPickerState(all: all, query: state.query)),
-    );
+    _subscription = _repository.watchAll().listen((all) {
+      if (isClosed || _closing) return;
+      emit(PatientPickerState(all: all, query: state.query));
+    });
   }
 
   void search(String query) =>
@@ -64,6 +73,7 @@ class PatientPickerCubit extends Cubit<PatientPickerState> {
 
   @override
   Future<void> close() async {
+    _closing = true;
     await _subscription?.cancel();
     return super.close();
   }

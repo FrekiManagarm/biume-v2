@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:biume_mobile/features/records/domain/patient.dart';
 import 'package:biume_mobile/features/records/domain/patient_repository.dart';
 import 'package:biume_mobile/features/records/presentation/patient_picker_cubit.dart';
@@ -127,4 +129,55 @@ void main() {
     await cubit.close();
     expect(cubit.isClosed, isTrue);
   });
+
+  /// `close()` attend `await _subscription?.cancel()`, qui peut réellement
+  /// prendre du temps (un flux drift libère des ressources). Ce test ralentit
+  /// délibérément cette annulation — via `onCancel` — et tente de faire
+  /// arriver une seconde valeur précisément pendant cette attente, pour
+  /// vérifier qu'elle n'atteint jamais `emit`.
+  ///
+  /// Contrairement au cas `TodoCubit` (l'appel réseau en vol n'était médié
+  /// par aucun abonnement), ce test passe **avec ou sans** le drapeau
+  /// `_closing` : `StreamSubscription.cancel()` garantit à lui seul qu'aucune
+  /// donnée n'est plus délivrée dès qu'il est appelé, quel que soit le temps
+  /// que prend le `Future` qu'il retourne. Vérifié en repassant temporairement
+  /// la garde à `if (isClosed) return;` seule : ce test reste vert. Il est
+  /// gardé comme verrou de régression sur ce comportement et comme
+  /// documentation du drapeau, pas comme preuve que celui-ci était
+  /// nécessaire pour ce chemin précis.
+  test(
+    "n'émet plus si une valeur arrive pendant que l'annulation de "
+    "l'abonnement prend du temps",
+    () async {
+      final onCancelGate = Completer<void>();
+      final controller = StreamController<List<Patient>>.broadcast(
+        onCancel: () => onCancelGate.future,
+      );
+      when(() => repository.watchAll()).thenAnswer((_) => controller.stream);
+
+      final cubit = PatientPickerCubit(repository);
+      final states = <PatientPickerState>[];
+      final subscription = cubit.stream.listen(states.add);
+
+      cubit.start();
+      controller.add([filou]);
+      await Future<void>.delayed(Duration.zero);
+      final apresPremiereValeur = List<PatientPickerState>.of(states);
+
+      final closeFuture = cubit.close();
+      // `close()` est maintenant suspendu dans `_subscription?.cancel()`,
+      // qui attend `onCancelGate` : une seconde valeur tente d'arriver
+      // précisément pendant cette fenêtre, avant que `super.close()` —
+      // et donc `isClosed` — n'ait eu lieu.
+      controller.add([filou, rex]);
+      await Future<void>.delayed(Duration.zero);
+      onCancelGate.complete();
+      await closeFuture;
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states, apresPremiereValeur);
+      await subscription.cancel();
+      await controller.close();
+    },
+  );
 }
