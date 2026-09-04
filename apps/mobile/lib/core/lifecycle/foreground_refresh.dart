@@ -6,6 +6,7 @@ import '../../features/agenda/domain/agenda_repository.dart';
 import '../../features/capture/domain/sync_engine.dart';
 import '../../features/records/domain/patient_repository.dart';
 import '../../injection_container.dart';
+import '../background/background_refresh.dart';
 
 /// Ce qui doit être à jour avant d'être sur le terrain : la file part, le
 /// cache des animaux se remplit, la fenêtre d'agenda se rafraîchit. Appelé à
@@ -33,6 +34,22 @@ Future<void> refreshForeground() async {
       .first;
   final patientIds = appointments.map((a) => a.patientId).toSet();
   await getIt<PatientRepository>().refreshSheetsFor(patientIds).then((_) {});
+
+  // Le même cycle qu'en arrière-plan, mais muet : ce que le praticien a sous
+  // les yeux ne doit pas le réveiller une demi-heure plus tard. La file, elle,
+  // vient de repartir juste au-dessus.
+  await runBackgroundCycle(
+    sync: getIt(),
+    todo: getIt(),
+    followUps: getIt(),
+    store: getIt(),
+    memory: getIt(),
+    notifications: getIt(),
+    telemetry: getIt(),
+    now: DateTime.now,
+    notify: false,
+    runSync: false,
+  );
 }
 
 class ForegroundRefresh with WidgetsBindingObserver {

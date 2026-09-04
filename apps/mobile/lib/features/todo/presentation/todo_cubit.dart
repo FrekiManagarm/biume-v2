@@ -144,50 +144,14 @@ class TodoCubit extends Cubit<TodoState> {
   void _publish(String? offlineMessage) {
     if (_shuttingDown) return;
 
-    final now = _now();
-    final requestedAt = {
-      for (final c in _local)
-        if (c.extractionRequestedAt != null) c.id: c.extractionRequestedAt!,
-    };
-
-    // Les dictées locales non envoyées passent en tête : ce sont les seules
-    // dont le praticien peut faire quelque chose sans réseau.
-    final local = _local
-        .where(
-          (c) =>
-              c.status == LocalCaptureStatus.queued ||
-              c.status == LocalCaptureStatus.uploading ||
-              c.status == LocalCaptureStatus.needsAction,
-        )
-        .map(
-          (c) => TodoItem(
-            kind: c.status == LocalCaptureStatus.needsAction
-                ? TodoKind.uploadBlocked
-                : TodoKind.pendingUpload,
-            captureId: c.id,
-            appointmentId: c.appointmentId,
-            updatedAt: c.createdAt,
-          ),
-        );
-
-    final remote = _remote.map((item) {
-      final at = requestedAt[item.captureId];
-      final preparing =
-          item.kind == TodoKind.transcriptToReview &&
-          at != null &&
-          now.difference(at) < preparingWindow;
-      return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
-    });
-
-    // Les suivis s'intercalent entre les deux : un propriétaire qui attend
-    // passe avant un brouillon, jamais avant une dictée jamais partie.
     emit(
       TodoState(
-        items: [
-          ...local,
-          ..._followUpItems.map((f) => TodoItem.followUp(f, now: now)),
-          ...remote,
-        ],
+        items: composeTodo(
+          local: _local,
+          followUps: _followUpItems,
+          remote: _remote,
+          now: _now(),
+        ),
         offlineMessage: offlineMessage,
       ),
     );
@@ -203,4 +167,59 @@ class TodoCubit extends Cubit<TodoState> {
     await _subscription?.cancel();
     return super.close();
   }
+}
+
+/// Ce que « À traiter » montre, à partir des trois sources.
+///
+/// Pure et hors du cubit : le réveil en arrière-plan compose exactement la
+/// même liste, sans écran ni cubit, pour décider quoi notifier. Deux
+/// compositions différentes finiraient par notifier autre chose que ce que le
+/// praticien voit.
+List<TodoItem> composeTodo({
+  required List<LocalCapture> local,
+  required List<FollowUp> followUps,
+  required List<TodoItem> remote,
+  required DateTime now,
+}) {
+  final requestedAt = {
+    for (final c in local)
+      if (c.extractionRequestedAt != null) c.id: c.extractionRequestedAt!,
+  };
+
+  // Les dictées locales non envoyées passent en tête : ce sont les seules
+  // dont le praticien peut faire quelque chose sans réseau.
+  final locales = local
+      .where(
+        (c) =>
+            c.status == LocalCaptureStatus.queued ||
+            c.status == LocalCaptureStatus.uploading ||
+            c.status == LocalCaptureStatus.needsAction,
+      )
+      .map(
+        (c) => TodoItem(
+          kind: c.status == LocalCaptureStatus.needsAction
+              ? TodoKind.uploadBlocked
+              : TodoKind.pendingUpload,
+          captureId: c.id,
+          appointmentId: c.appointmentId,
+          updatedAt: c.createdAt,
+        ),
+      );
+
+  final distants = remote.map((item) {
+    final at = requestedAt[item.captureId];
+    final preparing =
+        item.kind == TodoKind.transcriptToReview &&
+        at != null &&
+        now.difference(at) < TodoCubit.preparingWindow;
+    return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
+  });
+
+  // Les suivis s'intercalent entre les deux : un propriétaire qui attend
+  // passe avant un brouillon, jamais avant une dictée jamais partie.
+  return [
+    ...locales,
+    ...followUps.map((f) => TodoItem.followUp(f, now: now)),
+    ...distants,
+  ];
 }

@@ -11,6 +11,8 @@ import 'core/crypto/device_key.dart';
 import 'core/crypto/local_cipher.dart';
 import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
+import 'core/notifications/local_notifications.dart';
+import 'core/notifications/notification_memory.dart';
 import 'core/telemetry/telemetry.dart';
 import 'features/agenda/data/agenda_repository_impl.dart';
 import 'features/agenda/data/http_appointment_write_repository.dart';
@@ -115,6 +117,10 @@ Future<void> configureDependencies() async {
       () => HttpActionableFollowUpRepository(getIt()),
     )
     ..registerLazySingleton<TodoApi>(() => HttpTodoApi(getIt()))
+    ..registerLazySingleton<NotificationMemory>(
+      () => DriftNotificationMemory(getIt()),
+    )
+    ..registerLazySingleton(LocalNotifications.new)
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
     // de dictée en veut un neuf, et le précédent doit être libéré.
     ..registerFactory<AudioRecorder>(RecordAudioRecorder.new)
