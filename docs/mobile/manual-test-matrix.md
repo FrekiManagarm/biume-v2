@@ -480,3 +480,185 @@ réussit, l'envoi vers TestFlight se fait à la main via Transporter.
 | 6 — Sélecteur de date, hors ligne | — | — | — | — | non exécuté | — |
 | 7 — Nouvelle séance en mode avion | — | — | — | — | non exécuté | — |
 | Build TestFlight | — | — | — | — | non exécuté | — |
+
+## Boucle de retour (lot C)
+
+**Non exécuté.** Le lot C referme la boucle : quand un propriétaire répond au
+questionnaire de suivi, le praticien l'apprend sans avoir à ouvrir
+l'application, et traite le suivi en trois gestes. Aucun push n'est
+construit — c'est un réveil périodique, accordé par le système, qui pose une
+notification locale. Les six scénarios ci-dessous vérifient cette chaîne sur
+téléphone réel, et **mesurent** le délai réel : c'est ce chiffre qui décidera,
+ou non, d'ouvrir un jour le chantier push.
+
+**Démarrer le serveur et l'application :**
+
+```bash
+bun --filter @biume/web dev
+```
+
+Puis, dans un autre terminal, depuis `apps/mobile` :
+
+```bash
+flutter run --dart-define-from-file=dart_define/local.json
+```
+
+**Préparatifs communs, à faire une fois avant de commencer :**
+
+- un compte praticien connecté, avec une organisation active ;
+- **un compte rendu finalisé avec un suivi programmé**, dont l'échéance est
+  déjà passée et dont le lien du questionnaire (`/r/<jeton>`) a été envoyé au
+  propriétaire. Sans lui, aucun scénario ne peut commencer : c'est la réponse
+  du propriétaire qui déclenche toute la chaîne. Le parcours du lot A permet
+  d'en produire un ;
+- **un second appareil** (ou un navigateur privé) pour répondre au
+  questionnaire à la place du propriétaire ;
+- la fiche du propriétaire renseigne un **téléphone** et un **e-mail** : ce
+  sont eux qui allument les boutons « Appeler » et « Écrire » ;
+- avoir **accepté les notifications** quand l'application les demande, juste
+  après la connexion. Si elles ont été refusées, les réactiver dans les
+  réglages système avant de commencer — sinon aucun scénario ne montrera quoi
+  que ce soit.
+
+### Scénario 1 — Une réponse de propriétaire réveille l'application
+
+**Préparatifs :** l'application est connectée, puis **mise en arrière-plan**
+(bouton d'accueil, sans la fermer).
+
+**Gestes :**
+1. Depuis le second appareil, ouvrir le lien `/r/<jeton>` du questionnaire.
+2. Répondre « Moins bien », écrire une phrase dans la réaction observée, et
+   cocher la demande de recontact. Valider.
+3. Attendre le réveil du téléphone du praticien. Sur Android, il arrive dans
+   les quinze minutes. Sur iOS, il peut tarder : pour ne pas attendre, le
+   forcer depuis le débogueur Xcode, application en pause :
+
+   ```
+   e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.biume.mobile.refresh"]
+   ```
+
+**On doit voir :**
+- une notification « Filou : un propriétaire demande une action » (avec le
+  vrai nom de l'animal), dont le texte dit le motif de l'alerte ;
+- en la touchant, l'écran du suivi s'ouvre directement — pas l'accueil ;
+- l'écran montre le motif, puis « État : moins bien. », la réaction observée
+  entre guillemets, et « Souhaite être recontacté. ».
+
+### Scénario 2 — Jamais deux fois pour la même chose
+
+**Préparatifs :** le scénario 1 vient d'avoir lieu, **sans** avoir touché la
+notification.
+
+**Gestes :**
+1. Rouvrir l'application normalement (par son icône).
+2. Lire « À traiter » en tête de l'accueil.
+3. Remettre l'application en arrière-plan et attendre (ou forcer) un second
+   réveil.
+
+**On doit voir :**
+- le suivi apparaît dans « À traiter », entre les dictées en attente d'envoi
+  et les comptes rendus ;
+- **aucune seconde notification** pour ce même suivi, ni à ce réveil ni aux
+  suivants.
+
+### Scénario 3 — Appeler ne clôt rien, « traité » est un geste
+
+**Préparatifs :** le suivi du scénario 1 est visible dans « À traiter ».
+
+**Gestes :**
+1. Ouvrir le suivi depuis « À traiter ».
+2. Toucher « Appeler » : l'application téléphone s'ouvre. Revenir à Biume
+   sans passer l'appel.
+3. Toucher « Prendre un rendez-vous ».
+4. Revenir en arrière, puis toucher « Marquer comme traité ».
+
+**On doit voir :**
+- après le retour de l'application téléphone, **le suivi est toujours là** ;
+- « Prendre un rendez-vous » ouvre la création de séance avec **l'animal déjà
+  choisi** ;
+- après « Marquer comme traité », l'écran se referme et le suivi a disparu de
+  « À traiter ».
+
+### Scénario 4 — Un brouillon oublié se rappelle une fois
+
+**Préparatifs :** un compte rendu laissé à l'état « Prêt à envoyer », jamais
+finalisé. L'application est en arrière-plan.
+
+**Gestes :**
+1. Attendre (ou forcer) un réveil.
+2. Attendre (ou forcer) un second réveil.
+
+**On doit voir :**
+- une notification « … : compte rendu en attente », qui ouvre le compte rendu
+  concerné ;
+- **une seule** : le second réveil ne redit rien.
+
+### Scénario 5 — Une dictée qui n'est jamais partie
+
+**Préparatifs :** arrêter le serveur web (`bun --filter @biume/web dev`),
+téléphone en ligne.
+
+**Gestes :**
+1. Dicter une séance et la valider : elle part en file et échoue.
+2. Laisser l'application tenter ses envois jusqu'à l'abandon (cinq échecs).
+3. Mettre l'application en arrière-plan, attendre (ou forcer) un réveil.
+
+**On doit voir :**
+- dans « À traiter », « Envoi impossible, appuyez pour réessayer » ;
+- une notification « Une dictée n'a pas pu être envoyée », qui ouvre
+  l'accueil ;
+- **aucune** notification pour les dictées qui sont parties normalement.
+
+### Scénario 6 — La mesure du délai, dans PostHog
+
+**Préparatifs :** une application construite avec une clé PostHog
+(`--dart-define=BIUME_POSTHOG_KEY=…`, voir `docs/mobile/operations.md`), et
+au moins un scénario 1 exécuté avec elle.
+
+**Gestes :**
+1. Ouvrir PostHog, projet mobile.
+2. Exécuter la requête SQL de la section 12 de `docs/mobile/operations.md`.
+
+**On doit voir :**
+- des événements `mobile.*` portant tous un `journeyId` ;
+- au moins un `mobile.followup_notified` avec une propriété `delayMs` ;
+- **aucun** nom de propriétaire, d'animal, note ou adresse dans les
+  propriétés.
+
+### Délai iOS observé
+
+À remplir avec **trois réveils réels** — pas simulés au débogueur. C'est la
+seule mesure qui autorise, ou non, à ouvrir le chantier push ; la reporter
+dans la section 5.11 de la spécification une fois les trois lignes remplies.
+
+| # | Date | Appareil / version iOS | Réponse du propriétaire (heure) | Notification (heure) | Délai |
+|---|------|------------------------|---------------------------------|----------------------|-------|
+| 1 | — | — | — | — | — |
+| 2 | — | — | — | — | — |
+| 3 | — | — | — | — | — |
+
+### Build de distribution (TestFlight)
+
+```bash
+cd apps/mobile && flutter build ipa \
+  --dart-define=BIUME_API_URL=https://biume.app \
+  --dart-define=BIUME_POSTHOG_KEY=<clé de projet>
+```
+
+Comme aux lots A et B, cette commande exige un compte développeur Apple
+configuré sur la machine qui construit l'app. S'il n'est pas disponible, le
+dire clairement dans le résultat ci-dessous plutôt que de consigner un échec
+technique — ce n'est pas la même chose.
+
+### Résultats
+
+| Scénario | Date | Testeur | Plateforme | Appareil | Résultat | Preuve |
+|----------|------|---------|------------|----------|----------|--------|
+| 1 — Réponse propriétaire, notification | — | — | — | — | non exécuté | — |
+| 2 — Jamais deux fois | — | — | — | — | non exécuté | — |
+| 3 — Appeler ne clôt rien | — | — | — | — | non exécuté | — |
+| 4 — Brouillon oublié | — | — | — | — | non exécuté | — |
+| 5 — Dictée jamais partie | — | — | — | — | non exécuté | — |
+| 6 — Mesure du délai dans PostHog | — | — | — | — | non exécuté | — |
+| Délai iOS sur trois réveils réels | — | — | — | — | non exécuté | — |
+| Build TestFlight | — | — | — | — | non exécuté | — |
