@@ -121,6 +121,13 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    // La liste construit ses éléments à la demande : le socle final n'existe
+    // dans l'arbre qu'une fois amené à l'écran.
+    await tester.scrollUntilVisible(
+      find.widgetWithText(FilledButton, 'Finaliser et partager'),
+      300,
+    );
+
     final bouton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Finaliser et partager'),
     );
@@ -201,6 +208,14 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.widgetWithText(FilledButton, 'Finaliser et partager'),
+      300,
+    );
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Finaliser et partager'),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Finaliser et partager'));
     await tester.pumpAndSettle();
 
