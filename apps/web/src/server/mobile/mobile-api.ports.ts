@@ -42,6 +42,7 @@ import {
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
+import { assertReportDecidable } from "./report-decision.service";
 import { buildSessionReportTitle } from "#/functions/appointment-report.service";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
 import {
@@ -864,6 +865,9 @@ export async function createProductionMobileApiPorts(
     async decideProposal(actor, reportId, proposalId, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // La lecture accepte un rapport finalisé, la décision jamais : un
+      // compte rendu envoyé au propriétaire ne bouge plus (5.10).
+      assertReportDecidable(current.status);
 
       const decided = await createProposalRepository().decide(
         reportId,
@@ -878,6 +882,10 @@ export async function createProductionMobileApiPorts(
     async decideSection(actor, reportId, section, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Sans cette garde, décider une section entière sur un rapport
+      // finalisé répondait 200 sans rien changer : un silence qui se lit
+      // comme un succès.
+      assertReportDecidable(current.status);
 
       await createProposalRepository().decideSection(
         reportId,
