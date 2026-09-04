@@ -30,7 +30,7 @@ export const HERO_PILL_BADGE = "Nouveau";
 export const HERO_PILL_TEXT =
   "Le compte rendu propriétaire de l'ostéopathe animalier";
 
-export const HERO_TITLE_LINE_1 = "Vos notes d'ostéopathe animalier,";
+export const HERO_TITLE_LINE_1 = "Vos notes de praticien animalier,";
 export const HERO_TITLE_LINE_2 = "un compte rendu prêt à envoyer.";
 
 export const HERO_LEAD =
