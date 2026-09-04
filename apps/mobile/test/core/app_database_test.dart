@@ -131,4 +131,91 @@ void main() {
     expect(row.patientId, 'pet-1');
     expect(row.extractionRequestedAt, isNull);
   });
+
+  /// Schéma v3 : les lignes déjà en cache avant la migration n'ont jamais
+  /// porté cette colonne. Un défaut sûr évite de la rendre obligatoire à la
+  /// lecture pour des données qui existent déjà.
+  test("une séance en cache n'est pas à domicile par défaut", () async {
+    await insertAppointment('appointment-1');
+
+    final row = await db.select(db.cachedAppointments).getSingle();
+    expect(row.atHome, isFalse);
+  });
+
+  test('la date de naissance et le dernier rendez-vous sont nullables', () async {
+    await db
+        .into(db.cachedPatients)
+        .insert(
+          CachedPatientsCompanion.insert(
+            id: 'pet-1',
+            ownerId: 'owner-1',
+            ownerName: 'Camille Roux',
+            name: 'Filou',
+            species: 'DOG',
+          ),
+        );
+
+    final row = await db.select(db.cachedPatients).getSingle();
+    expect(row.birthDate, isNull);
+    expect(row.lastAppointmentAt, isNull);
+  });
+
+  test('conserve un compte rendu mis en cache', () async {
+    await db
+        .into(db.cachedReports)
+        .insert(
+          CachedReportsCompanion.insert(
+            reportId: 'report-1',
+            patientId: 'pet-1',
+            status: 'FINALIZED',
+            payload: '{"summary":"RAS"}',
+            cachedAt: DateTime.utc(2026, 9, 3),
+          ),
+        );
+
+    final rows = await db.select(db.cachedReports).get();
+    expect(rows, hasLength(1));
+    expect(rows.first.appointmentId, isNull);
+  });
+
+  /// Un compte rendu en cache décrit un animal d'un cabinet précis : il doit
+  /// disparaître avec le reste du cache de lecture au changement
+  /// d'entreprise, sous peine d'exposer un cabinet dans un autre.
+  test('vider le cache emporte aussi les comptes rendus en cache', () async {
+    await db
+        .into(db.cachedReports)
+        .insert(
+          CachedReportsCompanion.insert(
+            reportId: 'report-1',
+            patientId: 'pet-1',
+            status: 'FINALIZED',
+            payload: '{}',
+            cachedAt: DateTime.utc(2026, 9, 3),
+          ),
+        );
+
+    await db.clearReadCache();
+
+    expect(await db.select(db.cachedReports).get(), isEmpty);
+  });
+
+  test('émet un flux sur une fenêtre de plusieurs jours', () async {
+    await insertAppointment('appointment-1');
+
+    final dansLaFenetre = await db
+        .watchAppointmentsBetween(
+          DateTime.utc(2026, 8, 20),
+          DateTime.utc(2026, 8, 23),
+        )
+        .first;
+    expect(dansLaFenetre, hasLength(1));
+
+    final horsFenetre = await db
+        .watchAppointmentsBetween(
+          DateTime.utc(2026, 8, 22),
+          DateTime.utc(2026, 8, 25),
+        )
+        .first;
+    expect(horsFenetre, isEmpty);
+  });
 }

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCaptureStore extends Mock implements CaptureStore {}
@@ -29,6 +30,11 @@ void main() {
   late MockAgendaRepository agendaRepository;
   late MockAuthRepository authRepository;
 
+  // `AgendaBody` formate les en-têtes de jour avec `DateFormat('fr_FR')`,
+  // que seul `main()` initialise en production. Les tests widgets ne passent
+  // pas par `main()` : sans cet appel, chaque en-tête de jour plante.
+  setUpAll(() => initializeDateFormatting('fr_FR'));
+
   setUp(() {
     store = MockCaptureStore();
     todoApi = MockTodoApi();
@@ -40,9 +46,9 @@ void main() {
     when(() => store.watchAll()).thenAnswer((_) => const Stream.empty());
     when(() => todoApi.list())
         .thenAnswer((_) async => const Success(<TodoItem>[]));
-    when(() => agendaRepository.watchDay(any()))
+    when(() => agendaRepository.watchWindow(any(), any()))
         .thenAnswer((_) => Stream.value(const []));
-    when(() => agendaRepository.refresh(any()))
+    when(() => agendaRepository.refreshWindow(any(), any()))
         .thenAnswer((_) async => const Success(null));
     when(() => authRepository.signOut()).thenAnswer((_) async {});
 

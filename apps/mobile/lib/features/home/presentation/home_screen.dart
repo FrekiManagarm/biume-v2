@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../injection_container.dart';
 import '../../agenda/domain/agenda_repository.dart';
+import '../../agenda/presentation/agenda_body.dart';
 import '../../agenda/presentation/agenda_cubit.dart';
-import '../../agenda/presentation/agenda_screen.dart';
 import '../../auth/presentation/auth_cubit.dart';
 import '../../capture/domain/capture_store.dart';
 import '../../todo/domain/todo_api.dart';

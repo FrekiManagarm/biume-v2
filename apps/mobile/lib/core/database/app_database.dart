@@ -65,6 +65,10 @@ class CachedAppointments extends Table {
   DateTimeColumn get endAt => dateTime()();
   TextColumn get status => text()();
 
+  /// Séance à domicile plutôt qu'au cabinet. Un défaut à `false` garde les
+  /// lignes déjà en cache avant la migration v3 lisibles sans exception.
+  BoolColumn get atHome => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -87,13 +91,36 @@ class CachedPatients extends Table {
   TextColumn get name => text()();
   TextColumn get species => text()();
   TextColumn get breed => text().nullable()();
+  DateTimeColumn get birthDate => dateTime().nullable()();
+  DateTimeColumn get lastAppointmentAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
+/// Le dernier compte rendu finalisé d'un animal, mis en cache pour la fiche
+/// hors ligne. Cache de lecture comme les autres tables `Cached*` : jetable,
+/// jamais mis en file, vidé avec le reste au changement d'entreprise.
+class CachedReports extends Table {
+  TextColumn get reportId => text()();
+  TextColumn get patientId => text()();
+  TextColumn get appointmentId => text().nullable()();
+  TextColumn get status => text()();
+  TextColumn get payload => text()();
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {reportId};
+}
+
 @DriftDatabase(
-  tables: [LocalCaptures, CachedAppointments, CachedOwners, CachedPatients],
+  tables: [
+    LocalCaptures,
+    CachedAppointments,
+    CachedOwners,
+    CachedPatients,
+    CachedReports,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -101,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -113,6 +140,18 @@ class AppDatabase extends _$AppDatabase {
           localCaptures.extractionRequestedAt,
         );
       }
+      if (from < 3) {
+        await migrator.addColumn(
+          cachedAppointments,
+          cachedAppointments.atHome,
+        );
+        await migrator.addColumn(cachedPatients, cachedPatients.birthDate);
+        await migrator.addColumn(
+          cachedPatients,
+          cachedPatients.lastAppointmentAt,
+        );
+        await migrator.createTable(cachedReports);
+      }
     },
   );
 
@@ -123,6 +162,7 @@ class AppDatabase extends _$AppDatabase {
       batch.deleteWhere(cachedAppointments, (_) => const Constant(true));
       batch.deleteWhere(cachedOwners, (_) => const Constant(true));
       batch.deleteWhere(cachedPatients, (_) => const Constant(true));
+      batch.deleteWhere(cachedReports, (_) => const Constant(true));
     });
   }
 
@@ -136,6 +176,19 @@ class AppDatabase extends _$AppDatabase {
     return (select(cachedAppointments)
           ..where((row) => row.beginAt.isBiggerOrEqualValue(start))
           ..where((row) => row.beginAt.isSmallerThanValue(end))
+          ..orderBy([(row) => OrderingTerm.asc(row.beginAt)]))
+        .watch();
+  }
+
+  /// Même requête que `watchAppointmentsOn`, avec les deux bornes fournies par
+  /// l'appelant : c'est ce qui porte la fenêtre de huit jours de l'agenda.
+  Stream<List<CachedAppointment>> watchAppointmentsBetween(
+    DateTime from,
+    DateTime to,
+  ) {
+    return (select(cachedAppointments)
+          ..where((row) => row.beginAt.isBiggerOrEqualValue(from))
+          ..where((row) => row.beginAt.isSmallerThanValue(to))
           ..orderBy([(row) => OrderingTerm.asc(row.beginAt)]))
         .watch();
   }
