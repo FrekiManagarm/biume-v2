@@ -179,3 +179,51 @@ distribution iOS externe attend l'inscription Apple Developer.
 Le contrat d'événements rejette toute propriété hors de cette liste, et le
 champ de version est contraint à un triplet numérique pour qu'il ne devienne
 pas un canal de texte libre.
+
+## 12. Télémétrie de parcours (PostHog)
+
+Le puits d'analyse n'existe que si le build porte une clé de projet. Sans elle,
+rien ne quitte le téléphone : le puits reste la console de développement.
+
+```bash
+flutter build ipa \
+  --dart-define=BIUME_API_URL=https://biume.app \
+  --dart-define=BIUME_POSTHOG_KEY=<clé de projet> \
+  --dart-define=BIUME_POSTHOG_HOST=https://eu.i.posthog.com
+```
+
+- [ ] La clé est celle du projet **mobile**, distincte du web.
+- [ ] L'hôte reste l'instance européenne : les événements d'un cabinet français
+      n'ont pas à traverser l'Atlantique.
+- [ ] `captureApplicationLifecycleEvents` est désactivé : seuls les événements
+      du parcours de compte rendu partent, et la liste blanche de `Telemetry`
+      les filtre déjà.
+- [ ] Le praticien est identifié à la connexion (`identify`) et l'identité est
+      remise à zéro à la déconnexion (`reset`) : l'appareil peut changer de
+      main.
+
+### Délai réel entre la réponse du propriétaire et la notification
+
+C'est le seul chiffre qui décidera, ou non, du chantier push. Il est porté par
+`mobile.followup_notified`, propriété `delayMs` : l'écart entre `answeredAt`
+côté serveur et l'instant où la notification locale s'affiche.
+
+Requête PostHog (SQL, onglet *Insights → SQL*) :
+
+```sql
+SELECT
+  toStartOfDay(timestamp)                              AS jour,
+  count()                                              AS notifications,
+  median(toFloat64(properties.delayMs)) / 60000        AS delai_median_minutes,
+  quantile(0.9)(toFloat64(properties.delayMs)) / 60000 AS delai_p90_minutes
+FROM events
+WHERE event = 'mobile.followup_notified'
+  AND timestamp > now() - INTERVAL 30 DAY
+GROUP BY jour
+ORDER BY jour DESC
+```
+
+À lire par plateforme (`properties.$os`) : Android tient à peu près les quinze
+minutes, iOS accorde ses réveils quand il le décide. Un délai médian iOS qui
+dépasse durablement l'heure est le signal — et la seule justification — d'un
+chantier push.

@@ -13,6 +13,7 @@ import 'core/background/background_refresh.dart';
 import 'core/database/app_database.dart';
 import 'core/lifecycle/foreground_refresh.dart';
 import 'core/notifications/local_notifications.dart';
+import 'core/telemetry/posthog_sink.dart';
 import 'features/auth/domain/auth_repository.dart';
 import 'features/auth/presentation/auth_cubit.dart';
 import 'injection_container.dart';
@@ -60,6 +61,11 @@ class _BiumeAppState extends State<BiumeApp> {
       if (state is AuthAuthenticated) {
         unawaited(refreshForeground());
         unawaited(_armerLesRappels());
+        // Le parcours mesuré est celui d'un praticien, pas d'un appareil : sans
+        // cette identité, deux tournées du même cabinet se confondent.
+        unawaited(identifyForTelemetry(state.session.userId));
+      } else if (state is AuthUnauthenticated) {
+        unawaited(resetTelemetryIdentity());
       }
     });
     _foreground.start();
