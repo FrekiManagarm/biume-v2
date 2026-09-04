@@ -151,6 +151,13 @@ export const followUpSchema = z
     answer: followUpAnswerSchema.nullable(),
     alertReasons: z.array(alertReasonSchema),
     handledAt: isoDateTimeSchema.nullable(),
+    // Ce qu'il faut pour agir depuis le téléphone sans revenir chercher la
+    // fiche : joindre le propriétaire, et reprendre un rendez-vous pour le bon
+    // animal. Trois champs nullables — une fiche client peut être incomplète,
+    // et un suivi reste lisible sans eux.
+    ownerPhone: z.string().nullable(),
+    ownerEmail: z.string().nullable(),
+    patientId: z.string().min(1).nullable(),
   })
   .strict();
 export type FollowUp = z.infer<typeof followUpSchema>;

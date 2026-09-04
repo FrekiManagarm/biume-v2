@@ -338,7 +338,10 @@ async function readFollowUp(
       answeredAt: followUp.answeredAt,
       handledAt: followUp.handledAt,
       patientName: pets.name,
+      patientId: advancedReport.patientId,
       ownerName: clients.name,
+      ownerPhone: clients.phone,
+      ownerEmail: clients.email,
     })
     .from(followUp)
     // Le nom de l'animal vient du rapport suivi, pas de « n'importe quel
@@ -374,6 +377,9 @@ async function readFollowUp(
     answer: row.answer ?? null,
     alertReasons: alerts.map((alert) => alert.reason as AlertReason),
     handledAt: row.handledAt?.toISOString() ?? null,
+    ownerPhone: row.ownerPhone ?? null,
+    ownerEmail: row.ownerEmail ?? null,
+    patientId: row.patientId ?? null,
   };
 }
 
