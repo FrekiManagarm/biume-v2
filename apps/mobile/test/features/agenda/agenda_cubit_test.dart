@@ -208,4 +208,46 @@ void main() {
     expect(states, isEmpty);
     await subscription.cancel();
   });
+
+  /// Le neuvième jour devenait inatteignable au deuxième essai : l'état émis
+  /// pour un jour hors fenêtre implémente l'égalité par valeur, donc
+  /// rechoisir la même date n'émettait rien et la feuille ne se rouvrait pas.
+  test('rechoisir la même date hors fenêtre rouvre la feuille', () async {
+    when(() => repository.fetchDay(any())).thenAnswer(
+      (_) async => Success<List<Appointment>>([rdv(DateTime(2026, 10, 1))]),
+    );
+
+    final cubit = AgendaCubit(repository, now: () => DateTime(2026, 9, 3, 8));
+    final states = <AgendaState>[];
+    final subscription = cubit.stream.listen(states.add);
+
+    await cubit.showDay(DateTime(2026, 10, 1));
+    await cubit.showDay(DateTime(2026, 10, 1));
+    // Le flux livre ses évènements en microtâche : sans ce tour de boucle,
+    // le second n'est pas encore arrivé.
+    await Future<void>.delayed(Duration.zero);
+
+    expect(states.whereType<AgendaDayLoaded>(), hasLength(2));
+
+    await subscription.cancel();
+    await cubit.close();
+  });
+
+  test('réessayer la même date qui échoue redit le message', () async {
+    when(() => repository.fetchDay(any()))
+        .thenAnswer((_) async => const Err(NetworkFailure()));
+
+    final cubit = AgendaCubit(repository, now: () => DateTime(2026, 9, 3, 8));
+    final states = <AgendaState>[];
+    final subscription = cubit.stream.listen(states.add);
+
+    await cubit.showDay(DateTime(2026, 10, 1));
+    await cubit.showDay(DateTime(2026, 10, 1));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(states.whereType<AgendaDayUnavailable>(), hasLength(2));
+
+    await subscription.cancel();
+    await cubit.close();
+  });
 }

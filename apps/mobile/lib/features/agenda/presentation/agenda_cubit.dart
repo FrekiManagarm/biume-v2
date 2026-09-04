@@ -93,14 +93,26 @@ class AgendaLoaded extends AgendaState {
 /// Réponse à `showDay` pour un jour choisi par le sélecteur de date : montrée
 /// dans une feuille modale, sans remplacer la fenêtre affichée en-dessous.
 class AgendaDayLoaded extends AgendaState {
-  const AgendaDayLoaded({required this.day, required this.appointments});
+  const AgendaDayLoaded({
+    required this.day,
+    required this.appointments,
+    required this.request,
+  });
 
   final DateTime day;
   final List<Appointment> appointments;
 
+  /// Le rang de la demande qui a produit cet état. Il entre dans l'égalité :
+  /// sans lui, rechoisir deux fois de suite la même date émettrait un état
+  /// identique au précédent, le cubit ne notifierait rien, et la feuille ne
+  /// se rouvrirait pas — le neuvième jour devenait inatteignable au deuxième
+  /// essai.
+  final int request;
+
   @override
   bool operator ==(Object other) =>
       other is AgendaDayLoaded &&
+      other.request == request &&
       other.day == day &&
       const ListEquality<Appointment>().equals(
         other.appointments,
@@ -110,6 +122,7 @@ class AgendaDayLoaded extends AgendaState {
   @override
   int get hashCode => Object.hash(
     3,
+    request,
     day,
     const ListEquality<Appointment>().hash(appointments),
   );
@@ -117,16 +130,22 @@ class AgendaDayLoaded extends AgendaState {
 
 /// Un jour hors fenêtre dont la lecture directe a échoué.
 class AgendaDayUnavailable extends AgendaState {
-  const AgendaDayUnavailable({required this.message});
+  const AgendaDayUnavailable({required this.message, required this.request});
 
   final String message;
 
-  @override
-  bool operator ==(Object other) =>
-      other is AgendaDayUnavailable && other.message == message;
+  /// Même raison que dans `AgendaDayLoaded` : réessayer la même date qui
+  /// échoue doit redire le message, pas se taire.
+  final int request;
 
   @override
-  int get hashCode => Object.hash(4, message);
+  bool operator ==(Object other) =>
+      other is AgendaDayUnavailable &&
+      other.request == request &&
+      other.message == message;
+
+  @override
+  int get hashCode => Object.hash(4, request, message);
 }
 
 /// Cubit de l'écran d'accueil : la fenêtre de huit jours (aujourd'hui et les
@@ -143,6 +162,10 @@ class AgendaCubit extends Cubit<AgendaState> {
   StreamSubscription<List<Appointment>>? _subscription;
   DateTime? _windowStart;
   AgendaLoaded? _lastLoaded;
+
+  /// Incrémenté à chaque `showDay` : c'est ce qui distingue deux réponses
+  /// identiques pour la même date, et fait rouvrir la feuille.
+  int _dayRequests = 0;
 
   static const _windowLength = Duration(days: 8);
 
@@ -205,13 +228,20 @@ class AgendaCubit extends Cubit<AgendaState> {
     final target = _dateOnly(day);
     final today = _dateOnly(_now());
     final windowEnd = today.add(_windowLength);
+    final request = ++_dayRequests;
 
     if (!target.isBefore(today) && target.isBefore(windowEnd)) {
       final match = _lastLoaded?.days.firstWhereOrNull(
         (candidate) => candidate.day == target,
       );
       if (match != null) {
-        emit(AgendaDayLoaded(day: match.day, appointments: match.appointments));
+        emit(
+          AgendaDayLoaded(
+            day: match.day,
+            appointments: match.appointments,
+            request: request,
+          ),
+        );
         return;
       }
     }
@@ -220,9 +250,13 @@ class AgendaCubit extends Cubit<AgendaState> {
     if (_shuttingDown) return;
     switch (result) {
       case Success(:final value):
-        emit(AgendaDayLoaded(day: target, appointments: value));
+        emit(
+          AgendaDayLoaded(day: target, appointments: value, request: request),
+        );
       case Err(:final failure):
-        emit(AgendaDayUnavailable(message: failure.message));
+        emit(
+          AgendaDayUnavailable(message: failure.message, request: request),
+        );
     }
   }
 
