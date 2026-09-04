@@ -77,6 +77,14 @@ class FinalizeOutcome {
 abstract class ReportRepository {
   Future<Result<ReportProposals>> load(String reportId);
 
+  /// Ouvre un compte rendu **passé** depuis la fiche animal : tente le
+  /// réseau, et sur une panne réseau seulement, retombe sur `CachedReports`
+  /// — le dernier compte rendu finalisé de l'animal, mis en cache pour cette
+  /// raison précise. Tout autre échec se propage tel quel : rien ne sert de
+  /// masquer un refus d'authentification derrière un cache qui n'y changerait
+  /// rien.
+  Future<Result<ReportProposals>> loadCachedOrRemote(String reportId);
+
   Future<Result<ReportProposals>> decide({
     required String reportId,
     required String proposalId,

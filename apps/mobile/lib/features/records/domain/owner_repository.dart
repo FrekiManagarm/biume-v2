@@ -37,6 +37,12 @@ class Owner {
 /// pour que le contrat strict du serveur (champs optionnels, jamais
 /// nullables) reste l'affaire de l'implémentation HTTP.
 abstract class OwnerRepository {
+  /// Depuis le cache local (`CachedOwners`), rempli par
+  /// `PatientRepository.refreshSheetsFor`. `null` si ce propriétaire n'a
+  /// jamais été mis en cache — un praticien devant l'écurie doit pouvoir le
+  /// dire, plutôt que d'afficher une fiche à moitié vide.
+  Future<Owner?> byId(String id);
+
   Future<Result<Owner>> create({
     required String name,
     String? email,

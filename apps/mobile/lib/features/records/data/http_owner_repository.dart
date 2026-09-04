@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/result.dart';
 import '../domain/owner_repository.dart';
@@ -13,9 +14,25 @@ import '../domain/patient.dart';
 /// rejetée. Chaque corps ci-dessous n'inclut donc une clé optionnelle que
 /// lorsque sa valeur n'est pas nulle.
 class HttpOwnerRepository implements OwnerRepository {
-  const HttpOwnerRepository(this._dio);
+  const HttpOwnerRepository(this._dio, this._db);
 
   final Dio _dio;
+  final AppDatabase _db;
+
+  @override
+  Future<Owner?> byId(String id) async {
+    final row = await (_db.select(
+      _db.cachedOwners,
+    )..where((o) => o.id.equals(id))).getSingleOrNull();
+    if (row == null) return null;
+    return Owner(
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      city: row.city,
+    );
+  }
 
   @override
   Future<Result<Owner>> create({

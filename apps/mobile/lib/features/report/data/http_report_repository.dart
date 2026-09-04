@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
+import '../../../core/database/app_database.dart';
+import '../../../core/failure.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/result.dart';
 import '../domain/proposal.dart';
@@ -9,8 +13,9 @@ import '../domain/report_repository.dart';
 /// appel traduit son `DioException` en échec de domaine, jamais en message de
 /// transport.
 class HttpReportRepository implements ReportRepository {
-  const HttpReportRepository(this._dio);
+  const HttpReportRepository(this._dio, this._db);
   final Dio _dio;
+  final AppDatabase _db;
 
   ReportProposals _parse(Map<String, dynamic> data) {
     final owner = data['owner'] as Map<String, dynamic>;
@@ -51,6 +56,25 @@ class HttpReportRepository implements ReportRepository {
   @override
   Future<Result<ReportProposals>> load(String reportId) =>
       _call(() => _dio.get('/api/mobile/v1/reports/$reportId/proposals'));
+
+  /// Ouvre un compte rendu passé depuis la fiche animal : le réseau d'abord,
+  /// et seulement sur une panne réseau, `CachedReports` — le dernier compte
+  /// rendu finalisé de l'animal, mis en cache pour cette raison précise.
+  @override
+  Future<Result<ReportProposals>> loadCachedOrRemote(String reportId) async {
+    final result = await load(reportId);
+    if (result case Success()) return result;
+
+    final failure = (result as Err<ReportProposals>).failure;
+    if (failure is! NetworkFailure) return result;
+
+    final row = await (_db.select(
+      _db.cachedReports,
+    )..where((r) => r.reportId.equals(reportId))).getSingleOrNull();
+    if (row == null) return result;
+
+    return Success(_parse(jsonDecode(row.payload) as Map<String, dynamic>));
+  }
 
   @override
   Future<Result<ReportProposals>> decide({required String reportId, required String proposalId, required SectionState decision}) =>

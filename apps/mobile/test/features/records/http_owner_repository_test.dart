@@ -1,15 +1,46 @@
+import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/features/records/data/http_owner_repository.dart';
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  late AppDatabase db;
   late Dio dio;
   late HttpOwnerRepository repository;
 
   setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     dio = Dio(BaseOptions(baseUrl: 'https://api.test'));
-    repository = HttpOwnerRepository(dio);
+    repository = HttpOwnerRepository(dio, db);
+  });
+
+  tearDown(() => db.close());
+
+  group('byId', () {
+    test('lit un propriétaire depuis le cache', () async {
+      await db.into(db.cachedOwners).insert(
+            CachedOwnersCompanion.insert(
+              id: 'owner-1',
+              name: 'Camille Roux',
+              email: const Value('camille@example.org'),
+              phone: const Value('0600000000'),
+              city: const Value('Lyon'),
+            ),
+          );
+
+      final owner = await repository.byId('owner-1');
+
+      expect(owner?.name, 'Camille Roux');
+      expect(owner?.email, 'camille@example.org');
+      expect(owner?.city, 'Lyon');
+    });
+
+    test('renvoie null pour un propriétaire jamais mis en cache', () async {
+      expect(await repository.byId('inconnu'), isNull);
+    });
   });
 
   group('create', () {

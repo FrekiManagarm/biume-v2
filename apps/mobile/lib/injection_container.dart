@@ -84,7 +84,7 @@ Future<void> configureDependencies() async {
       () => PatientRepositoryImpl(getIt(), getIt()),
     )
     ..registerLazySingleton<OwnerRepository>(
-      () => HttpOwnerRepository(getIt()),
+      () => HttpOwnerRepository(getIt(), getIt()),
     )
     ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
     ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
@@ -93,7 +93,7 @@ Future<void> configureDependencies() async {
       () => HttpTranscriptRepository(getIt()),
     )
     ..registerLazySingleton<ReportRepository>(
-      () => HttpReportRepository(getIt()),
+      () => HttpReportRepository(getIt(), getIt()),
     )
     ..registerLazySingleton<FollowUpRepository>(
       () => HttpFollowUpRepository(getIt()),

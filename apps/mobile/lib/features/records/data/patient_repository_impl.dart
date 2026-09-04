@@ -1,10 +1,15 @@
+import 'dart:convert';
+
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/result.dart';
+import '../../report/domain/proposal.dart';
 import '../domain/patient.dart';
+import '../domain/patient_history.dart';
 import '../domain/patient_repository.dart';
 
 class PatientRepositoryImpl implements PatientRepository {
@@ -17,16 +22,15 @@ class PatientRepositoryImpl implements PatientRepository {
   Stream<List<Patient>> watchAll() =>
       (_db.select(_db.cachedPatients)..orderBy([(p) => OrderingTerm.asc(p.name)]))
           .watch()
-          .map((rows) => rows
-              .map((r) => Patient(
-                    id: r.id,
-                    ownerId: r.ownerId,
-                    ownerName: r.ownerName,
-                    name: r.name,
-                    species: r.species,
-                    breed: r.breed,
-                  ))
-              .toList());
+          .map((rows) => rows.map(_rowToPatient).toList());
+
+  @override
+  Future<Patient?> byId(String id) async {
+    final row = await (_db.select(
+      _db.cachedPatients,
+    )..where((p) => p.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _rowToPatient(row);
+  }
 
   @override
   Future<Result<void>> refresh() async {
@@ -63,6 +67,8 @@ class PatientRepositoryImpl implements PatientRepository {
                 name: item['name'] as String,
                 species: item['species'] as String,
                 breed: Value(item['breed'] as String?),
+                birthDate: Value(_parseDate(item['birthDate'])),
+                lastAppointmentAt: Value(_parseDate(item['lastAppointmentAt'])),
               ),
               mode: InsertMode.insertOrReplace,
             );
@@ -70,4 +76,129 @@ class PatientRepositoryImpl implements PatientRepository {
     });
     return const Success(null);
   }
+
+  @override
+  Future<Result<List<PatientHistoryEntry>>> history(String patientId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/mobile/v1/patients/$patientId/history',
+        queryParameters: {'limit': 50},
+      );
+      final entries = (response.data?['items'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(_itemToHistoryEntry)
+          .toList();
+      return Success(entries);
+    } on DioException catch (error) {
+      return Err(failureFromDioException(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> refreshSheetsFor(Iterable<String> patientIds) async {
+    final owners = <Map<String, dynamic>>[];
+    String? cursor;
+    try {
+      do {
+        final response = await _dio.get<Map<String, dynamic>>(
+          '/api/mobile/v1/owners',
+          queryParameters: {'limit': 50, 'cursor': ?cursor},
+        );
+        owners.addAll(
+          (response.data?['items'] as List<dynamic>? ?? const [])
+              .whereType<Map<String, dynamic>>(),
+        );
+        cursor = response.data?['nextCursor'] as String?;
+      } while (cursor != null);
+    } on DioException catch (error) {
+      // Le cache n'est pas touché : sans propriétaires, aucune fiche ne peut
+      // être construite hors ligne — autant garder ce qui y est déjà.
+      return Err(failureFromDioException(error));
+    }
+
+    await _db.transaction(() async {
+      await _db.delete(_db.cachedOwners).go();
+      for (final owner in owners) {
+        await _db.into(_db.cachedOwners).insert(
+              CachedOwnersCompanion.insert(
+                id: owner['id'] as String,
+                name: owner['name'] as String,
+                email: Value(owner['email'] as String?),
+                phone: Value(owner['phone'] as String?),
+                city: Value(owner['city'] as String?),
+              ),
+              mode: InsertMode.insertOrReplace,
+            );
+      }
+    });
+
+    // Le dernier compte rendu finalisé de chaque animal, un par un : un échec
+    // isolé — réseau coupé en cours de route, animal sans historique — ne doit
+    // pas priver les autres animaux de leur fiche hors ligne.
+    for (final patientId in patientIds) {
+      final historyResult = await history(patientId);
+      if (historyResult is! Success<List<PatientHistoryEntry>>) continue;
+
+      final lastFinalized = historyResult.value.firstWhereOrNull(
+        (entry) => entry.hasFinalizedReport,
+      );
+      if (lastFinalized == null) continue;
+
+      try {
+        final response = await _dio.get<Map<String, dynamic>>(
+          '/api/mobile/v1/reports/${lastFinalized.reportId}/proposals',
+        );
+        final data = response.data!;
+        await _db.transaction(() async {
+          // Un seul compte rendu en cache par animal : si celui qui était
+          // « le dernier finalisé » a changé depuis la dernière synchronisation,
+          // l'ancien ne doit pas traîner indéfiniment.
+          await (_db.delete(
+            _db.cachedReports,
+          )..where((r) => r.patientId.equals(patientId))).go();
+          await _db.into(_db.cachedReports).insert(
+                CachedReportsCompanion.insert(
+                  reportId: lastFinalized.reportId!,
+                  patientId: patientId,
+                  appointmentId: Value(lastFinalized.appointmentId),
+                  status: data['status'] as String,
+                  payload: jsonEncode(data),
+                  cachedAt: DateTime.now(),
+                ),
+                mode: InsertMode.insertOrReplace,
+              );
+        });
+      } on DioException {
+        // Ce compte rendu restera indisponible hors ligne pour cet animal,
+        // sans bloquer les suivants.
+        continue;
+      }
+    }
+
+    return const Success(null);
+  }
+
+  Patient _rowToPatient(CachedPatient r) => Patient(
+    id: r.id,
+    ownerId: r.ownerId,
+    ownerName: r.ownerName,
+    name: r.name,
+    species: r.species,
+    breed: r.breed,
+    birthDate: r.birthDate,
+  );
+
+  PatientHistoryEntry _itemToHistoryEntry(Map<String, dynamic> item) =>
+      PatientHistoryEntry(
+        appointmentId: item['appointmentId'] as String,
+        beginAt: DateTime.parse(item['beginAt'] as String),
+        reportId: item['reportId'] as String?,
+        reportStatus: item['reportStatus'] != null
+            ? reportStatusFrom(item['reportStatus'] as String)
+            : null,
+        consultationReason: item['consultationReason'] as String? ?? '',
+      );
+
+  DateTime? _parseDate(dynamic value) =>
+      value == null ? null : DateTime.parse(value as String);
 }
