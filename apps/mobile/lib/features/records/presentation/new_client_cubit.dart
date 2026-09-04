@@ -28,6 +28,7 @@ class NewClientState {
     this.patient,
     this.busy = false,
     this.message,
+    this.offline = false,
   });
 
   final NewClientStep step;
@@ -39,12 +40,19 @@ class NewClientState {
   /// `null` une fois le champ corrigé ou une nouvelle tentative lancée.
   final String? message;
 
+  /// Distingue une panne réseau — la seule pour laquelle l'écran propose de
+  /// dicter en attendant — d'un autre échec, affiché sans ce geste de repli.
+  /// Même forme que `AppointmentFormState.offline`, pour que les deux écrans
+  /// se lisent pareil.
+  final bool offline;
+
   NewClientState copyWith({
     NewClientStep? step,
     Object? owner = _unset,
     Object? patient = _unset,
     bool? busy,
     Object? message = _unset,
+    bool? offline,
   }) {
     return NewClientState(
       step: step ?? this.step,
@@ -54,6 +62,7 @@ class NewClientState {
           : patient as Patient?,
       busy: busy ?? this.busy,
       message: identical(message, _unset) ? this.message : message as String?,
+      offline: offline ?? this.offline,
     );
   }
 
@@ -64,10 +73,12 @@ class NewClientState {
       other.owner == owner &&
       other.patient == patient &&
       other.busy == busy &&
-      other.message == message;
+      other.message == message &&
+      other.offline == offline;
 
   @override
-  int get hashCode => Object.hash(step, owner, patient, busy, message);
+  int get hashCode =>
+      Object.hash(step, owner, patient, busy, message, offline);
 }
 
 /// Crée un propriétaire puis un animal, depuis le terrain.
@@ -112,11 +123,13 @@ class NewClientCubit extends Cubit<NewClientState> {
 
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      emit(state.copyWith(message: 'Le nom est obligatoire.'));
+      emit(
+        state.copyWith(message: 'Le nom est obligatoire.', offline: false),
+      );
       return;
     }
 
-    emit(state.copyWith(busy: true, message: null));
+    emit(state.copyWith(busy: true, message: null, offline: false));
 
     final result = await _owners.create(
       name: trimmedName,
@@ -138,7 +151,13 @@ class NewClientCubit extends Cubit<NewClientState> {
           ),
         );
       case Err(:final failure):
-        emit(state.copyWith(busy: false, message: _messageFor(failure)));
+        emit(
+          state.copyWith(
+            busy: false,
+            message: _messageFor(failure),
+            offline: failure is NetworkFailure,
+          ),
+        );
     }
   }
 
@@ -152,7 +171,9 @@ class NewClientCubit extends Cubit<NewClientState> {
 
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      emit(state.copyWith(message: 'Le nom est obligatoire.'));
+      emit(
+        state.copyWith(message: 'Le nom est obligatoire.', offline: false),
+      );
       return;
     }
 
@@ -160,11 +181,16 @@ class NewClientCubit extends Cubit<NewClientState> {
     // Ne devrait jamais arriver : le volet animal n'est atteint qu'après un
     // propriétaire créé, ou fourni dès la construction du cubit.
     if (ownerId == null) {
-      emit(state.copyWith(message: 'Choisissez un propriétaire.'));
+      emit(
+        state.copyWith(
+          message: 'Choisissez un propriétaire.',
+          offline: false,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(busy: true, message: null));
+    emit(state.copyWith(busy: true, message: null, offline: false));
 
     final result = await _owners.createPatient(
       ownerId: ownerId,
@@ -190,7 +216,13 @@ class NewClientCubit extends Cubit<NewClientState> {
           ),
         );
       case Err(:final failure):
-        emit(state.copyWith(busy: false, message: _messageFor(failure)));
+        emit(
+          state.copyWith(
+            busy: false,
+            message: _messageFor(failure),
+            offline: failure is NetworkFailure,
+          ),
+        );
     }
   }
 

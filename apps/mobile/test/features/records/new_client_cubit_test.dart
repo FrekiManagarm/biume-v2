@@ -180,6 +180,7 @@ void main() {
     act: (cubit) => cubit.submitOwner(name: 'Camille Roux'),
     verify: (cubit) {
       expect(cubit.state.message, newClientOfflineMessage);
+      expect(cubit.state.offline, isTrue);
       expect(cubit.state.step, NewClientStep.owner);
     },
   );
@@ -202,6 +203,29 @@ void main() {
     act: (cubit) => cubit.submitOwner(name: 'Camille Roux'),
     verify: (cubit) {
       expect(cubit.state.message, 'Nom déjà utilisé.');
+      expect(cubit.state.offline, isFalse);
+    },
+  );
+
+  blocTest<NewClientCubit, NewClientState>(
+    'hors ligne côté animal aussi : le drapeau se pose sur le second volet',
+    setUp: () {
+      when(
+        () => owners.createPatient(
+          ownerId: 'owner-1',
+          name: 'Filou',
+          species: 'DOG',
+          breed: null,
+          birthDate: null,
+        ),
+      ).thenAnswer((_) async => const Err(NetworkFailure()));
+    },
+    build: () => NewClientCubit(owners, patients, existingOwnerId: 'owner-1'),
+    act: (cubit) => cubit.submitPatient(name: 'Filou', species: 'DOG'),
+    verify: (cubit) {
+      expect(cubit.state.message, newClientOfflineMessage);
+      expect(cubit.state.offline, isTrue);
+      expect(cubit.state.step, NewClientStep.patient);
     },
   );
 }

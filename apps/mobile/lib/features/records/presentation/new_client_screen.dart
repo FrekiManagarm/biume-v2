@@ -95,7 +95,11 @@ class _NewClientScreenState extends State<NewClientScreen> {
               children: [
                 _StepHeader(step: state.step),
                 if (state.message != null)
-                  _MessageBanner(message: state.message!, palette: palette),
+                  _MessageBanner(
+                    message: state.message!,
+                    offline: state.offline,
+                    palette: palette,
+                  ),
                 Expanded(
                   child: PageView(
                     controller: _controller,
@@ -143,14 +147,18 @@ class _StepHeader extends StatelessWidget {
 }
 
 class _MessageBanner extends StatelessWidget {
-  const _MessageBanner({required this.message, required this.palette});
+  const _MessageBanner({
+    required this.message,
+    required this.offline,
+    required this.palette,
+  });
 
   final String message;
+  final bool offline;
   final AppPalette palette;
 
   @override
   Widget build(BuildContext context) {
-    final offline = message == newClientOfflineMessage;
     final surface = offline ? palette.warningSurface : palette.dangerSurface;
     final border = offline ? palette.warningBorder : palette.dangerBorder;
 
