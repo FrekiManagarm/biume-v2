@@ -219,6 +219,20 @@ void main() {
     expect: () => [isA<PatientSheetUnavailable>()],
   );
 
+  /// Le message était faux dès que le réseau était là : une fiche tout juste
+  /// créée n'est pas encore en cache, et « connectez-vous une fois au réseau »
+  /// envoyait le praticien chercher une panne qui n'existe pas.
+  test("le message d'indisponibilité ne diagnostique jamais le réseau", () {
+    expect(
+      patientSheetUnavailableMessage.toLowerCase(),
+      isNot(contains('réseau')),
+    );
+    expect(
+      patientSheetUnavailableMessage.toLowerCase(),
+      isNot(contains('connect')),
+    );
+  });
+
   test('load ne plante pas si le cubit est fermé pendant la requête', () async {
     when(() => patients.byId('pet-1')).thenAnswer((_) async {
       await Future<void>.delayed(const Duration(milliseconds: 20));

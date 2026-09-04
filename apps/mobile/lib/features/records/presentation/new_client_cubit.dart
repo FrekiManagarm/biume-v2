@@ -207,6 +207,10 @@ class NewClientCubit extends Cubit<NewClientState> {
         // Sans ce rafraîchissement, le sélecteur d'animal qui enchaîne ne
         // trouverait pas la fiche qui vient d'être créée.
         await _patients.refresh();
+        // Et sans celui-ci, « Voir la fiche » juste après la création
+        // s'ouvrirait sur « fiche indisponible » : la fiche exige le
+        // propriétaire, et seul ce rafraîchissement remplit son cache.
+        await _patients.refreshSheetsFor([value.id]);
         if (_shuttingDown) return;
         emit(
           state.copyWith(

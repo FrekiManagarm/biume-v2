@@ -52,6 +52,8 @@ void main() {
         ),
       ).thenAnswer((_) async => const Success(filou));
       when(() => patients.refresh()).thenAnswer((_) async => const Success(null));
+      when(() => patients.refreshSheetsFor(any()))
+          .thenAnswer((_) async => const Success(null));
     },
     build: () => NewClientCubit(owners, patients),
     act: (cubit) async {
@@ -62,6 +64,35 @@ void main() {
       expect(cubit.state.step, NewClientStep.done);
       expect(cubit.state.patient, filou);
       verify(() => patients.refresh()).called(1);
+    },
+  );
+
+  /// « Voir la fiche » suit immédiatement la création dans le sélecteur. Sans
+  /// le cache des propriétaires, la fiche exige un propriétaire qu'elle n'a
+  /// pas et s'affiche introuvable, réseau présent.
+  blocTest<NewClientCubit, NewClientState>(
+    "remplit aussi le cache du propriétaire, pour que la fiche s'ouvre",
+    setUp: () {
+      when(
+        () => owners.createPatient(
+          ownerId: 'owner-1',
+          name: 'Filou',
+          species: 'DOG',
+          breed: null,
+          birthDate: null,
+        ),
+      ).thenAnswer((_) async => const Success(filou));
+      when(() => patients.refresh()).thenAnswer((_) async => const Success(null));
+      when(() => patients.refreshSheetsFor(any()))
+          .thenAnswer((_) async => const Success(null));
+    },
+    build: () => NewClientCubit(owners, patients, existingOwnerId: 'owner-1'),
+    act: (cubit) => cubit.submitPatient(name: 'Filou', species: 'DOG'),
+    verify: (_) {
+      final captured = verify(
+        () => patients.refreshSheetsFor(captureAny()),
+      ).captured.single as Iterable<String>;
+      expect(captured, ['pet-1']);
     },
   );
 
@@ -84,6 +115,8 @@ void main() {
         ),
       ).thenAnswer((_) async => const Success(filou));
       when(() => patients.refresh()).thenAnswer((_) async => const Success(null));
+      when(() => patients.refreshSheetsFor(any()))
+          .thenAnswer((_) async => const Success(null));
     },
     build: () => NewClientCubit(owners, patients, existingOwnerId: 'owner-1'),
     act: (cubit) => cubit.submitPatient(name: 'Filou', species: 'DOG'),

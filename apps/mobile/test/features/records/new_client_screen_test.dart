@@ -203,6 +203,8 @@ void main() {
         ),
       ).thenAnswer((_) async => const Success(filou));
       when(() => patients.refresh()).thenAnswer((_) async => const Success(null));
+      when(() => patients.refreshSheetsFor(any()))
+          .thenAnswer((_) async => const Success(null));
 
       await ouvrirLEcran(tester, owners, patients);
 

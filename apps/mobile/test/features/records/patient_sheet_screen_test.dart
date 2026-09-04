@@ -409,7 +409,10 @@ void main() {
 
       await monter(tester);
 
-      expect(find.textContaining('Connectez-vous une fois au réseau'), findsOneWidget);
+      expect(
+        find.textContaining("n'est pas encore disponible sur cet appareil"),
+        findsOneWidget,
+      );
     },
   );
 }

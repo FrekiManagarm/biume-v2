@@ -38,8 +38,13 @@ class PatientSheetLoaded extends PatientSheetState {
   final String? offlineMessage;
 }
 
-const String _sheetUnavailableMessage =
-    'Fiche introuvable. Connectez-vous une fois au réseau pour la charger.';
+/// Ne diagnostique aucune panne : la fiche peut manquer alors que le réseau
+/// est parfaitement là — un client tout juste créé, un animal hors de la
+/// fenêtre d'agenda préchargée. Un message qui se trompe de cause envoie le
+/// praticien chercher un problème qui n'existe pas.
+const String patientSheetUnavailableMessage =
+    "Cette fiche n'est pas encore disponible sur cet appareil. Elle le sera "
+    'au prochain rafraîchissement.';
 
 /// La fiche « avant la séance » : elle s'affiche depuis le cache d'abord —
 /// nom de l'animal, téléphone du propriétaire — puis se complète avec
@@ -72,14 +77,14 @@ class PatientSheetCubit extends Cubit<PatientSheetState> {
     final patient = await _patients.byId(patientId);
     if (_shuttingDown) return;
     if (patient == null) {
-      emit(const PatientSheetUnavailable(_sheetUnavailableMessage));
+      emit(const PatientSheetUnavailable(patientSheetUnavailableMessage));
       return;
     }
 
     final owner = await _owners.byId(patient.ownerId);
     if (_shuttingDown) return;
     if (owner == null) {
-      emit(const PatientSheetUnavailable(_sheetUnavailableMessage));
+      emit(const PatientSheetUnavailable(patientSheetUnavailableMessage));
       return;
     }
 
