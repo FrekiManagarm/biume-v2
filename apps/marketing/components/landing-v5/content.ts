@@ -40,7 +40,7 @@ export const HERO_CTA_PRIMARY = "Commencer l'essai gratuit";
 export const HERO_CTA_SECONDARY = "Voir un compte rendu";
 
 export const HERO_MOCK = {
-  subject: "Nashira · jument, 11 ans",
+  subject: "Iron · jument, 11 ans",
   subtitle: "Séance du 14 mars · 10:30 · Écurie du Val",
   sendLabel: "Envoyer au propriétaire",
   nav: [
@@ -62,14 +62,6 @@ export const HERO_MOCK = {
   statusBarRight: "Prêt à envoyer",
 } as const;
 
-export const HERO_PHONE_MOCK = {
-  label: "Espace propriétaire",
-  linkLabel: "Lien sécurisé",
-  question: "Comment va Nashira depuis la séance ?",
-  followUpLabel: "Suivi · J+2",
-  cta: "Répondre",
-} as const;
-
 /**
  * Reprend, sous forme de schéma corporel, les zones déjà nommées dans les
  * notes de la même séance : HERO_MOCK.raw ("tension chaîne thoraco-lombaire
@@ -82,6 +74,79 @@ export const HERO_ANATOMY_MOCK = {
     { label: "Thoraco-lombaire", note: "Tension" },
     { label: "Sacro-iliaque", note: "Sensible" },
   ],
+} as const;
+
+/**
+ * Maquette du module de rapports de l'application praticien, relevée sur
+ * l'écran réel (`apps/web/src/components/dashboard/pages/reports-module/`,
+ * route `/dashboard/reports/$id/edit`). Libellés, états et compteurs sont
+ * ceux du code : `professionalStateLabel`, `ownerStatusPresentation`, les
+ * quatre onglets, `SectionDecisionControl` et `OwnerPreparationSheet`.
+ *
+ * Le panneau « Préparation guidée » est ouvert parce que c'est là que se
+ * joue la promesse du hero : le texte professionnel reste intact à gauche,
+ * la version propriétaire s'écrit à droite.
+ *
+ * La séance est celle de `HERO_MOCK` — Iron — dont le propriétaire porte
+ * le nom déjà utilisé par le board mobile, pour n'en inventer aucun.
+ */
+export const WEB_MOCK_REPORT = {
+  url: "app.biume.com/dashboard/reports/iron/edit",
+
+  sidebarTitle: "Compte rendu",
+  sidebarProgress: "50% complété",
+  sidebarTabs: [
+    {
+      label: "Observations",
+      count: "3",
+      state: "À confirmer",
+      owner: "À préparer",
+      active: false,
+    },
+    {
+      label: "Anatomie",
+      count: "2",
+      state: "Confirmé",
+      owner: "Prêt",
+      active: true,
+    },
+    {
+      label: "Recommandations",
+      count: "2",
+      state: "Confirmé",
+      owner: "Prêt",
+      active: false,
+    },
+    {
+      label: "Notes additionnelles",
+      count: "0",
+      state: "À renseigner",
+      owner: null,
+      active: false,
+    },
+  ],
+  sidebarPrepare: "3 contenus à préparer",
+
+  title: "Compte rendu — Iron",
+  patient: ["Iron", "Cheval", "Claire Lambert"],
+  appointment: "sam. 14 mars · 10:30–11:15",
+  preview: "Aperçu",
+  save: "Sauvegarder",
+  finalize: "Finaliser",
+
+  decisionConfirm: "Confirmer la section",
+  decisionDismiss: "Marquer non applicable",
+
+  /* Onglet Anatomie : le canevas et ses deux barres flottantes, telles
+     qu'`AnatomicalEvaluationTab` les pose — les vues à droite, les outils à
+     gauche. Les deux zones colorées sont celles que les notes de la séance
+     nomment déjà (cf. HERO_ANATOMY_MOCK). */
+  anatomyViews: ["Vue gauche", "Vue droite"],
+  anatomyHelp: "Aide",
+  anatomyElements: "Éléments",
+  anatomyElementsCount: "2",
+  anatomyAdd: "Ajouter",
+  anatomyAddKey: "N",
 } as const;
 
 /* ── Bandeau de contextes de pratique ─────────────────────────── */
@@ -153,7 +218,7 @@ export const BENTO_OWNER = {
   title: "Le propriétaire lit sur son téléphone",
   body: "Un lien sécurisé, un code à usage unique. Rien à installer, aucun compte à créer.",
   cardLabel: "Lien sécurisé",
-  cardMessage: "Le compte rendu de Nashira est disponible.",
+  cardMessage: "Le compte rendu d'Iron est disponible.",
 } as const;
 
 export const BENTO_FOLLOW_UP = {
@@ -172,7 +237,7 @@ export const TABS_EYEBROW = "Le compte rendu";
 export const TABS_TITLE = "Le même relevé, écrit deux fois.";
 export const TABS_LEAD =
   "À gauche, vos notes. À droite, ce que le propriétaire reçoit. Passez d'un temps de la séance à l'autre.";
-export const TABS_SUBJECT = "Nashira · jument selle français · 11 ans";
+export const TABS_SUBJECT = "Iron · jument selle français · 11 ans";
 export const TABS_NOTE =
   "Séance fictive, écrite pour la démonstration. Aucun dossier réel n'est utilisé sur cette page.";
 
@@ -182,7 +247,7 @@ export const SPECIMEN_STEPS = [
     label: "Motif",
     heading: "Ce que vous notez en arrivant.",
     raw: "mot : raideur post-transport, refus incurvation D, prop. signale gêne dep. 3 sem",
-    out: "Vous m'avez appelé parce que Nashira semblait gênée depuis environ trois semaines, en particulier depuis son dernier transport. À l'examen, elle avait effectivement du mal à s'incurver du côté droit.",
+    out: "Vous m'avez appelé parce qu'Iron semblait gênée depuis environ trois semaines, en particulier depuis son dernier transport. À l'examen, elle avait effectivement du mal à s'incurver du côté droit.",
   },
   {
     id: "examen",
@@ -214,21 +279,54 @@ export const ATELIER_TITLE = "Chaque compte rendu a son poste de travail.";
 export const ATELIER_LEAD =
   "Quatre sections suivies une à une, un schéma corporel qui garde vos observations précises, l'historique de l'animal sous la main — tout reste au même endroit, du début à l'envoi.";
 
+/**
+ * Reprend l'écran réel du module (cf. `WEB_MOCK_REPORT`) : mêmes onglets,
+ * mêmes compteurs, mêmes états. La tuile montre l'onglet Anatomie là où le
+ * hero montre Observations — c'est le même compte rendu, un autre moment.
+ */
 export const ATELIER_WORKSPACE = {
   title: "Quatre sections, un état par section",
-  body: "Clinique, anatomique, recommandations, notes : chaque section garde son propre statut jusqu'à ce que vous l'ayez confirmée.",
-  progressLabel: "3 sections sur 4 traitées",
-  progressPercent: 75,
+  body: "Observations, anatomie, recommandations, notes : chaque section garde son propre statut, et « Finaliser » attend les quatre.",
+  url: "app.biume.com/dashboard/reports/iron/edit",
+  sidebarTitle: "Compte rendu",
+  progressLabel: "50% complété",
   sections: [
-    { label: "Clinique", state: "confirmed" },
-    { label: "Anatomique", state: "confirmed", active: true },
-    { label: "Recommandations", state: "needs_confirmation" },
-    { label: "Notes", state: "proposed" },
+    {
+      label: "Observations",
+      count: "3",
+      state: "needs_confirmation",
+      owner: "À préparer",
+      active: false,
+    },
+    {
+      label: "Anatomie",
+      count: "2",
+      state: "confirmed",
+      owner: "Prêt",
+      active: true,
+    },
+    {
+      label: "Recommandations",
+      count: "2",
+      state: "confirmed",
+      owner: "Prêt",
+      active: false,
+    },
+    {
+      label: "Notes additionnelles",
+      count: "0",
+      state: "empty",
+      owner: null,
+      active: false,
+    },
   ],
+  prepare: "3 contenus à préparer",
   anatomyLabel: "Schéma corporel",
   anatomyZone: "Thoraco-lombaire",
   anatomySide: "Côté gauche",
   anatomySeverity: "Très marquée",
+  decisionConfirm: "Confirmer la section",
+  decisionDismiss: "Marquer non applicable",
 } as const;
 
 export const ATELIER_HISTORY = {
@@ -241,12 +339,14 @@ export const ATELIER_HISTORY = {
   ],
 } as const;
 
+/** Vocabulaire d'`OwnerPreparationSheet` : « Texte professionnel » d'un côté,
+ *  « Version propriétaire » de l'autre, et le statut propriétaire à droite. */
 export const ATELIER_VERSIONS = {
   title: "Deux écritures, un seul geste",
-  body: "La version praticien reste précise ; celle du propriétaire est prête au même endroit, avec son propre statut.",
+  body: "Le texte professionnel ne bouge pas ; la version propriétaire se prépare à côté, avec son propre statut.",
   practitioner: {
-    label: "Version praticien",
-    status: "Confirmée",
+    label: "Texte professionnel",
+    status: "Confirmé",
     extract: "Tension chaîne T-L G>D, restriction D14-L1.",
   },
   owner: {
@@ -278,7 +378,7 @@ export const FEATURES = [
     link: "En savoir plus sur la relecture",
     panelStates: ["Motif — Validé", "Examen — Validé", "Suites — À relire"],
     panelExtract:
-      "Vous m'avez appelé parce que Nashira semblait gênée depuis environ trois semaines.",
+      "Vous m'avez appelé parce qu'Iron semblait gênée depuis environ trois semaines.",
     panelActions: ["Corriger", "Valider"],
   },
   {
@@ -299,7 +399,99 @@ export const MOBILE_TITLE = "Votre activité tient dans une poche.";
 export const MOBILE_LEAD =
   "Les rendez-vous du jour et le compte rendu prêt à envoyer tiennent sur l'écran que vous avez déjà en main.";
 
-export const MOBILE_SCREENS = [{ label: "Compte rendu prêt à envoyer" }] as const;
+/**
+ * Contenu des maquettes de l'application mobile. Repris mot pour mot du board
+ * de remise (`handoff/Biume Mobile.html`) : c'est le produit qui se montre
+ * lui-même, aucune donnée clinique n'est ajoutée ici.
+ */
+export const APP_MOCK_HOME = {
+  initials: "CM",
+  date: "Mardi 8 septembre",
+  practitioner: "Camille Marchand",
+  inboxTitle: "À traiter",
+  inboxCount: "2",
+  inbox: [
+    {
+      tag: "Compte rendu à terminer",
+      tone: "violet",
+      when: "il y a 40 min",
+      subject: "Iron",
+      detail: "Mme Lambert · 4 propositions à vérifier",
+    },
+    {
+      tag: "Réponse au suivi",
+      tone: "green",
+      when: "hier",
+      subject: "Naya",
+      detail: "Mme Perrot · « elle boite encore un peu »",
+    },
+  ],
+  agendaTitle: "Aujourd'hui",
+  agendaAside: "8 jours",
+  agenda: [
+    {
+      time: "14:00",
+      subject: "Iron · Selle français",
+      place: "Écurie des Pins, Rambouillet",
+      now: "Maintenant",
+    },
+    {
+      time: "15:30",
+      subject: "Vega · Selle français",
+      place: "M. Dubreuil, Gazeran",
+      now: null,
+    },
+    {
+      time: "17:15",
+      subject: "Naya · Border collie",
+      place: "Mme Perrot, Cernay",
+      now: null,
+    },
+  ],
+  action: "Dicter une séance",
+} as const;
+
+export const APP_MOCK_FINALIZE = {
+  title: "Finaliser",
+  checked: "7 sections validées",
+  subject: "Iron",
+  session: "Séance du 8 septembre · 4 min 32 de dictée",
+  recipientLabel: "Destinataire",
+  recipientInitials: "CL",
+  recipientName: "Claire Lambert",
+  recipientMail: "claire.lambert@mail.fr",
+  edit: "Modifier",
+  attachTitle: "Joindre les recommandations",
+  attachDetail: "Deux semaines sans saut",
+  // L'irréversible est annoncé avant le geste, jamais après.
+  warning:
+    "Une fois envoyé, le compte rendu n'est plus modifiable depuis le mobile. Le propriétaire reçoit un PDF signé.",
+  action: "Finaliser et envoyer",
+  secondary: "Finaliser sans envoyer",
+} as const;
+
+export const APP_MOCK_REPORT = {
+  title: "Compte rendu",
+  subtitle: "Iron · Mme Lambert",
+  progressLabel: "3 propositions vérifiées sur 7",
+  progressValue: "43 %",
+  progressRatio: 43,
+  observationsLabel: "Observations",
+  observationsStatus: "À vérifier",
+  proposal:
+    "Restriction de mobilité de la charnière lombo-sacrée, avec sensibilité modérée en regard de L7.",
+  quoteLabel: "Dit à 02:14",
+  quote:
+    "« À la palpation, restriction de mobilité sur la charnière lombo-sacrée… »",
+  accept: "Valider",
+  dismiss: "Sans objet",
+  settled: "Bassin équilibré, pas d'asymétrie franche à l'observation statique.",
+  settledStatus: "Validé",
+  recommendationsLabel: "Recommandations",
+  recommendation: "Deux semaines sans saut, reprise progressive du travail.",
+  recommendationRest: "2 propositions restantes dans cette section",
+  action: "Terminer — 4 à vérifier",
+} as const;
 
 export const MOBILE_PERIMETER = [
   {
@@ -331,7 +523,7 @@ export const OWNER_POINTS = [
 
 export const OWNER_MOCK_LINK = {
   label: "Lien sécurisé",
-  message: "Le compte rendu de Nashira est disponible.",
+  message: "Le compte rendu d'Iron est disponible.",
   codeLabel: "Code reçu par SMS",
   digits: ["4", "1", "8", ""],
   cta: "Voir le compte rendu",
@@ -339,7 +531,7 @@ export const OWNER_MOCK_LINK = {
 
 export const OWNER_MOCK_FOLLOWUP = {
   label: "Suivi · J+2",
-  question: "Comment va Nashira depuis la séance ?",
+  question: "Comment va Iron depuis la séance ?",
   answers: ["Mieux qu'avant", "Nettement mieux", "Sans changement"],
   selectedIndex: 1,
   note: "Seules les réponses qui demandent une action vous sont signalées.",

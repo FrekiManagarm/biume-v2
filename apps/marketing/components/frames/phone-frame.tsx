@@ -3,6 +3,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@biume/ui/lib/utils";
 
+import {
+  PHONE_CONTENT_HEIGHT,
+  PHONE_CONTENT_WIDTH,
+  PHONE_SCREEN,
+} from "./phone-frame-geometry";
+
 /**
  * Calcule le facteur d'échelle d'un contenu dessiné à largeur fixe pour
  * qu'il remplisse exactement la zone d'écran d'un cadre d'appareil, quelle
@@ -25,30 +31,6 @@ export function computeFrameScale({
   if (containerWidth <= 0 || contentWidth <= 0) return 0;
   return (containerWidth * screenWidthRatio) / contentWidth;
 }
-
-const PHONE_FRAME = { width: 433, height: 882 };
-const PHONE_CONTENT_WIDTH = 216;
-const PHONE_SCREEN = {
-  left: 4.908,
-  top: 2.183,
-  width: 89.954,
-  height: 95.635,
-  radiusX: 14.32,
-  radiusY: 6.61,
-};
-
-/**
- * Hauteur du contenu dans son propre repère, déduite du rapport de l'écran.
- *
- * Sans elle, le conteneur mis à l'échelle n'a qu'une largeur : sa hauteur
- * suit le contenu, et un enfant en `h-full` ne remplit plus rien. Les
- * maquettes se tassaient alors en haut de l'écran, sous l'encoche.
- */
-const PHONE_CONTENT_HEIGHT = Math.round(
-  (PHONE_CONTENT_WIDTH *
-    (PHONE_FRAME.height * PHONE_SCREEN.height)) /
-    (PHONE_FRAME.width * PHONE_SCREEN.width),
-);
 
 export function PhoneFrame({
   children,

@@ -19,6 +19,8 @@ mock.module("next/font/google", () => ({
   Hanken_Grotesk: () => ({ variable: "font-hanken" }),
   Geist: () => ({ variable: "font-v2-sans" }),
   Geist_Mono: () => ({ variable: "font-v2-mono" }),
+  Bricolage_Grotesque: () => ({ variable: "font-biume-app-display" }),
+  Plus_Jakarta_Sans: () => ({ variable: "font-biume-app-sans" }),
 }));
 
 const { default: HomePage } = await import("../app/page");

@@ -1,19 +1,23 @@
+import Image from "next/image";
+
 import {
   HERO_CTA_PRIMARY,
   HERO_CTA_SECONDARY,
   HERO_LEAD,
-  HERO_MOCK,
-  HERO_PHONE_MOCK,
   HERO_PILL_BADGE,
   HERO_PILL_TEXT,
   HERO_TITLE_LINE_1,
   HERO_TITLE_LINE_2,
   TRIAL_NOTE,
+  WEB_MOCK_REPORT,
 } from "./content";
 import { BrowserFrame } from "../frames/browser-frame";
+import { WebReportEditor } from "./web-mockups";
 import { PhoneFrame } from "../frames/phone-frame";
+import { AppFinalizeScreen } from "./app-mockups";
+import { appFontVariables } from "./app-fonts";
+import { ANATOMY_ZONES } from "./anatomy-widget";
 import { webAppPath } from "../../lib/web-app-url";
-import { HeroAnatomyPreview } from "./anatomy-widget";
 import { Reveal } from "./motion";
 
 export function LandingV5Hero() {
@@ -97,6 +101,10 @@ export function LandingV5Hero() {
           <HeroMockMobile />
 
           {/*
+            Le module de rapports tel qu'il est, pas un schéma : la maquette
+            reprend l'écran de `apps/web/.../reports-module`, panneau
+            « Préparation guidée » ouvert. Voir web-mockups.tsx.
+
             Le `BrowserFrame` dessine son contenu sur un plan de 1120px puis
             le met à l'échelle du cadre. Sous 1024px ce facteur descend sous
             0.8 et la maquette passe en dessous de 10px : illisible, tassée.
@@ -104,125 +112,23 @@ export function LandingV5Hero() {
             même contenu à la taille réelle du texte de la page.
           */}
           <div className="hidden lg:block">
-            <BrowserFrame urlLabel="app.biume.com/seances/nashira">
-              <div className="flex h-full text-left">
-                <aside className="flex w-43 shrink-0 flex-col gap-1 border-r border-(--lv5-frame-border) bg-(--lv5-canvas) p-3">
-                  {HERO_MOCK.nav.map((item) => {
-                    const active = "active" in item && item.active;
-                    const badge = "badge" in item ? item.badge : undefined;
-
-                    return (
-                      <span
-                        key={item.label}
-                        className={
-                          active
-                            ? "flex items-center justify-between gap-2 rounded-[9px] bg-(--lv5-violet-soft) px-2.5 py-2 text-[0.82rem] font-semibold text-(--lv5-violet-ink)"
-                            : "flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-[0.82rem] text-(--lv5-ink-mid)"
-                        }
-                      >
-                        {item.label}
-                        {badge ? (
-                          <span className="rounded-full bg-(--lv5-violet) px-1.75 py-px text-[0.68rem] text-white">
-                            {badge}
-                          </span>
-                        ) : null}
-                      </span>
-                    );
-                  })}
-                </aside>
-
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--lv5-frame-border) px-[clamp(14px,2vw,22px)] py-3.5">
-                    <div>
-                      <p className="m-0 text-[1.02rem] font-semibold tracking-[-.015em] text-(--lv5-ink)">
-                        {HERO_MOCK.subject}
-                      </p>
-                      <p className="m-0 mt-1 text-[0.76rem] text-(--lv5-ink-tertiary)">
-                        {HERO_MOCK.subtitle}
-                      </p>
-                    </div>
-                    <span className="inline-flex h-8.5 items-center rounded-full bg-(--lv5-violet) px-4 text-[0.8rem] font-semibold text-white">
-                      {HERO_MOCK.sendLabel}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-1 gap-[clamp(12px,1.6vw,18px)] p-[clamp(14px,2vw,22px)]">
-                    <div
-                      className="flex-1 rounded-[14px] p-4.5"
-                      style={{ background: "var(--lv5-anthracite)", color: "rgba(253,253,251,.86)" }}
-                    >
-                      <p
-                        className="m-0 mb-3 text-[0.68rem] uppercase tracking-[.08em]"
-                        style={{ fontFamily: "var(--lv5-font-mono)", color: "rgba(253,253,251,.42)" }}
-                      >
-                        {HERO_MOCK.rawLabel}
-                      </p>
-                      <p
-                        className="m-0 text-[0.84rem] leading-[1.75]"
-                        style={{ fontFamily: "var(--lv5-font-mono)" }}
-                      >
-                        {HERO_MOCK.raw}
-                      </p>
-                    </div>
-
-                    <div className="flex-1 rounded-[14px] border border-(--lv5-line) bg-(--lv5-surface) p-5">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <p className="m-0 text-[0.68rem] uppercase tracking-[.08em] text-(--lv5-ink-tertiary)">
-                          {HERO_MOCK.outLabel}
-                        </p>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-(--lv5-green-soft) px-2.5 py-1 text-[0.7rem] font-semibold text-(--lv5-green-ink)">
-                          <span className="size-1.5 rounded-full bg-(--lv5-green)" />
-                          {HERO_MOCK.outStatus}
-                        </span>
-                      </div>
-                      <HeroAnatomyPreview />
-                      {HERO_MOCK.out.map((paragraph) => (
-                        <p
-                          key={paragraph}
-                          className="m-0 mb-3 text-[0.98rem] leading-[1.6] text-(--lv5-ink) last:mb-0"
-                        >
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-(--lv5-frame-border) bg-(--lv5-canvas) px-[clamp(14px,2vw,22px)] py-3">
-                    <span className="text-[0.76rem] text-(--lv5-ink-tertiary)">
-                      {HERO_MOCK.statusBarLeft}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-[0.76rem] font-semibold text-(--lv5-green-ink)">
-                      <span className="size-1.5 rounded-full bg-(--lv5-green)" />
-                      {HERO_MOCK.statusBarRight}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <BrowserFrame urlLabel={WEB_MOCK_REPORT.url}>
+              <WebReportEditor />
             </BrowserFrame>
           </div>
 
+          {/*
+            La finalisation plutôt que l'espace propriétaire : c'est le titre
+            du hero mis en écran — le compte rendu prêt à partir — et elle
+            reste lisible à 180px, portée par trois blocs et un bouton.
+            L'espace propriétaire garde sa place dans sa propre section.
+
+            Posée en bas à droite : c'est le seul coin de la maquette web où
+            elle ne recouvre rien — le schéma corporel occupe le haut du
+            panneau, la barre de décision reste dégagée à gauche.
+          */}
           <PhoneFrame className="absolute -bottom-10 -right-6 w-45 max-lg:hidden animate-[biume-float_6s_ease-in-out_infinite]">
-            <div className="flex h-full flex-col gap-2 pt-9 px-3.25 pb-4">
-              <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-(--lv5-ink-tertiary)">
-                {HERO_PHONE_MOCK.label}
-              </p>
-              <div className="rounded-[10px] p-2.5" style={{ background: "var(--lv5-blue-soft)" }}>
-                <p className="m-0 text-[0.68rem] font-semibold" style={{ color: "var(--lv5-blue-ink)" }}>
-                  {HERO_PHONE_MOCK.linkLabel}
-                </p>
-              </div>
-              <div className="rounded-[10px] border border-(--lv5-line) p-2.5">
-                <p className="m-0 text-[0.66rem] font-semibold text-(--lv5-ink-tertiary)">
-                  {HERO_PHONE_MOCK.followUpLabel}
-                </p>
-                <p className="m-0 mt-1 text-[0.76rem] leading-[1.4] text-(--lv5-ink)">
-                  {HERO_PHONE_MOCK.question}
-                </p>
-              </div>
-              <div className="mt-auto flex min-h-8.5 items-center justify-center rounded-[10px] bg-(--lv5-violet) text-[0.74rem] font-semibold text-white">
-                {HERO_PHONE_MOCK.cta}
-              </div>
-            </div>
+            <AppFinalizeScreen />
           </PhoneFrame>
         </div>
       </Reveal>
@@ -232,93 +138,151 @@ export function LandingV5Hero() {
 
 /**
  * Version fluide de la maquette du hero, servie sous 1024px à la place du
- * `BrowserFrame`. Même contenu (`HERO_MOCK`), même ordre de lecture — notes
- * brutes puis compte rendu — mais dessinée à la largeur réelle du conteneur :
- * le texte garde la taille du reste de la page au lieu d'être réduit par le
- * facteur d'échelle du cadre. Le principe est celui déjà retenu pour la
- * maquette de l'atelier (cf. atelier.tsx).
+ * `BrowserFrame` : sous cette largeur le facteur d'échelle du cadre passe
+ * sous 0.8 et la maquette descend en dessous de 10px, illisible. Celle-ci est
+ * dessinée à la largeur réelle du conteneur, à la taille de texte de la page.
+ *
+ * Elle reprend la disposition mobile du module (bloc `lg:hidden` de
+ * `reports-editor.tsx`) : en-tête collant, sélecteur de section à la place de
+ * la barre latérale, puis le contenu de l'onglet et la barre de décision.
  */
 function HeroMockMobile() {
+  const mock = WEB_MOCK_REPORT;
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-(--lv5-frame-border) bg-(--lv5-canvas) text-left lg:hidden">
-      <div className="flex items-center gap-1.5 border-b border-(--lv5-frame-border) px-3.5 py-2.5">
+    <div
+      className={`biume-app-mock biume-web-mock ${appFontVariables} overflow-hidden rounded-2xl border border-(--lv5-frame-border) text-left lg:hidden`}
+      style={{ background: "var(--app-muted)" }}
+    >
+      <div className="flex items-center gap-1.5 border-b border-(--lv5-frame-border) bg-(--lv5-canvas) px-3.5 py-2.5">
         <span className="size-2.5 shrink-0 rounded-full bg-(--lv5-line)" />
         <span className="size-2.5 shrink-0 rounded-full bg-(--lv5-line)" />
         <span className="size-2.5 shrink-0 rounded-full bg-(--lv5-line)" />
         <span className="mx-auto truncate rounded-full bg-(--lv5-surface) px-4 py-1 text-[0.72rem] text-(--lv5-ink-tertiary)">
-          app.biume.com/seances/nashira
+          {mock.url}
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-(--lv5-frame-border) bg-(--lv5-surface) px-4 py-3.5">
+      <div
+        className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5"
+        style={{
+          background: "var(--app-surface)",
+          borderBottom: "1px solid var(--app-line-strong)",
+        }}
+      >
         <div className="min-w-0">
-          <p className="m-0 text-[1rem] font-semibold tracking-[-.015em] text-(--lv5-ink)">
-            {HERO_MOCK.subject}
+          <p className="m-0 text-[1rem] font-semibold" style={{ color: "var(--app-ink)" }}>
+            {mock.title}
           </p>
-          <p className="m-0 mt-1 text-[0.76rem] text-(--lv5-ink-tertiary)">
-            {HERO_MOCK.subtitle}
-          </p>
-        </div>
-        <span className="inline-flex h-8.5 items-center rounded-full bg-(--lv5-violet) px-4 text-[0.8rem] font-semibold text-white">
-          {HERO_MOCK.sendLabel}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-3 bg-(--lv5-surface) p-4">
-        <div
-          className="rounded-[14px] p-4"
-          style={{ background: "var(--lv5-anthracite)", color: "rgba(253,253,251,.86)" }}
-        >
-          <p
-            className="m-0 mb-2.5 text-[0.68rem] uppercase tracking-[.08em]"
-            style={{ fontFamily: "var(--lv5-font-mono)", color: "rgba(253,253,251,.42)" }}
-          >
-            {HERO_MOCK.rawLabel}
-          </p>
-          <p
-            className="m-0 text-[0.82rem] leading-[1.7]"
-            style={{ fontFamily: "var(--lv5-font-mono)" }}
-          >
-            {HERO_MOCK.raw}
+          <p className="m-0 mt-1 text-[0.8rem]" style={{ color: "var(--app-ink-mute)" }}>
+            {mock.patient.join(" · ")}
           </p>
         </div>
-
         <span
-          aria-hidden="true"
-          className="self-center text-[1.1rem] leading-none text-(--lv5-violet)"
+          className="inline-flex h-9 items-center rounded-[12px] px-4 text-[0.84rem] font-semibold text-white"
+          style={{ background: "var(--app-violet)" }}
         >
-          ↓
+          {mock.finalize}
         </span>
+      </div>
 
-        <div className="rounded-[14px] border border-(--lv5-line) bg-(--lv5-surface) p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="m-0 text-[0.68rem] uppercase tracking-[.08em] text-(--lv5-ink-tertiary)">
-              {HERO_MOCK.outLabel}
-            </p>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-(--lv5-green-soft) px-2.5 py-1 text-[0.7rem] font-semibold text-(--lv5-green-ink)">
-              <span className="size-1.5 rounded-full bg-(--lv5-green)" />
-              {HERO_MOCK.outStatus}
-            </span>
+      {/* Le sélecteur de section remplace la barre latérale sous 1024px. */}
+      <div
+        className="flex flex-wrap items-center gap-2 px-4 py-3"
+        style={{
+          background: "var(--app-surface)",
+          borderBottom: "1px solid var(--app-line-strong)",
+        }}
+      >
+        <span
+          className="inline-flex h-10 flex-1 items-center justify-between gap-2 rounded-[12px] px-3 text-[0.86rem] font-medium"
+          style={{ border: "1px solid var(--app-line-strong)", color: "var(--app-ink)" }}
+        >
+          {mock.sidebarTabs[1].label}
+          <span aria-hidden="true" style={{ color: "var(--app-ink-mute)" }}>
+            ▾
+          </span>
+        </span>
+        <span
+          className="inline-flex h-10 items-center gap-1.5 rounded-[12px] px-3 text-[0.84rem] font-semibold text-white"
+          style={{ background: "var(--app-violet)" }}
+        >
+          + {mock.anatomyAdd}
+        </span>
+      </div>
+
+      <div style={{ background: "rgba(248,250,252,.6)" }}>
+        <div className="relative mx-auto w-full max-w-[420px] p-4 pt-16">
+          <Image
+            src="/assets/images/horse-anatomy-widget.jpg"
+            alt=""
+            width={900}
+            height={600}
+            className="block h-auto w-full mix-blend-multiply"
+          />
+          <svg
+            viewBox="0 0 500 380"
+            preserveAspectRatio="xMidYMid meet"
+            className="absolute inset-x-4 bottom-4 top-16 h-[calc(100%-5rem)] w-[calc(100%-2rem)]"
+          >
+            {ANATOMY_ZONES.map((zone, index) => (
+              <path
+                key={zone.label}
+                d={zone.path}
+                transform={zone.transform}
+                fill={index === 0 ? "rgba(234,179,8,.5)" : "rgba(34,197,94,.5)"}
+                stroke={index === 0 ? "rgba(234,179,8,1)" : "rgba(34,197,94,1)"}
+                strokeWidth="5"
+              />
+            ))}
+          </svg>
+
+          <div
+            className="absolute right-6 top-6 inline-flex items-center gap-1 rounded-[14px] p-1"
+            style={{
+              border: "1px solid var(--app-line-strong)",
+              background: "rgba(249,250,251,.9)",
+            }}
+          >
+            {mock.anatomyViews.map((view, index) => (
+              <span
+                key={view}
+                className="inline-flex h-8 items-center rounded-[10px] px-2.5 text-[0.74rem]"
+                style={{
+                  fontWeight: index === 0 ? 600 : 500,
+                  color: index === 0 ? "var(--app-ink)" : "var(--app-ink-mute)",
+                  background: index === 0 ? "var(--app-accent)" : "transparent",
+                }}
+              >
+                {view}
+              </span>
+            ))}
           </div>
-          <HeroAnatomyPreview />
-          {HERO_MOCK.out.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="m-0 mb-3 text-[0.94rem] leading-[1.6] text-(--lv5-ink) last:mb-0"
-            >
-              {paragraph}
-            </p>
-          ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-(--lv5-frame-border) bg-(--lv5-canvas) px-4 py-3">
-        <span className="text-[0.76rem] text-(--lv5-ink-tertiary)">
-          {HERO_MOCK.statusBarLeft}
+      <div
+        className="flex flex-wrap items-center gap-2 px-4 py-3"
+        style={{
+          borderTop: "1px solid var(--app-line-strong)",
+          background: "var(--app-canvas)",
+        }}
+      >
+        <span
+          className="inline-flex h-9 items-center rounded-[12px] px-3 text-[0.84rem] font-medium"
+          style={{
+            border: "1px solid var(--app-line-strong)",
+            background: "var(--app-surface)",
+            color: "var(--app-ink)",
+          }}
+        >
+          {mock.decisionConfirm}
         </span>
-        <span className="inline-flex items-center gap-1.5 text-[0.76rem] font-semibold text-(--lv5-green-ink)">
-          <span className="size-1.5 rounded-full bg-(--lv5-green)" />
-          {HERO_MOCK.statusBarRight}
+        <span
+          className="inline-flex h-9 items-center rounded-[12px] px-3 text-[0.84rem] font-medium"
+          style={{ color: "var(--app-ink-soft)" }}
+        >
+          {mock.decisionDismiss}
         </span>
       </div>
     </div>

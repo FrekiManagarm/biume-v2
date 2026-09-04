@@ -92,3 +92,68 @@
   from { opacity: 0; transform: scale(0.82); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ── Maquettes de produit ──────────────────────────────────────────
+   Palette commune au mobile (`handoff/Biume Mobile.html`) et au web
+   (`packages/ui/src/styles/product.css`) : les deux portent exactement les
+   mêmes valeurs, seule la police change.
+   Ce sont des captures de l'application, pas des blocs de la page : elles
+   gardent la palette de l'app (ardoise froide) au lieu d'emprunter celle,
+   plus chaude, de la landing. Un écran dans un cadre d'appareil se lit
+   comme un objet à part, la rupture de teinte est voulue. */
+.biume-app-mock {
+  --app-canvas: #F9FAFB;
+  --app-surface: #FFFFFF;
+  --app-line: #E2E8F0;
+  /* `--border` de l'application web ; `--app-line` est la ligne plus douce
+     que le board mobile pose sur ses cartes. */
+  --app-line-strong: #CBD5E1;
+  --app-track: #E7E9EE;
+  --app-muted: #F8FAFC;
+  --app-accent: #F1F5F9;
+
+  --app-ink: #020617;
+  --app-ink-body: #1E293B;
+  --app-ink-strong: #334155;
+  --app-ink-soft: #475569;
+  --app-ink-mute: #64748B;
+  --app-ink-faint: #94A3B8;
+
+  --app-violet: #6A52D6;
+  --app-violet-ink: #4C36A8;
+  --app-violet-body: #5B4BA3;
+  --app-violet-soft: #F3F0FD;
+  --app-violet-line: #D8CFFA;
+  --app-violet-quote: #F6F5FC;
+
+  --app-green: #047857;
+  --app-green-soft: #ECFDF5;
+  --app-green-line: #A7F3D0;
+
+  --app-amber: #B45309;
+  --app-amber-soft: #FFFBEB;
+  --app-amber-line: #FDE68A;
+
+  /* Le dégradé de marque ne sert qu'aux deux gestes qui font avancer la
+     séance (dicter, finaliser) — règle 2 de la remise. */
+  --app-brand: linear-gradient(140deg, #8B7BE8, #3FBF87);
+  --app-brand-action: linear-gradient(120deg, #7B62E0, #4FAE93 78%, #3FBF87);
+
+  font-family: var(--font-biume-app-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Le board est dessiné sur l'interligne par defaut du navigateur ; la
+     preflight de Tailwind impose 1.5 a la page. Sans ce retour a `normal`,
+     chaque bloc gagnait une dizaine de pixels et l'ecran debordait de son
+     cadre — le dernier rendez-vous passait sous le socle. */
+  line-height: normal;
+}
+
+/* Bricolage Grotesque : titres, heures, minuteur du mobile. */
+.biume-app-display {
+  font-family: var(--font-biume-app-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Les maquettes web portent la police de l'application praticien. */
+.biume-web-mock {
+  font-family: var(--font-biume-web-sans), ui-sans-serif, system-ui, sans-serif;
+}
