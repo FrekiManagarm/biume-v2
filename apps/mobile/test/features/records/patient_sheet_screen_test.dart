@@ -10,15 +10,37 @@ import 'package:biume_mobile/features/records/presentation/patient_sheet_cubit.d
 import 'package:biume_mobile/features/records/presentation/patient_sheet_screen.dart';
 import 'package:biume_mobile/features/report/domain/proposal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 class MockPatientRepository extends Mock implements PatientRepository {}
 
 class MockOwnerRepository extends Mock implements OwnerRepository {}
+
+/// Double du canal de plateforme d'`url_launcher` — c'est la façon
+/// documentée de tester ce qu'il se passe quand `launchUrl` échoue, sans
+/// dépendre d'un vrai canal de méthode absent en test.
+class _FakeUrlLauncher extends UrlLauncherPlatform {
+  bool succeeds = true;
+  bool throws = false;
+  String? lastUrl;
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    lastUrl = url;
+    if (throws) throw PlatformException(code: 'launch_error');
+    return succeeds;
+  }
+}
 
 const filou = Patient(
   id: 'pet-1',
@@ -48,6 +70,7 @@ void main() {
 
   late MockPatientRepository patients;
   late MockOwnerRepository owners;
+  late _FakeUrlLauncher launcher;
 
   setUp(() {
     patients = MockPatientRepository();
@@ -55,6 +78,9 @@ void main() {
     when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
     when(() => patients.history('pet-1')).thenAnswer((_) async => const Success([]));
     when(() => patients.cachedHistory(any())).thenAnswer((_) async => const []);
+
+    launcher = _FakeUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
   });
 
   /// Construit un routeur minimal autour de l'écran de fiche : les cartes de
@@ -204,6 +230,71 @@ void main() {
         expect(appeler.onPressed, isNotNull);
         expect(ecrire.onPressed, isNotNull);
         expect(find.text('Lyon'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Appeler compose le numéro normalisé, espaces et points retirés',
+      (tester) async {
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(
+            id: 'owner-1',
+            name: 'Camille Roux',
+            phone: '06 00.00 00 00',
+          ),
+        );
+
+        await monter(tester);
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Appeler'));
+        await tester.pump();
+
+        expect(launcher.lastUrl, 'tel:0600000000');
+      },
+    );
+
+    testWidgets(
+      "dit que ça n'a pas marché quand aucune application ne peut ouvrir l'adresse",
+      (tester) async {
+        launcher.succeeds = false;
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(
+            id: 'owner-1',
+            name: 'Camille Roux',
+            phone: '0600000000',
+          ),
+        );
+
+        await monter(tester);
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Appeler'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text("Impossible d'ouvrir cette application."),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      "dit que ça n'a pas marché quand l'ouverture lève une exception",
+      (tester) async {
+        launcher.throws = true;
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(
+            id: 'owner-1',
+            name: 'Camille Roux',
+            email: 'camille@example.org',
+          ),
+        );
+
+        await monter(tester);
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Écrire'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text("Impossible d'ouvrir cette application."),
+          findsOneWidget,
+        );
       },
     );
   });

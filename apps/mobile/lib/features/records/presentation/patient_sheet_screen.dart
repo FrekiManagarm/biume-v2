@@ -150,20 +150,44 @@ String _headerSubtitle(Patient patient, int? ageYears) {
   return segments.join(' · ');
 }
 
+/// Message lu quand ni un bouton ne fait rien, ni une exception ne remonte
+/// nulle part : aucune application de téléphonie, une adresse mal formée, et
+/// il ne devait plus rien se passer en silence — le praticien qui tape doit
+/// savoir que ça n'a pas marché, pas croire à un écran figé.
+const String _launchFailedMessage = "Impossible d'ouvrir cette application.";
+
 class _OwnerCard extends StatelessWidget {
   const _OwnerCard({required this.owner, required this.palette});
 
   final Owner owner;
   final AppPalette palette;
 
-  Future<void> _appeler() =>
-      launchUrl(Uri(scheme: 'tel', path: owner.phone));
+  Future<void> _appeler(BuildContext context, String phone) =>
+      _launch(context, Uri(scheme: 'tel', path: phone));
 
-  Future<void> _ecrire() =>
-      launchUrl(Uri(scheme: 'mailto', path: owner.email));
+  Future<void> _ecrire(BuildContext context) =>
+      _launch(context, Uri(scheme: 'mailto', path: owner.email));
+
+  /// `launchUrl` renvoie `false`, sans lever d'exception, quand aucune
+  /// application ne sait ouvrir l'adresse — et peut aussi lever une
+  /// exception de plateforme selon l'échec. Les deux cas doivent se voir.
+  Future<void> _launch(BuildContext context, Uri uri) async {
+    var succeeded = false;
+    try {
+      succeeded = await launchUrl(uri);
+    } catch (_) {
+      succeeded = false;
+    }
+    if (succeeded || !context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(_launchFailedMessage)));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final phone = _normalizedPhone(owner.phone);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -184,7 +208,7 @@ class _OwnerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: owner.phone != null ? _appeler : null,
+                  onPressed: phone != null ? () => _appeler(context, phone) : null,
                   icon: const Icon(Icons.call_outlined),
                   label: const Text('Appeler'),
                 ),
@@ -192,7 +216,7 @@ class _OwnerCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: owner.email != null ? _ecrire : null,
+                  onPressed: owner.email != null ? () => _ecrire(context) : null,
                   icon: const Icon(Icons.email_outlined),
                   label: const Text('Écrire'),
                 ),
@@ -203,6 +227,15 @@ class _OwnerCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Un numéro saisi avec des espaces, points ou tirets ne doit pas partir tel
+/// quel, simplement encodé, dans l'adresse `tel:` : seuls les chiffres et un
+/// éventuel `+` international sont retenus.
+String? _normalizedPhone(String? phone) {
+  if (phone == null) return null;
+  final digits = phone.replaceAll(RegExp('[^0-9+]'), '');
+  return digits.isEmpty ? null : digits;
 }
 
 class _HistoryTile extends StatelessWidget {
