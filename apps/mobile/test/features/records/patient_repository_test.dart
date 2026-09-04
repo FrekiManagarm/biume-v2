@@ -731,4 +731,123 @@ void main() {
       },
     );
   });
+
+  /// Le cas du changement d'entreprise : les requêtes du cabinet précédent
+  /// sont encore en vol quand le cache est vidé. Ce qu'elles rapportent —
+  /// des animaux, des propriétaires, un compte rendu entier — ne doit rien
+  /// laisser derrière lui dans le cache du cabinet suivant.
+  group('vidage du cache pendant une requête en vol', () {
+    test("refresh n'écrit rien après un vidage", () async {
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            await db.clearReadCache();
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'items': [
+                    {
+                      'id': 'pet-cabinet-precedent',
+                      'ownerId': 'owner-1',
+                      'ownerName': 'Camille Roux',
+                      'name': 'Filou',
+                      'species': 'DOG',
+                      'breed': null,
+                    },
+                  ],
+                  'nextCursor': null,
+                },
+              ),
+            );
+          },
+        ),
+      );
+
+      await repository.refresh();
+
+      expect(await db.select(db.cachedPatients).get(), isEmpty);
+    });
+
+    test("refreshSheetsFor n'écrit rien après un vidage", () async {
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            await db.clearReadCache();
+            switch (options.path) {
+              case '/api/mobile/v1/owners':
+                handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: {
+                      'items': [
+                        {
+                          'id': 'owner-1',
+                          'name': 'Camille Roux',
+                          'email': null,
+                          'phone': null,
+                          'city': null,
+                          'patientCount': 1,
+                        },
+                      ],
+                      'nextCursor': null,
+                    },
+                  ),
+                );
+              case '/api/mobile/v1/patients/pet-1/history':
+                handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: {
+                      'items': [
+                        {
+                          'appointmentId': 'appt-1',
+                          'beginAt': '2026-08-01T09:00:00.000Z',
+                          'reportId': 'report-1',
+                          'reportStatus': 'finalized',
+                          'consultationReason': 'Suivi lombaire',
+                        },
+                      ],
+                      'nextCursor': null,
+                    },
+                  ),
+                );
+              case '/api/mobile/v1/reports/report-1/proposals':
+                handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: {
+                      'reportId': 'report-1',
+                      'status': 'finalized',
+                      'patientName': 'Filou',
+                    },
+                  ),
+                );
+              default:
+                handler.reject(
+                  DioException(
+                    requestOptions: options,
+                    type: DioExceptionType.badResponse,
+                    response: Response(
+                      requestOptions: options,
+                      statusCode: 404,
+                    ),
+                  ),
+                );
+            }
+          },
+        ),
+      );
+
+      await repository.refreshSheetsFor(['pet-1']);
+
+      expect(await db.select(db.cachedOwners).get(), isEmpty);
+      expect(await db.select(db.cachedPatientHistoryEntries).get(), isEmpty);
+      expect(await db.select(db.cachedReports).get(), isEmpty);
+    });
+  });
 }

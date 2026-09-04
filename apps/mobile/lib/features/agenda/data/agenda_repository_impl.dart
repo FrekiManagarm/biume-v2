@@ -25,6 +25,11 @@ class AgendaRepositoryImpl implements AgendaRepository {
 
   @override
   Future<Result<void>> refreshWindow(DateTime from, DateTime to) async {
+    // Capturée avant le départ des requêtes : si le cache est vidé pendant
+    // qu'elles sont en vol — un changement d'entreprise — ce qu'elles
+    // rapportent appartient au cabinet précédent et ne doit rien écrire.
+    final generation = _db.readCacheGeneration;
+
     final List<Map<String, dynamic>> items;
     switch (await _fetchAll(from, to)) {
       case Success(:final value):
@@ -37,7 +42,7 @@ class AgendaRepositoryImpl implements AgendaRepository {
 
     // Remplacement de toute la fenêtre, dans une transaction : un
     // rafraîchissement interrompu ne laisse jamais l'agenda à moitié écrit.
-    await _db.transaction(() async {
+    await _db.writeReadCache(generation, () async {
       await (_db.delete(_db.cachedAppointments)
             ..where((row) => row.beginAt.isBiggerOrEqualValue(from))
             ..where((row) => row.beginAt.isSmallerThanValue(to)))

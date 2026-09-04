@@ -177,9 +177,46 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
+  /// Génération du cache de lecture, en mémoire. Incrémentée à chaque vidage
+  /// — changement d'entreprise, déconnexion.
+  ///
+  /// Un rafraîchissement part sur le réseau avec plusieurs requêtes en vol :
+  /// trois listes paginées et deux appels par animal de la fenêtre d'agenda.
+  /// Leurs réponses reviennent bien après leur départ, et rien dans leur
+  /// contenu ne dit de quel cabinet elles parlent — le client ne porte pas
+  /// l'entreprise, le serveur la lit dans la session. Sans ce compteur, une
+  /// réponse du cabinet précédent réécrirait ses propriétaires, ses
+  /// historiques et ses comptes rendus dans le cache du cabinet suivant.
+  int _readCacheGeneration = 0;
+
+  int get readCacheGeneration => _readCacheGeneration;
+
+  /// Applique [writes] dans une transaction, et **seulement si** le cache n'a
+  /// pas été vidé depuis [generation]. Renvoie `false` quand l'écriture a été
+  /// abandonnée.
+  ///
+  /// Le contrôle est fait à l'intérieur de la transaction : drift sérialise
+  /// les accès à la connexion, donc aucun vidage ne peut s'intercaler entre
+  /// lui et les écritures qui suivent.
+  Future<bool> writeReadCache(
+    int generation,
+    Future<void> Function() writes,
+  ) async {
+    var applied = false;
+    await transaction(() async {
+      if (generation != _readCacheGeneration) return;
+      await writes();
+      applied = true;
+    });
+    return applied;
+  }
+
   /// Vide **uniquement** le cache de lecture. La file de dictées n'est jamais
   /// touchée ici : elle porte du travail que le praticien ne peut pas refaire.
   Future<void> clearReadCache() async {
+    // Incrémentée avant la suppression : toute écriture partie avant cet
+    // instant est déjà périmée, même si elle revient pendant le vidage.
+    _readCacheGeneration++;
     await batch((batch) {
       batch.deleteWhere(cachedAppointments, (_) => const Constant(true));
       batch.deleteWhere(cachedOwners, (_) => const Constant(true));

@@ -181,4 +181,45 @@ void main() {
     expect(result.failureOrNull, isA<NetworkFailure>());
     expect(await db.select(db.cachedAppointments).get(), isEmpty);
   });
+
+  /// Le cas du changement d'entreprise : les requêtes du cabinet précédent
+  /// sont encore en vol quand le cache est vidé. Leurs réponses reviennent
+  /// après, et ne doivent rien laisser derrière elles — sans quoi les
+  /// séances d'un cabinet réapparaissent dans l'agenda du suivant.
+  test(
+    "une réponse partie avant un vidage du cache n'écrit rien",
+    () async {
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            await db.clearReadCache();
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'items': [
+                    {
+                      'id': 'appointment-cabinet-precedent',
+                      'patientId': 'pet-1',
+                      'patientName': 'Filou',
+                      'animalType': 'DOG',
+                      'beginAt': '2026-09-03T08:00:00.000Z',
+                      'endAt': '2026-09-03T09:00:00.000Z',
+                      'status': 'CREATED',
+                    },
+                  ],
+                  'nextCursor': null,
+                },
+              ),
+            );
+          },
+        ),
+      );
+
+      await repository.refreshWindow(from, to);
+
+      expect(await db.select(db.cachedAppointments).get(), isEmpty);
+    },
+  );
 }

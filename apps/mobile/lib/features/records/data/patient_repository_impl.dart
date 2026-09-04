@@ -39,6 +39,11 @@ class PatientRepositoryImpl implements PatientRepository {
 
   @override
   Future<Result<void>> refresh() async {
+    // Capturée avant le départ des requêtes : si le cache est vidé pendant
+    // qu'elles sont en vol — un changement d'entreprise — ce qu'elles
+    // rapportent appartient au cabinet précédent et ne doit rien écrire.
+    final generation = _db.readCacheGeneration;
+
     final items = <Map<String, dynamic>>[];
     String? cursor;
     try {
@@ -61,7 +66,7 @@ class PatientRepositoryImpl implements PatientRepository {
       return Err(failureFromDioException(error));
     }
 
-    await _db.transaction(() async {
+    await _db.writeReadCache(generation, () async {
       await _db.delete(_db.cachedPatients).go();
       for (final item in items) {
         await _db.into(_db.cachedPatients).insert(
@@ -110,6 +115,11 @@ class PatientRepositoryImpl implements PatientRepository {
 
   @override
   Future<Result<void>> refreshSheetsFor(Iterable<String> patientIds) async {
+    // Même génération pour toutes les écritures de ce rafraîchissement :
+    // propriétaires, historiques et comptes rendus partent ensemble et
+    // doivent renoncer ensemble si l'entreprise change entre-temps.
+    final generation = _db.readCacheGeneration;
+
     final owners = <Map<String, dynamic>>[];
     String? cursor;
     try {
@@ -130,7 +140,7 @@ class PatientRepositoryImpl implements PatientRepository {
       return Err(failureFromDioException(error));
     }
 
-    await _db.transaction(() async {
+    await _db.writeReadCache(generation, () async {
       await _db.delete(_db.cachedOwners).go();
       for (final owner in owners) {
         await _db.into(_db.cachedOwners).insert(
@@ -154,13 +164,13 @@ class PatientRepositoryImpl implements PatientRepository {
     await _forEachWithConcurrency(
       patientIds,
       _sheetsConcurrency,
-      _refreshSheetFor,
+      (patientId) => _refreshSheetFor(patientId, generation),
     );
 
     return const Success(null);
   }
 
-  Future<void> _refreshSheetFor(String patientId) async {
+  Future<void> _refreshSheetFor(String patientId, int generation) async {
     final List<PatientHistoryEntry> entries;
     try {
       final historyResult = await history(patientId);
@@ -176,7 +186,7 @@ class PatientRepositoryImpl implements PatientRepository {
       // travailleurs, ni faire rejeter le résultat rendu par
       // `refreshSheetsFor` — une erreur asynchrone non rattrapée dans un
       // rafraîchissement d'arrière-plan ne se diagnostique jamais.
-      await _db.transaction(() async {
+      await _db.writeReadCache(generation, () async {
         await (_db.delete(
           _db.cachedPatientHistoryEntries,
         )..where((h) => h.patientId.equals(patientId))).go();
@@ -214,7 +224,7 @@ class PatientRepositoryImpl implements PatientRepository {
         '/api/mobile/v1/reports/${lastFinalized.reportId}/proposals',
       );
       final data = response.data!;
-      await _db.transaction(() async {
+      await _db.writeReadCache(generation, () async {
         // Un seul compte rendu en cache par animal : si celui qui était
         // « le dernier finalisé » a changé depuis la dernière synchronisation,
         // l'ancien ne doit pas traîner indéfiniment.
