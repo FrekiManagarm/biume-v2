@@ -39,14 +39,14 @@ class HomeScreen extends StatelessWidget {
             PopupMenuButton<String>(
               tooltip: 'Ajouter',
               icon: const Icon(Icons.add),
-              // « Nouveau client » arrive à la tâche suivante : ce menu ne
-              // propose que ce que l'application sait déjà faire.
               onSelected: (value) => switch (value) {
                 'seance' => context.push('/seances/nouvelle'),
+                'client' => context.push('/clients/nouveau'),
                 _ => null,
               },
               itemBuilder: (_) => const [
                 PopupMenuItem(value: 'seance', child: Text('Nouvelle séance')),
+                PopupMenuItem(value: 'client', child: Text('Nouveau client')),
               ],
             ),
             PopupMenuButton<String>(

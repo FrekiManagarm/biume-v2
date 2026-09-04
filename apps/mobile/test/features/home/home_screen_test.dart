@@ -90,6 +90,10 @@ void main() {
           builder: (_, _) => const Text('nouvelle-seance'),
         ),
         GoRoute(
+          path: '/clients/nouveau',
+          builder: (_, _) => const Text('nouveau-client'),
+        ),
+        GoRoute(
           path: '/seances/:appointmentId/deplacer',
           builder: (_, state) {
             final appointment = state.extra as Appointment?;
@@ -186,6 +190,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('nouvelle-seance'), findsOneWidget);
+  });
+
+  testWidgets('le menu « + » propose aussi « Nouveau client » et y navigue', (
+    tester,
+  ) async {
+    await monter(tester);
+
+    await tester.tap(find.byTooltip('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nouveau client'), findsOneWidget);
+
+    await tester.tap(find.text('Nouveau client'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('nouveau-client'), findsOneWidget);
   });
 
   testWidgets(

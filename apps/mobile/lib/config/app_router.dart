@@ -11,6 +11,7 @@ import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/capture/presentation/recording_page.dart';
 import '../features/followup/presentation/follow_up_schedule_page.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/records/presentation/new_client_screen.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/transcript/presentation/transcript_page.dart';
@@ -55,6 +56,12 @@ GoRouter buildAppRouter(AuthCubit auth) {
       GoRoute(
         path: '/animaux/choisir',
         builder: (_, _) => const PatientPickerPage(),
+      ),
+      GoRoute(
+        path: '/clients/nouveau',
+        builder: (_, state) => NewClientPage(
+          existingOwnerId: state.uri.queryParameters['proprietaire'],
+        ),
       ),
       GoRoute(
         path: '/seances/nouvelle',

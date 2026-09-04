@@ -70,6 +70,17 @@ Future<void> ouvrirLeSelecteur(
           child: const PatientPickerScreen(),
         ),
       ),
+      GoRoute(
+        path: '/clients/nouveau',
+        builder: (context, state) => Scaffold(
+          body: ListTile(
+            title: Text(
+              'créer, propriétaire ${state.uri.queryParameters['proprietaire']}',
+            ),
+            onTap: () => context.pop(rex),
+          ),
+        ),
+      ),
     ],
   );
 
@@ -155,6 +166,47 @@ void main() {
         find.textContaining('Connectez-vous une fois au réseau'),
         findsNothing,
       );
+    },
+  );
+
+  testWidgets(
+    '« Nouveau client » renvoie l\'animal créé directement à l\'appelant',
+    (tester) async {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex]));
+
+      await ouvrirLeSelecteur(tester, repository);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Nouveau client'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('créer, propriétaire null'));
+      await tester.pumpAndSettle();
+
+      final appelant = tester.state<_AppelantState>(find.byType(_Appelant));
+      expect(appelant.resultat, equals(rex));
+    },
+  );
+
+  testWidgets(
+    'un appui long propose d\'ajouter un animal au propriétaire de la ligne',
+    (tester) async {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex]));
+
+      await ouvrirLeSelecteur(tester, repository);
+
+      await tester.longPress(find.text('Filou'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter un animal à Camille Roux'), findsOneWidget);
+
+      await tester.tap(find.text('Ajouter un animal à Camille Roux'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('créer, propriétaire owner-1'));
+      await tester.pumpAndSettle();
+
+      final appelant = tester.state<_AppelantState>(find.byType(_Appelant));
+      expect(appelant.resultat, equals(rex));
     },
   );
 }

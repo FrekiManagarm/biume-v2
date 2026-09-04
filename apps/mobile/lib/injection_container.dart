@@ -27,7 +27,9 @@ import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
 import 'features/followup/data/http_follow_up_repository.dart';
 import 'features/followup/domain/follow_up_repository.dart';
+import 'features/records/data/http_owner_repository.dart';
 import 'features/records/data/patient_repository_impl.dart';
+import 'features/records/domain/owner_repository.dart';
 import 'features/records/domain/patient_repository.dart';
 import 'features/report/data/http_report_repository.dart';
 import 'features/report/domain/report_repository.dart';
@@ -80,6 +82,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<PatientRepository>(
       () => PatientRepositoryImpl(getIt(), getIt()),
+    )
+    ..registerLazySingleton<OwnerRepository>(
+      () => HttpOwnerRepository(getIt()),
     )
     ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
     ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
