@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/result.dart';
 import '../../capture/domain/capture_store.dart';
+import '../../followup/domain/actionable_follow_up_repository.dart';
+import '../../followup/domain/follow_up.dart';
 import '../domain/todo_api.dart';
 import '../domain/todo_item.dart';
 
@@ -39,13 +41,19 @@ class TodoCubit extends Cubit<TodoState> {
   TodoCubit(
     this._store,
     this._api, {
+    required ActionableFollowUpRepository followUps,
     this.pollInterval = const Duration(seconds: 10),
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now,
+  }) : // Un paramètre nommé ne peut pas être privé : le champ garde son
+       // underscore, le point d'appel garde un nom lisible.
+       // ignore: prefer_initializing_formals
+       _followUps = followUps,
+       _now = now ?? DateTime.now,
        super(const TodoState(items: []));
 
   final CaptureStore _store;
   final TodoApi _api;
+  final ActionableFollowUpRepository _followUps;
   final Duration pollInterval;
   final DateTime Function() _now;
 
@@ -56,6 +64,7 @@ class TodoCubit extends Cubit<TodoState> {
 
   List<LocalCapture> _local = const [];
   List<TodoItem> _remote = const [];
+  List<FollowUp> _followUpItems = const [];
   StreamSubscription<List<LocalCapture>>? _subscription;
   Timer? _timer;
 
@@ -79,9 +88,22 @@ class TodoCubit extends Cubit<TodoState> {
   }
 
   Future<void> refresh() async {
-    final result = await _api.list();
+    // Les deux lectures partent ensemble : « À traiter » ne doit pas coûter
+    // deux allers-retours en série au praticien qui ouvre l'application.
+    final remoteFuture = _api.list();
+    final followUpsFuture = _followUps.listActionable();
+    final remoteResult = await remoteFuture;
+    final followUpsResult = await followUpsFuture;
     if (_shuttingDown) return;
-    switch (result) {
+
+    // Un suivi qui ne se charge pas ne doit pas vider « À traiter » : la
+    // dernière liste connue reste, et seul l'échec du serveur principal fait
+    // apparaître le bandeau hors ligne.
+    if (followUpsResult case Success(:final value)) {
+      _followUpItems = value.where((follow) => follow.isActionable).toList();
+    }
+
+    switch (remoteResult) {
       case Success(:final value):
         _remote = value;
         _publish(null);
@@ -122,43 +144,16 @@ class TodoCubit extends Cubit<TodoState> {
   void _publish(String? offlineMessage) {
     if (_shuttingDown) return;
 
-    final now = _now();
-    final requestedAt = {
-      for (final c in _local)
-        if (c.extractionRequestedAt != null) c.id: c.extractionRequestedAt!,
-    };
-
-    // Les dictées locales non envoyées passent en tête : ce sont les seules
-    // dont le praticien peut faire quelque chose sans réseau.
-    final local = _local
-        .where(
-          (c) =>
-              c.status == LocalCaptureStatus.queued ||
-              c.status == LocalCaptureStatus.uploading ||
-              c.status == LocalCaptureStatus.needsAction,
-        )
-        .map(
-          (c) => TodoItem(
-            kind: c.status == LocalCaptureStatus.needsAction
-                ? TodoKind.uploadBlocked
-                : TodoKind.pendingUpload,
-            captureId: c.id,
-            appointmentId: c.appointmentId,
-            updatedAt: c.createdAt,
-          ),
-        );
-
-    final remote = _remote.map((item) {
-      final at = requestedAt[item.captureId];
-      final preparing =
-          item.kind == TodoKind.transcriptToReview &&
-          at != null &&
-          now.difference(at) < preparingWindow;
-      return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
-    });
-
     emit(
-      TodoState(items: [...local, ...remote], offlineMessage: offlineMessage),
+      TodoState(
+        items: composeTodo(
+          local: _local,
+          followUps: _followUpItems,
+          remote: _remote,
+          now: _now(),
+        ),
+        offlineMessage: offlineMessage,
+      ),
     );
   }
 
@@ -172,4 +167,59 @@ class TodoCubit extends Cubit<TodoState> {
     await _subscription?.cancel();
     return super.close();
   }
+}
+
+/// Ce que « À traiter » montre, à partir des trois sources.
+///
+/// Pure et hors du cubit : le réveil en arrière-plan compose exactement la
+/// même liste, sans écran ni cubit, pour décider quoi notifier. Deux
+/// compositions différentes finiraient par notifier autre chose que ce que le
+/// praticien voit.
+List<TodoItem> composeTodo({
+  required List<LocalCapture> local,
+  required List<FollowUp> followUps,
+  required List<TodoItem> remote,
+  required DateTime now,
+}) {
+  final requestedAt = {
+    for (final c in local)
+      if (c.extractionRequestedAt != null) c.id: c.extractionRequestedAt!,
+  };
+
+  // Les dictées locales non envoyées passent en tête : ce sont les seules
+  // dont le praticien peut faire quelque chose sans réseau.
+  final locales = local
+      .where(
+        (c) =>
+            c.status == LocalCaptureStatus.queued ||
+            c.status == LocalCaptureStatus.uploading ||
+            c.status == LocalCaptureStatus.needsAction,
+      )
+      .map(
+        (c) => TodoItem(
+          kind: c.status == LocalCaptureStatus.needsAction
+              ? TodoKind.uploadBlocked
+              : TodoKind.pendingUpload,
+          captureId: c.id,
+          appointmentId: c.appointmentId,
+          updatedAt: c.createdAt,
+        ),
+      );
+
+  final distants = remote.map((item) {
+    final at = requestedAt[item.captureId];
+    final preparing =
+        item.kind == TodoKind.transcriptToReview &&
+        at != null &&
+        now.difference(at) < TodoCubit.preparingWindow;
+    return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
+  });
+
+  // Les suivis s'intercalent entre les deux : un propriétaire qui attend
+  // passe avant un brouillon, jamais avant une dictée jamais partie.
+  return [
+    ...locales,
+    ...followUps.map((f) => TodoItem.followUp(f, now: now)),
+    ...distants,
+  ];
 }

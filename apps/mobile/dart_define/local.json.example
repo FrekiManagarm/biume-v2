@@ -1,3 +1,5 @@
 {
-  "BIUME_API_URL": "http://localhost:3000"
+  "BIUME_API_URL": "http://localhost:3000",
+  "BIUME_POSTHOG_KEY": "",
+  "BIUME_POSTHOG_HOST": "https://eu.i.posthog.com"
 }

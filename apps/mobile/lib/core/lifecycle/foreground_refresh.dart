@@ -2,18 +2,54 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../../features/agenda/domain/agenda_repository.dart';
 import '../../features/capture/domain/sync_engine.dart';
 import '../../features/records/domain/patient_repository.dart';
 import '../../injection_container.dart';
+import '../background/background_refresh.dart';
 
-/// Ce qui doit être à jour avant d'être sur le terrain : la file part, le cache
-/// des animaux se remplit. Appelé à la connexion et à chaque retour au premier
-/// plan, jamais à la demande depuis un écran.
+/// Ce qui doit être à jour avant d'être sur le terrain : la file part, le
+/// cache des animaux se remplit, la fenêtre d'agenda se rafraîchit. Appelé à
+/// la connexion, à chaque retour au premier plan, et après toute écriture
+/// qui change l'agenda (prise ou déplacement d'une séance) — jamais à la
+/// demande d'un simple affichage.
 Future<void> refreshForeground() async {
+  final today = DateTime.now();
+  final windowStart = DateTime.utc(today.year, today.month, today.day);
+  final windowEnd = windowStart.add(const Duration(days: 8));
+
   await Future.wait<void>([
     getIt<SyncEngine>().runOnce().then((_) {}),
     getIt<PatientRepository>().refresh().then((_) {}),
+    getIt<AgendaRepository>().refreshWindow(windowStart, windowEnd).then((
+      _,
+    ) {}),
   ]);
+
+  // Les fiches hors ligne — propriétaire et dernier compte rendu finalisé —
+  // ne couvrent que les animaux de la fenêtre qu'on vient de rafraîchir :
+  // c'est elle qui dit qui a une séance dans les huit jours.
+  final appointments = await getIt<AgendaRepository>()
+      .watchWindow(windowStart, windowEnd)
+      .first;
+  final patientIds = appointments.map((a) => a.patientId).toSet();
+  await getIt<PatientRepository>().refreshSheetsFor(patientIds).then((_) {});
+
+  // Le même cycle qu'en arrière-plan, mais muet : ce que le praticien a sous
+  // les yeux ne doit pas le réveiller une demi-heure plus tard. La file, elle,
+  // vient de repartir juste au-dessus.
+  await runBackgroundCycle(
+    sync: getIt(),
+    todo: getIt(),
+    followUps: getIt(),
+    store: getIt(),
+    memory: getIt(),
+    notifications: getIt(),
+    telemetry: getIt(),
+    now: DateTime.now,
+    notify: false,
+    runSync: false,
+  );
 }
 
 class ForegroundRefresh with WidgetsBindingObserver {

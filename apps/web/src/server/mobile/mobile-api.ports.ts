@@ -42,6 +42,8 @@ import {
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
+import { assertReportDecidable } from "./report-decision.service";
+import { buildSessionReportTitle } from "#/functions/appointment-report.service";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
 import {
   buildReportSectionStateRows,
@@ -73,6 +75,7 @@ import { sendNewReportEmail } from "./report-email";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
+import { dayBounds } from "./appointment-write.service";
 import {
   createCaptureRepository,
   type CaptureDatabase,
@@ -335,7 +338,10 @@ async function readFollowUp(
       answeredAt: followUp.answeredAt,
       handledAt: followUp.handledAt,
       patientName: pets.name,
+      patientId: advancedReport.patientId,
       ownerName: clients.name,
+      ownerPhone: clients.phone,
+      ownerEmail: clients.email,
     })
     .from(followUp)
     // Le nom de l'animal vient du rapport suivi, pas de « n'importe quel
@@ -371,7 +377,69 @@ async function readFollowUp(
     answer: row.answer ?? null,
     alertReasons: alerts.map((alert) => alert.reason as AlertReason),
     handledAt: row.handledAt?.toISOString() ?? null,
+    ownerPhone: row.ownerPhone ?? null,
+    ownerEmail: row.ownerEmail ?? null,
+    patientId: row.patientId ?? null,
   };
+}
+
+/**
+ * Le même prédicat que le web (`findAppointmentConflicts`) : les deux
+ * surfaces signalent exactement les mêmes chevauchements, par construction.
+ * La fenêtre de lecture est bornée à la journée concernée : détecter un
+ * chevauchement ne justifie jamais de charger tout l'agenda.
+ */
+async function conflictsOn(
+  actor: CaptureActor,
+  beginAt: Date,
+  endAt: Date,
+  excludeAppointmentId?: string,
+) {
+  const { dayStart, dayEnd } = dayBounds(beginAt);
+
+  const candidates = await db
+    .select({
+      id: appointments.id,
+      beginAt: appointments.beginAt,
+      endAt: appointments.endAt,
+      status: appointments.status,
+      patientName: pets.name,
+    })
+    .from(appointments)
+    .leftJoin(pets, eq(appointments.patientId, pets.id))
+    .where(
+      and(
+        eq(appointments.organizationId, actor.organizationId),
+        gte(appointments.beginAt, dayStart),
+        lte(appointments.beginAt, dayEnd),
+      ),
+    );
+
+  return findAppointmentConflicts({
+    beginAt,
+    endAt,
+    excludeAppointmentId,
+    candidates,
+  });
+}
+
+/** Le brouillon lié à la séance, s'il en existe un. */
+async function linkedReportId(reportScope: {
+  organizationId: string;
+  appointmentId: string;
+}): Promise<string | null> {
+  const [report] = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.appointmentId, reportScope.appointmentId),
+        eq(advancedReport.createdBy, reportScope.organizationId),
+      ),
+    )
+    .limit(1);
+
+  return report?.id ?? null;
 }
 
 export async function createProductionMobileApiPorts(
@@ -803,6 +871,9 @@ export async function createProductionMobileApiPorts(
     async decideProposal(actor, reportId, proposalId, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // La lecture accepte un rapport finalisé, la décision jamais : un
+      // compte rendu envoyé au propriétaire ne bouge plus (5.10).
+      assertReportDecidable(current.status);
 
       const decided = await createProposalRepository().decide(
         reportId,
@@ -817,6 +888,10 @@ export async function createProductionMobileApiPorts(
     async decideSection(actor, reportId, section, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Sans cette garde, décider une section entière sur un rapport
+      // finalisé répondait 200 sans rien changer : un silence qui se lit
+      // comme un succès.
+      assertReportDecidable(current.status);
 
       await createProposalRepository().decideSection(
         reportId,
@@ -830,6 +905,10 @@ export async function createProductionMobileApiPorts(
     async regenerateProposals(actor, reportId) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Même classe de mutation que les deux décisions : régénérer réécrit le
+      // contenu clinique. Un compte rendu parti chez le propriétaire ne bouge
+      // plus (5.10).
+      assertReportDecidable(current.status);
 
       // Sans proposition existante, la source est la capture du rapport, pas
       // une proposition : la toute première extraction n'en a encore laissé
@@ -961,31 +1040,6 @@ export async function createProductionMobileApiPorts(
 
       if (!target) throw new MobileRequestError("not_found");
 
-      // La fenêtre de lecture est bornée à la journée concernée : détecter un
-      // chevauchement ne justifie jamais de charger tout l'agenda.
-      const dayStart = new Date(beginAt);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(beginAt);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const candidates = await db
-        .select({
-          id: appointments.id,
-          beginAt: appointments.beginAt,
-          endAt: appointments.endAt,
-          status: appointments.status,
-          patientName: pets.name,
-        })
-        .from(appointments)
-        .leftJoin(pets, eq(appointments.patientId, pets.id))
-        .where(
-          and(
-            eq(appointments.organizationId, actor.organizationId),
-            gte(appointments.beginAt, dayStart),
-            lte(appointments.beginAt, dayEnd),
-          ),
-        );
-
       await db
         .update(appointments)
         .set({ beginAt, endAt, updatedAt: new Date() })
@@ -996,17 +1050,91 @@ export async function createProductionMobileApiPorts(
           ),
         );
 
-      // Le même prédicat que le web : les deux surfaces signalent exactement
-      // les mêmes chevauchements, par construction.
-      const conflicts = findAppointmentConflicts({
-        beginAt,
-        endAt,
-        excludeAppointmentId: appointmentId,
-        candidates,
-      });
+      const [conflicts, reportId] = await Promise.all([
+        conflictsOn(actor, beginAt, endAt, appointmentId),
+        linkedReportId({ organizationId: actor.organizationId, appointmentId }),
+      ]);
 
       return {
         appointmentId,
+        reportId,
+        beginAt: beginAt.toISOString(),
+        endAt: endAt.toISOString(),
+        conflicts: conflicts.map((conflict) => ({
+          appointmentId: conflict.id,
+          beginAt: new Date(conflict.beginAt).toISOString(),
+          patientName: conflict.patientName,
+        })),
+      };
+    },
+
+    /**
+     * L'ostéopathe animalier en tournée prend une séance entre deux portes.
+     * Le brouillon naît avec elle, comme sur le web : c'est lui que la
+     * dictée du rendez-vous alimentera. Un chevauchement n'empêche jamais
+     * l'écriture — il est signalé après coup, au praticien de trancher.
+     */
+    async createAppointment(actor, request) {
+      const beginAt = new Date(request.beginAt);
+      const endAt = new Date(request.endAt);
+
+      const [patient] = await db
+        .select({ id: pets.id, name: pets.name })
+        .from(pets)
+        .where(
+          and(
+            eq(pets.id, request.patientId),
+            eq(pets.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+      if (!patient) throw new MobileRequestError("not_found");
+
+      const appointmentId = crypto.randomUUID();
+      const reportId = crypto.randomUUID();
+      const now = new Date();
+
+      await db.batch([
+        db.insert(appointments).values({
+          id: appointmentId,
+          organizationId: actor.organizationId,
+          patientId: patient.id,
+          beginAt,
+          endAt,
+          atHome: request.atHome,
+          status: "CREATED",
+          createdAt: now,
+          updatedAt: now,
+        }),
+        db.insert(advancedReport).values({
+          id: reportId,
+          // Le helper partagé du web, jamais une copie de son format : les
+          // deux moitiés du produit écrivent dans la même liste, chez le
+          // même praticien.
+          title: buildSessionReportTitle(patient.name, beginAt),
+          consultationReason: "",
+          patientId: patient.id,
+          appointmentId,
+          notes: "",
+          status: "draft",
+          createdBy: actor.organizationId,
+          createdAt: now,
+        }),
+        db
+          .insert(reportSectionState)
+          .values(
+            buildReportSectionStateRows(
+              reportId,
+              createInitialReportSectionStates(),
+            ),
+          ),
+      ] as const);
+
+      const conflicts = await conflictsOn(actor, beginAt, endAt, appointmentId);
+
+      return {
+        appointmentId,
+        reportId,
         beginAt: beginAt.toISOString(),
         endAt: endAt.toISOString(),
         conflicts: conflicts.map((conflict) => ({
@@ -1191,7 +1319,7 @@ export async function createProductionMobileApiPorts(
       }
 
       const [patient] = await db
-        .select({ id: pets.id })
+        .select({ id: pets.id, name: pets.name })
         .from(pets)
         .where(
           and(
@@ -1204,10 +1332,9 @@ export async function createProductionMobileApiPorts(
 
       const now = new Date();
       const reportId = crypto.randomUUID();
-      const title = `Séance du ${new Intl.DateTimeFormat("fr-FR", {
-        dateStyle: "long",
-        timeZone: "Europe/Paris",
-      }).format(capture.createdAt)}`;
+      // Même helper partagé que la création de séance : un brouillon né d'une
+      // dictée libre atterrit dans la même liste que les autres.
+      const title = buildSessionReportTitle(patient.name, capture.createdAt);
 
       // Un seul batch : un rapport sans ses états de section ne pourrait
       // jamais être finalisé, et ne serait jamais revendiqué par une capture.

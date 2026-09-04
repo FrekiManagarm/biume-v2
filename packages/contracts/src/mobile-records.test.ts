@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  appointmentWriteResponseSchema,
+  createAppointmentRequestSchema,
   createMobileOwnerRequestSchema,
   createMobilePatientRequestSchema,
   mobileOwnerSchema,
@@ -147,5 +149,59 @@ describe("déplacement d'un rendez-vous", () => {
         endAt: "2026-08-21T11:00:00.000Z",
       }),
     ).toMatchObject({ beginAt: "2026-08-21T10:00:00.000Z" });
+  });
+});
+
+describe("création d'une séance", () => {
+  const request = {
+    patientId: "pet-1",
+    beginAt: "2026-08-21T10:00:00.000Z",
+    endAt: "2026-08-21T11:00:00.000Z",
+    atHome: true,
+  };
+
+  it("accepte une demande complète", () => {
+    expect(createAppointmentRequestSchema.parse(request)).toEqual(request);
+  });
+
+  it("rejette une fin antérieure au début", () => {
+    expect(() =>
+      createAppointmentRequestSchema.parse({
+        ...request,
+        beginAt: request.endAt,
+        endAt: request.beginAt,
+      }),
+    ).toThrow();
+  });
+
+  it("exige atHome", () => {
+    const { atHome, ...withoutAtHome } = request;
+    expect(() => createAppointmentRequestSchema.parse(withoutAtHome)).toThrow();
+  });
+
+  it("rejette un champ non déclaré", () => {
+    expect(() =>
+      createAppointmentRequestSchema.parse({ ...request, organizationId: "org-1" }),
+    ).toThrow();
+  });
+});
+
+describe("réponse d'écriture d'une séance", () => {
+  const response = {
+    appointmentId: "appointment-1",
+    reportId: "report-1",
+    beginAt: "2026-08-21T10:00:00.000Z",
+    endAt: "2026-08-21T11:00:00.000Z",
+    conflicts: [],
+  };
+
+  it("accepte un brouillon lié", () => {
+    expect(appointmentWriteResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it("accepte l'absence de brouillon", () => {
+    expect(
+      appointmentWriteResponseSchema.parse({ ...response, reportId: null }).reportId,
+    ).toBeNull();
   });
 });

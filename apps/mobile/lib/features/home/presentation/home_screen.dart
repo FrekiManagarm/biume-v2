@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../injection_container.dart';
 import '../../agenda/domain/agenda_repository.dart';
+import '../../agenda/presentation/agenda_body.dart';
 import '../../agenda/presentation/agenda_cubit.dart';
-import '../../agenda/presentation/agenda_screen.dart';
 import '../../auth/presentation/auth_cubit.dart';
 import '../../capture/domain/capture_store.dart';
+import '../../followup/domain/actionable_follow_up_repository.dart';
 import '../../todo/domain/todo_api.dart';
 import '../../todo/presentation/todo_cubit.dart';
 import '../../todo/presentation/todo_section.dart';
@@ -24,8 +25,11 @@ class HomeScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) =>
-              TodoCubit(getIt<CaptureStore>(), getIt<TodoApi>())..start(),
+          create: (_) => TodoCubit(
+            getIt<CaptureStore>(),
+            getIt<TodoApi>(),
+            followUps: getIt<ActionableFollowUpRepository>(),
+          )..start(),
         ),
         BlocProvider(
           create: (_) =>
@@ -37,12 +41,28 @@ class HomeScreen extends StatelessWidget {
           title: const Text('Biume'),
           actions: [
             PopupMenuButton<String>(
+              tooltip: 'Ajouter',
+              icon: const Icon(Icons.add),
+              onSelected: (value) => switch (value) {
+                'seance' => context.push('/seances/nouvelle'),
+                'client' => context.push('/clients/nouveau'),
+                _ => null,
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'seance', child: Text('Nouvelle séance')),
+                PopupMenuItem(value: 'client', child: Text('Nouveau client')),
+              ],
+            ),
+            PopupMenuButton<String>(
               tooltip: 'Compte',
               icon: const Icon(Icons.account_circle_outlined),
               onSelected: (value) => switch (value) {
                 // Navigation volontaire : la garde du routeur doit la
                 // laisser passer plutôt que de renvoyer aussitôt à l'accueil.
-                'entreprise' => context.push('/entreprise', extra: 'volontaire'),
+                'entreprise' => context.push(
+                  '/entreprise',
+                  extra: 'volontaire',
+                ),
                 // Cas explicite plutôt qu'un `_` par défaut : une troisième
                 // entrée ne doit jamais déconnecter en silence.
                 'deconnexion' => context.read<AuthCubit>().signOut(),
@@ -53,7 +73,10 @@ class HomeScreen extends StatelessWidget {
                   value: 'entreprise',
                   child: Text("Changer d'entreprise"),
                 ),
-                PopupMenuItem(value: 'deconnexion', child: Text('Se déconnecter')),
+                PopupMenuItem(
+                  value: 'deconnexion',
+                  child: Text('Se déconnecter'),
+                ),
               ],
             ),
           ],

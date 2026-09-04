@@ -49,22 +49,23 @@ import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
 import { buildMobileApiError, MobileRequestError } from "./mobile-api.errors";
 import {
+  appointmentWriteResponseSchema,
   mobileOwnersResponseSchema,
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
   mobileOwnerSchema,
   mobilePatientSchema,
   mobileRecordsPageSize,
+  type AppointmentWriteResponse,
+  type CreateAppointmentRequest,
   type CreateMobileOwnerRequest,
   type CreateMobilePatientRequest,
   type MobileOwner,
   type MobileOwnersResponse,
-  moveAppointmentResponseSchema,
   type MobilePatient,
   type MobilePatientHistoryResponse,
   type MobilePatientsResponse,
   type MoveAppointmentRequest,
-  type MoveAppointmentResponse,
   type UpdateOwnerEmailRequest,
 } from "@biume/contracts/mobile-records";
 import {
@@ -86,6 +87,7 @@ import {
   scheduleFollowUpRoute,
   regenerateProposalsRoute,
   reportProposalsRoute,
+  createAppointmentRoute,
   createPatientRoute,
   getTranscriptRoute,
   moveAppointmentRoute,
@@ -182,7 +184,11 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     appointmentId: string,
     slot: MoveAppointmentRequest,
-  ): Promise<MoveAppointmentResponse>;
+  ): Promise<AppointmentWriteResponse>;
+  createAppointment(
+    actor: CaptureActor,
+    request: CreateAppointmentRequest,
+  ): Promise<AppointmentWriteResponse>;
   updateOwnerEmail(
     actor: CaptureActor,
     ownerId: string,
@@ -522,7 +528,15 @@ export function createMobileApiApp(
       c.req.valid("param").appointmentId,
       c.req.valid("json"),
     );
-    return validated(c, 200, moveAppointmentResponseSchema, result);
+    return validated(c, 200, appointmentWriteResponseSchema, result);
+  });
+
+  app.openapi(createAppointmentRoute, async (c) => {
+    const created = await ports.createAppointment(
+      c.get("actor"),
+      c.req.valid("json"),
+    );
+    return validated(c, 201, appointmentWriteResponseSchema, created);
   });
 
   app.openapi(createOwnerRoute, async (c) => {

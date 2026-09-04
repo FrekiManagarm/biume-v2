@@ -11,6 +11,8 @@ import {
   uploadSessionResponseSchema,
 } from "@biume/contracts/capture";
 import {
+  appointmentWriteResponseSchema,
+  createAppointmentRequestSchema,
   createMobileOwnerRequestSchema,
   createMobilePatientRequestSchema,
   mobileOwnerSchema,
@@ -19,7 +21,6 @@ import {
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
   moveAppointmentRequestSchema,
-  moveAppointmentResponseSchema,
   updateOwnerEmailRequestSchema,
 } from "@biume/contracts/mobile-records";
 import {
@@ -115,6 +116,18 @@ export const appointmentsRoute = createRoute({
       description: "Page de rendez-vous",
       content: json(mobileAppointmentsResponseSchema),
     },
+    ...errorResponses,
+  },
+});
+
+export const createAppointmentRoute = createRoute({
+  method: "post",
+  path: "/appointments",
+  security,
+  summary: "Créer une séance depuis le terrain, avec avertissement de conflit",
+  request: { body: { content: json(createAppointmentRequestSchema) } },
+  responses: {
+    201: { description: "Séance créée", content: json(appointmentWriteResponseSchema) },
     ...errorResponses,
   },
 });
@@ -332,7 +345,7 @@ export const moveAppointmentRoute = createRoute({
   responses: {
     200: {
       description: "Séance déplacée",
-      content: json(moveAppointmentResponseSchema),
+      content: json(appointmentWriteResponseSchema),
     },
     ...errorResponses,
   },

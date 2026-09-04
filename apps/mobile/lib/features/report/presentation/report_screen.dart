@@ -15,16 +15,24 @@ import 'report_cubit.dart';
 /// Séparé de l'écran présentationnel pour que celui-ci soit testable sans
 /// conteneur d'injection — et pour qu'un oubli de `load` se voie.
 class ReportPage extends StatelessWidget {
-  const ReportPage({required this.reportId, super.key});
+  const ReportPage({
+    required this.reportId,
+    this.fromPatientSheet = false,
+    super.key,
+  });
 
   final String reportId;
+
+  /// Vrai quand l'appel vient de la fiche animal (`?source=fiche`) : un
+  /// compte rendu passé doit s'ouvrir hors ligne, depuis `CachedReports`.
+  final bool fromPatientSheet;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
           ReportCubit(getIt<ReportRepository>(), telemetry: getIt<Telemetry>())
-            ..load(reportId),
+            ..load(reportId, preferCache: fromPatientSheet),
       child: const ReportScreen(),
     );
   }

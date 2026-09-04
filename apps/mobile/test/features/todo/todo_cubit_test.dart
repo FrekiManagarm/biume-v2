@@ -5,12 +5,16 @@ import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
 import 'package:biume_mobile/features/capture/domain/sync_decision.dart';
+import 'package:biume_mobile/features/followup/domain/actionable_follow_up_repository.dart';
+import 'package:biume_mobile/features/followup/domain/follow_up.dart';
 import 'package:biume_mobile/features/todo/domain/todo_api.dart';
 import 'package:biume_mobile/features/todo/domain/todo_item.dart';
 import 'package:biume_mobile/features/todo/presentation/todo_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../followup/follow_up_fixture.dart';
 
 /// Une file dont les tests contrôlent le contenu à la main, sans base réelle.
 /// `emitAll` rejoue systématiquement la dernière liste à qui s'abonne après
@@ -90,6 +94,9 @@ class FakeCaptureStore implements CaptureStore {
 
 class MockTodoApi extends Mock implements TodoApi {}
 
+class MockActionableFollowUpRepository extends Mock
+    implements ActionableFollowUpRepository {}
+
 LocalCapture localQueued(
   String id, {
   String? appointmentId,
@@ -133,10 +140,15 @@ TodoItem serverItem(TodoKind kind, String captureId, {String? reportId}) =>
 void main() {
   late FakeCaptureStore store;
   late MockTodoApi api;
+  late MockActionableFollowUpRepository followUps;
 
   setUp(() {
     store = FakeCaptureStore();
     api = MockTodoApi();
+    followUps = MockActionableFollowUpRepository();
+    when(
+      () => followUps.listActionable(),
+    ).thenAnswer((_) async => const Success(<FollowUp>[]));
   });
 
   blocTest<TodoCubit, TodoState>(
@@ -147,10 +159,61 @@ void main() {
         (_) async => Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
       );
     },
-    build: () => TodoCubit(store, api, pollInterval: Duration.zero),
+    build: () => TodoCubit(store, api, followUps: followUps, pollInterval: Duration.zero),
     act: (cubit) => cubit.start(),
     verify: (cubit) =>
         expect(cubit.state.items.map((i) => i.captureId), ['c-local', 'c-srv']),
+  );
+
+  /// Un suivi est plus urgent qu'un brouillon — un propriétaire attend — mais
+  /// moins qu'une dictée jamais partie, seule chose que le praticien peut
+  /// débloquer sans réseau.
+  blocTest<TodoCubit, TodoState>(
+    'place les suivis actionnables après les dictées locales et avant le reste',
+    setUp: () {
+      store.emitAll([localQueued('c-local')]);
+      when(() => api.list()).thenAnswer(
+        (_) async => Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
+      );
+      when(
+        () => followUps.listActionable(),
+      ).thenAnswer((_) async => Success([suivi(id: 'f-1')]));
+    },
+    build: () => TodoCubit(
+      store,
+      api,
+      followUps: followUps,
+      pollInterval: Duration.zero,
+    ),
+    act: (cubit) => cubit.start(),
+    verify: (cubit) => expect(cubit.state.items.map((i) => i.kind), [
+      TodoKind.pendingUpload,
+      TodoKind.followUp,
+      TodoKind.reportToValidate,
+    ]),
+  );
+
+  /// Le serveur qui ne répond pas sur les suivis ne doit pas vider « À
+  /// traiter » : le reste de la liste vaut mieux qu'une page blanche.
+  blocTest<TodoCubit, TodoState>(
+    'garde le reste de la liste quand les suivis ne se chargent pas',
+    setUp: () {
+      when(() => api.list()).thenAnswer(
+        (_) async => Success([serverItem(TodoKind.reportToValidate, 'c-srv')]),
+      );
+      when(
+        () => followUps.listActionable(),
+      ).thenAnswer((_) async => const Err(NetworkFailure()));
+    },
+    build: () => TodoCubit(
+      store,
+      api,
+      followUps: followUps,
+      pollInterval: Duration.zero,
+    ),
+    act: (cubit) => cubit.start(),
+    verify: (cubit) =>
+        expect(cubit.state.items.single.kind, TodoKind.reportToValidate),
   );
 
   blocTest<TodoCubit, TodoState>(
@@ -169,6 +232,7 @@ void main() {
     build: () => TodoCubit(
       store,
       api,
+      followUps: followUps,
       pollInterval: Duration.zero,
       now: () => DateTime(2026, 9, 3, 10, 1),
     ),
@@ -193,6 +257,7 @@ void main() {
     build: () => TodoCubit(
       store,
       api,
+      followUps: followUps,
       pollInterval: Duration.zero,
       now: () => DateTime(2026, 9, 3, 10, 5),
     ),
@@ -208,7 +273,7 @@ void main() {
       when(() => api.list())
           .thenAnswer((_) async => const Err(NetworkFailure()));
     },
-    build: () => TodoCubit(store, api, pollInterval: Duration.zero),
+    build: () => TodoCubit(store, api, followUps: followUps, pollInterval: Duration.zero),
     act: (cubit) => cubit.start(),
     verify: (cubit) {
       expect(cubit.state.items, hasLength(1));
@@ -222,7 +287,7 @@ void main() {
   /// et `uploading` — et le geste est inerte.
   test('remet en file une dictée abandonnée, compteur remis à zéro', () async {
     when(() => api.list()).thenAnswer((_) async => const Success(<TodoItem>[]));
-    final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+    final cubit = TodoCubit(store, api, followUps: followUps, pollInterval: Duration.zero);
 
     await cubit.retryUpload('c-1');
 
@@ -241,7 +306,7 @@ void main() {
     store.emitAll([localQueued('c-local')]);
     when(() => api.list()).thenAnswer((_) async => const Success(<TodoItem>[]));
 
-    final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+    final cubit = TodoCubit(store, api, followUps: followUps, pollInterval: Duration.zero);
     final states = <TodoState>[];
     final subscription = cubit.stream.listen(states.add);
 
@@ -276,7 +341,7 @@ void main() {
     final completer = Completer<Result<List<TodoItem>>>();
     when(() => api.list()).thenAnswer((_) => completer.future);
 
-    final cubit = TodoCubit(store, api, pollInterval: Duration.zero);
+    final cubit = TodoCubit(store, api, followUps: followUps, pollInterval: Duration.zero);
     final states = <TodoState>[];
     final subscription = cubit.stream.listen(states.add);
 

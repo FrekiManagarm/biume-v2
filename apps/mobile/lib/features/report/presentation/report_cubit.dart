@@ -79,10 +79,16 @@ class ReportCubit extends Cubit<ReportState> {
   /// secondes qui suivent. On interroge tant qu'il n'y en a pas, à intervalle
   /// court, et on cesse au bout du nombre d'essais prévu : le praticien reste
   /// libre de partir, « À traiter » le rappellera.
-  Future<void> load(String reportId) async {
+  /// `preferCache` sert l'ouverture d'un compte rendu **passé** depuis la
+  /// fiche animal : réseau d'abord, cache local en repli. Un compte rendu
+  /// ouvert ainsi est toujours verrouillé (finalisé ou envoyé), donc jamais
+  /// en attente d'extraction — la boucle ci-dessous ne s'y attarde pas.
+  Future<void> load(String reportId, {bool preferCache = false}) async {
     emit(const ReportLoading());
     for (var attempt = 0; ; attempt++) {
-      final result = await _repository.load(reportId);
+      final result = preferCache
+          ? await _repository.loadCachedOrRemote(reportId)
+          : await _repository.load(reportId);
       // Le praticien reste libre de quitter cet écran pendant l'attente :
       // `BlocProvider` ferme alors le cubit avant que la requête ne
       // revienne. Émettre sur un cubit fermé lève un `StateError` que

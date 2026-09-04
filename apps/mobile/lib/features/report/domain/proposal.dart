@@ -13,6 +13,28 @@ ReportStatus reportStatusFrom(String value) => switch (value) {
   _ => ReportStatus.draft,
 };
 
+/// L'inverse de `reportStatusFrom` : sert à ranger un statut dans le cache
+/// local (`CachedPatientHistoryEntries`) sous la même forme que le contrat
+/// serveur, pour le relire sans ambiguïté.
+String reportStatusToApi(ReportStatus status) => switch (status) {
+  ReportStatus.draft => 'draft',
+  ReportStatus.finalized => 'finalized',
+  ReportStatus.sent => 'sent',
+};
+
+/// Ce que le praticien lit sur une séance passée, dans la fiche animal.
+/// Jamais l'état machine : « finalized » ne veut rien dire pour un
+/// ostéopathe, « Compte rendu finalisé » lui dit où en est son travail.
+const Map<ReportStatus, String> reportStatusLabels = {
+  ReportStatus.draft: 'Compte rendu à terminer',
+  ReportStatus.finalized: 'Compte rendu finalisé',
+  ReportStatus.sent: 'Compte rendu envoyé',
+};
+
+/// La séance a eu lieu, rien n'a été rédigé. Se dit, plutôt que de laisser un
+/// vide qui se lit comme une information manquante.
+const String noReportLabel = 'Aucun compte rendu';
+
 SectionState sectionStateFrom(String value) => switch (value) {
   'proposed' => SectionState.proposed,
   'needs_confirmation' => SectionState.needsConfirmation,

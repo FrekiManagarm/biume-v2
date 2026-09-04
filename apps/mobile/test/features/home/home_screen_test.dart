@@ -1,10 +1,13 @@
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/agenda/domain/agenda_repository.dart';
+import 'package:biume_mobile/features/agenda/domain/appointment.dart';
 import 'package:biume_mobile/features/auth/domain/auth_repository.dart';
 import 'package:biume_mobile/features/auth/domain/session.dart';
 import 'package:biume_mobile/features/auth/presentation/auth_cubit.dart';
 import 'package:biume_mobile/features/auth/presentation/choose_company_screen.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
+import 'package:biume_mobile/features/followup/domain/actionable_follow_up_repository.dart';
+import 'package:biume_mobile/features/followup/domain/follow_up.dart';
 import 'package:biume_mobile/features/home/presentation/home_screen.dart';
 import 'package:biume_mobile/features/todo/domain/todo_api.dart';
 import 'package:biume_mobile/features/todo/domain/todo_item.dart';
@@ -13,11 +16,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCaptureStore extends Mock implements CaptureStore {}
 
 class MockTodoApi extends Mock implements TodoApi {}
+
+class MockActionableFollowUpRepository extends Mock
+    implements ActionableFollowUpRepository {}
 
 class MockAgendaRepository extends Mock implements AgendaRepository {}
 
@@ -26,12 +33,19 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   late MockCaptureStore store;
   late MockTodoApi todoApi;
+  late MockActionableFollowUpRepository followUps;
   late MockAgendaRepository agendaRepository;
   late MockAuthRepository authRepository;
+
+  // `AgendaBody` formate les en-têtes de jour avec `DateFormat('fr_FR')`,
+  // que seul `main()` initialise en production. Les tests widgets ne passent
+  // pas par `main()` : sans cet appel, chaque en-tête de jour plante.
+  setUpAll(() => initializeDateFormatting('fr_FR'));
 
   setUp(() {
     store = MockCaptureStore();
     todoApi = MockTodoApi();
+    followUps = MockActionableFollowUpRepository();
     agendaRepository = MockAgendaRepository();
     authRepository = MockAuthRepository();
 
@@ -40,15 +54,18 @@ void main() {
     when(() => store.watchAll()).thenAnswer((_) => const Stream.empty());
     when(() => todoApi.list())
         .thenAnswer((_) async => const Success(<TodoItem>[]));
-    when(() => agendaRepository.watchDay(any()))
+    when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
+    when(() => agendaRepository.watchWindow(any(), any()))
         .thenAnswer((_) => Stream.value(const []));
-    when(() => agendaRepository.refresh(any()))
+    when(() => agendaRepository.refreshWindow(any(), any()))
         .thenAnswer((_) async => const Success(null));
     when(() => authRepository.signOut()).thenAnswer((_) async {});
 
     getIt
       ..registerLazySingleton<CaptureStore>(() => store)
       ..registerLazySingleton<TodoApi>(() => todoApi)
+      ..registerLazySingleton<ActionableFollowUpRepository>(() => followUps)
       ..registerLazySingleton<AgendaRepository>(() => agendaRepository)
       // `ChooseCompanyScreen` va chercher son dépôt directement dans le
       // conteneur (comme le fait le vrai routeur) : il faut donc l'y
@@ -78,6 +95,26 @@ void main() {
           builder: (_, _) => const ChooseCompanyScreen(),
         ),
         GoRoute(path: '/dicter', builder: (_, _) => const SizedBox.shrink()),
+        GoRoute(
+          path: '/seances/nouvelle',
+          builder: (_, _) => const Text('nouvelle-seance'),
+        ),
+        GoRoute(
+          path: '/clients/nouveau',
+          builder: (_, _) => const Text('nouveau-client'),
+        ),
+        GoRoute(
+          path: '/seances/:appointmentId/deplacer',
+          builder: (_, state) {
+            final appointment = state.extra as Appointment?;
+            return Text('deplacer-${appointment?.id}');
+          },
+        ),
+        GoRoute(
+          path: '/animaux/:patientId',
+          builder: (_, state) =>
+              Text('fiche-${state.pathParameters['patientId']}'),
+        ),
       ],
     );
 
@@ -152,6 +189,92 @@ void main() {
       expect(find.text('Votre entreprise'), findsNothing);
       expect(find.text('À traiter'), findsOneWidget);
       expect(find.text('Vos séances'), findsOneWidget);
+    },
+  );
+
+  testWidgets('le menu « + » propose « Nouvelle séance » et y navigue', (
+    tester,
+  ) async {
+    await monter(tester);
+
+    await tester.tap(find.byTooltip('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nouvelle séance'), findsOneWidget);
+
+    await tester.tap(find.text('Nouvelle séance'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('nouvelle-seance'), findsOneWidget);
+  });
+
+  testWidgets('le menu « + » propose aussi « Nouveau client » et y navigue', (
+    tester,
+  ) async {
+    await monter(tester);
+
+    await tester.tap(find.byTooltip('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nouveau client'), findsOneWidget);
+
+    await tester.tap(find.text('Nouveau client'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('nouveau-client'), findsOneWidget);
+  });
+
+  testWidgets(
+    'une carte de séance propose de la déplacer, avec la séance en extra',
+    (tester) async {
+      final appointment = Appointment(
+        id: 'appointment-1',
+        patientId: 'pet-1',
+        patientName: 'Filou',
+        species: 'DOG',
+        beginAt: DateTime.now().add(const Duration(hours: 2)),
+        endAt: DateTime.now().add(const Duration(hours: 3)),
+        status: 'CONFIRMED',
+      );
+      when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
+    when(() => agendaRepository.watchWindow(any(), any()))
+          .thenAnswer((_) => Stream.value([appointment]));
+
+      await monter(tester);
+      await tester.pump();
+
+      await tester.tap(find.byTooltip('Options'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Déplacer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('deplacer-appointment-1'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "le nom de l'animal sur la carte ouvre sa fiche",
+    (tester) async {
+      final appointment = Appointment(
+        id: 'appointment-1',
+        patientId: 'pet-1',
+        patientName: 'Filou',
+        species: 'DOG',
+        beginAt: DateTime.now().add(const Duration(hours: 2)),
+        endAt: DateTime.now().add(const Duration(hours: 3)),
+        status: 'CONFIRMED',
+      );
+      when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
+    when(() => agendaRepository.watchWindow(any(), any()))
+          .thenAnswer((_) => Stream.value([appointment]));
+
+      await monter(tester);
+      await tester.pump();
+
+      await tester.tap(find.text('Filou'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('fiche-pet-1'), findsOneWidget);
     },
   );
 }
