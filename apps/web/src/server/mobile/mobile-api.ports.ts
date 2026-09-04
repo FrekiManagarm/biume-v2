@@ -899,6 +899,10 @@ export async function createProductionMobileApiPorts(
     async regenerateProposals(actor, reportId) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Même classe de mutation que les deux décisions : régénérer réécrit le
+      // contenu clinique. Un compte rendu parti chez le propriétaire ne bouge
+      // plus (5.10).
+      assertReportDecidable(current.status);
 
       // Sans proposition existante, la source est la capture du rapport, pas
       // une proposition : la toute première extraction n'en a encore laissé

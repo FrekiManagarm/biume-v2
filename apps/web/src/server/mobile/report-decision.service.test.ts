@@ -47,4 +47,16 @@ describe("les deux endpoints de décision portent la garde", () => {
       bodyOf("async decideSection(", "async regenerateProposals("),
     ).toContain("assertReportDecidable(current.status)");
   });
+
+  /**
+   * Même classe de mutation que les deux précédentes : régénérer réécrit le
+   * contenu clinique. La lecture accepte un rapport finalisé — c'est voulu,
+   * la fiche animal ouvre les comptes rendus passés — et la régénération est
+   * exposée sur la même surface, donc le cas est atteignable.
+   */
+  it("regenerateProposals refuse un rapport qui n'est plus un brouillon", () => {
+    expect(
+      bodyOf("async regenerateProposals(", "async finalizeReport("),
+    ).toContain("assertReportDecidable(current.status)");
+  });
 });
