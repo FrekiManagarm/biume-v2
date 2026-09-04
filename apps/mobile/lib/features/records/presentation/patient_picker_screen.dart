@@ -91,16 +91,40 @@ class PatientPickerScreen extends StatelessWidget {
                       return ListTile(
                         title: Text(patient.name),
                         subtitle: Text(patient.subtitle),
-                        // La fiche complète est à un appui, sans quitter le
-                        // sélecteur : le praticien peut vérifier « la
-                        // dernière fois » avant de choisir cet animal.
-                        trailing: IconButton(
-                          icon: const Icon(Icons.info_outline),
-                          tooltip: 'Voir la fiche',
-                          onPressed: () =>
-                              context.push('/animaux/${patient.id}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // La fiche complète est à un appui, sans quitter
+                            // le sélecteur : le praticien peut vérifier « la
+                            // dernière fois » avant de choisir cet animal.
+                            IconButton(
+                              icon: const Icon(Icons.info_outline),
+                              tooltip: 'Voir la fiche',
+                              onPressed: () =>
+                                  context.push('/animaux/${patient.id}'),
+                            ),
+                            // La spécification 5.9 dit que le sélecteur
+                            // « propose » d'ajouter un animal à un
+                            // propriétaire existant. Derrière un appui long
+                            // que rien ne signalait, il ne le proposait pas.
+                            PopupMenuButton<String>(
+                              tooltip: 'Options',
+                              onSelected: (_) =>
+                                  _ajouterAnimal(context, patient),
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'ajouter',
+                                  child: Text(
+                                    'Ajouter un animal à ${patient.ownerName}',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                         onTap: () => context.pop(patient),
+                        // L'appui long reste : ceux qui l'ont appris le
+                        // gardent, il n'est simplement plus le seul chemin.
                         onLongPress: () =>
                             _proposerAjoutAnimal(context, patient),
                       );
@@ -143,17 +167,23 @@ class PatientPickerScreen extends StatelessWidget {
       builder: (sheetContext) => SafeArea(
         child: ListTile(
           title: Text('Ajouter un animal à ${patient.ownerName}'),
-          onTap: () async {
+          onTap: () {
             Navigator.of(sheetContext).pop();
-            final created = await context.push<Patient>(
-              '/clients/nouveau?proprietaire=${patient.ownerId}',
-            );
-            if (created != null && context.mounted) {
-              context.pop(created);
-            }
+            _ajouterAnimal(context, patient);
           },
         ),
       ),
     );
+  }
+
+  /// Le volet animal seul, le propriétaire étant déjà connu. Comme
+  /// « Nouveau client », le sélecteur retient directement l'animal créé.
+  Future<void> _ajouterAnimal(BuildContext context, Patient patient) async {
+    final created = await context.push<Patient>(
+      '/clients/nouveau?proprietaire=${patient.ownerId}',
+    );
+    if (created != null && context.mounted) {
+      context.pop(created);
+    }
   }
 }

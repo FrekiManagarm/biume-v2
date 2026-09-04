@@ -22,6 +22,11 @@ class PatientHistoryEntry {
   final ReportStatus? reportStatus;
   final String consultationReason;
 
+  /// L'état du compte rendu, tel qu'il se lit (spécification 5.10). Jamais
+  /// l'état machine du serveur.
+  String get reportLabel =>
+      reportStatus == null ? noReportLabel : reportStatusLabels[reportStatus]!;
+
   /// Une séance passée n'ouvre son compte rendu que s'il est verrouillé —
   /// finalisé ou envoyé. Un brouillon donnerait l'illusion qu'on peut le
   /// consulter, alors qu'il n'existe pas encore vraiment pour le praticien

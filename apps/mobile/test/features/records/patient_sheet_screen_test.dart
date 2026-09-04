@@ -375,6 +375,40 @@ void main() {
       },
     );
 
+    /// Spécification 5.10 : « les dernières séances avec motif **et état du
+    /// compte rendu** ». Sans lui, seul le chevron distinguait l'ouvrable, et
+    /// une séance sans compte rendu ressemblait à une séance dont le compte
+    /// rendu n'était simplement pas consultable.
+    testWidgets(
+      "affiche l'état du compte rendu, en français",
+      (tester) async {
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(id: 'owner-1', name: 'Camille Roux'),
+        );
+        when(() => patients.history('pet-1')).thenAnswer(
+          (_) async => Success([
+            entree(appointmentId: 'appt-1', reportStatus: ReportStatus.sent),
+            entree(
+              appointmentId: 'appt-2',
+              beginAt: DateTime(2026, 7, 1),
+              reportId: null,
+              reportStatus: null,
+            ),
+          ]),
+        );
+
+        await tester.binding.setSurfaceSize(const Size(400, 1200));
+        await monter(tester);
+
+        expect(find.text('Compte rendu envoyé'), findsOneWidget);
+        expect(find.text('Aucun compte rendu'), findsOneWidget);
+        for (final machine in ['draft', 'finalized', 'sent']) {
+          expect(find.textContaining(machine), findsNothing);
+        }
+        await tester.binding.setSurfaceSize(null);
+      },
+    );
+
     testWidgets('un motif vide affiche « Sans motif »', (tester) async {
       when(() => owners.byId('owner-1')).thenAnswer(
         (_) async => const Owner(id: 'owner-1', name: 'Camille Roux'),

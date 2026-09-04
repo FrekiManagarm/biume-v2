@@ -215,6 +215,32 @@ void main() {
     },
   );
 
+  /// Spécification 5.9 : le sélecteur « propose » d'ajouter un animal à un
+  /// propriétaire existant. Derrière un appui long que rien ne signale, le
+  /// geste existait sans être proposé.
+  testWidgets(
+    "le geste d'ajout à un propriétaire existant est visible sans appui long",
+    (tester) async {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex]));
+
+      await ouvrirLeSelecteur(tester, repository);
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter un animal à Camille Roux'), findsOneWidget);
+
+      await tester.tap(find.text('Ajouter un animal à Camille Roux'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('créer, propriétaire owner-1'));
+      await tester.pumpAndSettle();
+
+      final appelant = tester.state<_AppelantState>(find.byType(_Appelant));
+      expect(appelant.resultat, equals(rex));
+    },
+  );
+
   testWidgets(
     "l'icône d'information ouvre la fiche de l'animal de la ligne",
     (tester) async {

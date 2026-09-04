@@ -272,8 +272,22 @@ class _HistoryTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
+      isThreeLine: true,
       title: Text(DateFormat('d MMMM yyyy', 'fr_FR').format(entry.beginAt.toLocal())),
-      subtitle: Text(subtitle),
+      // Le motif **et** l'état du compte rendu (spécification 5.10) : sans
+      // lui, seul le chevron distinguait ce qui s'ouvre, et une séance sans
+      // compte rendu ressemblait à une séance simplement non consultable.
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subtitle),
+          const SizedBox(height: 2),
+          Text(
+            entry.reportLabel,
+            style: TextStyle(color: palette.inkSubtle),
+          ),
+        ],
+      ),
       // Un brouillon ne se consulte pas : lui donner un chevron laisserait
       // croire qu'un compte rendu existe déjà, alors qu'il n'existe pas
       // encore vraiment pour le praticien pressé devant l'écurie.
