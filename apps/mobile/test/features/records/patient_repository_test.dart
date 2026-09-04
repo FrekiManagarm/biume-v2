@@ -645,5 +645,90 @@ void main() {
         );
       },
     );
+
+    /// Une exception qui n'est pas une erreur de transport — une date
+    /// serveur malformée qui casse `DateTime.parse`, par exemple — ne doit
+    /// ni priver les autres animaux de leur fiche, ni faire rejeter le
+    /// résultat rendu par `refreshSheetsFor` : une erreur asynchrone non
+    /// rattrapée dans un rafraîchissement d'arrière-plan ne se diagnostique
+    /// jamais.
+    test(
+      "une erreur qui n'est pas une erreur de transport sur un animal n'empêche pas les autres, et le résultat est toujours rendu",
+      () async {
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              switch (options.path) {
+                case '/api/mobile/v1/owners':
+                  handler.resolve(
+                    Response(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: {'items': <dynamic>[], 'nextCursor': null},
+                    ),
+                  );
+                case '/api/mobile/v1/patients/pet-1/history':
+                  // Une date malformée fait lever une FormatException à
+                  // DateTime.parse — pas une DioException.
+                  handler.resolve(
+                    Response(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: historyResponse([
+                        {
+                          'appointmentId': 'appt-1',
+                          'beginAt': 'pas-une-date',
+                          'reportId': null,
+                          'reportStatus': null,
+                          'consultationReason': '',
+                        },
+                      ]),
+                    ),
+                  );
+                case '/api/mobile/v1/patients/pet-2/history':
+                  handler.resolve(
+                    Response(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: historyResponse([
+                        {
+                          'appointmentId': 'appt-9',
+                          'beginAt': '2026-08-01T09:00:00.000Z',
+                          'reportId': 'report-9',
+                          'reportStatus': 'sent',
+                          'consultationReason': '',
+                        },
+                      ]),
+                    ),
+                  );
+                case '/api/mobile/v1/reports/report-9/proposals':
+                  handler.resolve(
+                    Response(
+                      requestOptions: options,
+                      statusCode: 200,
+                      data: {'reportId': 'report-9', 'status': 'sent'},
+                    ),
+                  );
+                default:
+                  handler.reject(
+                    DioException(
+                      requestOptions: options,
+                      type: DioExceptionType.badResponse,
+                    ),
+                  );
+              }
+            },
+          ),
+        );
+
+        final result = await repository.refreshSheetsFor(['pet-1', 'pet-2']);
+
+        expect(result.isSuccess, isTrue);
+        expect(await repository.cachedHistory('pet-1'), isEmpty);
+        expect(await repository.cachedHistory('pet-2'), hasLength(1));
+        final cached = await db.select(db.cachedReports).get();
+        expect(cached.single.reportId, 'report-9');
+      },
+    );
   });
 }

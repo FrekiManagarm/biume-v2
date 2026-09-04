@@ -161,35 +161,48 @@ class PatientRepositoryImpl implements PatientRepository {
   }
 
   Future<void> _refreshSheetFor(String patientId) async {
-    final historyResult = await history(patientId);
-    if (historyResult is! Success<List<PatientHistoryEntry>>) return;
-    final entries = historyResult.value;
+    final List<PatientHistoryEntry> entries;
+    try {
+      final historyResult = await history(patientId);
+      if (historyResult is! Success<List<PatientHistoryEntry>>) return;
+      entries = historyResult.value;
 
-    // L'historique lui-même doit survivre à l'absence de réseau : lui seul
-    // porte la date et le motif des séances passées, que `CachedReports` ne
-    // porte pas et que la fenêtre d'agenda en cache ne couvre plus.
-    await _db.transaction(() async {
-      await (_db.delete(
-        _db.cachedPatientHistoryEntries,
-      )..where((h) => h.patientId.equals(patientId))).go();
-      for (final entry in entries) {
-        await _db.into(_db.cachedPatientHistoryEntries).insert(
-              CachedPatientHistoryEntriesCompanion.insert(
-                appointmentId: entry.appointmentId,
-                patientId: patientId,
-                beginAt: entry.beginAt,
-                reportId: Value(entry.reportId),
-                reportStatus: Value(
-                  entry.reportStatus != null
-                      ? reportStatusToApi(entry.reportStatus!)
-                      : null,
+      // L'historique lui-même doit survivre à l'absence de réseau : lui
+      // seul porte la date et le motif des séances passées, que
+      // `CachedReports` ne porte pas et que la fenêtre d'agenda en cache ne
+      // couvre plus. Capture large — pas seulement une panne réseau : un
+      // défaut de données sur un animal (une date serveur malformée, par
+      // exemple) ne doit ni faire échouer les autres animaux du bassin de
+      // travailleurs, ni faire rejeter le résultat rendu par
+      // `refreshSheetsFor` — une erreur asynchrone non rattrapée dans un
+      // rafraîchissement d'arrière-plan ne se diagnostique jamais.
+      await _db.transaction(() async {
+        await (_db.delete(
+          _db.cachedPatientHistoryEntries,
+        )..where((h) => h.patientId.equals(patientId))).go();
+        for (final entry in entries) {
+          await _db.into(_db.cachedPatientHistoryEntries).insert(
+                CachedPatientHistoryEntriesCompanion.insert(
+                  appointmentId: entry.appointmentId,
+                  patientId: patientId,
+                  beginAt: entry.beginAt,
+                  reportId: Value(entry.reportId),
+                  reportStatus: Value(
+                    entry.reportStatus != null
+                        ? reportStatusToApi(entry.reportStatus!)
+                        : null,
+                  ),
+                  consultationReason: entry.consultationReason,
                 ),
-                consultationReason: entry.consultationReason,
-              ),
-              mode: InsertMode.insertOrReplace,
-            );
-      }
-    });
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      });
+    } catch (_) {
+      // Cet animal restera sans historique en cache jusqu'au prochain
+      // rafraîchissement, sans bloquer les autres.
+      return;
+    }
 
     final lastFinalized = entries.firstWhereOrNull(
       (entry) => entry.hasFinalizedReport,
