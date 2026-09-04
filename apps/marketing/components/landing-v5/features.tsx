@@ -1,6 +1,28 @@
+import type { ReactNode } from "react";
+
 import { FEATURES, FEATURES_EYEBROW, FEATURES_TITLE } from "./content";
-import { PhoneFrame } from "../frames/phone-frame";
 import { Reveal } from "./motion";
+
+/**
+ * Chrome de fenêtre légère (3 puces, sans barre d'url) pour les mocks de
+ * cette section : contrairement au `BrowserFrame` du hero et de l'atelier,
+ * ces panneaux sont trop étroits pour recevoir un contenu à échelle fixe
+ * lisible — on reste sur des divs simples, comme le fait déjà `bento.tsx`.
+ */
+function PanelChrome({ children }: { children: ReactNode }) {
+  return (
+    <div className="w-[264px] shrink-0 overflow-hidden rounded-[14px] border border-(--lv5-frame-border) bg-(--lv5-canvas) shadow-[0_1px_2px_rgba(29,29,33,.05)]">
+      <div className="flex items-center gap-1.5 border-b border-(--lv5-frame-border) px-3 py-2.5">
+        <span className="size-2 rounded-full bg-(--lv5-line)" />
+        <span className="size-2 rounded-full bg-(--lv5-line)" />
+        <span className="size-2 rounded-full bg-(--lv5-line)" />
+      </div>
+      <div aria-hidden="true" className="flex min-h-[220px] flex-col gap-2.5 p-3">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function LandingV5Features() {
   return (
@@ -49,81 +71,79 @@ export function LandingV5Features() {
                     </a>
                   </div>
 
-                  <PhoneFrame className="w-[220px] shrink-0">
-                    <div aria-hidden="true" className="flex h-full flex-col gap-2 pt-9 px-[13px] pb-4">
-                      {"phoneLabel" in feature ? (
-                        <>
-                          <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
-                            {feature.phoneLabel}
-                          </p>
-                          <div
-                            className="rounded-[10px] p-2.5 font-[family-name:var(--lv5-font-mono)] text-[0.72rem] leading-[1.5]"
-                            style={{ background: "var(--lv5-anthracite)", color: "rgba(253,253,251,.86)" }}
-                          >
-                            {feature.phoneRaw}
-                          </div>
-                          <div className="mt-auto flex min-h-[34px] items-center justify-center rounded-[10px] bg-[color:var(--lv5-violet)] text-[0.74rem] font-semibold text-white">
-                            {feature.phoneCta}
-                          </div>
-                        </>
-                      ) : null}
+                  <PanelChrome>
+                    {"panelLabel" in feature ? (
+                      <>
+                        <p className="m-0 text-[0.66rem] font-semibold uppercase tracking-[.06em] text-[color:var(--lv5-ink-tertiary)]">
+                          {feature.panelLabel}
+                        </p>
+                        <div
+                          className="rounded-[10px] p-2.5 font-[family-name:var(--lv5-font-mono)] text-[0.72rem] leading-[1.5]"
+                          style={{ background: "var(--lv5-anthracite)", color: "rgba(253,253,251,.86)" }}
+                        >
+                          {feature.panelRaw}
+                        </div>
+                        <div className="mt-auto flex min-h-[34px] items-center justify-center rounded-[10px] bg-[color:var(--lv5-violet)] text-[0.74rem] font-semibold text-white">
+                          {feature.panelCta}
+                        </div>
+                      </>
+                    ) : null}
 
-                      {"phoneStates" in feature ? (
-                        <>
-                          <ul className="flex flex-col gap-1.5">
-                            {feature.phoneStates.map((state) => (
-                              <li key={state} className="flex items-center gap-2">
-                                <span
-                                  aria-hidden="true"
-                                  className={`size-1.5 shrink-0 rounded-full ${
-                                    state.includes("Validé")
-                                      ? "bg-[color:var(--lv5-green)]"
-                                      : "bg-[color:var(--lv5-violet)]"
-                                  }`}
-                                />
-                                <span className="text-[0.72rem] text-[color:var(--lv5-ink)]">{state}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="m-0 rounded-[10px] border border-[color:var(--lv5-line)] p-2.5 text-[0.74rem] leading-[1.5] text-[color:var(--lv5-ink)]">
-                            {feature.phoneExtract}
-                          </p>
-                          <div className="mt-auto flex gap-2">
-                            {feature.phoneActions.map((action, actionIndex) => (
+                    {"panelStates" in feature ? (
+                      <>
+                        <ul className="flex flex-col gap-1.5">
+                          {feature.panelStates.map((state) => (
+                            <li key={state} className="flex items-center gap-2">
                               <span
-                                key={action}
-                                className={`flex min-h-[34px] flex-1 items-center justify-center rounded-[10px] text-[0.72rem] font-semibold ${
-                                  actionIndex === feature.phoneActions.length - 1
-                                    ? "bg-[color:var(--lv5-violet)] text-white"
-                                    : "border border-[color:var(--lv5-line)] text-[color:var(--lv5-ink)]"
+                                aria-hidden="true"
+                                className={`size-1.5 shrink-0 rounded-full ${
+                                  state.includes("Validé")
+                                    ? "bg-[color:var(--lv5-green)]"
+                                    : "bg-[color:var(--lv5-violet)]"
                                 }`}
-                              >
-                                {action}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      ) : null}
+                              />
+                              <span className="text-[0.72rem] text-[color:var(--lv5-ink)]">{state}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="m-0 rounded-[10px] border border-[color:var(--lv5-line)] p-2.5 text-[0.74rem] leading-[1.5] text-[color:var(--lv5-ink)]">
+                          {feature.panelExtract}
+                        </p>
+                        <div className="mt-auto flex gap-2">
+                          {feature.panelActions.map((action, actionIndex) => (
+                            <span
+                              key={action}
+                              className={`flex min-h-[34px] flex-1 items-center justify-center rounded-[10px] text-[0.72rem] font-semibold ${
+                                actionIndex === feature.panelActions.length - 1
+                                  ? "bg-[color:var(--lv5-violet)] text-white"
+                                  : "border border-[color:var(--lv5-line)] text-[color:var(--lv5-ink)]"
+                              }`}
+                            >
+                              {action}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
 
-                      {"phoneStatus" in feature ? (
-                        <>
-                          <div className="rounded-[10px] p-2.5" style={{ background: "var(--lv5-green-soft)" }}>
-                            <p className="m-0 text-[0.72rem] font-semibold" style={{ color: "var(--lv5-green-ink)" }}>
-                              {feature.phoneStatus}
-                            </p>
-                          </div>
-                          <div className="rounded-[10px] border border-[color:var(--lv5-line)] p-2.5">
-                            <p className="m-0 text-[0.7rem] leading-[1.4] text-[color:var(--lv5-ink)]">
-                              {feature.phoneFollowUp}
-                            </p>
-                          </div>
-                          <div className="mt-auto rounded-[10px] border border-[color:var(--lv5-line)] p-2.5 text-[0.7rem] text-[color:var(--lv5-ink-tertiary)]">
-                            {feature.phoneControl}
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  </PhoneFrame>
+                    {"panelStatus" in feature ? (
+                      <>
+                        <div className="rounded-[10px] p-2.5" style={{ background: "var(--lv5-green-soft)" }}>
+                          <p className="m-0 text-[0.72rem] font-semibold" style={{ color: "var(--lv5-green-ink)" }}>
+                            {feature.panelStatus}
+                          </p>
+                        </div>
+                        <div className="rounded-[10px] border border-[color:var(--lv5-line)] p-2.5">
+                          <p className="m-0 text-[0.7rem] leading-[1.4] text-[color:var(--lv5-ink)]">
+                            {feature.panelFollowUp}
+                          </p>
+                        </div>
+                        <div className="mt-auto rounded-[10px] border border-[color:var(--lv5-line)] p-2.5 text-[0.7rem] text-[color:var(--lv5-ink-tertiary)]">
+                          {feature.panelControl}
+                        </div>
+                      </>
+                    ) : null}
+                  </PanelChrome>
                 </article>
               </Reveal>
             ))}

@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative Kiwi Appli",
+  title: "Alternative à Kiwi Appli pour ostéopathe animalier",
   description:
     "Alternative Kiwi Appli pour ostéopathes animaliers: comparez agenda, propriétaires, patients, comptes rendus et suivi post-séance avec Biume.",
   path: "/alternatives/kiwiappli",

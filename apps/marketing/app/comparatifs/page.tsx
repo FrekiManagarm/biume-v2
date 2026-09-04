@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Alternatives aux logiciels ostéopathe animalier",
   description:
-    "Comparez Biume, Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe: agenda, patients, suivi et relances.",
+    "Comparez Biume à Animalib, Hunimalis, Kiwi Appli, Stenko, MyTour, NeoVoice et MyPawScribe pour ostéopathe animalier: agenda, patients, comptes rendus et suivi.",
   path: "/comparatifs",
 });
 

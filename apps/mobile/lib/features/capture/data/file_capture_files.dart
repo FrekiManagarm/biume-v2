@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,43 +7,26 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/crypto/capture_envelope.dart';
+import '../../../core/crypto/device_key.dart';
 import '../domain/audio_recorder.dart';
 
-/// Clé de chiffrement des dictées, dans le trousseau système.
-const String _captureKeyName = 'biume.capture.key';
+/// Clé de chiffrement des dictées, dans le trousseau système. Distincte de
+/// celle du cache de lecture (`localCacheKeyName`) : une dictée porte du
+/// travail irremplaçable, un cache se refait — les deux clés n'ont pas la
+/// même valeur et ne doivent pas se perdre ensemble.
+const String captureKeyName = 'biume.capture.key';
 
 class FileCaptureFiles implements CaptureFiles {
-  FileCaptureFiles(this._storage, {Random? random})
-    : _random = random ?? Random.secure();
-
-  final FlutterSecureStorage _storage;
-  final Random _random;
-
-  /// Une seule clé par installation, générée à la première dictée et rangée
-  /// dans le trousseau — jamais dans des préférences en clair.
-  ///
-  /// Elle ne quitte pas l'appareil : le chiffrement protège un téléphone perdu,
-  /// pas le transit, que TLS couvre déjà.
-  Future<Uint8List> _key() async {
-    final existing = await _storage.read(key: _captureKeyName);
-    if (existing != null) {
-      return Uint8List.fromList(
-        List<int>.generate(
-          existing.length ~/ 2,
-          (i) => int.parse(existing.substring(i * 2, i * 2 + 2), radix: 16),
-        ),
+  FileCaptureFiles(FlutterSecureStorage storage, {Random? random})
+    : _random = random ?? Random.secure(),
+      _key = deviceKeyFromSecureStorage(
+        storage,
+        name: captureKeyName,
+        random: random,
       );
-    }
 
-    final fresh = Uint8List.fromList(
-      List<int>.generate(captureKeyLength, (_) => _random.nextInt(256)),
-    );
-    await _storage.write(
-      key: _captureKeyName,
-      value: fresh.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
-    );
-    return fresh;
-  }
+  final Random _random;
+  final DeviceKeyReader _key;
 
   Future<Directory> _directory() async {
     final base = await getApplicationDocumentsDirectory();
@@ -69,9 +51,7 @@ class FileCaptureFiles implements CaptureFiles {
     final source = File(path);
     final envelope = await encryptCapture(
       key: await _key(),
-      nonce: Uint8List.fromList(
-        List<int>.generate(captureNonceLength, (_) => _random.nextInt(256)),
-      ),
+      nonce: newCaptureNonce(_random),
       captureId: captureId,
       plaintext: await source.readAsBytes(),
     );

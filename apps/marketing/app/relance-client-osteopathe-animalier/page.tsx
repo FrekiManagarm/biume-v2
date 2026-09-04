@@ -16,7 +16,7 @@ export default function ReminderPage() {
       eyebrow="Relance client"
       title={
         <>
-          Relancer vos clients sans perdre votre{" "}
+          La relance client ostéopathe animalier, sans perdre votre{" "}
           <span className="bg-linear-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             posture professionnelle
           </span>

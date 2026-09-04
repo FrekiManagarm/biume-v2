@@ -50,3 +50,6 @@ app.*.map.json
 # Code généré par build_runner : régénéré par la CI à chaque exécution.
 *.g.dart
 *.freezed.dart
+
+# URL d'API locale (dépend de la machine du développeur) : voir dart_define/local.json.example
+/dart_define/local.json

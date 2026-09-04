@@ -12,6 +12,7 @@ abstract class CaptureStore {
     required String filePath,
     required DateTime createdAt,
     required DateTime expiresAt,
+    String? patientId,
   });
 
   /// Refuse la transition si elle n'est pas autorisée, et retourne `false`
@@ -26,6 +27,12 @@ abstract class CaptureStore {
   });
 
   Future<List<SyncCandidate>> pending();
+
+  /// Mémorise l'animal d'une capture libre. Sans effet sur le serveur : c'est
+  /// le moteur de synchronisation qui portera ce choix après la déclaration.
+  Future<void> attachPatient(String id, String patientId);
+
+  Future<void> markExtractionRequested(String id, DateTime at);
 
   Future<LocalCapture?> byId(String id);
 

@@ -1,4 +1,5 @@
 import {
+  mobileOwnerSchema,
   mobileOwnersResponseSchema,
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
@@ -10,7 +11,7 @@ import { createMobileApiHandler, type MobileApiPorts } from "./mobile-api";
 const owner = {
   id: "client-1",
   name: "Camille Roux",
-  email: null,
+  email: "camille@example.org",
   phone: null,
   city: null,
   patientCount: 1,
@@ -43,6 +44,7 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
     completeCapture: vi.fn(),
     cancelCapture: vi.fn(),
     createOwner: vi.fn(),
+    updateOwnerEmail: vi.fn(async () => owner),
     createPatient: vi.fn(),
     moveAppointment: vi.fn(),
     ...overrides,
@@ -197,6 +199,23 @@ describe("création de fiches", () => {
       }),
     );
 
+    expect(response.status).toBe(400);
+  });
+});
+
+describe("e-mail du propriétaire", () => {
+  it("met à jour l'e-mail et renvoie la fiche", async () => {
+    const response = await createMobileApiHandler(createPorts())(
+      post("/owners/owner-1/email", { email: "camille@example.org" }),
+    );
+    expect(response.status).toBe(200);
+    expect(mobileOwnerSchema.parse(await response.json()).email).toBe("camille@example.org");
+  });
+
+  it("refuse une adresse invalide", async () => {
+    const response = await createMobileApiHandler(createPorts())(
+      post("/owners/owner-1/email", { email: "pas-une-adresse" }),
+    );
     expect(response.status).toBe(400);
   });
 });

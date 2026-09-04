@@ -76,7 +76,14 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
 		<string>processing</string>
+	</array>
+	<!-- iOS refuse de programmer une tâche dont l'identifiant ne figure pas
+	     ici : il doit rester identique à `backgroundTaskId`. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.biume.mobile.refresh</string>
 	</array>
 </dict>
 </plist>

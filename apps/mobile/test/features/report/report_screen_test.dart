@@ -18,10 +18,15 @@ const ancre = TranscriptAnchor(
   quote: 'tension lombaire à droite',
 );
 
-final donnees = ReportProposals(
-  reportId: 'report-1',
-  transcript: 'Filou présente une tension lombaire à droite.',
-  proposals: const [
+const proprietaire = ReportOwner(
+  id: 'owner-1',
+  name: 'Camille Roux',
+  email: 'camille@example.org',
+);
+
+ReportProposals fabriquer({
+  ReportStatus status = ReportStatus.draft,
+  List<Proposal> proposals = const [
     Proposal(
       id: 'proposal-1',
       section: ReportSection.clinical,
@@ -30,13 +35,25 @@ final donnees = ReportProposals(
       anchor: ancre,
     ),
   ],
-  sections: const {
+  Map<ReportSection, SectionState> sections = const {
     ReportSection.clinical: SectionState.proposed,
     ReportSection.anatomical: SectionState.empty,
     ReportSection.recommendations: SectionState.empty,
     ReportSection.notes: SectionState.empty,
   },
+  ReportOwner owner = proprietaire,
+}) => ReportProposals(
+  reportId: 'report-1',
+  status: status,
+  patientName: 'Filou',
+  owner: owner,
+  captureId: null,
+  transcript: 'Filou présente une tension lombaire à droite.',
+  proposals: proposals,
+  sections: sections,
 );
+
+final donnees = fabriquer();
 
 Future<void> monter(WidgetTester tester, MockReportRepository repository) async {
   await tester.pumpWidget(
@@ -110,4 +127,149 @@ void main() {
 
     expect(bouton.onPressed, isNull);
   });
+
+  testWidgets("n'affiche aucun bouton sur un rapport finalisé", (
+    tester,
+  ) async {
+    when(() => repository.load(any())).thenAnswer(
+      (_) async => Success(
+        fabriquer(
+          status: ReportStatus.finalized,
+          proposals: const [
+            Proposal(
+              id: 'proposal-1',
+              section: ReportSection.clinical,
+              text: 'Tension lombaire droite',
+              state: SectionState.confirmed,
+              anchor: ancre,
+            ),
+          ],
+          sections: const {
+            ReportSection.clinical: SectionState.confirmed,
+            ReportSection.anatomical: SectionState.notApplicable,
+            ReportSection.recommendations: SectionState.notApplicable,
+            ReportSection.notes: SectionState.notApplicable,
+          },
+        ),
+      ),
+    );
+
+    await monter(tester, repository);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.widgetWithText(FilledButton, 'Valider'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Sans objet'), findsNothing);
+    expect(
+      find.widgetWithText(FilledButton, 'Finaliser et partager'),
+      findsNothing,
+    );
+    expect(find.textContaining('Compte rendu finalisé'), findsOneWidget);
+  });
+
+  testWidgets("propose d'ajouter l'e-mail quand le propriétaire n'en a pas", (
+    tester,
+  ) async {
+    when(() => repository.load(any())).thenAnswer(
+      (_) async => Success(
+        fabriquer(
+          proposals: const [
+            Proposal(
+              id: 'proposal-1',
+              section: ReportSection.clinical,
+              text: 'Tension lombaire droite',
+              state: SectionState.confirmed,
+              anchor: ancre,
+            ),
+          ],
+          sections: const {
+            ReportSection.clinical: SectionState.confirmed,
+            ReportSection.anatomical: SectionState.notApplicable,
+            ReportSection.recommendations: SectionState.notApplicable,
+            ReportSection.notes: SectionState.notApplicable,
+          },
+          owner: const ReportOwner(
+            id: 'owner-1',
+            name: 'Camille Roux',
+            email: null,
+          ),
+        ),
+      ),
+    );
+
+    await monter(tester, repository);
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Finaliser et partager'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(
+      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(TextButton, 'Finaliser sans envoyer'),
+      findsOneWidget,
+    );
+
+    // Une adresse vide ou malformée est refusée sur place, avec ce qu'il faut
+    // corriger : un aller-retour serveur pour revenir en message générique
+    // ferait perdre le geste au praticien.
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text("Indiquez l'adresse e-mail du propriétaire."),
+      findsOneWidget,
+    );
+    expect(find.byType(TextField), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'camille');
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    verifyNever(() => repository.updateOwnerEmail(any(), any()));
+  });
+
+  testWidgets(
+    'affiche « Biume prépare le compte rendu » pendant l\'attente',
+    (tester) async {
+      when(() => repository.load(any())).thenAnswer(
+        (_) async => Success(fabriquer(proposals: const [])),
+      );
+
+      // Un intervalle court et un plafond bas : le test observe l'attente,
+      // puis la laisse se résoudre pour ne pas quitter avec un minuteur
+      // encore en suspens.
+      const intervalle = Duration(milliseconds: 10);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(AppPalette.light, Brightness.light),
+          home: BlocProvider(
+            create: (_) => ReportCubit(
+              repository,
+              pollInterval: intervalle,
+              maxPolls: 2,
+            )..load('report-1'),
+            child: const ReportScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.textContaining('Biume prépare le compte rendu'),
+        findsOneWidget,
+      );
+
+      await tester.pump(intervalle);
+      await tester.pump();
+    },
+  );
 }

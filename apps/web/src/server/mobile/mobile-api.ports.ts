@@ -13,15 +13,20 @@ import {
   reportShareLink,
   pets,
   reportProposal,
+  reportSectionState,
+  reportSharedVersion,
 } from "@biume/db/schema/index";
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   gt,
   gte,
   ilike,
+  inArray,
+  isNotNull,
   isNull,
   lte,
   or,
@@ -32,12 +37,22 @@ import {
   completeCapture,
   createCapture,
   createUploadSession,
+  toCaptureResponse,
   type CaptureActor,
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
+import { assertReportDecidable } from "./report-decision.service";
+import { buildSessionReportTitle } from "#/functions/appointment-report.service";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
-import type { Transcript } from "@biume/contracts/transcript";
+import {
+  buildReportSectionStateRows,
+  normalizeReportSectionStates,
+} from "#/functions/report-domain";
+import { createInitialReportSectionStates } from "@biume/contracts/report";
+import { classifyTodo, todoCaptureStatuses } from "./todo.service";
+import { todoPageSize } from "@biume/contracts/mobile-todo";
+import type { Transcript, TranscriptStatus } from "@biume/contracts/transcript";
 import type {
   Proposal,
   ReportProposalsResponse,
@@ -49,10 +64,22 @@ import {
   type FollowUp,
 } from "@biume/contracts/followup";
 import { validateDueDate } from "#/server/followup/followup.service";
+import { createImmutableReportSharedVersion } from "#/functions/report-shared-version.service";
+import { reportSharedVersionPorts } from "#/server/report/report-shared-version.ports";
+import { generateShareToken } from "#/server/owner/owner-access.service";
+import {
+  finalizeReport,
+  type FinalizeReportPorts,
+} from "./finalize-report.service";
+import { sendNewReportEmail } from "./report-email";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
-import { createCaptureRepository } from "./capture.repository";
+import { dayBounds } from "./appointment-write.service";
+import {
+  createCaptureRepository,
+  type CaptureDatabase,
+} from "./capture.repository";
 import { getR2AudioObjectStore } from "./r2-audio-object-store.factory";
 import {
   toHistoryEntry,
@@ -151,6 +178,19 @@ async function readTranscript(
 }
 
 
+/**
+ * Déclenche l'extraction du compte rendu. Partagée entre la validation de la
+ * transcription et la régénération : les deux chemins lancent exactement la
+ * même tâche, jamais une variante dupliquée.
+ */
+async function triggerExtraction(reportId: string, captureId: string) {
+  const { tasks } = await import("@trigger.dev/sdk/v3");
+  const { extractReportTaskId } = await import(
+    "#/trigger/extract-report.trigger"
+  );
+  await tasks.trigger(extractReportTaskId, { reportId, captureId });
+}
+
 function toProposal(row: typeof reportProposal.$inferSelect): Proposal {
   return {
     id: row.id,
@@ -178,8 +218,17 @@ async function readReportProposals(
   reportId: string,
 ): Promise<ReportProposalsResponse | null> {
   const [report] = await db
-    .select({ id: advancedReport.id })
+    .select({
+      id: advancedReport.id,
+      status: advancedReport.status,
+      patientName: pets.name,
+      ownerId: clients.id,
+      ownerName: clients.name,
+      ownerEmail: clients.email,
+    })
     .from(advancedReport)
+    .leftJoin(pets, eq(pets.id, advancedReport.patientId))
+    .leftJoin(clients, eq(clients.id, pets.ownerId))
     .where(
       and(
         eq(advancedReport.id, reportId),
@@ -211,6 +260,14 @@ async function readReportProposals(
 
   return {
     reportId,
+    status: report.status,
+    patientName: report.patientName ?? "Animal sans nom",
+    owner: {
+      id: report.ownerId ?? "",
+      name: report.ownerName ?? "Propriétaire sans nom",
+      email: report.ownerEmail ?? null,
+    },
+    captureId: captureId ?? null,
     transcript: transcript?.text ?? "",
     items,
     sections: deriveSectionStates(items),
@@ -238,6 +295,35 @@ async function syncAndReread(
 }
 
 
+/**
+ * Le jeton d'un suivi doit être celui du rapport demandé, et de personne
+ * d'autre. La jointure passe par `reportSharedVersion`, qui porte à la fois le
+ * rapport et son locataire : un lien d'une autre organisation n'est pas
+ * seulement improbable, il est hors de portée de la requête.
+ */
+export async function findReportShareToken(
+  database: CaptureDatabase,
+  scope: { organizationId: string; reportId: string },
+): Promise<string | null> {
+  const [link] = await database
+    .select({ token: reportShareLink.token })
+    .from(reportShareLink)
+    .innerJoin(
+      reportSharedVersion,
+      eq(reportSharedVersion.id, reportShareLink.sharedVersionId),
+    )
+    .where(
+      and(
+        eq(reportSharedVersion.reportId, scope.reportId),
+        eq(reportSharedVersion.organizationId, scope.organizationId),
+        isNull(reportShareLink.revokedAt),
+      ),
+    )
+    .orderBy(desc(reportShareLink.createdAt))
+    .limit(1);
+  return link?.token ?? null;
+}
+
 async function readFollowUp(
   actor: CaptureActor,
   followUpId: string,
@@ -252,12 +338,17 @@ async function readFollowUp(
       answeredAt: followUp.answeredAt,
       handledAt: followUp.handledAt,
       patientName: pets.name,
+      patientId: advancedReport.patientId,
       ownerName: clients.name,
+      ownerPhone: clients.phone,
+      ownerEmail: clients.email,
     })
     .from(followUp)
-    .leftJoin(reportShareLink, eq(reportShareLink.token, followUp.shareToken))
-    .leftJoin(clients, eq(clients.id, reportShareLink.ownerId))
-    .leftJoin(pets, eq(pets.ownerId, clients.id))
+    // Le nom de l'animal vient du rapport suivi, pas de « n'importe quel
+    // animal du propriétaire » : la jointure précédente en tirait un au hasard.
+    .innerJoin(advancedReport, eq(advancedReport.id, followUp.reportId))
+    .leftJoin(pets, eq(pets.id, advancedReport.patientId))
+    .leftJoin(clients, eq(clients.id, pets.ownerId))
     .where(
       and(
         eq(followUp.id, followUpId),
@@ -286,10 +377,75 @@ async function readFollowUp(
     answer: row.answer ?? null,
     alertReasons: alerts.map((alert) => alert.reason as AlertReason),
     handledAt: row.handledAt?.toISOString() ?? null,
+    ownerPhone: row.ownerPhone ?? null,
+    ownerEmail: row.ownerEmail ?? null,
+    patientId: row.patientId ?? null,
   };
 }
 
-export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> {
+/**
+ * Le même prédicat que le web (`findAppointmentConflicts`) : les deux
+ * surfaces signalent exactement les mêmes chevauchements, par construction.
+ * La fenêtre de lecture est bornée à la journée concernée : détecter un
+ * chevauchement ne justifie jamais de charger tout l'agenda.
+ */
+async function conflictsOn(
+  actor: CaptureActor,
+  beginAt: Date,
+  endAt: Date,
+  excludeAppointmentId?: string,
+) {
+  const { dayStart, dayEnd } = dayBounds(beginAt);
+
+  const candidates = await db
+    .select({
+      id: appointments.id,
+      beginAt: appointments.beginAt,
+      endAt: appointments.endAt,
+      status: appointments.status,
+      patientName: pets.name,
+    })
+    .from(appointments)
+    .leftJoin(pets, eq(appointments.patientId, pets.id))
+    .where(
+      and(
+        eq(appointments.organizationId, actor.organizationId),
+        gte(appointments.beginAt, dayStart),
+        lte(appointments.beginAt, dayEnd),
+      ),
+    );
+
+  return findAppointmentConflicts({
+    beginAt,
+    endAt,
+    excludeAppointmentId,
+    candidates,
+  });
+}
+
+/** Le brouillon lié à la séance, s'il en existe un. */
+async function linkedReportId(reportScope: {
+  organizationId: string;
+  appointmentId: string;
+}): Promise<string | null> {
+  const [report] = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.appointmentId, reportScope.appointmentId),
+        eq(advancedReport.createdBy, reportScope.organizationId),
+      ),
+    )
+    .limit(1);
+
+  return report?.id ?? null;
+}
+
+export async function createProductionMobileApiPorts(
+  overrides: { sendReportEmail?: FinalizeReportPorts["sendEmail"] } = {},
+): Promise<MobileApiPorts> {
+  const sendReportEmail = overrides.sendReportEmail ?? sendNewReportEmail;
   const { auth } = await import("@biume/auth");
   const repository = createCaptureRepository();
   const dependencies: CaptureServiceDependencies = {
@@ -306,7 +462,7 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
     },
   };
 
-  return {
+  const ports: MobileApiPorts = {
     async authenticate(headers) {
       const session = await auth.api.getSession({ headers });
       if (!session) return null;
@@ -526,7 +682,7 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
 
     async scheduleFollowUp(actor, reportId, request) {
       const [report] = await db
-        .select({ id: advancedReport.id })
+        .select({ id: advancedReport.id, status: advancedReport.status })
         .from(advancedReport)
         .where(
           and(
@@ -543,17 +699,22 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
         throw new MobileRequestError("validation");
       }
 
-      const [link] = await db
-        .select({ token: reportShareLink.token })
-        .from(reportShareLink)
-        .limit(1);
+      // Un suivi porte un lien vers le compte rendu : sans rapport finalisé,
+      // le propriétaire recevrait un questionnaire sur un document qu'il n'a
+      // jamais reçu.
+      if (report.status === "draft") throw new MobileRequestError("conflict");
+      const shareToken = await findReportShareToken(db, {
+        organizationId: actor.organizationId,
+        reportId,
+      });
+      if (!shareToken) throw new MobileRequestError("conflict");
 
       const id = crypto.randomUUID();
       await db.insert(followUp).values({
         id,
         reportId,
         organizationId: actor.organizationId,
-        shareToken: link?.token ?? null,
+        shareToken,
         questionnaire: request.questionnaire ?? defaultFollowUpQuestionnaire,
         dueAt: new Date(request.dueAt),
       });
@@ -610,6 +771,99 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       return handled;
     },
 
+    async listTodo(actor) {
+      // Trente jours : une dictée plus ancienne non traitée est un cas de
+      // support, pas une ligne de liste.
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const rows = await db
+        .select({
+          captureId: audioCapture.id,
+          reportId: audioCapture.reportId,
+          appointmentId: audioCapture.appointmentId,
+          patientId: audioCapture.patientId,
+          captureStatus: audioCapture.status,
+          updatedAt: audioCapture.updatedAt,
+          patientName: pets.name,
+          transcriptStatus: captureTranscript.status,
+          reportStatus: advancedReport.status,
+        })
+        .from(audioCapture)
+        .leftJoin(captureTranscript, eq(captureTranscript.captureId, audioCapture.id))
+        .leftJoin(advancedReport, eq(advancedReport.id, audioCapture.reportId))
+        .leftJoin(pets, eq(pets.id, audioCapture.patientId))
+        .where(
+          and(
+            eq(audioCapture.organizationId, actor.organizationId),
+            // `expired` est retenu comme `uploaded` : la purge de l'audio,
+            // au bout de 24 h, ne doit pas retirer de la liste une dictée
+            // dont le travail n'est pas terminé. `uploadedAt` non nul écarte
+            // les captures expirées avant même d'être arrivées : elles n'ont
+            // ni transcription ni rapport, et occuperaient une place dans la
+            // page au détriment d'une dictée réelle.
+            inArray(audioCapture.status, [...todoCaptureStatuses]),
+            isNotNull(audioCapture.uploadedAt),
+            gte(audioCapture.createdAt, since),
+          ),
+        )
+        .orderBy(desc(audioCapture.createdAt))
+        .limit(todoPageSize);
+
+      const reportIds = rows
+        .map((row) => row.reportId)
+        .filter((id): id is string => id !== null);
+
+      const proposalCounts = reportIds.length
+        ? await db
+            .select({ reportId: reportProposal.reportId, total: count() })
+            .from(reportProposal)
+            .where(inArray(reportProposal.reportId, reportIds))
+            .groupBy(reportProposal.reportId)
+        : [];
+      const stateRows = reportIds.length
+        ? await db
+            .select({
+              reportId: reportSectionState.reportId,
+              section: reportSectionState.section,
+              state: reportSectionState.state,
+            })
+            .from(reportSectionState)
+            .where(inArray(reportSectionState.reportId, reportIds))
+        : [];
+
+      const countByReport = new Map(proposalCounts.map((row) => [row.reportId, Number(row.total)]));
+      const statesByReport = new Map<string, typeof stateRows>();
+      for (const row of stateRows) {
+        statesByReport.set(row.reportId, [...(statesByReport.get(row.reportId) ?? []), row]);
+      }
+
+      const items = rows.flatMap((row) => {
+        const states = row.reportId ? statesByReport.get(row.reportId) : undefined;
+        const kind = classifyTodo({
+          reportId: row.reportId,
+          reportStatus: row.reportStatus,
+          transcriptStatus: row.transcriptStatus as TranscriptStatus | null,
+          proposalCount: row.reportId ? (countByReport.get(row.reportId) ?? 0) : 0,
+          sectionStates: states ? normalizeReportSectionStates(states) : null,
+          audioExpired: row.captureStatus === "expired",
+          hasPatient: row.patientId !== null,
+        });
+        if (!kind) return [];
+        return [
+          {
+            kind,
+            captureId: row.captureId,
+            reportId: row.reportId,
+            appointmentId: row.appointmentId,
+            patientName: row.patientName ?? null,
+            updatedAt: row.updatedAt.toISOString(),
+          },
+        ];
+      });
+
+      return { items };
+    },
+
     async getReportProposals(actor, reportId) {
       return readReportProposals(actor, reportId);
     },
@@ -617,6 +871,9 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
     async decideProposal(actor, reportId, proposalId, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // La lecture accepte un rapport finalisé, la décision jamais : un
+      // compte rendu envoyé au propriétaire ne bouge plus (5.10).
+      assertReportDecidable(current.status);
 
       const decided = await createProposalRepository().decide(
         reportId,
@@ -631,6 +888,10 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
     async decideSection(actor, reportId, section, request) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Sans cette garde, décider une section entière sur un rapport
+      // finalisé répondait 200 sans rien changer : un silence qui se lit
+      // comme un succès.
+      assertReportDecidable(current.status);
 
       await createProposalRepository().decideSection(
         reportId,
@@ -644,23 +905,102 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
     async regenerateProposals(actor, reportId) {
       const current = await readReportProposals(actor, reportId);
       if (!current) throw new MobileRequestError("not_found");
+      // Même classe de mutation que les deux décisions : régénérer réécrit le
+      // contenu clinique. Un compte rendu parti chez le propriétaire ne bouge
+      // plus (5.10).
+      assertReportDecidable(current.status);
 
-      const captureId = await db
+      // Sans proposition existante, la source est la capture du rapport, pas
+      // une proposition : la toute première extraction n'en a encore laissé
+      // aucune.
+      const [fromProposal] = await db
         .select({ id: reportProposal.captureId })
         .from(reportProposal)
         .where(eq(reportProposal.reportId, reportId))
         .limit(1);
+      const [fromCapture] = await db
+        .select({ id: audioCapture.id })
+        .from(audioCapture)
+        .where(
+          and(
+            eq(audioCapture.reportId, reportId),
+            eq(audioCapture.organizationId, actor.organizationId),
+          ),
+        )
+        .orderBy(desc(audioCapture.createdAt))
+        .limit(1);
 
-      const source = captureId[0]?.id;
-      if (source) {
-        const { tasks } = await import("@trigger.dev/sdk/v3");
-        const { extractReportTaskId } = await import(
-          "#/trigger/extract-report.trigger"
-        );
-        await tasks.trigger(extractReportTaskId, { reportId, captureId: source });
-      }
-
+      const source = fromProposal?.id ?? fromCapture?.id;
+      if (source) await triggerExtraction(reportId, source);
       return current;
+    },
+
+    async finalizeReport(actor, reportId, request) {
+      return finalizeReport(
+        { organizationId: actor.organizationId, reportId, sendToOwner: request.sendToOwner, now: new Date() },
+        {
+          async loadReport(scope) {
+            const row = await db.query.advancedReport.findFirst({
+              where: and(
+                eq(advancedReport.id, scope.reportId),
+                eq(advancedReport.createdBy, scope.organizationId),
+              ),
+              with: { patient: { with: { owner: true } }, sectionStates: true },
+            });
+            if (!row) return null;
+            return {
+              id: row.id,
+              status: row.status,
+              sectionStates: row.sectionStates.map((s) => ({ section: s.section, state: s.state })),
+              patient: row.patient
+                ? {
+                    name: row.patient.name,
+                    owner: row.patient.owner
+                      ? { id: row.patient.owner.id, name: row.patient.owner.name, email: row.patient.owner.email }
+                      : null,
+                  }
+                : null,
+            };
+          },
+          async markStatus(scope, status, at) {
+            await db
+              .update(advancedReport)
+              .set({ status, updatedAt: at })
+              .where(
+                and(
+                  eq(advancedReport.id, scope.reportId),
+                  eq(advancedReport.createdBy, scope.organizationId),
+                ),
+              );
+          },
+          async createSharedVersion(scope, at) {
+            const version = await createImmutableReportSharedVersion(
+              { organizationId: scope.organizationId, reportId: scope.reportId, createdAt: at },
+              reportSharedVersionPorts,
+            );
+            return { id: version.id };
+          },
+          async findActiveLink({ sharedVersionId, ownerId }) {
+            const [link] = await db
+              .select({ token: reportShareLink.token })
+              .from(reportShareLink)
+              .where(
+                and(
+                  eq(reportShareLink.sharedVersionId, sharedVersionId),
+                  eq(reportShareLink.ownerId, ownerId),
+                  isNull(reportShareLink.revokedAt),
+                ),
+              )
+              .limit(1);
+            return link ?? null;
+          },
+          async insertLink(link) {
+            await db.insert(reportShareLink).values(link);
+          },
+          generateToken: generateShareToken,
+          sendEmail: sendReportEmail,
+        },
+      );
     },
 
     async getTranscript(actor, captureId) {
@@ -700,31 +1040,6 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
 
       if (!target) throw new MobileRequestError("not_found");
 
-      // La fenêtre de lecture est bornée à la journée concernée : détecter un
-      // chevauchement ne justifie jamais de charger tout l'agenda.
-      const dayStart = new Date(beginAt);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(beginAt);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const candidates = await db
-        .select({
-          id: appointments.id,
-          beginAt: appointments.beginAt,
-          endAt: appointments.endAt,
-          status: appointments.status,
-          patientName: pets.name,
-        })
-        .from(appointments)
-        .leftJoin(pets, eq(appointments.patientId, pets.id))
-        .where(
-          and(
-            eq(appointments.organizationId, actor.organizationId),
-            gte(appointments.beginAt, dayStart),
-            lte(appointments.beginAt, dayEnd),
-          ),
-        );
-
       await db
         .update(appointments)
         .set({ beginAt, endAt, updatedAt: new Date() })
@@ -735,17 +1050,91 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
           ),
         );
 
-      // Le même prédicat que le web : les deux surfaces signalent exactement
-      // les mêmes chevauchements, par construction.
-      const conflicts = findAppointmentConflicts({
-        beginAt,
-        endAt,
-        excludeAppointmentId: appointmentId,
-        candidates,
-      });
+      const [conflicts, reportId] = await Promise.all([
+        conflictsOn(actor, beginAt, endAt, appointmentId),
+        linkedReportId({ organizationId: actor.organizationId, appointmentId }),
+      ]);
 
       return {
         appointmentId,
+        reportId,
+        beginAt: beginAt.toISOString(),
+        endAt: endAt.toISOString(),
+        conflicts: conflicts.map((conflict) => ({
+          appointmentId: conflict.id,
+          beginAt: new Date(conflict.beginAt).toISOString(),
+          patientName: conflict.patientName,
+        })),
+      };
+    },
+
+    /**
+     * L'ostéopathe animalier en tournée prend une séance entre deux portes.
+     * Le brouillon naît avec elle, comme sur le web : c'est lui que la
+     * dictée du rendez-vous alimentera. Un chevauchement n'empêche jamais
+     * l'écriture — il est signalé après coup, au praticien de trancher.
+     */
+    async createAppointment(actor, request) {
+      const beginAt = new Date(request.beginAt);
+      const endAt = new Date(request.endAt);
+
+      const [patient] = await db
+        .select({ id: pets.id, name: pets.name })
+        .from(pets)
+        .where(
+          and(
+            eq(pets.id, request.patientId),
+            eq(pets.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+      if (!patient) throw new MobileRequestError("not_found");
+
+      const appointmentId = crypto.randomUUID();
+      const reportId = crypto.randomUUID();
+      const now = new Date();
+
+      await db.batch([
+        db.insert(appointments).values({
+          id: appointmentId,
+          organizationId: actor.organizationId,
+          patientId: patient.id,
+          beginAt,
+          endAt,
+          atHome: request.atHome,
+          status: "CREATED",
+          createdAt: now,
+          updatedAt: now,
+        }),
+        db.insert(advancedReport).values({
+          id: reportId,
+          // Le helper partagé du web, jamais une copie de son format : les
+          // deux moitiés du produit écrivent dans la même liste, chez le
+          // même praticien.
+          title: buildSessionReportTitle(patient.name, beginAt),
+          consultationReason: "",
+          patientId: patient.id,
+          appointmentId,
+          notes: "",
+          status: "draft",
+          createdBy: actor.organizationId,
+          createdAt: now,
+        }),
+        db
+          .insert(reportSectionState)
+          .values(
+            buildReportSectionStateRows(
+              reportId,
+              createInitialReportSectionStates(),
+            ),
+          ),
+      ] as const);
+
+      const conflicts = await conflictsOn(actor, beginAt, endAt, appointmentId);
+
+      return {
+        appointmentId,
+        reportId,
         beginAt: beginAt.toISOString(),
         endAt: endAt.toISOString(),
         conflicts: conflicts.map((conflict) => ({
@@ -777,6 +1166,30 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       if (!created) throw new MobileRequestError("server_error", { retryable: true });
 
       return toMobileOwner({ ...created, patientCount: 0 });
+    },
+
+    async updateOwnerEmail(actor, ownerId, request) {
+      const [updated] = await db
+        .update(clients)
+        .set({ email: request.email })
+        .where(
+          and(eq(clients.id, ownerId), eq(clients.organizationId, actor.organizationId)),
+        )
+        .returning({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          phone: clients.phone,
+          city: clients.city,
+        });
+      if (!updated) throw new MobileRequestError("not_found");
+
+      const [counted] = await db
+        .select({ patientCount: count() })
+        .from(pets)
+        .where(eq(pets.ownerId, ownerId));
+
+      return toMobileOwner({ ...updated, patientCount: counted?.patientCount ?? 0 });
     },
 
     async createPatient(actor, request) {
@@ -890,7 +1303,135 @@ export async function createProductionMobileApiPorts(): Promise<MobileApiPorts> 
       completeCapture(actor, captureId, request, dependencies),
     cancelCapture: (actor, captureId) =>
       cancelCapture(actor, captureId, dependencies),
+
+    async attachCapture(actor, captureId, request) {
+      const scope = { id: captureId, organizationId: actor.organizationId };
+      const capture = await repository.findCapture(scope);
+      if (!capture) throw new MobileRequestError("not_found");
+
+      // Idempotent sur le même animal ; contradictoire sur un autre. Une
+      // extraction déjà faite s'appuie sur ce rapport : on ne le déplace pas.
+      if (capture.reportId) {
+        if (capture.patientId === request.patientId) {
+          return toCaptureResponse(capture);
+        }
+        throw new MobileRequestError("conflict");
+      }
+
+      const [patient] = await db
+        .select({ id: pets.id, name: pets.name })
+        .from(pets)
+        .where(
+          and(
+            eq(pets.id, request.patientId),
+            eq(pets.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+      if (!patient) throw new MobileRequestError("not_found");
+
+      const now = new Date();
+      const reportId = crypto.randomUUID();
+      // Même helper partagé que la création de séance : un brouillon né d'une
+      // dictée libre atterrit dans la même liste que les autres.
+      const title = buildSessionReportTitle(patient.name, capture.createdAt);
+
+      // Un seul batch : un rapport sans ses états de section ne pourrait
+      // jamais être finalisé, et ne serait jamais revendiqué par une capture.
+      await db.batch([
+        db.insert(advancedReport).values({
+          id: reportId,
+          title,
+          consultationReason: "",
+          patientId: patient.id,
+          // Jamais le rendez-vous de la capture. Rien n'empêche deux dictées
+          // sur la même séance — une tournée hors ligne où l'on dicte deux
+          // fois avant de synchroniser — et aucun index unique ne garde cette
+          // colonne : deux brouillons porteraient le même rendez-vous.
+          // L'historique de l'animal joint les rapports sur le rendez-vous et
+          // afficherait la séance deux fois, et `findAppointmentContext` en
+          // choisirait un au hasard.
+          appointmentId: null,
+          notes: "",
+          status: "draft",
+          createdBy: actor.organizationId,
+          createdAt: now,
+        }),
+        db
+          .insert(reportSectionState)
+          .values(
+            buildReportSectionStateRows(reportId, createInitialReportSectionStates()),
+          ),
+      ] as const);
+
+      // Le prédicat `isNull(reportId)` fait office de verrou : deux
+      // rattachements concurrents ne produisent qu'un rapport vivant.
+      const [claimed] = await db
+        .update(audioCapture)
+        .set({ patientId: patient.id, reportId, updatedAt: now })
+        .where(
+          and(
+            eq(audioCapture.id, captureId),
+            eq(audioCapture.organizationId, actor.organizationId),
+            isNull(audioCapture.reportId),
+          ),
+        )
+        .returning({ id: audioCapture.id });
+
+      if (!claimed) {
+        await db.delete(advancedReport).where(eq(advancedReport.id, reportId));
+        const current = await repository.findCapture(scope);
+        if (!current) throw new MobileRequestError("not_found");
+        if (current.patientId !== request.patientId) {
+          throw new MobileRequestError("conflict");
+        }
+        return toCaptureResponse(current);
+      }
+
+      const refreshed = await repository.findCapture(scope);
+      if (!refreshed) throw new MobileRequestError("not_found");
+      return toCaptureResponse(refreshed);
+    },
+
+    async extractCapture(actor, captureId) {
+      const capture = await repository.findCapture({
+        id: captureId,
+        organizationId: actor.organizationId,
+      });
+      if (!capture) throw new MobileRequestError("not_found");
+
+      // Contrôlé avant toute écriture : une transcription en attente, échouée
+      // ou inaudible n'extrait rien, et le brouillon créé juste avant serait
+      // un rapport vide abandonné. Le bouton unique du mobile n'atteint pas
+      // ce chemin, l'API si.
+      const transcript = await readTranscript(actor, captureId);
+      if (
+        !transcript ||
+        (transcript.status !== "ready" && transcript.status !== "corrected")
+      ) {
+        throw new MobileRequestError("conflict");
+      }
+
+      // Sans rapport, l'extraction n'a nulle part où écrire. Quand l'animal
+      // est déjà connu — une capture née d'un rendez-vous créé sans rapport —
+      // il n'y a personne à qui le demander : le brouillon se crée ici, sur
+      // cet animal-là. Ne rien faire laisserait le praticien devant un écran
+      // dont le seul bouton échoue.
+      let reportId = capture.reportId;
+      if (!reportId && capture.patientId) {
+        const attached = await ports.attachCapture(actor, captureId, {
+          patientId: capture.patientId,
+        });
+        reportId = attached.reportId;
+      }
+      if (!reportId) throw new MobileRequestError("conflict");
+
+      await triggerExtraction(reportId, captureId);
+      return { captureId, reportId };
+    },
   };
+
+  return ports;
 }
 
 type MobileApiPortsCaptureErrorCode = NonNullable<

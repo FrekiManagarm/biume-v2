@@ -1,7 +1,9 @@
 import {
+  attachCaptureRequestSchema,
   captureResponseSchema,
   completeCaptureRequestSchema,
   createCaptureRequestSchema,
+  extractCaptureResponseSchema,
   mobileApiErrorSchema,
   mobileAppointmentsResponseSchema,
   mobileCapturesResponseSchema,
@@ -9,6 +11,8 @@ import {
   uploadSessionResponseSchema,
 } from "@biume/contracts/capture";
 import {
+  appointmentWriteResponseSchema,
+  createAppointmentRequestSchema,
   createMobileOwnerRequestSchema,
   createMobilePatientRequestSchema,
   mobileOwnerSchema,
@@ -17,7 +21,7 @@ import {
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
   moveAppointmentRequestSchema,
-  moveAppointmentResponseSchema,
+  updateOwnerEmailRequestSchema,
 } from "@biume/contracts/mobile-records";
 import {
   correctTranscriptRequestSchema,
@@ -26,6 +30,8 @@ import {
 import {
   decideProposalRequestSchema,
   decideSectionRequestSchema,
+  finalizeReportRequestSchema,
+  finalizeReportResponseSchema,
   reportProposalsResponseSchema,
 } from "@biume/contracts/proposal";
 import { reportSectionIds } from "@biume/contracts/report";
@@ -34,6 +40,7 @@ import {
   followUpSchema,
   scheduleFollowUpRequestSchema,
 } from "@biume/contracts/followup";
+import { todoResponseSchema } from "@biume/contracts/mobile-todo";
 import { createRoute, z } from "@hono/zod-openapi";
 
 const json = <T>(schema: T) => ({ "application/json": { schema } });
@@ -113,6 +120,18 @@ export const appointmentsRoute = createRoute({
   },
 });
 
+export const createAppointmentRoute = createRoute({
+  method: "post",
+  path: "/appointments",
+  security,
+  summary: "Créer une séance depuis le terrain, avec avertissement de conflit",
+  request: { body: { content: json(createAppointmentRequestSchema) } },
+  responses: {
+    201: { description: "Séance créée", content: json(appointmentWriteResponseSchema) },
+    ...errorResponses,
+  },
+});
+
 export const listCapturesRoute = createRoute({
   method: "get",
   path: "/captures",
@@ -181,6 +200,21 @@ export const cancelCaptureRoute = createRoute({
   request: { params: captureIdParamsSchema },
   responses: {
     204: { description: "Dictée annulée" },
+    ...errorResponses,
+  },
+});
+
+export const attachCaptureRoute = createRoute({
+  method: "post",
+  path: "/captures/{captureId}/attach",
+  security,
+  summary: "Rattacher une capture libre à un animal et créer son brouillon",
+  request: {
+    params: captureIdParamsSchema,
+    body: { content: json(attachCaptureRequestSchema) },
+  },
+  responses: {
+    200: { description: "Capture rattachée", content: json(captureResponseSchema) },
     ...errorResponses,
   },
 });
@@ -273,6 +307,25 @@ export const createPatientRoute = createRoute({
   },
 });
 
+export const ownerIdParamsSchema = z.object({
+  ownerId: z.string().min(1).openapi({ param: { name: "ownerId", in: "path" } }),
+});
+
+export const updateOwnerEmailRoute = createRoute({
+  method: "post",
+  path: "/owners/{ownerId}/email",
+  security,
+  summary: "Compléter l'e-mail d'un propriétaire",
+  request: {
+    params: ownerIdParamsSchema,
+    body: { content: json(updateOwnerEmailRequestSchema) },
+  },
+  responses: {
+    200: { description: "Propriétaire mis à jour", content: json(mobileOwnerSchema) },
+    ...errorResponses,
+  },
+});
+
 export const appointmentIdParamsSchema = z.object({
   appointmentId: z
     .string()
@@ -292,7 +345,7 @@ export const moveAppointmentRoute = createRoute({
   responses: {
     200: {
       description: "Séance déplacée",
-      content: json(moveAppointmentResponseSchema),
+      content: json(appointmentWriteResponseSchema),
     },
     ...errorResponses,
   },
@@ -324,6 +377,18 @@ export const correctTranscriptRoute = createRoute({
       description: "Transcription corrigée",
       content: json(transcriptSchema),
     },
+    ...errorResponses,
+  },
+});
+
+export const extractCaptureRoute = createRoute({
+  method: "post",
+  path: "/captures/{captureId}/extract",
+  security,
+  summary: "Valider la transcription et lancer l'extraction du compte rendu",
+  request: { params: captureIdParamsSchema },
+  responses: {
+    200: { description: "Extraction lancée", content: json(extractCaptureResponseSchema) },
     ...errorResponses,
   },
 });
@@ -420,6 +485,21 @@ export const regenerateProposalsRoute = createRoute({
   },
 });
 
+export const finalizeReportRoute = createRoute({
+  method: "post",
+  path: "/reports/{reportId}/finalize",
+  security,
+  summary: "Finaliser le compte rendu, le figer et l'envoyer au propriétaire",
+  request: {
+    params: reportIdParamsSchema,
+    body: { content: json(finalizeReportRequestSchema) },
+  },
+  responses: {
+    200: { description: "Rapport finalisé", content: json(finalizeReportResponseSchema) },
+    ...errorResponses,
+  },
+});
+
 export const followUpIdParamsSchema = z.object({
   followUpId: z
     .string()
@@ -465,6 +545,17 @@ export const markFollowUpHandledRoute = createRoute({
   request: { params: followUpIdParamsSchema },
   responses: {
     200: { description: "Suivi traité", content: json(followUpSchema) },
+    ...errorResponses,
+  },
+});
+
+export const todoRoute = createRoute({
+  method: "get",
+  path: "/todo",
+  security,
+  summary: "Tout ce qui attend un geste du praticien",
+  responses: {
+    200: { description: "Éléments à traiter", content: json(todoResponseSchema) },
     ...errorResponses,
   },
 });

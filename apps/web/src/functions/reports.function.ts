@@ -26,7 +26,6 @@ import {
   pets,
   reportOwnerContent,
   reportSectionState,
-  reportSharedVersion,
 } from "@biume/db/schema/index";
 import {
   createReportWithTenantIsolation,
@@ -48,10 +47,8 @@ import {
   buildReportSectionStateRows,
   normalizeReportSectionStates,
 } from "./report-domain";
-import {
-  createImmutableReportSharedVersion,
-  type ReportSharedVersionPorts,
-} from "./report-shared-version.service";
+import { createImmutableReportSharedVersion } from "./report-shared-version.service";
+import { reportSharedVersionPorts } from "#/server/report/report-shared-version.ports";
 import { buildAtomicReportUpdateStatement } from "./report-update.persistence";
 import { updateReportWithExpectedRevision } from "./report-update.service";
 import { createIdempotentQuickReport } from "./quick-report.service";
@@ -595,60 +592,6 @@ export const updateReport = createServerFn({ method: "POST" })
       };
     }
   });
-
-const findReportSharedVersion = ({
-  organizationId,
-  reportId,
-  reportRevision,
-}: {
-  organizationId: string;
-  reportId: string;
-  reportRevision: number;
-}) =>
-  db.query.reportSharedVersion.findFirst({
-    where: and(
-      eq(reportSharedVersion.reportId, reportId),
-      eq(reportSharedVersion.organizationId, organizationId),
-      eq(reportSharedVersion.reportRevision, reportRevision),
-    ),
-  });
-
-const reportSharedVersionPorts: ReportSharedVersionPorts = {
-  loadTenantOwnedReport: ({ organizationId, reportId }) =>
-    db.query.advancedReport.findFirst({
-      where: and(
-        eq(advancedReport.id, reportId),
-        eq(advancedReport.createdBy, organizationId),
-      ),
-      with: {
-        patient: { with: { owner: true } },
-        anatomicalIssues: { with: { anatomicalPart: true } },
-        recommendations: true,
-        ownerContents: true,
-        sectionStates: true,
-      },
-    }),
-  findExistingVersion: findReportSharedVersion,
-  insertImmutableVersion: async ({
-    organizationId,
-    reportId,
-    reportRevision,
-    snapshot,
-  }) => {
-    const [created] = await db
-      .insert(reportSharedVersion)
-      .values({ organizationId, reportId, reportRevision, snapshot })
-      .onConflictDoNothing({
-        target: [
-          reportSharedVersion.reportId,
-          reportSharedVersion.reportRevision,
-        ],
-      })
-      .returning();
-    return created;
-  },
-  findVersionAfterConflict: findReportSharedVersion,
-};
 
 export const createReportSharedVersion = createServerFn({ method: "POST" })
   .validator(z.object({ reportId: z.string().min(1) }))

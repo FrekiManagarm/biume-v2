@@ -239,7 +239,7 @@ function MdxTextFallback({ content }: { content: string }) {
           }
 
           if (block.startsWith("# ")) {
-            return <h1 key={block}>{block.replace(/^# /, "")}</h1>;
+            return <h2 key={block}>{block.replace(/^# /, "")}</h2>;
           }
 
           return <p key={block}>{block}</p>;

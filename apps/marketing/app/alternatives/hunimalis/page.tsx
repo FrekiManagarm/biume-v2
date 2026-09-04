@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative Hunimalis",
+  title: "Alternative à Hunimalis pour ostéopathe animalier",
   description:
     "Comparez Hunimalis et Biume: agenda, propriétaires, patients, documents, comptes rendus et suivi post-séance pour thérapeutes animaliers.",
   path: "/alternatives/hunimalis",

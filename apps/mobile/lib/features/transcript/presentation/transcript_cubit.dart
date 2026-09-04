@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/result.dart';
+import '../../../core/telemetry/journey_events.dart';
+import '../../../core/telemetry/telemetry.dart';
+import '../../capture/domain/capture_store.dart';
 import '../domain/transcript.dart';
 import '../domain/transcript_repository.dart';
 
@@ -93,15 +96,53 @@ class TranscriptUnavailable extends TranscriptState {
   int get hashCode => Object.hash(6, message);
 }
 
+/// La séquence corriger/rattacher/extraire est en cours : le bouton unique
+/// attend, et rien d'autre ne se passe pendant ce temps.
+class TranscriptValidating extends TranscriptState {
+  const TranscriptValidating(this.transcript);
+
+  final Transcript transcript;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TranscriptValidating && other.transcript == transcript;
+
+  @override
+  int get hashCode => Object.hash(7, transcript);
+}
+
+/// L'extraction est lancée côté serveur. Le praticien passe au suivi.
+class TranscriptValidated extends TranscriptState {
+  const TranscriptValidated(this.reportId);
+
+  final String reportId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TranscriptValidated && other.reportId == reportId;
+
+  @override
+  int get hashCode => Object.hash(8, reportId);
+}
+
 class TranscriptCubit extends Cubit<TranscriptState> {
-  TranscriptCubit(this._repository) : super(const TranscriptInitial());
+  TranscriptCubit(this._repository, this._store, {Telemetry? telemetry})
+    : _telemetry = telemetry ?? Telemetry(),
+      super(const TranscriptInitial());
 
   final TranscriptRepository _repository;
+  final CaptureStore _store;
+  final Telemetry _telemetry;
 
   Future<void> load(String captureId) async {
     emit(const TranscriptLoading());
 
     final result = await _repository.load(captureId);
+    // Le praticien reste libre de quitter cet écran pendant l'attente :
+    // `BlocProvider` ferme alors le cubit avant que la requête ne revienne.
+    // Émettre sur un cubit fermé lève un `StateError` que personne
+    // n'attraperait ici.
+    if (isClosed) return;
     switch (result) {
       case Err(:final failure):
         emit(TranscriptUnavailable(failure.message));
@@ -123,6 +164,9 @@ class TranscriptCubit extends Cubit<TranscriptState> {
       text,
     );
 
+    // Même geste, même risque : le praticien a pu quitter l'écran pendant
+    // que la correction était en vol.
+    if (isClosed) return;
     switch (result) {
       case Success(:final value):
         emit(TranscriptReady(value));
@@ -133,6 +177,91 @@ class TranscriptCubit extends Cubit<TranscriptState> {
             draft: text,
             message: failure.message,
           ),
+        );
+    }
+  }
+
+  /// Un seul bouton : enregistre la correction s'il y en a une, rattache
+  /// l'animal s'il a été choisi, puis lance l'extraction. L'ordre est celui de
+  /// la spécification : on corrige la source avant d'en extraire quoi que ce
+  /// soit.
+  Future<void> validate({
+    required String text,
+    required String? patientId,
+  }) async {
+    final current = state;
+    if (current is! TranscriptReady) return;
+    if (!current.transcript.isCorrectable) return;
+
+    var transcript = current.transcript;
+    // Relevé avant la correction, émis seulement à la fin : la mesure porte
+    // sur ce que le praticien a fait, mais elle ne compte que les validations
+    // qui ont abouti.
+    final textChanged = text != transcript.text;
+    emit(TranscriptValidating(transcript));
+
+    if (text != transcript.text) {
+      final result = await _repository.correct(transcript.captureId, text);
+      // Le praticien reste libre de quitter cet écran pendant l'attente :
+      // `BlocProvider` ferme alors le cubit avant que la requête ne
+      // revienne. Émettre sur un cubit fermé lève un `StateError` que
+      // personne n'attraperait ici.
+      if (isClosed) return;
+      switch (result) {
+        case Success(:final value):
+          transcript = value;
+        case Err(:final failure):
+          emit(
+            TranscriptReady(transcript, draft: text, message: failure.message),
+          );
+          return;
+      }
+    }
+
+    if (patientId != null) {
+      final attachResult = await _repository.attach(
+        transcript.captureId,
+        patientId,
+      );
+      if (isClosed) return;
+      if (attachResult case Err(:final failure)) {
+        emit(
+          TranscriptReady(transcript, draft: text, message: failure.message),
+        );
+        return;
+      }
+    }
+
+    final extractResult = await _repository.extract(transcript.captureId);
+    if (isClosed) return;
+    switch (extractResult) {
+      case Success(:final value):
+        await _store.markExtractionRequested(
+          transcript.captureId,
+          DateTime.now(),
+        );
+        if (isClosed) return;
+        // Ici seulement : la correction est enregistrée, l'animal rattaché,
+        // l'extraction lancée. Émis à l'entrée, l'événement comptait aussi
+        // les séquences qui échouaient ensuite.
+        _telemetry.emit(
+          ProductEvent(
+            name: JourneyEvents.transcriptValidated,
+            journeyId: transcript.captureId,
+            properties: {'textChanged': textChanged},
+          ),
+        );
+        _telemetry.emit(
+          ProductEvent(
+            name: JourneyEvents.extractionRequested,
+            journeyId: transcript.captureId,
+            properties: {'reportId': value},
+          ),
+        );
+        emit(TranscriptValidated(value));
+      case Err(:final failure):
+        emit(
+          TranscriptReady(transcript, draft: text, message: failure.message),
         );
     }
   }

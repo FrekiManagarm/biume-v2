@@ -79,9 +79,15 @@ class AuthAuthenticated extends AuthState {
 /// pas de transitions concurrentes. Le Bloc est réservé à l'enregistrement et
 /// à la synchronisation, où elles existent réellement.
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit(this._repository) : super(const AuthInitial());
+  AuthCubit(this._repository, {required this.clearReadCache})
+    : super(const AuthInitial());
 
   final AuthRepository _repository;
+
+  /// Vide le cache de lecture — animaux, propriétaires, agenda. Exigé, jamais
+  /// facultatif : un appelant qui l'oublierait laisserait les clients d'un
+  /// cabinet visibles dans un autre.
+  final Future<void> Function() clearReadCache;
 
   Future<void> start() async {
     emit(const AuthChecking());
@@ -95,10 +101,7 @@ class AuthCubit extends Cubit<AuthState> {
     _emitForSession(session);
   }
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     emit(const AuthChecking());
 
     final result = await _repository.signIn(email: email, password: password);
@@ -117,6 +120,13 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await _repository.setActiveCompany(companyId);
     switch (result) {
       case Success(:final value):
+        // Le cache de lecture appartient à l'entreprise qu'on vient de
+        // quitter. Le garder afficherait ses clients dans le sélecteur
+        // d'animal de la suivante, et hors ligne aucun rafraîchissement ne
+        // viendrait jamais le corriger. La file de dictées, elle, n'est pas
+        // touchée : elle porte du travail que le praticien ne peut pas
+        // refaire, et survit au changement.
+        await clearReadCache();
         _emitForSession(value);
       case Err(:final failure):
         // La session en cours n'est pas perdue : le praticien réessaie sans
@@ -131,14 +141,15 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> signOut() async {
     await _repository.signOut();
+    // Même raison qu'au changement d'entreprise : l'appareil ne garde aucune
+    // donnée de clients lisible une fois la session fermée.
+    await clearReadCache();
     emit(const AuthUnauthenticated());
   }
 
   void _emitForSession(PractitionerSession session) {
     emit(
-      session.canWork
-          ? AuthAuthenticated(session)
-          : AuthNeedsCompany(session),
+      session.canWork ? AuthAuthenticated(session) : AuthNeedsCompany(session),
     );
   }
 }
