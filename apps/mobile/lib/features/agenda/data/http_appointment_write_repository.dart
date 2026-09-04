@@ -83,6 +83,13 @@ class HttpAppointmentWriteRepository implements AppointmentWriteRepository {
               ..limit(1))
             .getSingleOrNull();
     if (row == null) return const Duration(hours: 1);
-    return row.endAt.difference(row.beginAt);
+    final duration = row.endAt.difference(row.beginAt);
+    // Une ligne dont la fin précède ou égale le début n'est pas une durée
+    // exploitable — la même garde existe côté serveur (`defaultDurationMs`)
+    // : les deux moitiés du produit doivent s'accorder sur ce qu'est une
+    // durée acceptable.
+    return duration.isNegative || duration == Duration.zero
+        ? const Duration(hours: 1)
+        : duration;
   }
 }

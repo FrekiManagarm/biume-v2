@@ -162,4 +162,50 @@ void main() {
       const Duration(hours: 1, minutes: 30),
     );
   });
+
+  /// Même garde que côté serveur (`defaultDurationMs`, dans
+  /// `appointment-write.service.ts`) : une ligne dont la fin ne suit pas le
+  /// début n'est pas une durée exploitable, et ne doit jamais traverser
+  /// `submit()` jusqu'à un `endAt` nul ou antérieur à `beginAt`.
+  test(
+    'une dernière séance dont la fin précède le début retombe sur une heure',
+    () async {
+      await db
+          .into(db.cachedAppointments)
+          .insert(
+            CachedAppointmentsCompanion.insert(
+              id: 'appointment-1',
+              patientId: 'pet-1',
+              patientName: 'Filou',
+              species: 'DOG',
+              beginAt: DateTime.utc(2026, 9, 5, 10),
+              endAt: DateTime.utc(2026, 9, 5, 9),
+              status: 'CONFIRMED',
+            ),
+          );
+
+      expect(await repository.defaultDuration(), const Duration(hours: 1));
+    },
+  );
+
+  test(
+    'une dernière séance de durée nulle retombe aussi sur une heure',
+    () async {
+      await db
+          .into(db.cachedAppointments)
+          .insert(
+            CachedAppointmentsCompanion.insert(
+              id: 'appointment-1',
+              patientId: 'pet-1',
+              patientName: 'Filou',
+              species: 'DOG',
+              beginAt: DateTime.utc(2026, 9, 5, 9),
+              endAt: DateTime.utc(2026, 9, 5, 9),
+              status: 'CONFIRMED',
+            ),
+          );
+
+      expect(await repository.defaultDuration(), const Duration(hours: 1));
+    },
+  );
 }

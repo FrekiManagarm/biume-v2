@@ -9,8 +9,9 @@ import '../../injection_container.dart';
 
 /// Ce qui doit être à jour avant d'être sur le terrain : la file part, le
 /// cache des animaux se remplit, la fenêtre d'agenda se rafraîchit. Appelé à
-/// la connexion et à chaque retour au premier plan, jamais à la demande
-/// depuis un écran.
+/// la connexion, à chaque retour au premier plan, et après toute écriture
+/// qui change l'agenda (prise ou déplacement d'une séance) — jamais à la
+/// demande d'un simple affichage.
 Future<void> refreshForeground() async {
   final today = DateTime.now();
   final windowStart = DateTime.utc(today.year, today.month, today.day);
