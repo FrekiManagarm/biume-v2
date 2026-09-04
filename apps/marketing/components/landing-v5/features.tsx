@@ -11,7 +11,7 @@ import { Reveal } from "./motion";
  */
 function PanelChrome({ children }: { children: ReactNode }) {
   return (
-    <div className="w-[264px] shrink-0 overflow-hidden rounded-[14px] border border-(--lv5-frame-border) bg-(--lv5-canvas) shadow-[0_1px_2px_rgba(29,29,33,.05)]">
+    <div className="w-full max-w-[264px] shrink-0 overflow-hidden rounded-[14px] border border-(--lv5-frame-border) bg-(--lv5-canvas) shadow-[0_1px_2px_rgba(29,29,33,.05)] md:w-[264px]">
       <div className="flex items-center gap-1.5 border-b border-(--lv5-frame-border) px-3 py-2.5">
         <span className="size-2 rounded-full bg-(--lv5-line)" />
         <span className="size-2 rounded-full bg-(--lv5-line)" />
