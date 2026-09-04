@@ -2,6 +2,8 @@ import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
+import 'package:biume_mobile/features/followup/domain/actionable_follow_up_repository.dart';
+import 'package:biume_mobile/features/followup/domain/follow_up.dart';
 import 'package:biume_mobile/features/todo/domain/todo_api.dart';
 import 'package:biume_mobile/features/todo/domain/todo_item.dart';
 import 'package:biume_mobile/features/todo/presentation/todo_cubit.dart';
@@ -16,6 +18,9 @@ class MockCaptureStore extends Mock implements CaptureStore {}
 
 class MockTodoApi extends Mock implements TodoApi {}
 
+class MockActionableFollowUpRepository extends Mock
+    implements ActionableFollowUpRepository {}
+
 /// Construit l'application autour de `TodoSection`, avec un routeur minimal
 /// pour que les navigations déclenchées par un élément trouvent une
 /// destination.
@@ -23,6 +28,7 @@ Future<void> monter(
   WidgetTester tester,
   MockCaptureStore store,
   MockTodoApi api, {
+  ActionableFollowUpRepository? followUps,
   void Function(String)? onNavigate,
   Future<void> Function()? onForegroundRefresh,
 }) async {
@@ -33,7 +39,12 @@ Future<void> monter(
         path: '/',
         builder: (_, _) => BlocProvider(
           create: (_) =>
-              TodoCubit(store, api, pollInterval: Duration.zero)..start(),
+              TodoCubit(
+                store,
+                api,
+                followUps: followUps ?? _aucunSuivi(),
+                pollInterval: Duration.zero,
+              )..start(),
           child: Scaffold(
             body: SingleChildScrollView(
               child: TodoSection(
@@ -206,4 +217,14 @@ void main() {
 
     expect(destinations, ['/comptes-rendus/r-2']);
   });
+}
+
+/// Par défaut, aucun suivi en attente : chaque test de la section décrit ce
+/// qu'il montre, et n'a pas à câbler une source qu'il n'exerce pas.
+ActionableFollowUpRepository _aucunSuivi() {
+  final repository = MockActionableFollowUpRepository();
+  when(
+    () => repository.listActionable(),
+  ).thenAnswer((_) async => const Success(<FollowUp>[]));
+  return repository;
 }

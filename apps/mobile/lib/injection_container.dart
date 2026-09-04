@@ -5,12 +5,16 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 import 'config/app_environment.dart';
 import 'core/crypto/device_key.dart';
 import 'core/crypto/local_cipher.dart';
 import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
+import 'core/notifications/local_notifications.dart';
+import 'core/notifications/notification_memory.dart';
+import 'core/telemetry/posthog_sink.dart';
 import 'core/telemetry/telemetry.dart';
 import 'features/agenda/data/agenda_repository_impl.dart';
 import 'features/agenda/data/http_appointment_write_repository.dart';
@@ -27,7 +31,9 @@ import 'features/capture/domain/audio_recorder.dart';
 import 'features/capture/domain/capture_store.dart';
 import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
+import 'features/followup/data/http_actionable_follow_up_repository.dart';
 import 'features/followup/data/http_follow_up_repository.dart';
+import 'features/followup/domain/actionable_follow_up_repository.dart';
 import 'features/followup/domain/follow_up_repository.dart';
 import 'features/records/data/http_owner_repository.dart';
 import 'features/records/data/patient_repository_impl.dart';
@@ -49,14 +55,16 @@ final getIt = GetIt.instance;
 /// quand il atterrit côté serveur, et c'est la raison opérationnelle pour
 /// laquelle la couche domaine existe — avant toute considération de pureté.
 Future<void> configureDependencies() async {
+  // Sans clé de projet — développement, ou build oublié — rien ne quitte le
+  // téléphone : le puits reste la console.
+  final posthog = await _setUpPosthog();
+
   getIt
-    // Le puits reste local en développement : un simple affichage en
-    // console. Le transport vers un outil d'analyse est du ressort d'un lot
-    // ultérieur — c'est `installSink` qui permet de le brancher sans toucher
-    // aux appelants.
     ..registerLazySingleton(
       () => Telemetry(
-        sink: kDebugMode
+        sink: posthog != null
+            ? createPosthogSink(posthog)
+            : kDebugMode
             ? (e) => debugPrint(
                 '[telemetry] ${e.name} ${e.journeyId} ${e.properties}',
               )
@@ -109,7 +117,14 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<FollowUpRepository>(
       () => HttpFollowUpRepository(getIt()),
     )
+    ..registerLazySingleton<ActionableFollowUpRepository>(
+      () => HttpActionableFollowUpRepository(getIt()),
+    )
     ..registerLazySingleton<TodoApi>(() => HttpTodoApi(getIt()))
+    ..registerLazySingleton<NotificationMemory>(
+      () => DriftNotificationMemory(getIt()),
+    )
+    ..registerLazySingleton(LocalNotifications.new)
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
     // de dictée en veut un neuf, et le précédent doit être libéré.
     ..registerFactory<AudioRecorder>(RecordAudioRecorder.new)
@@ -124,4 +139,18 @@ Future<void> configureDependencies() async {
         random: Random.secure().nextDouble,
       ),
     );
+}
+
+Future<Posthog?> _setUpPosthog() async {
+  if (biumePosthogKey.isEmpty) return null;
+  final client = Posthog();
+  await client.setup(
+    PostHogConfig(biumePosthogKey)
+      ..host = biumePosthogHost
+      // Le parcours de compte rendu est ce qu'on mesure, pas les ouvertures
+      // d'application : la liste blanche de `Telemetry` dit déjà tout ce qui
+      // a le droit de partir.
+      ..captureApplicationLifecycleEvents = false,
+  );
+  return client;
 }

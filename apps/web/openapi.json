@@ -5000,6 +5000,25 @@
                         "null"
                       ],
                       "format": "date-time"
+                    },
+                    "ownerPhone": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "ownerEmail": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "patientId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
                     }
                   },
                   "required": [
@@ -5012,7 +5031,10 @@
                     "answeredAt",
                     "answer",
                     "alertReasons",
-                    "handledAt"
+                    "handledAt",
+                    "ownerPhone",
+                    "ownerEmail",
+                    "patientId"
                   ],
                   "additionalProperties": false
                 }
@@ -5634,6 +5656,25 @@
                               "null"
                             ],
                             "format": "date-time"
+                          },
+                          "ownerPhone": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "ownerEmail": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "patientId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "minLength": 1
                           }
                         },
                         "required": [
@@ -5646,7 +5687,10 @@
                           "answeredAt",
                           "answer",
                           "alertReasons",
-                          "handledAt"
+                          "handledAt",
+                          "ownerPhone",
+                          "ownerEmail",
+                          "patientId"
                         ],
                         "additionalProperties": false
                       },
@@ -6261,6 +6305,25 @@
                         "null"
                       ],
                       "format": "date-time"
+                    },
+                    "ownerPhone": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "ownerEmail": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "patientId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
                     }
                   },
                   "required": [
@@ -6273,7 +6336,10 @@
                     "answeredAt",
                     "answer",
                     "alertReasons",
-                    "handledAt"
+                    "handledAt",
+                    "ownerPhone",
+                    "ownerEmail",
+                    "patientId"
                   ],
                   "additionalProperties": false
                 }

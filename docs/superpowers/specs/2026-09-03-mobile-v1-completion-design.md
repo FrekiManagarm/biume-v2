@@ -196,6 +196,18 @@ L'endpoint de lecture des propositions accepte donc un rapport finalisé et le r
 
 **Limite assumée :** iOS accorde les réveils quand il le décide ; le délai peut atteindre plusieurs heures. Une réponse à un questionnaire n'est pas une urgence vétérinaire, le praticien y répond dans la journée. Le pilote mesure le délai réel (télémétrie : heure de l'événement serveur, heure de la notification locale). Si la mesure est mauvaise, le push devient un chantier distinct, avec des chiffres.
 
+**Mesure du délai — implémentée, pas encore relevée.** L'événement `mobile.followup_notified` porte `delayMs` : l'écart entre `answeredAt` côté serveur et l'instant où la notification s'affiche. La requête qui en donne la médiane et le p90, par plateforme, est en section 12 de `docs/mobile/operations.md`.
+
+Le relevé iOS sur **trois réveils réels** — jamais simulés au débogueur — se consigne dans `docs/mobile/manual-test-matrix.md`, section « Délai iOS observé », puis se recopie ici :
+
+| # | Date | Appareil / version iOS | Délai observé |
+|---|------|------------------------|---------------|
+| 1 | — | — | — |
+| 2 | — | — | — |
+| 3 | — | — | — |
+
+Tant que ces trois lignes sont vides, **aucun chantier push ne se justifie** : la décision s'appuie sur ce chiffre, pas sur une impression.
+
 ### 5.12 Traiter un suivi : lire, contacter, clore
 
 La carte d'un suivi actionnable montre le motif en français, la réponse du propriétaire (échelle, commentaire, demande de recontact), l'animal et le propriétaire. Gestes : « Appeler » et « Écrire » (téléphone et e-mail natifs, hors de l'application), « Prendre un rendez-vous » (ouvre la création de séance avec l'animal prérempli), et « Marquer comme traité ».

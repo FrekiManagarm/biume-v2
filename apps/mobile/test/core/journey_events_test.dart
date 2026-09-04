@@ -2,15 +2,15 @@ import 'package:biume_mobile/core/telemetry/journey_events.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('les six événements du parcours ont un nom préfixé mobile.', () {
+  test('les événements du parcours ont tous un nom préfixé mobile.', () {
     for (final name in JourneyEvents.all) {
       expect(name, startsWith('mobile.'));
     }
   });
 
-  test('les six moments du parcours sont tous listés, une seule fois', () {
-    expect(JourneyEvents.all, hasLength(6));
-    expect(JourneyEvents.all.toSet(), hasLength(6));
+  test('les moments du parcours sont tous listés, une seule fois', () {
+    expect(JourneyEvents.all, hasLength(7));
+    expect(JourneyEvents.all.toSet(), hasLength(7));
     expect(
       JourneyEvents.all,
       containsAll([
@@ -20,6 +20,7 @@ void main() {
         JourneyEvents.reportFinalized,
         JourneyEvents.followUpScheduled,
         JourneyEvents.followUpDeclined,
+        JourneyEvents.followUpNotified,
       ]),
     );
   });

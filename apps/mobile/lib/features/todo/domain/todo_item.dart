@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../followup/domain/follow_up.dart';
+
 /// Ce qui attend un geste du praticien, ou ce que Biume est en train de
 /// faire pour lui. `pendingUpload` et `uploadBlocked` n'existent que côté
 /// mobile : ce sont des dictées encore en file locale, jamais vues par le
@@ -15,6 +17,7 @@ enum TodoKind {
   preparing,
   reportToValidate,
   readyToSend,
+  followUp,
 }
 
 /// Le libellé dit le geste ou ce que Biume fait. Jamais l'état interne.
@@ -29,6 +32,7 @@ const Map<TodoKind, String> todoLabels = {
   TodoKind.preparing: 'Biume prépare le compte rendu',
   TodoKind.reportToValidate: 'Compte rendu à valider',
   TodoKind.readyToSend: 'Prêt à envoyer',
+  TodoKind.followUp: 'Suivi à traiter',
 };
 
 /// Traduit le genre renvoyé par le serveur. Une valeur inconnue ne doit
@@ -54,16 +58,37 @@ class TodoItem {
     this.reportId,
     this.appointmentId,
     this.patientName,
+    this.followUpId,
+    this.detail,
   });
+
+  /// Un suivi dont un propriétaire attend quelque chose. `captureId` est vide :
+  /// un suivi ne vient d'aucune dictée locale, il n'a rien à réconcilier avec
+  /// la file d'envoi.
+  factory TodoItem.followUp(FollowUp follow, {DateTime? now}) => TodoItem(
+    kind: TodoKind.followUp,
+    captureId: '',
+    followUpId: follow.id,
+    patientName: follow.patientName,
+    // Le motif de l'alerte, pas le libellé générique : c'est lui qui dit au
+    // praticien s'il doit rappeler tout de suite.
+    detail: follow.summary,
+    updatedAt: follow.answeredAt ?? now ?? DateTime.now(),
+  );
 
   final TodoKind kind;
   final String captureId;
   final String? reportId;
   final String? appointmentId;
   final String? patientName;
+  final String? followUpId;
+
+  /// Ce que l'élément dit à la place du libellé générique, quand il a mieux à
+  /// dire. Nul partout ailleurs.
+  final String? detail;
   final DateTime updatedAt;
 
-  String get label => todoLabels[kind]!;
+  String get label => detail ?? todoLabels[kind]!;
 
   /// L'écran qui répond au geste. `null` quand il n'y a rien à ouvrir —
   /// l'élément dit seulement ce qui se passe.
@@ -78,6 +103,7 @@ class TodoItem {
     TodoKind.transcribing => null,
     TodoKind.preparing || TodoKind.reportToValidate || TodoKind.readyToSend =>
       reportId == null ? null : '/comptes-rendus/$reportId',
+    TodoKind.followUp => followUpId == null ? null : '/suivis/$followUpId',
   };
 
   TodoItem copyWith({TodoKind? kind}) => TodoItem(
@@ -87,6 +113,8 @@ class TodoItem {
     reportId: reportId,
     appointmentId: appointmentId,
     patientName: patientName,
+    followUpId: followUpId,
+    detail: detail,
   );
 
   // `captureId` seul ne suffit pas à identifier ce qu'affiche l'élément : son
@@ -103,6 +131,8 @@ class TodoItem {
       other.reportId == reportId &&
       other.appointmentId == appointmentId &&
       other.patientName == patientName &&
+      other.followUpId == followUpId &&
+      other.detail == detail &&
       other.updatedAt == updatedAt;
 
   @override
@@ -112,6 +142,8 @@ class TodoItem {
     reportId,
     appointmentId,
     patientName,
+    followUpId,
+    detail,
     updatedAt,
   );
 }

@@ -131,6 +131,18 @@ class CachedPatientHistoryEntries extends Table {
   Set<Column> get primaryKey => {appointmentId};
 }
 
+/// Ce dont le praticien a déjà été prévenu. Une clé par situation — un suivi,
+/// un brouillon, une dictée abandonnée — et non par notification : c'est ce
+/// qui garantit qu'un réveil toutes les quinze minutes ne redit jamais la
+/// même chose.
+class NotifiedItems extends Table {
+  TextColumn get key => text()();
+  DateTimeColumn get notifiedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 @DriftDatabase(
   tables: [
     LocalCaptures,
@@ -139,6 +151,7 @@ class CachedPatientHistoryEntries extends Table {
     CachedPatients,
     CachedReports,
     CachedPatientHistoryEntries,
+    NotifiedItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -147,7 +160,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -182,6 +195,9 @@ class AppDatabase extends _$AppDatabase {
         // exactement ce que le chiffrement empêche. Le cache se refait au
         // prochain rafraîchissement.
         await delete(cachedReports).go();
+      }
+      if (from < 6) {
+        await migrator.createTable(notifiedItems);
       }
     },
   );
@@ -235,6 +251,9 @@ class AppDatabase extends _$AppDatabase {
         cachedPatientHistoryEntries,
         (_) => const Constant(true),
       );
+      // « Je l'ai déjà dit à cette personne, dans ce cabinet » : changer
+      // d'entreprise ou se déconnecter rend cette phrase fausse.
+      batch.deleteWhere(notifiedItems, (_) => const Constant(true));
     });
   }
 

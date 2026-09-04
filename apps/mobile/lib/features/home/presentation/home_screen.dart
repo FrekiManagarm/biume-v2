@@ -8,6 +8,7 @@ import '../../agenda/presentation/agenda_body.dart';
 import '../../agenda/presentation/agenda_cubit.dart';
 import '../../auth/presentation/auth_cubit.dart';
 import '../../capture/domain/capture_store.dart';
+import '../../followup/domain/actionable_follow_up_repository.dart';
 import '../../todo/domain/todo_api.dart';
 import '../../todo/presentation/todo_cubit.dart';
 import '../../todo/presentation/todo_section.dart';
@@ -24,8 +25,11 @@ class HomeScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) =>
-              TodoCubit(getIt<CaptureStore>(), getIt<TodoApi>())..start(),
+          create: (_) => TodoCubit(
+            getIt<CaptureStore>(),
+            getIt<TodoApi>(),
+            followUps: getIt<ActionableFollowUpRepository>(),
+          )..start(),
         ),
         BlocProvider(
           create: (_) =>
@@ -55,7 +59,10 @@ class HomeScreen extends StatelessWidget {
               onSelected: (value) => switch (value) {
                 // Navigation volontaire : la garde du routeur doit la
                 // laisser passer plutôt que de renvoyer aussitôt à l'accueil.
-                'entreprise' => context.push('/entreprise', extra: 'volontaire'),
+                'entreprise' => context.push(
+                  '/entreprise',
+                  extra: 'volontaire',
+                ),
                 // Cas explicite plutôt qu'un `_` par défaut : une troisième
                 // entrée ne doit jamais déconnecter en silence.
                 'deconnexion' => context.read<AuthCubit>().signOut(),
@@ -66,7 +73,10 @@ class HomeScreen extends StatelessWidget {
                   value: 'entreprise',
                   child: Text("Changer d'entreprise"),
                 ),
-                PopupMenuItem(value: 'deconnexion', child: Text('Se déconnecter')),
+                PopupMenuItem(
+                  value: 'deconnexion',
+                  child: Text('Se déconnecter'),
+                ),
               ],
             ),
           ],

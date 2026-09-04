@@ -19,6 +19,9 @@ const followUp = {
   answer: { evolution: "worse" as const, reaction: "", wantsContact: true },
   alertReasons: ["declared_worsening" as const, "contact_requested" as const],
   handledAt: null,
+  ownerPhone: "+33600000000",
+  ownerEmail: "camille.roux@example.test",
+  patientId: "pet-1",
 };
 
 function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
