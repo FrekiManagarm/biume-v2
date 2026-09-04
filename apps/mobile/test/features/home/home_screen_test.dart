@@ -100,6 +100,11 @@ void main() {
             return Text('deplacer-${appointment?.id}');
           },
         ),
+        GoRoute(
+          path: '/animaux/:patientId',
+          builder: (_, state) =>
+              Text('fiche-${state.pathParameters['patientId']}'),
+        ),
       ],
     );
 
@@ -231,6 +236,31 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('deplacer-appointment-1'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "le nom de l'animal sur la carte ouvre sa fiche",
+    (tester) async {
+      final appointment = Appointment(
+        id: 'appointment-1',
+        patientId: 'pet-1',
+        patientName: 'Filou',
+        species: 'DOG',
+        beginAt: DateTime.now().add(const Duration(hours: 2)),
+        endAt: DateTime.now().add(const Duration(hours: 3)),
+        status: 'CONFIRMED',
+      );
+      when(() => agendaRepository.watchWindow(any(), any()))
+          .thenAnswer((_) => Stream.value([appointment]));
+
+      await monter(tester);
+      await tester.pump();
+
+      await tester.tap(find.text('Filou'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('fiche-pet-1'), findsOneWidget);
     },
   );
 }

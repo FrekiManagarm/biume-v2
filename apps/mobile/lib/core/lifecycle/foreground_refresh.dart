@@ -24,6 +24,15 @@ Future<void> refreshForeground() async {
       _,
     ) {}),
   ]);
+
+  // Les fiches hors ligne — propriétaire et dernier compte rendu finalisé —
+  // ne couvrent que les animaux de la fenêtre qu'on vient de rafraîchir :
+  // c'est elle qui dit qui a une séance dans les huit jours.
+  final appointments = await getIt<AgendaRepository>()
+      .watchWindow(windowStart, windowEnd)
+      .first;
+  final patientIds = appointments.map((a) => a.patientId).toSet();
+  await getIt<PatientRepository>().refreshSheetsFor(patientIds).then((_) {});
 }
 
 class ForegroundRefresh with WidgetsBindingObserver {

@@ -81,6 +81,11 @@ Future<void> ouvrirLeSelecteur(
           ),
         ),
       ),
+      GoRoute(
+        path: '/animaux/:patientId',
+        builder: (_, state) =>
+            Text('fiche-${state.pathParameters['patientId']}'),
+      ),
     ],
   );
 
@@ -207,6 +212,21 @@ void main() {
 
       final appelant = tester.state<_AppelantState>(find.byType(_Appelant));
       expect(appelant.resultat, equals(rex));
+    },
+  );
+
+  testWidgets(
+    "l'icône d'information ouvre la fiche de l'animal de la ligne",
+    (tester) async {
+      when(() => repository.watchAll())
+          .thenAnswer((_) => Stream.value([filou, rex]));
+
+      await ouvrirLeSelecteur(tester, repository);
+
+      await tester.tap(find.byIcon(Icons.info_outline).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('fiche-patient-1'), findsOneWidget);
     },
   );
 }

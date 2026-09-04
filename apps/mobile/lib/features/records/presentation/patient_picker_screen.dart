@@ -91,6 +91,15 @@ class PatientPickerScreen extends StatelessWidget {
                       return ListTile(
                         title: Text(patient.name),
                         subtitle: Text(patient.subtitle),
+                        // La fiche complète est à un appui, sans quitter le
+                        // sélecteur : le praticien peut vérifier « la
+                        // dernière fois » avant de choisir cet animal.
+                        trailing: IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          tooltip: 'Voir la fiche',
+                          onPressed: () =>
+                              context.push('/animaux/${patient.id}'),
+                        ),
                         onTap: () => context.pop(patient),
                         onLongPress: () =>
                             _proposerAjoutAnimal(context, patient),

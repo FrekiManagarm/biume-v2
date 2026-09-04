@@ -282,9 +282,14 @@ class _AppointmentCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              appointment.patientName,
-              style: Theme.of(context).textTheme.titleMedium,
+            // Le nom ouvre la fiche animal : ce que le praticien a fait la
+            // dernière fois, avant même de dicter cette séance.
+            InkWell(
+              onTap: () => context.push('/animaux/${appointment.patientId}'),
+              child: Text(
+                appointment.patientName,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton(
