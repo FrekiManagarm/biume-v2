@@ -6,6 +6,8 @@ import 'package:biume_mobile/features/auth/domain/session.dart';
 import 'package:biume_mobile/features/auth/presentation/auth_cubit.dart';
 import 'package:biume_mobile/features/auth/presentation/choose_company_screen.dart';
 import 'package:biume_mobile/features/capture/domain/capture_store.dart';
+import 'package:biume_mobile/features/followup/domain/actionable_follow_up_repository.dart';
+import 'package:biume_mobile/features/followup/domain/follow_up.dart';
 import 'package:biume_mobile/features/home/presentation/home_screen.dart';
 import 'package:biume_mobile/features/todo/domain/todo_api.dart';
 import 'package:biume_mobile/features/todo/domain/todo_item.dart';
@@ -21,6 +23,9 @@ class MockCaptureStore extends Mock implements CaptureStore {}
 
 class MockTodoApi extends Mock implements TodoApi {}
 
+class MockActionableFollowUpRepository extends Mock
+    implements ActionableFollowUpRepository {}
+
 class MockAgendaRepository extends Mock implements AgendaRepository {}
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -28,6 +33,7 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   late MockCaptureStore store;
   late MockTodoApi todoApi;
+  late MockActionableFollowUpRepository followUps;
   late MockAgendaRepository agendaRepository;
   late MockAuthRepository authRepository;
 
@@ -39,6 +45,7 @@ void main() {
   setUp(() {
     store = MockCaptureStore();
     todoApi = MockTodoApi();
+    followUps = MockActionableFollowUpRepository();
     agendaRepository = MockAgendaRepository();
     authRepository = MockAuthRepository();
 
@@ -47,6 +54,8 @@ void main() {
     when(() => store.watchAll()).thenAnswer((_) => const Stream.empty());
     when(() => todoApi.list())
         .thenAnswer((_) async => const Success(<TodoItem>[]));
+    when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
     when(() => agendaRepository.watchWindow(any(), any()))
         .thenAnswer((_) => Stream.value(const []));
     when(() => agendaRepository.refreshWindow(any(), any()))
@@ -56,6 +65,7 @@ void main() {
     getIt
       ..registerLazySingleton<CaptureStore>(() => store)
       ..registerLazySingleton<TodoApi>(() => todoApi)
+      ..registerLazySingleton<ActionableFollowUpRepository>(() => followUps)
       ..registerLazySingleton<AgendaRepository>(() => agendaRepository)
       // `ChooseCompanyScreen` va chercher son dépôt directement dans le
       // conteneur (comme le fait le vrai routeur) : il faut donc l'y
@@ -224,7 +234,9 @@ void main() {
         endAt: DateTime.now().add(const Duration(hours: 3)),
         status: 'CONFIRMED',
       );
-      when(() => agendaRepository.watchWindow(any(), any()))
+      when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
+    when(() => agendaRepository.watchWindow(any(), any()))
           .thenAnswer((_) => Stream.value([appointment]));
 
       await monter(tester);
@@ -251,7 +263,9 @@ void main() {
         endAt: DateTime.now().add(const Duration(hours: 3)),
         status: 'CONFIRMED',
       );
-      when(() => agendaRepository.watchWindow(any(), any()))
+      when(() => followUps.listActionable())
+        .thenAnswer((_) async => const Success(<FollowUp>[]));
+    when(() => agendaRepository.watchWindow(any(), any()))
           .thenAnswer((_) => Stream.value([appointment]));
 
       await monter(tester);

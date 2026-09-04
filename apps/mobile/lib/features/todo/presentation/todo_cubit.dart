@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/result.dart';
 import '../../capture/domain/capture_store.dart';
+import '../../followup/domain/actionable_follow_up_repository.dart';
+import '../../followup/domain/follow_up.dart';
 import '../domain/todo_api.dart';
 import '../domain/todo_item.dart';
 
@@ -39,13 +41,19 @@ class TodoCubit extends Cubit<TodoState> {
   TodoCubit(
     this._store,
     this._api, {
+    required ActionableFollowUpRepository followUps,
     this.pollInterval = const Duration(seconds: 10),
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now,
+  }) : // Un paramètre nommé ne peut pas être privé : le champ garde son
+       // underscore, le point d'appel garde un nom lisible.
+       // ignore: prefer_initializing_formals
+       _followUps = followUps,
+       _now = now ?? DateTime.now,
        super(const TodoState(items: []));
 
   final CaptureStore _store;
   final TodoApi _api;
+  final ActionableFollowUpRepository _followUps;
   final Duration pollInterval;
   final DateTime Function() _now;
 
@@ -56,6 +64,7 @@ class TodoCubit extends Cubit<TodoState> {
 
   List<LocalCapture> _local = const [];
   List<TodoItem> _remote = const [];
+  List<FollowUp> _followUpItems = const [];
   StreamSubscription<List<LocalCapture>>? _subscription;
   Timer? _timer;
 
@@ -79,9 +88,22 @@ class TodoCubit extends Cubit<TodoState> {
   }
 
   Future<void> refresh() async {
-    final result = await _api.list();
+    // Les deux lectures partent ensemble : « À traiter » ne doit pas coûter
+    // deux allers-retours en série au praticien qui ouvre l'application.
+    final remoteFuture = _api.list();
+    final followUpsFuture = _followUps.listActionable();
+    final remoteResult = await remoteFuture;
+    final followUpsResult = await followUpsFuture;
     if (_shuttingDown) return;
-    switch (result) {
+
+    // Un suivi qui ne se charge pas ne doit pas vider « À traiter » : la
+    // dernière liste connue reste, et seul l'échec du serveur principal fait
+    // apparaître le bandeau hors ligne.
+    if (followUpsResult case Success(:final value)) {
+      _followUpItems = value.where((follow) => follow.isActionable).toList();
+    }
+
+    switch (remoteResult) {
       case Success(:final value):
         _remote = value;
         _publish(null);
@@ -157,8 +179,17 @@ class TodoCubit extends Cubit<TodoState> {
       return preparing ? item.copyWith(kind: TodoKind.preparing) : item;
     });
 
+    // Les suivis s'intercalent entre les deux : un propriétaire qui attend
+    // passe avant un brouillon, jamais avant une dictée jamais partie.
     emit(
-      TodoState(items: [...local, ...remote], offlineMessage: offlineMessage),
+      TodoState(
+        items: [
+          ...local,
+          ..._followUpItems.map((f) => TodoItem.followUp(f, now: now)),
+          ...remote,
+        ],
+        offlineMessage: offlineMessage,
+      ),
     );
   }
 

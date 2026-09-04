@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/contact/contact_actions.dart';
 import '../../../config/app_palette.dart';
 import '../../../injection_container.dart';
 import '../domain/owner_repository.dart';
@@ -159,12 +159,6 @@ String _headerSubtitle(Patient patient, int? ageYears) {
   return segments.join(' · ');
 }
 
-/// Message lu quand ni un bouton ne fait rien, ni une exception ne remonte
-/// nulle part : aucune application de téléphonie, une adresse mal formée, et
-/// il ne devait plus rien se passer en silence — le praticien qui tape doit
-/// savoir que ça n'a pas marché, pas croire à un écran figé.
-const String _launchFailedMessage = "Impossible d'ouvrir cette application.";
-
 class _OwnerCard extends StatelessWidget {
   const _OwnerCard({required this.owner, required this.palette});
 
@@ -172,30 +166,14 @@ class _OwnerCard extends StatelessWidget {
   final AppPalette palette;
 
   Future<void> _appeler(BuildContext context, String phone) =>
-      _launch(context, Uri(scheme: 'tel', path: phone));
+      launchContact(context, Uri(scheme: 'tel', path: phone));
 
   Future<void> _ecrire(BuildContext context) =>
-      _launch(context, Uri(scheme: 'mailto', path: owner.email));
-
-  /// `launchUrl` renvoie `false`, sans lever d'exception, quand aucune
-  /// application ne sait ouvrir l'adresse — et peut aussi lever une
-  /// exception de plateforme selon l'échec. Les deux cas doivent se voir.
-  Future<void> _launch(BuildContext context, Uri uri) async {
-    var succeeded = false;
-    try {
-      succeeded = await launchUrl(uri);
-    } catch (_) {
-      succeeded = false;
-    }
-    if (succeeded || !context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text(_launchFailedMessage)));
-  }
+      launchContact(context, Uri(scheme: 'mailto', path: owner.email));
 
   @override
   Widget build(BuildContext context) {
-    final phone = _normalizedPhone(owner.phone);
+    final phone = normalizedPhone(owner.phone);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -236,15 +214,6 @@ class _OwnerCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Un numéro saisi avec des espaces, points ou tirets ne doit pas partir tel
-/// quel, simplement encodé, dans l'adresse `tel:` : seuls les chiffres et un
-/// éventuel `+` international sont retenus.
-String? _normalizedPhone(String? phone) {
-  if (phone == null) return null;
-  final digits = phone.replaceAll(RegExp('[^0-9+]'), '');
-  return digits.isEmpty ? null : digits;
 }
 
 class _HistoryTile extends StatelessWidget {

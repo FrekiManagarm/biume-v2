@@ -27,7 +27,9 @@ import 'features/capture/domain/audio_recorder.dart';
 import 'features/capture/domain/capture_store.dart';
 import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
+import 'features/followup/data/http_actionable_follow_up_repository.dart';
 import 'features/followup/data/http_follow_up_repository.dart';
+import 'features/followup/domain/actionable_follow_up_repository.dart';
 import 'features/followup/domain/follow_up_repository.dart';
 import 'features/records/data/http_owner_repository.dart';
 import 'features/records/data/patient_repository_impl.dart';
@@ -108,6 +110,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<FollowUpRepository>(
       () => HttpFollowUpRepository(getIt()),
+    )
+    ..registerLazySingleton<ActionableFollowUpRepository>(
+      () => HttpActionableFollowUpRepository(getIt()),
     )
     ..registerLazySingleton<TodoApi>(() => HttpTodoApi(getIt()))
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
