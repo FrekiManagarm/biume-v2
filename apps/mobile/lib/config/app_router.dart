@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/agenda/domain/appointment.dart';
+import '../features/agenda/presentation/agenda_screen.dart';
 import '../features/agenda/presentation/appointment_form_screen.dart';
 import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
@@ -50,6 +51,7 @@ GoRouter buildAppRouter(AuthCubit auth) {
         path: '/entreprise',
         builder: (_, _) => const ChooseCompanyScreen(),
       ),
+      GoRoute(path: '/agenda', builder: (_, _) => const AgendaPage()),
       GoRoute(
         path: '/dicter',
         builder: (_, state) =>

@@ -112,9 +112,27 @@ void main() {
 
       expect(find.text('À traiter'), findsOneWidget);
       expect(find.text('Filou'), findsOneWidget);
-      expect(find.text(todoLabels[TodoKind.toAttach]!), findsOneWidget);
       expect(find.text('Capture libre'), findsOneWidget);
-      expect(find.text(todoLabels[TodoKind.reportToValidate]!), findsOneWidget);
+      // La pastille porte le genre en capitales, et le dit en clair à la
+      // synthèse vocale.
+      expect(
+        find.text(todoLabels[TodoKind.toAttach]!.toUpperCase()),
+        findsOneWidget,
+      );
+      expect(
+        find.text(todoLabels[TodoKind.reportToValidate]!.toUpperCase()),
+        findsOneWidget,
+      );
+      // Lue lettre par lettre, « À RATTACHER À UN ANIMAL » ne veut plus
+      // rien dire : la synthèse vocale reçoit la phrase, pas les capitales.
+      expect(
+        tester
+            .widget<Text>(
+              find.text(todoLabels[TodoKind.toAttach]!.toUpperCase()),
+            )
+            .semanticsLabel,
+        todoLabels[TodoKind.toAttach],
+      );
 
       // Aucun libellé ne montre l'identifiant technique du genre.
       expect(find.text('toAttach'), findsNothing);
@@ -189,7 +207,7 @@ void main() {
         onForegroundRefresh: () async => gestes.add('synchronise'),
       );
 
-      await tester.tap(find.text(todoLabels[TodoKind.uploadBlocked]!));
+      await tester.tap(find.text(todoLabels[TodoKind.uploadBlocked]!.toUpperCase()));
       await tester.pumpAndSettle();
 
       expect(gestes, ['file:LocalCaptureStatus.queued:0', 'synchronise']);

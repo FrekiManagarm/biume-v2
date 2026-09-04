@@ -155,7 +155,13 @@ class StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDesign.radiusPill),
         border: border == null ? null : Border.all(color: border!),
       ),
-      child: Text(label.toUpperCase(), style: AppTypography.chip(foreground)),
+      // Capitales à l'écran, phrase normale pour la synthèse vocale : lue
+      // lettre par lettre, « À VÉRIFIER » ne veut plus rien dire.
+      child: Text(
+        label.toUpperCase(),
+        semanticsLabel: label,
+        style: AppTypography.chip(foreground),
+      ),
     );
   }
 }
