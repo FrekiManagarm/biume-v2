@@ -56,6 +56,8 @@ void main() {
     // ne seed pas explicitement de cache. Sans ce défaut, tout appel non
     // préparé à `cachedHistory` lèverait une `MissingStubError`.
     when(() => patients.cachedHistory(any())).thenAnswer((_) async => const []);
+    when(() => patients.cachedReportIds(any()))
+        .thenAnswer((_) async => const <String>{});
   });
 
   blocTest<PatientSheetCubit, PatientSheetState>(
@@ -247,5 +249,63 @@ void main() {
     await cubit.close();
 
     await expectLater(loadFuture, completes);
+  });
+
+  /// Le préchargement ne range qu'un seul compte rendu par animal, le plus
+  /// récent. Hors ligne, promettre l'ouverture de tous les autres — un
+  /// chevron sur chaque séance finalisée — mène droit à un écran d'erreur,
+  /// précisément dans le scénario pour lequel le cache existe.
+  group('ce qui s\'ouvre réellement', () {
+    final ancienne = entree(
+      appointmentId: 'appt-1',
+      beginAt: DateTime(2026, 6, 1),
+      reportId: 'report-1',
+    );
+    final recente = entree(
+      appointmentId: 'appt-2',
+      beginAt: DateTime(2026, 8, 20),
+      reportId: 'report-2',
+    );
+
+    blocTest<PatientSheetCubit, PatientSheetState>(
+      'hors ligne, seul le compte rendu en cache est annoncé ouvrable',
+      setUp: () {
+        when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
+        when(() => owners.byId('owner-1')).thenAnswer((_) async => camille);
+        when(() => patients.cachedHistory('pet-1'))
+            .thenAnswer((_) async => [recente, ancienne]);
+        when(() => patients.cachedReportIds('pet-1'))
+            .thenAnswer((_) async => const {'report-2'});
+        when(() => patients.history('pet-1'))
+            .thenAnswer((_) async => const Err(NetworkFailure()));
+      },
+      build: () =>
+          PatientSheetCubit(patients, owners, now: () => DateTime(2026, 9, 3)),
+      act: (cubit) => cubit.load('pet-1'),
+      verify: (cubit) {
+        final state = cubit.state as PatientSheetLoaded;
+        expect(state.openableReportIds, {'report-2'});
+      },
+    );
+
+    blocTest<PatientSheetCubit, PatientSheetState>(
+      'en ligne, tout ce qui est finalisé est ouvrable',
+      setUp: () {
+        when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
+        when(() => owners.byId('owner-1')).thenAnswer((_) async => camille);
+        when(() => patients.cachedReportIds('pet-1'))
+            .thenAnswer((_) async => const {'report-2'});
+        when(() => patients.history('pet-1')).thenAnswer(
+          (_) async => Success([recente, ancienne]),
+        );
+      },
+      build: () =>
+          PatientSheetCubit(patients, owners, now: () => DateTime(2026, 9, 3)),
+      act: (cubit) => cubit.load('pet-1'),
+      verify: (cubit) {
+        final state = cubit.state as PatientSheetLoaded;
+        expect(state.openableReportIds, {'report-1', 'report-2'});
+      },
+    );
   });
 }

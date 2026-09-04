@@ -121,6 +121,14 @@ class PatientRepositoryImpl implements PatientRepository {
   }
 
   @override
+  Future<Set<String>> cachedReportIds(String patientId) async {
+    final rows = await (_db.select(
+      _db.cachedReports,
+    )..where((r) => r.patientId.equals(patientId))).get();
+    return rows.map((row) => row.reportId).toSet();
+  }
+
+  @override
   Future<Result<void>> refreshSheetsFor(Iterable<String> patientIds) async {
     // Même génération pour toutes les écritures de ce rafraîchissement :
     // propriétaires, historiques et comptes rendus partent ensemble et

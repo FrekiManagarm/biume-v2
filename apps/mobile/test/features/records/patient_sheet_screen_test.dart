@@ -78,6 +78,8 @@ void main() {
     when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
     when(() => patients.history('pet-1')).thenAnswer((_) async => const Success([]));
     when(() => patients.cachedHistory(any())).thenAnswer((_) async => const []);
+    when(() => patients.cachedReportIds(any()))
+        .thenAnswer((_) async => const <String>{});
 
     launcher = _FakeUrlLauncher();
     UrlLauncherPlatform.instance = launcher;
@@ -341,6 +343,38 @@ void main() {
       },
     );
 
+    /// Le préchargement ne range qu'un compte rendu par animal. Un chevron
+    /// sur une séance dont le compte rendu n'est pas en cache promet, hors
+    /// ligne, un écran d'erreur.
+    testWidgets(
+      "hors ligne, seule la séance en cache porte un chevron",
+      (tester) async {
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(id: 'owner-1', name: 'Camille Roux'),
+        );
+        when(() => patients.cachedHistory('pet-1')).thenAnswer(
+          (_) async => [
+            entree(appointmentId: 'appt-2', reportId: 'report-2'),
+            entree(
+              appointmentId: 'appt-1',
+              reportId: 'report-1',
+              beginAt: DateTime(2026, 6, 1),
+            ),
+          ],
+        );
+        when(() => patients.cachedReportIds('pet-1'))
+            .thenAnswer((_) async => const {'report-2'});
+        when(() => patients.history('pet-1'))
+            .thenAnswer((_) async => const Err(NetworkFailure()));
+
+        await tester.binding.setSurfaceSize(const Size(400, 1200));
+        await monter(tester);
+
+        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+        await tester.binding.setSurfaceSize(null);
+      },
+    );
+
     testWidgets('un motif vide affiche « Sans motif »', (tester) async {
       when(() => owners.byId('owner-1')).thenAnswer(
         (_) async => const Owner(id: 'owner-1', name: 'Camille Roux'),
@@ -367,6 +401,8 @@ void main() {
         when(() => patients.cachedHistory('pet-1')).thenAnswer(
           (_) async => [entree(reportStatus: ReportStatus.finalized)],
         );
+        when(() => patients.cachedReportIds('pet-1'))
+            .thenAnswer((_) async => const {'report-1'});
         when(() => patients.history('pet-1'))
             .thenAnswer((_) async => const Err(NetworkFailure()));
 

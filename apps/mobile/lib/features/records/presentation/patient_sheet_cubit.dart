@@ -28,9 +28,19 @@ class PatientSheetUnavailable extends PatientSheetState {
 }
 
 class PatientSheetLoaded extends PatientSheetState {
-  const PatientSheetLoaded(this.sheet, {this.offlineMessage});
+  const PatientSheetLoaded(
+    this.sheet, {
+    this.openableReportIds = const {},
+    this.offlineMessage,
+  });
 
   final PatientSheet sheet;
+
+  /// Les comptes rendus que la fiche promet d'ouvrir. Hors ligne, ce sont
+  /// ceux que le préchargement a rangés — un seul par animal ; en ligne,
+  /// tous ceux qui sont finalisés. La fiche ne met de chevron que là :
+  /// promettre un geste qui échoue est pire que ne rien promettre.
+  final Set<String> openableReportIds;
 
   /// Non nul quand l'historique du serveur n'a pas pu être chargé. La fiche
   /// reste affichée depuis le cache : ce message dit « ces séances peuvent
@@ -96,25 +106,48 @@ class PatientSheetCubit extends Cubit<PatientSheetState> {
     final cachedEntries = await _patients.cachedHistory(patientId);
     if (_shuttingDown) return;
 
+    // Tant que le réseau n'a pas répondu, seul ce qui est en cache s'ouvrira
+    // vraiment : la fiche ne promet que ça. Elle élargit sa promesse quand le
+    // serveur répond, jamais avant.
+    final cachedReports = await _patients.cachedReportIds(patientId);
+    if (_shuttingDown) return;
+
     final sheet = PatientSheet(
       patient: patient,
       owner: owner,
       ageYears: _ageYears(patient.birthDate),
       history: cachedEntries,
     );
-    emit(PatientSheetLoaded(sheet));
+    emit(PatientSheetLoaded(sheet, openableReportIds: cachedReports));
 
     final result = await _patients.history(patientId);
     if (_shuttingDown) return;
     switch (result) {
       case Success(:final value):
-        emit(PatientSheetLoaded(sheet.copyWith(history: value)));
+        // Le serveur a répondu : tout compte rendu finalisé s'ouvrira.
+        emit(
+          PatientSheetLoaded(
+            sheet.copyWith(history: value),
+            openableReportIds: _finalizedReportIds(value),
+          ),
+        );
       case Err(:final failure):
         // L'historique en cache reste affiché : ce message dit qu'il peut
         // dater, jamais qu'il n'y a rien — le même principe que l'agenda.
-        emit(PatientSheetLoaded(sheet, offlineMessage: failure.message));
+        emit(
+          PatientSheetLoaded(
+            sheet,
+            openableReportIds: cachedReports,
+            offlineMessage: failure.message,
+          ),
+        );
     }
   }
+
+  Set<String> _finalizedReportIds(List<PatientHistoryEntry> entries) => entries
+      .where((entry) => entry.hasFinalizedReport)
+      .map((entry) => entry.reportId!)
+      .toSet();
 
   /// Années révolues entre la date de naissance et `_now()`. `null` sans
   /// date de naissance connue : l'âge se tait plutôt que d'être inventé.

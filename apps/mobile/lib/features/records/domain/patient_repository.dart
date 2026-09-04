@@ -28,6 +28,12 @@ abstract class PatientRepository {
   /// fiche animal.
   Future<List<PatientHistoryEntry>> cachedHistory(String patientId);
 
+  /// Les comptes rendus de cet animal réellement disponibles hors ligne
+  /// (`CachedReports`). La fiche ne promet l'ouverture que de ceux-là quand
+  /// le réseau manque : le préchargement n'en range qu'un par animal, et un
+  /// geste promis qui ne s'ouvre pas est pire qu'un geste absent.
+  Future<Set<String>> cachedReportIds(String patientId);
+
   /// Remplit les fiches hors ligne des animaux passés en paramètre : leurs
   /// propriétaires (`CachedOwners`), leur historique de séances
   /// (`CachedPatientHistoryEntries`) et, pour chacun, le dernier compte rendu

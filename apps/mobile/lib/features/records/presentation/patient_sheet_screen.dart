@@ -119,7 +119,16 @@ class _Sheet extends StatelessWidget {
                 )
               else
                 for (final entry in sheet.history)
-                  _HistoryTile(entry: entry, palette: palette),
+                  _HistoryTile(
+                    entry: entry,
+                    // Le chevron ne s'affiche que sur ce qui s'ouvrira
+                    // réellement : hors ligne, ce que le préchargement a
+                    // rangé ; en ligne, tout ce qui est finalisé.
+                    openable:
+                        entry.reportId != null &&
+                        state.openableReportIds.contains(entry.reportId),
+                    palette: palette,
+                  ),
             ],
           ),
         ),
@@ -239,14 +248,24 @@ String? _normalizedPhone(String? phone) {
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.entry, required this.palette});
+  const _HistoryTile({
+    required this.entry,
+    required this.openable,
+    required this.palette,
+  });
 
   final PatientHistoryEntry entry;
+
+  /// Ce compte rendu s'ouvrira vraiment si on tape dessus. Hors ligne, un
+  /// seul compte rendu par animal est préchargé : mettre un chevron sur les
+  /// autres promet un écran d'erreur.
+  final bool openable;
+
   final AppPalette palette;
 
   @override
   Widget build(BuildContext context) {
-    final hasReport = entry.hasFinalizedReport;
+    final hasReport = entry.hasFinalizedReport && openable;
     final subtitle = entry.consultationReason.isEmpty
         ? 'Sans motif'
         : entry.consultationReason;
