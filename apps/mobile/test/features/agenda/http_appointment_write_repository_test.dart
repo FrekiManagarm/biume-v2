@@ -10,10 +10,18 @@ void main() {
   late Dio dio;
   late HttpAppointmentWriteRepository repository;
 
+  /// Toutes les séances des tests de durée sont datées autour de cet
+  /// instant : « la dernière séance » est une notion relative à maintenant.
+  final maintenant = DateTime.utc(2026, 9, 10, 12);
+
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     dio = Dio(BaseOptions(baseUrl: 'https://api.test'));
-    repository = HttpAppointmentWriteRepository(dio, db);
+    repository = HttpAppointmentWriteRepository(
+      dio,
+      db,
+      now: () => maintenant,
+    );
   });
 
   tearDown(() => db.close());
@@ -129,7 +137,62 @@ void main() {
     expect(await repository.defaultDuration(), const Duration(hours: 1));
   });
 
-  test('la durée par défaut vient de la dernière séance du cache', () async {
+  /// La spécification, 5.8 : « la durée par défaut est celle de la dernière
+  /// séance du praticien ». Le cache couvre aujourd'hui à J+8 : prendre la
+  /// ligne dont le début est le plus grand donnait la séance la plus
+  /// **lointaine à venir**, pas la dernière tenue. Une séance de deux heures
+  /// posée dans huit jours proposait deux heures pour tout ce qui se prend
+  /// aujourd'hui.
+  test('la durée par défaut vient de la dernière séance tenue', () async {
+    await db
+        .into(db.cachedAppointments)
+        .insert(
+          CachedAppointmentsCompanion.insert(
+            id: 'appointment-a-venir',
+            patientId: 'pet-3',
+            patientName: 'Bella',
+            species: 'DOG',
+            beginAt: DateTime.utc(2026, 9, 18, 9),
+            endAt: DateTime.utc(2026, 9, 18, 11),
+            status: 'CONFIRMED',
+          ),
+        );
+    await db
+        .into(db.cachedAppointments)
+        .insert(
+          CachedAppointmentsCompanion.insert(
+            id: 'appointment-tenue',
+            patientId: 'pet-1',
+            patientName: 'Filou',
+            species: 'DOG',
+            beginAt: DateTime.utc(2026, 9, 10, 9),
+            endAt: DateTime.utc(2026, 9, 10, 9, 30),
+            status: 'CONFIRMED',
+          ),
+        );
+
+    expect(await repository.defaultDuration(), const Duration(minutes: 30));
+  });
+
+  test('sans séance tenue en cache, la durée reste une heure', () async {
+    await db
+        .into(db.cachedAppointments)
+        .insert(
+          CachedAppointmentsCompanion.insert(
+            id: 'appointment-a-venir',
+            patientId: 'pet-3',
+            patientName: 'Bella',
+            species: 'DOG',
+            beginAt: DateTime.utc(2026, 9, 18, 9),
+            endAt: DateTime.utc(2026, 9, 18, 11),
+            status: 'CONFIRMED',
+          ),
+        );
+
+    expect(await repository.defaultDuration(), const Duration(hours: 1));
+  });
+
+  test('parmi les séances tenues, la plus récente gagne', () async {
     await db
         .into(db.cachedAppointments)
         .insert(

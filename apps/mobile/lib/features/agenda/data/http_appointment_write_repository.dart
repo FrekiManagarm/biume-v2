@@ -1,3 +1,8 @@
+// Le champ est privé et le paramètre nommé public : Dart n'autorise pas les
+// paramètres formels d'initialisation sur un champ privé, et rendre ce champ
+// public exposerait un détail d'implémentation du dépôt.
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 
@@ -10,10 +15,15 @@ import '../domain/appointment_write_repository.dart';
 /// appel traduit son `DioException` en échec de domaine, jamais en message de
 /// transport.
 class HttpAppointmentWriteRepository implements AppointmentWriteRepository {
-  const HttpAppointmentWriteRepository(this._dio, this._db);
+  const HttpAppointmentWriteRepository(
+    this._dio,
+    this._db, {
+    DateTime Function() now = DateTime.now,
+  }) : _now = now;
 
   final Dio _dio;
   final AppDatabase _db;
+  final DateTime Function() _now;
 
   AppointmentWriteOutcome _parse(Map<String, dynamic> data) {
     return AppointmentWriteOutcome(
@@ -77,8 +87,13 @@ class HttpAppointmentWriteRepository implements AppointmentWriteRepository {
 
   @override
   Future<Duration> defaultDuration() async {
+    // La dernière séance **tenue**, jamais la plus lointaine à venir. Le
+    // cache couvre aujourd'hui à J+8 : sans cette borne, une séance de deux
+    // heures posée dans huit jours proposerait deux heures pour tout ce qui
+    // se prend aujourd'hui (spécification 5.8).
     final row =
         await (_db.select(_db.cachedAppointments)
+              ..where((row) => row.beginAt.isSmallerOrEqualValue(_now()))
               ..orderBy([(row) => OrderingTerm.desc(row.beginAt)])
               ..limit(1))
             .getSingleOrNull();
