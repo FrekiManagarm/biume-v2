@@ -70,16 +70,16 @@ export function proMenuList(pathname: string): Group[] {
       groupLabel: "Dossiers",
       menus: [
         {
-          href: `/dashboard/patients`,
-          label: "Animaux",
-          active: pathname === `/dashboard/patients`,
-          icon: PawPrint,
-        },
-        {
           href: `/dashboard/clients`,
           label: "Propriétaires",
           active: pathname === `/dashboard/clients`,
           icon: Contact2,
+        },
+        {
+          href: `/dashboard/patients`,
+          label: "Patients",
+          active: pathname === `/dashboard/patients`,
+          icon: PawPrint,
         },
       ],
     },
