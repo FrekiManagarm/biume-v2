@@ -125,6 +125,13 @@ class SyncEngine {
       return _handleFailure(capture, failure);
     }
 
+    if (capture.patientId case final patientId?) {
+      final attached = await _api.attach(capture.id, patientId);
+      if (attached case Err(:final failure)) {
+        return _handleFailure(capture, failure);
+      }
+    }
+
     final session = await _api.requestUpload(capture.id);
     if (session case Err(:final failure)) {
       return _handleFailure(capture, failure);

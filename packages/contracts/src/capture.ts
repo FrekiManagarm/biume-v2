@@ -135,6 +135,21 @@ export type CompleteCaptureRequest = z.infer<
   typeof completeCaptureRequestSchema
 >;
 
+/**
+ * Rattache une capture libre à un animal. Le serveur crée le brouillon de
+ * rapport : le mobile ne choisit jamais un identifiant de rapport lui-même.
+ */
+export const attachCaptureRequestSchema = z
+  .object({ patientId: z.string().min(1) })
+  .strict();
+export type AttachCaptureRequest = z.infer<typeof attachCaptureRequestSchema>;
+
+/** Réponse de « Valider la transcription » : l'extraction est lancée. */
+export const extractCaptureResponseSchema = z
+  .object({ captureId: z.uuid(), reportId: z.string().min(1) })
+  .strict();
+export type ExtractCaptureResponse = z.infer<typeof extractCaptureResponseSchema>;
+
 export const mobileOrganizationSchema = z
   .object({
     id: z.string().min(1),

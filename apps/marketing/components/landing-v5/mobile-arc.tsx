@@ -8,29 +8,6 @@ import {
 import { PhoneFrame } from "../frames/phone-frame";
 import { Reveal } from "./motion";
 
-/**
- * Rotation, translation verticale et largeur par index (0 à 4). Calculées
- * en style inline car elles dépendent de l'index — pas de classes
- * Tailwind statiques possibles ici.
- */
-const ARC_ROTATION = [-8, -4, 0, 4, 8] as const;
-const ARC_TRANSLATE_Y = [18, 6, 0, 6, 18] as const;
-const ARC_WIDTH = [200, 216, 244, 216, 200] as const;
-
-/**
- * Visibilité responsive : Tailwind pur, aucun JS. Les deux téléphones
- * extérieurs (index 0, 4) n'apparaissent qu'à partir de 900px, les deux
- * intermédiaires (index 1, 3) à partir de 700px. Le central (index 2) est
- * toujours visible.
- */
-const ARC_VISIBILITY = [
-  "hidden min-[900px]:block",
-  "hidden min-[700px]:block",
-  "",
-  "hidden min-[700px]:block",
-  "hidden min-[900px]:block",
-] as const;
-
 export function LandingV5MobileArc() {
   return (
     <section
@@ -56,44 +33,32 @@ export function LandingV5MobileArc() {
           </p>
         </div>
 
-        <div className="mt-[clamp(40px,5vw,64px)] flex items-end justify-center">
-          {MOBILE_SCREENS.map((screen, index) => (
-            <div
-              key={screen.label}
-              className={ARC_VISIBILITY[index]}
-              style={{
-                width: `${ARC_WIDTH[index]}px`,
-                transform: `rotate(${ARC_ROTATION[index]}deg) translateY(${ARC_TRANSLATE_Y[index]}px)`,
-                zIndex: index === 2 ? 2 : 1,
-                marginLeft: index === 0 ? 0 : "-32px",
-                position: "relative",
-              }}
-            >
-              <PhoneFrame>
-                <div
-                  aria-hidden="true"
-                  className="flex h-full items-center justify-center p-4 text-center text-[0.9rem] font-semibold leading-[1.3] text-[color:var(--lv5-ink)]"
-                >
-                  {screen.label}
-                </div>
-              </PhoneFrame>
-            </div>
-          ))}
-        </div>
+        <div className="mt-[clamp(40px,5vw,64px)] flex flex-col items-center gap-[clamp(32px,4vw,48px)] md:flex-row md:items-center md:justify-center">
+          <Reveal delay={0} className="w-[220px] shrink-0">
+            <PhoneFrame>
+              <div
+                aria-hidden="true"
+                className="flex h-full items-center justify-center p-4 text-center text-[0.9rem] font-semibold leading-[1.3] text-[color:var(--lv5-ink)]"
+              >
+                {MOBILE_SCREENS[0].label}
+              </div>
+            </PhoneFrame>
+          </Reveal>
 
-        <div className="mt-[clamp(32px,4vw,48px)] grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {MOBILE_PERIMETER.map((item, index) => (
-            <Reveal key={item.title} delay={index * 80}>
-              <article className="h-full rounded-[var(--lv5-radius-card)] border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] p-5">
-                <h3 className="text-[1rem] font-semibold tracking-[-.01em] text-[color:var(--lv5-ink)]">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-[0.92rem] leading-[1.6] text-[color:var(--lv5-ink-soft)]">
-                  {item.body}
-                </p>
-              </article>
-            </Reveal>
-          ))}
+          <div className="grid w-full max-w-[560px] grid-cols-1 gap-4 sm:grid-cols-3 md:max-w-[420px] md:grid-cols-1">
+            {MOBILE_PERIMETER.map((item, index) => (
+              <Reveal key={item.title} delay={80 + index * 80}>
+                <article className="h-full rounded-[var(--lv5-radius-card)] border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] p-5">
+                  <h3 className="text-[1rem] font-semibold tracking-[-.01em] text-[color:var(--lv5-ink)]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-[0.92rem] leading-[1.6] text-[color:var(--lv5-ink-soft)]">
+                    {item.body}
+                  </p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </div>
     </section>

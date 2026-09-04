@@ -15,8 +15,18 @@ const sansEntreprise = PractitionerSession(userId: 'user-1', company: null);
 
 void main() {
   late MockAuthRepository repository;
+  late List<String> vidages;
 
-  setUp(() => repository = MockAuthRepository());
+  setUp(() {
+    repository = MockAuthRepository();
+    vidages = [];
+  });
+
+  /// Le cache de lecture est vidé par le cubit, jamais par la base
+  /// elle-même : le test compte les vidages pour vérifier qu'aucun client
+  /// d'un cabinet ne peut survivre à un changement d'entreprise.
+  AuthCubit construire() =>
+      AuthCubit(repository, clearReadCache: () async => vidages.add('vidé'));
 
   blocTest<AuthCubit, AuthState>(
     'passe authentifié quand une entreprise est déjà active',
@@ -24,7 +34,7 @@ void main() {
       when(() => repository.restoreSession())
           .thenAnswer((_) async => avecEntreprise);
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.start(),
     expect: () => [
       const AuthChecking(),
@@ -40,7 +50,7 @@ void main() {
       when(() => repository.restoreSession())
           .thenAnswer((_) async => sansEntreprise);
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.start(),
     expect: () => [
       const AuthChecking(),
@@ -53,7 +63,7 @@ void main() {
     setUp: () {
       when(() => repository.restoreSession()).thenAnswer((_) async => null);
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.start(),
     expect: () => [const AuthChecking(), const AuthUnauthenticated()],
   );
@@ -61,12 +71,14 @@ void main() {
   blocTest<AuthCubit, AuthState>(
     'reste déconnecté sur identifiants refusés, sans détail technique',
     setUp: () {
-      when(() => repository.signIn(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenAnswer((_) async => const Err(AuthFailure()));
+      when(
+        () => repository.signIn(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => const Err(AuthFailure()));
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.signIn(email: 'a@b.test', password: 'x'),
     expect: () => [
       const AuthChecking(),
@@ -81,7 +93,7 @@ void main() {
     setUp: () {
       when(() => repository.signOut()).thenAnswer((_) async {});
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.signOut(),
     expect: () => [const AuthUnauthenticated()],
     verify: (_) => verify(() => repository.signOut()).called(1),
@@ -93,12 +105,51 @@ void main() {
       when(() => repository.setActiveCompany(any()))
           .thenAnswer((_) async => const Success(avecEntreprise));
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.chooseCompany('org-1'),
     expect: () => [
       const AuthChecking(),
       const AuthAuthenticated(avecEntreprise),
     ],
+  );
+
+  /// Une exposition de données entre cabinets sur l'appareil : sans ce
+  /// vidage, la liste de clients du cabinet A reste dans le sélecteur
+  /// d'animal du cabinet B tant qu'un rafraîchissement réseau n'a pas abouti,
+  /// donc indéfiniment hors ligne.
+  blocTest<AuthCubit, AuthState>(
+    "vide le cache de lecture au changement d'entreprise",
+    setUp: () {
+      when(() => repository.setActiveCompany(any()))
+          .thenAnswer((_) async => const Success(avecEntreprise));
+    },
+    build: construire,
+    act: (cubit) => cubit.chooseCompany('org-2'),
+    verify: (_) => expect(vidages, ['vidé']),
+  );
+
+  blocTest<AuthCubit, AuthState>(
+    'vide le cache de lecture à la déconnexion',
+    setUp: () {
+      when(() => repository.signOut()).thenAnswer((_) async {});
+    },
+    build: construire,
+    act: (cubit) => cubit.signOut(),
+    verify: (_) => expect(vidages, ['vidé']),
+  );
+
+  /// Un changement refusé ne change pas d'entreprise : vider le cache
+  /// priverait le praticien de son sélecteur hors ligne sans raison.
+  blocTest<AuthCubit, AuthState>(
+    "ne vide rien quand le changement d'entreprise a échoué",
+    seed: () => const AuthNeedsCompany(sansEntreprise),
+    setUp: () {
+      when(() => repository.setActiveCompany(any()))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+    },
+    build: construire,
+    act: (cubit) => cubit.chooseCompany('org-2'),
+    verify: (_) => expect(vidages, isEmpty),
   );
 
   blocTest<AuthCubit, AuthState>(
@@ -108,11 +159,14 @@ void main() {
       when(() => repository.setActiveCompany(any()))
           .thenAnswer((_) async => const Err(NetworkFailure()));
     },
-    build: () => AuthCubit(repository),
+    build: construire,
     act: (cubit) => cubit.chooseCompany('org-1'),
     expect: () => [
       const AuthChecking(),
-      const AuthNeedsCompany(sansEntreprise, message: 'Connexion indisponible.'),
+      const AuthNeedsCompany(
+        sansEntreprise,
+        message: 'Connexion indisponible.',
+      ),
     ],
   );
 }

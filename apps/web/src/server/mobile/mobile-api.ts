@@ -2,13 +2,16 @@ import {
   captureResponseSchema,
   completeCaptureRequestSchema,
   createCaptureRequestSchema,
+  extractCaptureResponseSchema,
   mobileAppointmentsPageSize,
   mobileAppointmentsResponseSchema,
   mobileCapturesResponseSchema,
   mobileSessionResponseSchema,
   uploadSessionResponseSchema,
+  type AttachCaptureRequest,
   type CaptureErrorCode,
   type CaptureResponse,
+  type ExtractCaptureResponse,
   type MobileAppointmentsResponse,
   type MobileCapturesResponse,
   type UploadSessionResponse,
@@ -19,9 +22,12 @@ import {
   type Transcript,
 } from "@biume/contracts/transcript";
 import {
+  finalizeReportResponseSchema,
   reportProposalsResponseSchema,
   type DecideProposalRequest,
   type DecideSectionRequest,
+  type FinalizeReportRequest,
+  type FinalizeReportResponse,
   type ReportProposalsResponse,
 } from "@biume/contracts/proposal";
 import type { ReportSectionId } from "@biume/contracts/report";
@@ -32,6 +38,10 @@ import {
   type FollowUp,
   type ScheduleFollowUpRequest,
 } from "@biume/contracts/followup";
+import {
+  todoResponseSchema,
+  type TodoResponse,
+} from "@biume/contracts/mobile-todo";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -39,26 +49,29 @@ import { z } from "zod";
 import { CaptureServiceError, type CaptureActor } from "./capture.service";
 import { buildMobileApiError, MobileRequestError } from "./mobile-api.errors";
 import {
+  appointmentWriteResponseSchema,
   mobileOwnersResponseSchema,
   mobilePatientHistoryResponseSchema,
   mobilePatientsResponseSchema,
   mobileOwnerSchema,
   mobilePatientSchema,
   mobileRecordsPageSize,
+  type AppointmentWriteResponse,
+  type CreateAppointmentRequest,
   type CreateMobileOwnerRequest,
   type CreateMobilePatientRequest,
   type MobileOwner,
   type MobileOwnersResponse,
-  moveAppointmentResponseSchema,
   type MobilePatient,
   type MobilePatientHistoryResponse,
   type MobilePatientsResponse,
   type MoveAppointmentRequest,
-  type MoveAppointmentResponse,
+  type UpdateOwnerEmailRequest,
 } from "@biume/contracts/mobile-records";
 import {
   agendaQuerySchema,
   appointmentsRoute,
+  attachCaptureRoute,
   cancelCaptureRoute,
   completeCaptureRoute,
   createCaptureRoute,
@@ -68,10 +81,13 @@ import {
   actionableFollowUpsRoute,
   decideProposalRoute,
   decideSectionRoute,
+  extractCaptureRoute,
+  finalizeReportRoute,
   markFollowUpHandledRoute,
   scheduleFollowUpRoute,
   regenerateProposalsRoute,
   reportProposalsRoute,
+  createAppointmentRoute,
   createPatientRoute,
   getTranscriptRoute,
   moveAppointmentRoute,
@@ -79,6 +95,8 @@ import {
   patientHistoryRoute,
   patientsRoute,
   sessionRoute,
+  todoRoute,
+  updateOwnerEmailRoute,
   uploadSessionRoute,
 } from "./mobile-api.routes";
 
@@ -127,6 +145,15 @@ export type MobileApiPorts = {
     request: z.infer<typeof completeCaptureRequestSchema>,
   ): Promise<CaptureResponse>;
   cancelCapture(actor: CaptureActor, captureId: string): Promise<void>;
+  attachCapture(
+    actor: CaptureActor,
+    captureId: string,
+    request: AttachCaptureRequest,
+  ): Promise<CaptureResponse>;
+  extractCapture(
+    actor: CaptureActor,
+    captureId: string,
+  ): Promise<ExtractCaptureResponse>;
   listOwners(
     actor: CaptureActor,
     query: { limit: number; cursor: string | null; search: string | null },
@@ -157,7 +184,16 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     appointmentId: string,
     slot: MoveAppointmentRequest,
-  ): Promise<MoveAppointmentResponse>;
+  ): Promise<AppointmentWriteResponse>;
+  createAppointment(
+    actor: CaptureActor,
+    request: CreateAppointmentRequest,
+  ): Promise<AppointmentWriteResponse>;
+  updateOwnerEmail(
+    actor: CaptureActor,
+    ownerId: string,
+    request: UpdateOwnerEmailRequest,
+  ): Promise<MobileOwner>;
   getTranscript(
     actor: CaptureActor,
     captureId: string,
@@ -187,6 +223,11 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     reportId: string,
   ): Promise<ReportProposalsResponse>;
+  finalizeReport(
+    actor: CaptureActor,
+    reportId: string,
+    request: FinalizeReportRequest,
+  ): Promise<FinalizeReportResponse>;
   scheduleFollowUp(
     actor: CaptureActor,
     reportId: string,
@@ -200,6 +241,7 @@ export type MobileApiPorts = {
     actor: CaptureActor,
     followUpId: string,
   ): Promise<FollowUp>;
+  listTodo(actor: CaptureActor): Promise<TodoResponse>;
 };
 
 function parseAgendaQuery(
@@ -399,6 +441,11 @@ export function createMobileApiApp(
     return validated(c, 200, followUpSchema, handled);
   });
 
+  app.openapi(todoRoute, async (c) => {
+    const todo = await ports.listTodo(c.get("actor"));
+    return validated(c, 200, todoResponseSchema, todo);
+  });
+
   app.openapi(reportProposalsRoute, async (c) => {
     const found = await ports.getReportProposals(
       c.get("actor"),
@@ -440,6 +487,15 @@ export function createMobileApiApp(
     return validated(c, 200, reportProposalsResponseSchema, refreshed);
   });
 
+  app.openapi(finalizeReportRoute, async (c) => {
+    const finalized = await ports.finalizeReport(
+      c.get("actor"),
+      c.req.valid("param").reportId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, finalizeReportResponseSchema, finalized);
+  });
+
   app.openapi(getTranscriptRoute, async (c) => {
     const found = await ports.getTranscript(
       c.get("actor"),
@@ -458,18 +514,43 @@ export function createMobileApiApp(
     return validated(c, 200, transcriptSchema, corrected);
   });
 
+  app.openapi(extractCaptureRoute, async (c) => {
+    const started = await ports.extractCapture(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+    );
+    return validated(c, 200, extractCaptureResponseSchema, started);
+  });
+
   app.openapi(moveAppointmentRoute, async (c) => {
     const result = await ports.moveAppointment(
       c.get("actor"),
       c.req.valid("param").appointmentId,
       c.req.valid("json"),
     );
-    return validated(c, 200, moveAppointmentResponseSchema, result);
+    return validated(c, 200, appointmentWriteResponseSchema, result);
+  });
+
+  app.openapi(createAppointmentRoute, async (c) => {
+    const created = await ports.createAppointment(
+      c.get("actor"),
+      c.req.valid("json"),
+    );
+    return validated(c, 201, appointmentWriteResponseSchema, created);
   });
 
   app.openapi(createOwnerRoute, async (c) => {
     const created = await ports.createOwner(c.get("actor"), c.req.valid("json"));
     return validated(c, 201, mobileOwnerSchema, created);
+  });
+
+  app.openapi(updateOwnerEmailRoute, async (c) => {
+    const updated = await ports.updateOwnerEmail(
+      c.get("actor"),
+      c.req.valid("param").ownerId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, mobileOwnerSchema, updated);
   });
 
   app.openapi(createPatientRoute, async (c) => {
@@ -519,22 +600,36 @@ export function createMobileApiApp(
     return c.body(null, 204, noStore);
   });
 
+  app.openapi(attachCaptureRoute, async (c) => {
+    const attached = await ports.attachCapture(
+      c.get("actor"),
+      c.req.valid("param").captureId,
+      c.req.valid("json"),
+    );
+    return validated(c, 200, captureResponseSchema, attached);
+  });
+
   methodNotAllowed("/appointments");
   methodNotAllowed("/captures");
   methodNotAllowed("/captures/:captureId");
   methodNotAllowed("/captures/:captureId/upload-session");
   methodNotAllowed("/captures/:captureId/complete");
+  methodNotAllowed("/captures/:captureId/attach");
   methodNotAllowed("/owners");
   methodNotAllowed("/patients");
   methodNotAllowed("/patients/:patientId/history");
   methodNotAllowed("/appointments/:appointmentId/move");
+  methodNotAllowed("/owners/:ownerId/email");
   methodNotAllowed("/captures/:captureId/transcript");
+  methodNotAllowed("/captures/:captureId/extract");
   methodNotAllowed("/reports/:reportId/proposals");
   methodNotAllowed("/reports/:reportId/proposals/:proposalId/decision");
   methodNotAllowed("/reports/:reportId/sections/:section/decision");
+  methodNotAllowed("/reports/:reportId/finalize");
   methodNotAllowed("/reports/:reportId/followup");
   methodNotAllowed("/followups/actionable");
   methodNotAllowed("/followups/:followUpId/handled");
+  methodNotAllowed("/todo");
 
   app.notFound((c) => fail(c, "not_found"));
 

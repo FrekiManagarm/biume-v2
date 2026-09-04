@@ -126,9 +126,14 @@ test("shared versions are scoped, revision-bound, and never updated", () => {
     new URL("./reports.function.ts", import.meta.url),
     "utf8",
   );
-  const adapterSource = source.slice(
-    source.indexOf("const reportSharedVersionPorts"),
-    source.indexOf("export const getAnatomicalParts"),
+  // L'adaptateur Drizzle vit désormais sous `server/report/` : le parcours
+  // mobile de finalisation l'utilise autant que la fonction serveur du web.
+  const adapterSource = readFileSync(
+    new URL(
+      "../server/report/report-shared-version.ports.ts",
+      import.meta.url,
+    ),
+    "utf8",
   );
   const handlerSource = source.slice(
     source.indexOf("export const createReportSharedVersion"),

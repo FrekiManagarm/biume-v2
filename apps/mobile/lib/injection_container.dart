@@ -2,14 +2,24 @@ import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 import 'config/app_environment.dart';
+import 'core/crypto/device_key.dart';
+import 'core/crypto/local_cipher.dart';
 import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
+import 'core/notifications/local_notifications.dart';
+import 'core/notifications/notification_memory.dart';
+import 'core/telemetry/posthog_sink.dart';
+import 'core/telemetry/telemetry.dart';
 import 'features/agenda/data/agenda_repository_impl.dart';
+import 'features/agenda/data/http_appointment_write_repository.dart';
 import 'features/agenda/domain/agenda_repository.dart';
+import 'features/agenda/domain/appointment_write_repository.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/data/auth_repository_impl.dart';
 import 'features/auth/domain/auth_repository.dart';
@@ -21,6 +31,20 @@ import 'features/capture/domain/audio_recorder.dart';
 import 'features/capture/domain/capture_store.dart';
 import 'features/capture/domain/sync_engine.dart';
 import 'features/capture/domain/upload_client.dart';
+import 'features/followup/data/http_actionable_follow_up_repository.dart';
+import 'features/followup/data/http_follow_up_repository.dart';
+import 'features/followup/domain/actionable_follow_up_repository.dart';
+import 'features/followup/domain/follow_up_repository.dart';
+import 'features/records/data/http_owner_repository.dart';
+import 'features/records/data/patient_repository_impl.dart';
+import 'features/records/domain/owner_repository.dart';
+import 'features/records/domain/patient_repository.dart';
+import 'features/report/data/http_report_repository.dart';
+import 'features/report/domain/report_repository.dart';
+import 'features/todo/data/http_todo_api.dart';
+import 'features/todo/domain/todo_api.dart';
+import 'features/transcript/data/http_transcript_repository.dart';
+import 'features/transcript/domain/transcript_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -31,13 +55,37 @@ final getIt = GetIt.instance;
 /// quand il atterrit côté serveur, et c'est la raison opérationnelle pour
 /// laquelle la couche domaine existe — avant toute considération de pureté.
 Future<void> configureDependencies() async {
+  // Sans clé de projet — développement, ou build oublié — rien ne quitte le
+  // téléphone : le puits reste la console.
+  final posthog = await _setUpPosthog();
+
   getIt
+    ..registerLazySingleton(
+      () => Telemetry(
+        sink: posthog != null
+            ? createPosthogSink(posthog)
+            : kDebugMode
+            ? (e) => debugPrint(
+                '[telemetry] ${e.name} ${e.journeyId} ${e.properties}',
+              )
+            : null,
+      ),
+    )
     ..registerLazySingleton(() => const FlutterSecureStorage())
     ..registerLazySingleton(() => TokenStore(getIt()))
     ..registerLazySingleton<Dio>(
       () => createDioClient(baseUrl: biumeApiUrl, tokens: getIt()),
     )
     ..registerLazySingleton(AppDatabase.new)
+    // Le cache de lecture range du contenu clinique — la transcription et les
+    // propositions du dernier compte rendu finalisé. Sa clé vit dans le
+    // trousseau, distincte de celle des dictées : perdre celle-ci ne coûte
+    // qu'un rafraîchissement.
+    ..registerLazySingleton(
+      () => LocalCipher(
+        deviceKeyFromSecureStorage(getIt(), name: localCacheKeyName),
+      ),
+    )
     ..registerLazySingleton(() => AuthRemoteDataSource(getIt()))
     // Implémentation réelle. Pour développer contre le serveur avant qu'un
     // endpoint n'existe, remplacer cette ligne par sa doublure : c'est le seul
@@ -48,9 +96,35 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<AgendaRepository>(
       () => AgendaRepositoryImpl(getIt(), getIt()),
     )
+    ..registerLazySingleton<AppointmentWriteRepository>(
+      () => HttpAppointmentWriteRepository(getIt(), getIt()),
+    )
+    ..registerLazySingleton<PatientRepository>(
+      () => PatientRepositoryImpl(getIt(), getIt(), getIt()),
+    )
+    ..registerLazySingleton<OwnerRepository>(
+      () => HttpOwnerRepository(getIt(), getIt()),
+    )
     ..registerLazySingleton<CaptureFiles>(() => FileCaptureFiles(getIt()))
     ..registerLazySingleton<CaptureStore>(() => DriftCaptureStore(getIt()))
     ..registerLazySingleton<CaptureApi>(() => HttpCaptureApi(getIt()))
+    ..registerLazySingleton<TranscriptRepository>(
+      () => HttpTranscriptRepository(getIt()),
+    )
+    ..registerLazySingleton<ReportRepository>(
+      () => HttpReportRepository(getIt(), getIt(), getIt()),
+    )
+    ..registerLazySingleton<FollowUpRepository>(
+      () => HttpFollowUpRepository(getIt()),
+    )
+    ..registerLazySingleton<ActionableFollowUpRepository>(
+      () => HttpActionableFollowUpRepository(getIt()),
+    )
+    ..registerLazySingleton<TodoApi>(() => HttpTodoApi(getIt()))
+    ..registerLazySingleton<NotificationMemory>(
+      () => DriftNotificationMemory(getIt()),
+    )
+    ..registerLazySingleton(LocalNotifications.new)
     // L'enregistreur n'est pas un singleton paresseux partagé : chaque écran
     // de dictée en veut un neuf, et le précédent doit être libéré.
     ..registerFactory<AudioRecorder>(RecordAudioRecorder.new)
@@ -59,12 +133,24 @@ Future<void> configureDependencies() async {
         store: getIt(),
         api: getIt(),
         files: getIt(),
-        isOnline: () async =>
-            !(await Connectivity().checkConnectivity()).contains(
-              ConnectivityResult.none,
-            ),
+        isOnline: () async => !(await Connectivity().checkConnectivity())
+            .contains(ConnectivityResult.none),
         now: DateTime.now,
         random: Random.secure().nextDouble,
       ),
     );
+}
+
+Future<Posthog?> _setUpPosthog() async {
+  if (biumePosthogKey.isEmpty) return null;
+  final client = Posthog();
+  await client.setup(
+    PostHogConfig(biumePosthogKey)
+      ..host = biumePosthogHost
+      // Le parcours de compte rendu est ce qu'on mesure, pas les ouvertures
+      // d'application : la liste blanche de `Telemetry` dit déjà tout ce qui
+      // a le droit de partir.
+      ..captureApplicationLifecycleEvents = false,
+  );
+  return client;
 }

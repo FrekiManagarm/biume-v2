@@ -27,12 +27,14 @@ SyncCandidate candidat({
   LocalCaptureStatus status = LocalCaptureStatus.queued,
   int attemptCount = 0,
   DateTime? expiresAt,
+  String? patientId,
 }) => SyncCandidate(
   id: 'capture-1',
   status: status,
   attemptCount: attemptCount,
   nextAttemptAt: null,
   expiresAt: expiresAt ?? maintenant.add(const Duration(hours: 12)),
+  patientId: patientId,
 );
 
 void main() {
@@ -106,6 +108,8 @@ void main() {
     when(() => api.putBytes(any(), any()))
         .thenAnswer((_) async => const Success('"etag-1"'));
     when(() => api.complete(any(), any()))
+        .thenAnswer((_) async => const Success(null));
+    when(() => api.attach(any(), any()))
         .thenAnswer((_) async => const Success(null));
   });
 
@@ -259,5 +263,61 @@ void main() {
         createdAt: any(named: 'createdAt'),
       ),
     ).called(1);
+  });
+
+  /// L'animal choisi hors ligne est la seule « écriture » que la dictée porte
+  /// vers le serveur : elle part juste après la déclaration, avant même la
+  /// demande d'URL de téléversement.
+  test('rattache l\'animal choisi juste après la déclaration', () async {
+    when(
+      () => store.pending(),
+    ).thenAnswer((_) async => [candidat(patientId: 'pet-1')]);
+
+    await build().runOnce();
+
+    verifyInOrder([
+      () => api.declare(
+        id: any(named: 'id'),
+        appointmentId: any(named: 'appointmentId'),
+        durationMs: any(named: 'durationMs'),
+        byteSize: any(named: 'byteSize'),
+        sha256: any(named: 'sha256'),
+        createdAt: any(named: 'createdAt'),
+      ),
+      () => api.attach('capture-1', 'pet-1'),
+      () => api.requestUpload('capture-1'),
+    ]);
+  });
+
+  test('ne rattache rien quand aucun animal n\'a été choisi', () async {
+    await build().runOnce();
+
+    verifyNever(() => api.attach(any(), any()));
+  });
+
+  test('un rattachement en conflit met la dictée en attente d\'action', () async {
+    when(
+      () => store.pending(),
+    ).thenAnswer((_) async => [candidat(patientId: 'pet-1')]);
+    when(
+      () => api.attach(any(), any()),
+    ).thenAnswer((_) async => const Err(ConflictFailure()));
+
+    await build().runOnce();
+
+    verifyNever(() => api.requestUpload(any()));
+
+    final capture = verify(
+      () => store.transition(
+        'capture-1',
+        captureAny(),
+        attemptCount: captureAny(named: 'attemptCount'),
+        errorCode: any(named: 'errorCode'),
+        nextAttemptAt: any(named: 'nextAttemptAt'),
+      ),
+    ).captured;
+
+    final derniere = capture.sublist(capture.length - 2);
+    expect(derniere[0], LocalCaptureStatus.needsAction);
   });
 }

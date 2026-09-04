@@ -31,6 +31,9 @@ abstract class CaptureApi {
 
   Future<Result<UploadSession>> requestUpload(String captureId);
 
+  /// Rattache une capture libre à un animal. Idempotent sur le même animal.
+  Future<Result<void>> attach(String captureId, String patientId);
+
   /// Envoie les octets **en clair** vers l'URL signée. Le chiffrement est
   /// local : il protège l'appareil, pas le transit, que TLS couvre déjà. Sans
   /// ça le serveur ne pourrait pas transcrire.

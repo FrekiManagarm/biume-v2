@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
@@ -13,6 +14,16 @@ const int _gcmTagLength = 16;
 
 final _marker = Uint8List.fromList(utf8.encode(_versionMarker));
 final _aesGcm = AesGcm.with256bits();
+
+final _nonces = Random.secure();
+
+/// Un nonce neuf pour chaque enveloppe. Le réutiliser sur deux textes avec la
+/// même clé casserait GCM : c'est la seule règle que l'appelant ne doit pas
+/// avoir à réinventer.
+List<int> newCaptureNonce([Random? random]) => List<int>.generate(
+  captureNonceLength,
+  (_) => (random ?? _nonces).nextInt(256),
+);
 
 /// L'identifiant de capture est lié en données authentifiées supplémentaires :
 /// une enveloppe ne peut pas être déplacée sur une autre capture, même par

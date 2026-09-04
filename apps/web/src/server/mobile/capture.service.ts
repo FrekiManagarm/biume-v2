@@ -133,7 +133,7 @@ function hasSameIdentity(
   );
 }
 
-function toCaptureResponse(row: AudioCapture): CaptureResponse {
+export function toCaptureResponse(row: AudioCapture): CaptureResponse {
   return {
     id: row.id,
     organizationId: row.organizationId,

@@ -14,6 +14,7 @@ function createPorts(): MobileApiPorts {
     createUploadSession: vi.fn(),
     completeCapture: vi.fn(),
     cancelCapture: vi.fn(),
+    attachCapture: vi.fn(),
   } as unknown as MobileApiPorts;
 }
 
@@ -29,20 +30,25 @@ describe("application Hono de l'api mobile", () => {
       "/api/mobile/v1/appointments/{appointmentId}/move",
       "/api/mobile/v1/captures",
       "/api/mobile/v1/captures/{captureId}",
+      "/api/mobile/v1/captures/{captureId}/attach",
       "/api/mobile/v1/captures/{captureId}/complete",
+      "/api/mobile/v1/captures/{captureId}/extract",
       "/api/mobile/v1/captures/{captureId}/transcript",
       "/api/mobile/v1/captures/{captureId}/upload-session",
       "/api/mobile/v1/followups/actionable",
       "/api/mobile/v1/followups/{followUpId}/handled",
       "/api/mobile/v1/owners",
+      "/api/mobile/v1/owners/{ownerId}/email",
       "/api/mobile/v1/patients",
       "/api/mobile/v1/patients/{patientId}/history",
+      "/api/mobile/v1/reports/{reportId}/finalize",
       "/api/mobile/v1/reports/{reportId}/followup",
       "/api/mobile/v1/reports/{reportId}/proposals",
       "/api/mobile/v1/reports/{reportId}/proposals/regenerate",
       "/api/mobile/v1/reports/{reportId}/proposals/{proposalId}/decision",
       "/api/mobile/v1/reports/{reportId}/sections/{section}/decision",
       "/api/mobile/v1/session",
+      "/api/mobile/v1/todo",
     ]);
   });
 

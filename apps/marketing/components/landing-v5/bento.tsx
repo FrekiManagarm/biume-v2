@@ -20,9 +20,18 @@ const VALIDATION_TONE: Record<string, string> = {
     "bg-[color:var(--lv5-violet-soft)] text-[color:var(--lv5-violet-ink)]",
 };
 
-/** Tuile large : deux colonnes qui se replient d'elles-mêmes sous 480px. */
+/*
+  Tuile large : deux colonnes qui se replient d'elles-mêmes sous 480px.
+
+  Le `span 2` est conditionné à ~660px, largeur à partir de laquelle l'`auto-fit`
+  ci-dessous donne réellement deux colonnes. Sans cette garde, la grille
+  mono-colonne du mobile se voyait forcer une seconde colonne *implicite*
+  (dimensionnée `auto`) : les tuiles étroites s'y retrouvaient tassées sur
+  quelques dizaines de pixels, et la page débordait de ~50px vers la droite —
+  ce qui étirait aussi l'en-tête fixe et poussait le bouton menu hors écran.
+*/
 const WIDE_TILE =
-  "[grid-column:span_2] min-w-0 flex flex-wrap items-center gap-6 rounded-[22px] p-[clamp(22px,2.6vw,32px)]";
+  "min-[660px]:[grid-column:span_2] min-w-0 flex flex-wrap items-center gap-6 rounded-[22px] p-[clamp(22px,2.6vw,32px)]";
 
 const NARROW_TILE =
   "min-w-0 rounded-[22px] border border-[color:var(--lv5-line)] bg-[color:var(--lv5-surface)] p-[clamp(22px,2.6vw,30px)]";

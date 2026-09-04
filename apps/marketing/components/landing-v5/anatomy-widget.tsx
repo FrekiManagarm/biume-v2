@@ -42,9 +42,15 @@ const ZONES = [
  * déjà visible au chargement, inutile d'un déclenchement au scroll.
  */
 export function HeroAnatomyPreview() {
+  /*
+    Empilé sous 640px : à 160px d'illustration plus libellés, la colonne de
+    texte tombait à ~70px et "Thoraco-lombaire · Tension" se cassait en trois
+    lignes. Au-dessus, la disposition d'origine est conservée telle quelle
+    (c'est celle du mockup du hero, dessiné à échelle fixe).
+  */
   return (
-    <div className="mb-3 flex items-center gap-4 rounded-[12px] border border-(--lv5-line) bg-(--lv5-canvas) p-3">
-      <div className="relative w-40 shrink-0 overflow-hidden rounded-[9px] bg-(--lv5-surface)">
+    <div className="mb-3 flex flex-col gap-3 rounded-[12px] border border-(--lv5-line) bg-(--lv5-canvas) p-3 sm:flex-row sm:items-center sm:gap-4">
+      <div className="relative w-full shrink-0 overflow-hidden rounded-[9px] bg-(--lv5-surface) sm:w-40">
         <Image
           src="/assets/images/horse-anatomy-widget.jpg"
           alt=""

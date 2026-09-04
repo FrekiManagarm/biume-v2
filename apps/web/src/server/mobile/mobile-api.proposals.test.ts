@@ -6,6 +6,10 @@ import { MobileRequestError } from "./mobile-api.errors";
 
 const proposals = {
   reportId: "report-1",
+  status: "draft" as const,
+  patientName: "Filou",
+  owner: { id: "owner-1", name: "Camille Roux", email: "camille@example.org" },
+  captureId: null,
   transcript: "Filou présente une tension lombaire à droite.",
   items: [
     {

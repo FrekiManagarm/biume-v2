@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../config/app_palette.dart';
+import '../../records/domain/patient.dart';
 import 'recording_bloc.dart';
 
 String _mmss(Duration d) {
@@ -18,9 +21,14 @@ String _mmss(Duration d) {
 /// souvent debout, parfois avec un animal devant lui : rien d'important n'est
 /// caché derrière un second geste.
 class RecordingScreen extends StatefulWidget {
-  const RecordingScreen({this.appointmentId, super.key});
+  const RecordingScreen({this.appointmentId, this.onPatientChosen, super.key});
 
   final String? appointmentId;
+
+  /// L'animal choisi avant ou pendant la dictée, remonté à qui enregistrera la
+  /// capture. Facultatif : le chemin obligatoire reste le rattachement au
+  /// moment de valider la transcription.
+  final ValueChanged<Patient>? onPatientChosen;
 
   @override
   State<RecordingScreen> createState() => _RecordingScreenState();
@@ -30,6 +38,7 @@ class _RecordingScreenState extends State<RecordingScreen>
     with WidgetsBindingObserver {
   Timer? _timer;
   Duration _elapsed = Duration.zero;
+  Patient? _patient;
 
   @override
   void initState() {
@@ -52,6 +61,13 @@ class _RecordingScreenState extends State<RecordingScreen>
         context.read<RecordingBloc>().state is RecordingInProgress) {
       context.read<RecordingBloc>().add(const RecordingInterrupted());
     }
+  }
+
+  Future<void> _choisirAnimal() async {
+    final patient = await context.push<Patient>('/animaux/choisir');
+    if (patient == null || !mounted) return;
+    setState(() => _patient = patient);
+    widget.onPatientChosen?.call(patient);
   }
 
   void _startTicking() {
@@ -87,38 +103,90 @@ class _RecordingScreenState extends State<RecordingScreen>
           },
           builder: (context, state) => Padding(
             padding: const EdgeInsets.all(24),
-            child: switch (state) {
-              RecordingIdle() || RecordingPreparing() => _Idle(
-                palette: palette,
-                busy: state is RecordingPreparing,
-                appointmentId: widget.appointmentId,
-              ),
-              RecordingPermissionDenied() => _Message(
-                palette: palette,
-                title: 'Micro non autorisé',
-                body:
-                    'Biume a besoin du microphone pour enregistrer votre '
-                    'dictée. Autorisez-le dans les réglages de votre '
-                    'téléphone, puis revenez.',
-              ),
-              RecordingInProgress(:final elapsed) => _InProgress(
-                palette: palette,
-                elapsed: elapsed,
-              ),
-              RecordingReview() => _Review(palette: palette, state: state),
-              RecordingSaving() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              RecordingSaved() => const SizedBox.shrink(),
-              RecordingFailed(:final message) => _Message(
-                palette: palette,
-                title: 'Enregistrement interrompu',
-                body: message,
-              ),
-            },
+            child: Column(
+              children: [
+                // Une ligne, pas un écran de plus : le geste principal reste
+                // d'appuyer pour enregistrer. Elle ne s'affiche que sans
+                // rendez-vous, qui porte déjà l'animal, et disparaît dès que
+                // la dictée est en relecture — le rattachement se fait alors
+                // au moment de valider la transcription.
+                if (widget.appointmentId == null &&
+                    (state is RecordingIdle ||
+                        state is RecordingPreparing ||
+                        state is RecordingInProgress))
+                  _PatientLine(
+                    palette: palette,
+                    patient: _patient,
+                    onChoose: _choisirAnimal,
+                  ),
+                Expanded(
+                  child: switch (state) {
+                    RecordingIdle() || RecordingPreparing() => _Idle(
+                      palette: palette,
+                      busy: state is RecordingPreparing,
+                      appointmentId: widget.appointmentId,
+                    ),
+                    RecordingPermissionDenied() => _Message(
+                      palette: palette,
+                      title: 'Micro non autorisé',
+                      body:
+                          'Biume a besoin du microphone pour enregistrer votre '
+                          'dictée. Autorisez-le dans les réglages de votre '
+                          'téléphone, puis revenez.',
+                    ),
+                    RecordingInProgress(:final elapsed) => _InProgress(
+                      palette: palette,
+                      elapsed: elapsed,
+                    ),
+                    RecordingReview() => _Review(
+                      palette: palette,
+                      state: state,
+                    ),
+                    RecordingSaving() => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    RecordingSaved() => const SizedBox.shrink(),
+                    RecordingFailed(:final message) => _Message(
+                      palette: palette,
+                      title: 'Enregistrement interrompu',
+                      body: message,
+                    ),
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Le choix facultatif de l'animal, discret : le praticien peut le faire
+/// avant ou pendant la dictée, ou pas du tout.
+class _PatientLine extends StatelessWidget {
+  const _PatientLine({
+    required this.palette,
+    required this.patient,
+    required this.onChoose,
+  });
+
+  final AppPalette palette;
+  final Patient? patient;
+  final VoidCallback onChoose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Animal : ${patient?.name ?? "non choisi"}',
+            style: TextStyle(color: palette.inkMuted),
+          ),
+        ),
+        TextButton(onPressed: onChoose, child: const Text('Choisir')),
+      ],
     );
   }
 }

@@ -38,6 +38,10 @@ const Set<String> allowedTelemetryProperties = {
   'status',
   'section',
   'elapsedMs',
+  'reportId',
+  'sentToOwner',
+  'textChanged',
+  'delayMs',
 };
 
 // ignore_for_file: prefer_initializing_formals

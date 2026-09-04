@@ -3,7 +3,7 @@ import { SeoPage } from "../../../components/seo-page";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Alternative NeoVoice",
+  title: "Alternative à NeoVoice pour ostéopathe animalier",
   description:
     "Alternative NeoVoice Pro: comparez Biume pour agenda, propriétaires, patients, comptes rendus, timeline animal et relances.",
   path: "/alternatives/neovoice",

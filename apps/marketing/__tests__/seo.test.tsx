@@ -36,7 +36,7 @@ const pageChecks = [
     path: "/osteopathe-animalier",
     Page: OsteopatheAnimalierPage,
     metadata: osteopatheAnimalierMetadata,
-    title: "Ostéopathe animalier",
+    title: "Ostéopathe animalier : organiser séances et suivi",
     keywords: ["ostéopathe animalier", "compte rendu", "suivi post-séance"],
   },
   {
