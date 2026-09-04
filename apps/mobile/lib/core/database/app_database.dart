@@ -147,7 +147,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -173,6 +173,15 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await migrator.createTable(cachedPatientHistoryEntries);
+      }
+      if (from < 5) {
+        // Jusqu'ici, `payload` rangeait la réponse des propositions en clair :
+        // transcription intégrale et propositions cliniques, dans une base
+        // SQLite non chiffrée. Ces lignes sont supprimées, jamais converties
+        // — les garder le temps d'une migration laisserait sur le disque
+        // exactement ce que le chiffrement empêche. Le cache se refait au
+        // prochain rafraîchissement.
+        await delete(cachedReports).go();
       }
     },
   );

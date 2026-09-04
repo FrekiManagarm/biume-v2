@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../../../core/crypto/local_cipher.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/failure.dart';
 import '../../../core/network/api_error.dart';
@@ -13,9 +14,14 @@ import '../domain/report_repository.dart';
 /// appel traduit son `DioException` en échec de domaine, jamais en message de
 /// transport.
 class HttpReportRepository implements ReportRepository {
-  const HttpReportRepository(this._dio, this._db);
+  const HttpReportRepository(this._dio, this._db, this._cipher);
   final Dio _dio;
   final AppDatabase _db;
+
+  /// Le compte rendu en cache est chiffré sur le disque : la transcription et
+  /// les propositions cliniques ne survivent pas en clair à un téléphone
+  /// perdu (design parent, section 3).
+  final LocalCipher _cipher;
 
   ReportProposals _parse(Map<String, dynamic> data) {
     final owner = data['owner'] as Map<String, dynamic>;
@@ -73,7 +79,13 @@ class HttpReportRepository implements ReportRepository {
     )..where((r) => r.reportId.equals(reportId))).getSingleOrNull();
     if (row == null) return result;
 
-    return Success(_parse(jsonDecode(row.payload) as Map<String, dynamic>));
+    // Une enveloppe qui ne s'ouvre pas — clé remplacée par une
+    // réinstallation, ligne d'une version antérieure — est un cache manquant,
+    // pas une erreur à montrer : le praticien lit la panne réseau.
+    final clear = await _cipher.open(id: row.reportId, sealed: row.payload);
+    if (clear == null) return result;
+
+    return Success(_parse(jsonDecode(clear) as Map<String, dynamic>));
   }
 
   @override

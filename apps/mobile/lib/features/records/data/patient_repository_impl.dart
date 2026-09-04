@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 
+import '../../../core/crypto/local_cipher.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/result.dart';
@@ -18,10 +19,16 @@ import '../domain/patient_repository.dart';
 const _sheetsConcurrency = 4;
 
 class PatientRepositoryImpl implements PatientRepository {
-  const PatientRepositoryImpl(this._db, this._dio);
+  const PatientRepositoryImpl(this._db, this._dio, this._cipher);
 
   final AppDatabase _db;
   final Dio _dio;
+
+  /// Le dernier compte rendu finalisé mis en cache porte la transcription
+  /// intégrale de la séance et les propositions cliniques. Il ne descend
+  /// jamais en clair dans SQLite : la menace posée par le design parent
+  /// (section 3) est un appareil perdu ou volé.
+  final LocalCipher _cipher;
 
   @override
   Stream<List<Patient>> watchAll() =>
@@ -224,6 +231,12 @@ class PatientRepositoryImpl implements PatientRepository {
         '/api/mobile/v1/reports/${lastFinalized.reportId}/proposals',
       );
       final data = response.data!;
+      // Chiffré avant d'entrer dans la transaction : le clair ne touche pas
+      // le disque, même le temps d'une écriture interrompue.
+      final sealed = await _cipher.seal(
+        id: lastFinalized.reportId!,
+        clear: jsonEncode(data),
+      );
       await _db.writeReadCache(generation, () async {
         // Un seul compte rendu en cache par animal : si celui qui était
         // « le dernier finalisé » a changé depuis la dernière synchronisation,
@@ -237,7 +250,7 @@ class PatientRepositoryImpl implements PatientRepository {
                 patientId: patientId,
                 appointmentId: Value(lastFinalized.appointmentId),
                 status: data['status'] as String,
-                payload: jsonEncode(data),
+                payload: sealed,
                 cachedAt: DateTime.now(),
               ),
               mode: InsertMode.insertOrReplace,

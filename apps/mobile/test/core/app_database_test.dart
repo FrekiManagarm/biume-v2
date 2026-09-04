@@ -2,6 +2,7 @@ import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 void main() {
   late AppDatabase db;
@@ -260,5 +261,29 @@ void main() {
         )
         .first;
     expect(horsFenetre, isEmpty);
+  });
+
+  /// Migration v4 → v5 : les comptes rendus mis en cache avant le chiffrement
+  /// rangeaient la transcription et les propositions en clair. Elles ne sont
+  /// pas converties — les garder le temps d'une migration laisserait sur le
+  /// disque exactement ce que le chiffrement empêche.
+  test('la migration v5 efface les comptes rendus en cache en clair', () async {
+    final raw = sqlite3.openInMemory();
+    raw.execute(
+      'CREATE TABLE cached_reports ('
+      'report_id TEXT NOT NULL, patient_id TEXT NOT NULL, '
+      'appointment_id TEXT, status TEXT NOT NULL, payload TEXT NOT NULL, '
+      'cached_at INTEGER NOT NULL, PRIMARY KEY (report_id))',
+    );
+    raw.execute(
+      "INSERT INTO cached_reports VALUES ('report-1', 'pet-1', null, "
+      "'finalized', '{\"transcript\":\"palpation lombaire\"}', 0)",
+    );
+    raw.execute('PRAGMA user_version = 4');
+
+    final migrated = AppDatabase.forTesting(NativeDatabase.opened(raw));
+    addTearDown(migrated.close);
+
+    expect(await migrated.select(migrated.cachedReports).get(), isEmpty);
   });
 }

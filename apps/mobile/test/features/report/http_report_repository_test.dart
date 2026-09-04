@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:biume_mobile/core/crypto/local_cipher.dart';
 import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/features/report/data/http_report_repository.dart';
@@ -13,10 +14,12 @@ void main() {
   late Dio dio;
   late HttpReportRepository repository;
 
+  final cipher = LocalCipher(() async => List<int>.generate(32, (i) => i));
+
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     dio = Dio(BaseOptions(baseUrl: 'https://api.test'));
-    repository = HttpReportRepository(dio, db);
+    repository = HttpReportRepository(dio, db, cipher);
   });
 
   tearDown(() => db.close());
@@ -254,7 +257,10 @@ void main() {
                 reportId: 'report-1',
                 patientId: 'pet-1',
                 status: 'finalized',
-                payload: jsonEncode(reponse(status: 'finalized')),
+                payload: await cipher.seal(
+                  id: 'report-1',
+                  clear: jsonEncode(reponse(status: 'finalized')),
+                ),
                 cachedAt: DateTime.now(),
               ),
             );
@@ -309,7 +315,10 @@ void main() {
                 reportId: 'report-1',
                 patientId: 'pet-1',
                 status: 'finalized',
-                payload: jsonEncode(reponse(status: 'finalized')),
+                payload: await cipher.seal(
+                  id: 'report-1',
+                  clear: jsonEncode(reponse(status: 'finalized')),
+                ),
                 cachedAt: DateTime.now(),
               ),
             );
@@ -334,6 +343,40 @@ void main() {
         final result = await repository.loadCachedOrRemote('report-1');
 
         expect(result.failureOrNull, isA<NotFoundFailure>());
+      },
+    );
+
+    /// Une ligne écrite avant que le chiffrement n'existe, ou chiffrée avec
+    /// une clé que l'appareil n'a plus : c'est un cache, il se refait. Le
+    /// praticien voit la panne réseau, jamais une exception de déchiffrement.
+    test(
+      "propage la panne réseau quand l'enveloppe en cache ne s'ouvre pas",
+      () async {
+        await db.into(db.cachedReports).insert(
+              CachedReportsCompanion.insert(
+                reportId: 'report-1',
+                patientId: 'pet-1',
+                status: 'finalized',
+                payload: jsonEncode(reponse(status: 'finalized')),
+                cachedAt: DateTime.now(),
+              ),
+            );
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              handler.reject(
+                DioException(
+                  requestOptions: options,
+                  type: DioExceptionType.connectionError,
+                ),
+              );
+            },
+          ),
+        );
+
+        final result = await repository.loadCachedOrRemote('report-1');
+
+        expect(result.failureOrNull, isA<NetworkFailure>());
       },
     );
   });

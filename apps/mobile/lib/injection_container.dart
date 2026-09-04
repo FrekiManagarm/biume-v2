@@ -7,6 +7,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import 'config/app_environment.dart';
+import 'core/crypto/device_key.dart';
+import 'core/crypto/local_cipher.dart';
 import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
 import 'core/telemetry/telemetry.dart';
@@ -67,6 +69,15 @@ Future<void> configureDependencies() async {
       () => createDioClient(baseUrl: biumeApiUrl, tokens: getIt()),
     )
     ..registerLazySingleton(AppDatabase.new)
+    // Le cache de lecture range du contenu clinique — la transcription et les
+    // propositions du dernier compte rendu finalisé. Sa clé vit dans le
+    // trousseau, distincte de celle des dictées : perdre celle-ci ne coûte
+    // qu'un rafraîchissement.
+    ..registerLazySingleton(
+      () => LocalCipher(
+        deviceKeyFromSecureStorage(getIt(), name: localCacheKeyName),
+      ),
+    )
     ..registerLazySingleton(() => AuthRemoteDataSource(getIt()))
     // Implémentation réelle. Pour développer contre le serveur avant qu'un
     // endpoint n'existe, remplacer cette ligne par sa doublure : c'est le seul
@@ -81,7 +92,7 @@ Future<void> configureDependencies() async {
       () => HttpAppointmentWriteRepository(getIt(), getIt()),
     )
     ..registerLazySingleton<PatientRepository>(
-      () => PatientRepositoryImpl(getIt(), getIt()),
+      () => PatientRepositoryImpl(getIt(), getIt(), getIt()),
     )
     ..registerLazySingleton<OwnerRepository>(
       () => HttpOwnerRepository(getIt(), getIt()),
@@ -93,7 +104,7 @@ Future<void> configureDependencies() async {
       () => HttpTranscriptRepository(getIt()),
     )
     ..registerLazySingleton<ReportRepository>(
-      () => HttpReportRepository(getIt(), getIt()),
+      () => HttpReportRepository(getIt(), getIt(), getIt()),
     )
     ..registerLazySingleton<FollowUpRepository>(
       () => HttpFollowUpRepository(getIt()),

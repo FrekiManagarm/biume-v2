@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:biume_mobile/core/crypto/local_cipher.dart';
 import 'package:biume_mobile/core/database/app_database.dart';
 import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/features/records/data/patient_repository_impl.dart';
@@ -14,10 +15,12 @@ void main() {
   late Dio dio;
   late PatientRepositoryImpl repository;
 
+  final cipher = LocalCipher(() async => List<int>.generate(32, (i) => i));
+
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     dio = Dio(BaseOptions(baseUrl: 'https://api.test'));
-    repository = PatientRepositoryImpl(db, dio);
+    repository = PatientRepositoryImpl(db, dio, cipher);
   });
 
   tearDown(() => db.close());
@@ -369,8 +372,15 @@ void main() {
         expect(cached.reportId, 'report-1');
         expect(cached.appointmentId, 'appt-1');
         expect(cached.status, 'finalized');
+        // La transcription intégrale et les propositions cliniques ne
+        // descendent jamais en clair dans une base SQLite non chiffrée : la
+        // menace est un appareil perdu ou volé (design parent, section 3).
+        expect(cached.payload, isNot(contains('Filou')));
+        expect(cached.payload, isNot(contains('reportId')));
         expect(
-          jsonDecode(cached.payload),
+          jsonDecode(
+            (await cipher.open(id: 'report-1', sealed: cached.payload))!,
+          ),
           {'reportId': 'report-1', 'status': 'finalized', 'patientName': 'Filou'},
         );
 
