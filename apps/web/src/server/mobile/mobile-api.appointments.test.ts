@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { appointmentWriteResponseSchema } from "@biume/contracts/mobile-records";
 import { describe, expect, it, vi } from "vitest";
 
@@ -176,5 +178,32 @@ describe("création d'une séance depuis le terrain", () => {
     const response = await createMobileApiHandler(ports)(create(request));
 
     expect(response.status).toBe(404);
+  });
+});
+
+/**
+ * Une séance prise depuis le mobile et la même prise depuis le web se
+ * retrouvent dans la même liste, chez le même praticien. Un titre qui diverge
+ * selon l'écran d'origine se lit comme deux produits — et le format n'a
+ * qu'un seul endroit où vivre.
+ */
+describe("titre du brouillon né avec la séance", () => {
+  const source = readFileSync(
+    new URL("./mobile-api.ports.ts", import.meta.url),
+    "utf8",
+  );
+
+  it("createAppointment appelle le helper partagé au lieu d'en recopier le format", () => {
+    const createSource = source.slice(
+      source.indexOf("async createAppointment("),
+      source.indexOf("async createOwner("),
+    );
+
+    expect(createSource).toContain("buildSessionReportTitle(");
+    expect(createSource).not.toContain("Intl.DateTimeFormat");
+  });
+
+  it("aucune copie du format de titre ne subsiste dans les ports mobiles", () => {
+    expect(source).not.toContain("`Séance du ${");
   });
 });

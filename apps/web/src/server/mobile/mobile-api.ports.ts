@@ -42,6 +42,7 @@ import {
   type CaptureServiceDependencies,
 } from "./capture.service";
 import { MobileRequestError } from "./mobile-api.errors";
+import { buildSessionReportTitle } from "#/functions/appointment-report.service";
 import { createTranscriptRepository } from "#/server/transcription/transcript.repository";
 import {
   buildReportSectionStateRows,
@@ -1060,7 +1061,7 @@ export async function createProductionMobileApiPorts(
       const endAt = new Date(request.endAt);
 
       const [patient] = await db
-        .select({ id: pets.id })
+        .select({ id: pets.id, name: pets.name })
         .from(pets)
         .where(
           and(
@@ -1089,10 +1090,10 @@ export async function createProductionMobileApiPorts(
         }),
         db.insert(advancedReport).values({
           id: reportId,
-          title: `Séance du ${new Intl.DateTimeFormat("fr-FR", {
-            dateStyle: "long",
-            timeZone: "Europe/Paris",
-          }).format(beginAt)}`,
+          // Le helper partagé du web, jamais une copie de son format : les
+          // deux moitiés du produit écrivent dans la même liste, chez le
+          // même praticien.
+          title: buildSessionReportTitle(patient.name, beginAt),
           consultationReason: "",
           patientId: patient.id,
           appointmentId,
@@ -1300,7 +1301,7 @@ export async function createProductionMobileApiPorts(
       }
 
       const [patient] = await db
-        .select({ id: pets.id })
+        .select({ id: pets.id, name: pets.name })
         .from(pets)
         .where(
           and(
@@ -1313,10 +1314,9 @@ export async function createProductionMobileApiPorts(
 
       const now = new Date();
       const reportId = crypto.randomUUID();
-      const title = `Séance du ${new Intl.DateTimeFormat("fr-FR", {
-        dateStyle: "long",
-        timeZone: "Europe/Paris",
-      }).format(capture.createdAt)}`;
+      // Même helper partagé que la création de séance : un brouillon né d'une
+      // dictée libre atterrit dans la même liste que les autres.
+      const title = buildSessionReportTitle(patient.name, capture.createdAt);
 
       // Un seul batch : un rapport sans ses états de section ne pourrait
       // jamais être finalisé, et ne serait jamais revendiqué par une capture.
