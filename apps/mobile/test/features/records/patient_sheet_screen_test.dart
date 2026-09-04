@@ -1,5 +1,6 @@
 import 'package:biume_mobile/config/app_palette.dart';
 import 'package:biume_mobile/config/app_theme.dart';
+import 'package:biume_mobile/core/failure.dart';
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/records/domain/owner_repository.dart';
 import 'package:biume_mobile/features/records/domain/patient.dart';
@@ -53,6 +54,7 @@ void main() {
     owners = MockOwnerRepository();
     when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
     when(() => patients.history('pet-1')).thenAnswer((_) async => const Success([]));
+    when(() => patients.cachedHistory(any())).thenAnswer((_) async => const []);
   });
 
   /// Construit un routeur minimal autour de l'écran de fiche : les cartes de
@@ -260,6 +262,37 @@ void main() {
 
       expect(find.text('Sans motif'), findsOneWidget);
     });
+
+    /// Le parcours réel visé par la fonctionnalité : l'ostéopathe dans sa
+    /// voiture, sans réseau, devant l'écurie. La fiche doit encore montrer
+    /// « ce qu'il a fait la dernière fois » — depuis l'historique préchargé,
+    /// pas depuis un réseau absent — et laisser ouvrir ce compte rendu passé.
+    testWidgets(
+      "hors ligne, l'historique préchargé reste visible et son compte rendu s'ouvre",
+      (tester) async {
+        when(() => owners.byId('owner-1')).thenAnswer(
+          (_) async => const Owner(id: 'owner-1', name: 'Camille Roux'),
+        );
+        when(() => patients.cachedHistory('pet-1')).thenAnswer(
+          (_) async => [entree(reportStatus: ReportStatus.finalized)],
+        );
+        when(() => patients.history('pet-1'))
+            .thenAnswer((_) async => const Err(NetworkFailure()));
+
+        await monter(tester);
+
+        // Visible dès l'ouverture, sans attendre une réponse réseau qui ne
+        // viendra pas.
+        expect(find.text('Suivi lombaire'), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+        expect(find.textContaining('Connexion indisponible'), findsOneWidget);
+
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pumpAndSettle();
+
+        expect(find.text('compte-rendu-report-1-fiche'), findsOneWidget);
+      },
+    );
   });
 
   testWidgets(

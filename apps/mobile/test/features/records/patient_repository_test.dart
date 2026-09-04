@@ -214,6 +214,45 @@ void main() {
     });
   });
 
+  group('cachedHistory', () {
+    test(
+      'lit les entrées mises en cache par refreshSheetsFor, la plus récente en premier',
+      () async {
+        await db.into(db.cachedPatientHistoryEntries).insert(
+              CachedPatientHistoryEntriesCompanion.insert(
+                appointmentId: 'appt-1',
+                patientId: 'pet-1',
+                beginAt: DateTime(2026, 8, 1),
+                reportId: const Value('report-1'),
+                reportStatus: const Value('finalized'),
+                consultationReason: 'Suivi lombaire',
+              ),
+            );
+        await db.into(db.cachedPatientHistoryEntries).insert(
+              CachedPatientHistoryEntriesCompanion.insert(
+                appointmentId: 'appt-2',
+                patientId: 'pet-1',
+                beginAt: DateTime(2026, 9, 1),
+                consultationReason: '',
+              ),
+            );
+
+        final entries = await repository.cachedHistory('pet-1');
+
+        expect(entries, hasLength(2));
+        expect(entries.first.appointmentId, 'appt-2');
+        expect(entries.last.reportStatus, ReportStatus.finalized);
+      },
+    );
+
+    test(
+      "renvoie une liste vide pour un animal jamais préchargé, jamais une erreur",
+      () async {
+        expect(await repository.cachedHistory('inconnu'), isEmpty);
+      },
+    );
+  });
+
   group('refreshSheetsFor', () {
     Map<String, dynamic> historyResponse(
       List<Map<String, dynamic>> items,
@@ -334,6 +373,14 @@ void main() {
           jsonDecode(cached.payload),
           {'reportId': 'report-1', 'status': 'finalized', 'patientName': 'Filou'},
         );
+
+        // C'est ce qui permet à la fiche de survivre à l'absence de réseau :
+        // les deux séances, pas seulement celle dont le compte rendu est
+        // finalisé.
+        final history = await repository.cachedHistory('pet-1');
+        expect(history, hasLength(2));
+        expect(history.first.appointmentId, 'appt-2');
+        expect(history.last.reportId, 'report-1');
       },
     );
 

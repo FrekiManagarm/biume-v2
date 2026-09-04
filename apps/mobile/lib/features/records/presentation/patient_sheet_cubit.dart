@@ -83,11 +83,19 @@ class PatientSheetCubit extends Cubit<PatientSheetState> {
       return;
     }
 
+    // L'historique du cache local d'abord : c'est ce qui permet à un compte
+    // rendu passé de s'ouvrir sans réseau, pour un animal dont la fiche a
+    // été préchargée par `refreshSheetsFor`. Vide pour un animal jamais
+    // préchargé — la fiche s'affiche quand même, simplement sans historique
+    // tant que le réseau n'a pas répondu.
+    final cachedEntries = await _patients.cachedHistory(patientId);
+    if (_shuttingDown) return;
+
     final sheet = PatientSheet(
       patient: patient,
       owner: owner,
       ageYears: _ageYears(patient.birthDate),
-      history: const [],
+      history: cachedEntries,
     );
     emit(PatientSheetLoaded(sheet));
 
@@ -97,6 +105,8 @@ class PatientSheetCubit extends Cubit<PatientSheetState> {
       case Success(:final value):
         emit(PatientSheetLoaded(sheet.copyWith(history: value)));
       case Err(:final failure):
+        // L'historique en cache reste affiché : ce message dit qu'il peut
+        // dater, jamais qu'il n'y a rien — le même principe que l'agenda.
         emit(PatientSheetLoaded(sheet, offlineMessage: failure.message));
     }
   }

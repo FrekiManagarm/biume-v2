@@ -22,11 +22,20 @@ abstract class PatientRepository {
   /// visites, pas l'historique complet.
   Future<Result<List<PatientHistoryEntry>>> history(String patientId);
 
+  /// Lecture locale de l'historique déjà mis en cache par `refreshSheetsFor`
+  /// (`CachedPatientHistoryEntries`). Vide si cet animal n'a jamais été
+  /// préchargé — jamais une erreur, c'est un simple repli hors ligne pour la
+  /// fiche animal.
+  Future<List<PatientHistoryEntry>> cachedHistory(String patientId);
+
   /// Remplit les fiches hors ligne des animaux passés en paramètre : leurs
-  /// propriétaires (`CachedOwners`) et, pour chacun, le dernier compte rendu
+  /// propriétaires (`CachedOwners`), leur historique de séances
+  /// (`CachedPatientHistoryEntries`) et, pour chacun, le dernier compte rendu
   /// finalisé (`CachedReports`). Les fiches des animaux eux-mêmes sont déjà
   /// couvertes par `refresh()`. Un échec sur les propriétaires laisse le
   /// cache intact ; un échec isolé sur un animal n'empêche pas les autres
-  /// d'être mis à jour.
+  /// d'être mis à jour. Les animaux sont traités par lots concurrents
+  /// bornés : sur un réseau de campagne, vingt animaux en file indienne
+  /// retarderaient tout ce que `refreshForeground` fait par ailleurs.
   Future<Result<void>> refreshSheetsFor(Iterable<String> patientIds);
 }

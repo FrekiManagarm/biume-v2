@@ -199,6 +199,49 @@ void main() {
     expect(await db.select(db.cachedReports).get(), isEmpty);
   });
 
+  /// Schéma v4 : l'historique d'un animal doit survivre à l'absence de
+  /// réseau, ce que `CachedReports` seul ne permet pas — il ne porte ni la
+  /// date de la séance ni son motif.
+  test('conserve une entrée d\'historique en cache', () async {
+    await db
+        .into(db.cachedPatientHistoryEntries)
+        .insert(
+          CachedPatientHistoryEntriesCompanion.insert(
+            appointmentId: 'appt-1',
+            patientId: 'pet-1',
+            beginAt: DateTime.utc(2026, 8, 20),
+            reportId: const Value('report-1'),
+            reportStatus: const Value('finalized'),
+            consultationReason: 'Suivi lombaire',
+          ),
+        );
+
+    final row = await db.select(db.cachedPatientHistoryEntries).getSingle();
+    expect(row.patientId, 'pet-1');
+    expect(row.reportStatus, 'finalized');
+    expect(row.consultationReason, 'Suivi lombaire');
+  });
+
+  test(
+    "vider le cache emporte aussi l'historique des animaux",
+    () async {
+      await db
+          .into(db.cachedPatientHistoryEntries)
+          .insert(
+            CachedPatientHistoryEntriesCompanion.insert(
+              appointmentId: 'appt-1',
+              patientId: 'pet-1',
+              beginAt: DateTime.utc(2026, 8, 20),
+              consultationReason: '',
+            ),
+          );
+
+      await db.clearReadCache();
+
+      expect(await db.select(db.cachedPatientHistoryEntries).get(), isEmpty);
+    },
+  );
+
   test('émet un flux sur une fenêtre de plusieurs jours', () async {
     await insertAppointment('appointment-1');
 

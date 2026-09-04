@@ -113,6 +113,24 @@ class CachedReports extends Table {
   Set<Column> get primaryKey => {reportId};
 }
 
+/// Les séances passées d'un animal et l'état de leur compte rendu, mises en
+/// cache pour que la fiche animal survive à l'absence de réseau — au moins
+/// pour les animaux dont la fiche a été préchargée par `refreshSheetsFor`.
+/// `CachedReports` ne suffit pas seul : il ne porte ni la date de la séance
+/// ni son motif, et ces séances passées sont hors de la fenêtre d'agenda
+/// mise en cache, donc irrécupérables autrement hors ligne.
+class CachedPatientHistoryEntries extends Table {
+  TextColumn get appointmentId => text()();
+  TextColumn get patientId => text()();
+  DateTimeColumn get beginAt => dateTime()();
+  TextColumn get reportId => text().nullable()();
+  TextColumn get reportStatus => text().nullable()();
+  TextColumn get consultationReason => text()();
+
+  @override
+  Set<Column> get primaryKey => {appointmentId};
+}
+
 @DriftDatabase(
   tables: [
     LocalCaptures,
@@ -120,6 +138,7 @@ class CachedReports extends Table {
     CachedOwners,
     CachedPatients,
     CachedReports,
+    CachedPatientHistoryEntries,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -128,7 +147,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -152,6 +171,9 @@ class AppDatabase extends _$AppDatabase {
         );
         await migrator.createTable(cachedReports);
       }
+      if (from < 4) {
+        await migrator.createTable(cachedPatientHistoryEntries);
+      }
     },
   );
 
@@ -163,6 +185,10 @@ class AppDatabase extends _$AppDatabase {
       batch.deleteWhere(cachedOwners, (_) => const Constant(true));
       batch.deleteWhere(cachedPatients, (_) => const Constant(true));
       batch.deleteWhere(cachedReports, (_) => const Constant(true));
+      batch.deleteWhere(
+        cachedPatientHistoryEntries,
+        (_) => const Constant(true),
+      );
     });
   }
 

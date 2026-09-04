@@ -52,6 +52,10 @@ void main() {
   setUp(() {
     patients = MockPatientRepository();
     owners = MockOwnerRepository();
+    // Par défaut, rien n'a été préchargé : c'est le cas de chaque test qui
+    // ne seed pas explicitement de cache. Sans ce défaut, tout appel non
+    // préparé à `cachedHistory` lèverait une `MissingStubError`.
+    when(() => patients.cachedHistory(any())).thenAnswer((_) async => const []);
   });
 
   blocTest<PatientSheetCubit, PatientSheetState>(
@@ -144,6 +148,48 @@ void main() {
             (s) => s.offlineMessage,
             'message hors ligne',
             'Connexion indisponible.',
+          ),
+    ],
+  );
+
+  /// Le parcours réel visé par la fonctionnalité : le praticien devant son
+  /// écurie, sans réseau, doit encore pouvoir voir « ce qu'il a fait la
+  /// dernière fois » — et ouvrir le compte rendu qui va avec. L'historique
+  /// affiché doit venir de `cachedHistory`, préchargé par
+  /// `refreshSheetsFor`, jamais rester vide sous prétexte que le réseau a
+  /// manqué.
+  blocTest<PatientSheetCubit, PatientSheetState>(
+    "affiche l'historique préchargé et dit qu'il peut dater quand le réseau manque",
+    setUp: () {
+      when(() => patients.byId('pet-1')).thenAnswer((_) async => filou);
+      when(() => owners.byId('owner-1')).thenAnswer((_) async => camille);
+      when(() => patients.cachedHistory('pet-1')).thenAnswer(
+        (_) async => [entree(reportStatus: ReportStatus.finalized)],
+      );
+      when(() => patients.history('pet-1'))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+    },
+    build: () => PatientSheetCubit(patients, owners, now: () => DateTime(2026, 9, 3)),
+    act: (cubit) => cubit.load('pet-1'),
+    expect: () => [
+      // Dès le premier affichage — avant même que le réseau ait répondu —
+      // l'historique préchargé est déjà là.
+      isA<PatientSheetLoaded>().having(
+        (s) => s.sheet.history,
+        'historique',
+        hasLength(1),
+      ),
+      isA<PatientSheetLoaded>()
+          .having((s) => s.sheet.history, 'historique', hasLength(1))
+          .having(
+            (s) => s.sheet.history.single.reportId,
+            'compte rendu de la séance',
+            'report-1',
+          )
+          .having(
+            (s) => s.offlineMessage,
+            'message hors ligne',
+            isNotNull,
           ),
     ],
   );

@@ -95,6 +95,15 @@ class PatientRepositoryImpl implements PatientRepository {
   }
 
   @override
+  Future<List<PatientHistoryEntry>> cachedHistory(String patientId) async {
+    final rows = await (_db.select(_db.cachedPatientHistoryEntries)
+          ..where((h) => h.patientId.equals(patientId))
+          ..orderBy([(h) => OrderingTerm.desc(h.beginAt)]))
+        .get();
+    return rows.map(_rowToHistoryEntry).toList();
+  }
+
+  @override
   Future<Result<void>> refreshSheetsFor(Iterable<String> patientIds) async {
     final owners = <Map<String, dynamic>>[];
     String? cursor;
@@ -136,46 +145,76 @@ class PatientRepositoryImpl implements PatientRepository {
     // isolé — réseau coupé en cours de route, animal sans historique — ne doit
     // pas priver les autres animaux de leur fiche hors ligne.
     for (final patientId in patientIds) {
-      final historyResult = await history(patientId);
-      if (historyResult is! Success<List<PatientHistoryEntry>>) continue;
-
-      final lastFinalized = historyResult.value.firstWhereOrNull(
-        (entry) => entry.hasFinalizedReport,
-      );
-      if (lastFinalized == null) continue;
-
-      try {
-        final response = await _dio.get<Map<String, dynamic>>(
-          '/api/mobile/v1/reports/${lastFinalized.reportId}/proposals',
-        );
-        final data = response.data!;
-        await _db.transaction(() async {
-          // Un seul compte rendu en cache par animal : si celui qui était
-          // « le dernier finalisé » a changé depuis la dernière synchronisation,
-          // l'ancien ne doit pas traîner indéfiniment.
-          await (_db.delete(
-            _db.cachedReports,
-          )..where((r) => r.patientId.equals(patientId))).go();
-          await _db.into(_db.cachedReports).insert(
-                CachedReportsCompanion.insert(
-                  reportId: lastFinalized.reportId!,
-                  patientId: patientId,
-                  appointmentId: Value(lastFinalized.appointmentId),
-                  status: data['status'] as String,
-                  payload: jsonEncode(data),
-                  cachedAt: DateTime.now(),
-                ),
-                mode: InsertMode.insertOrReplace,
-              );
-        });
-      } on DioException {
-        // Ce compte rendu restera indisponible hors ligne pour cet animal,
-        // sans bloquer les suivants.
-        continue;
-      }
+      await _refreshSheetFor(patientId);
     }
 
     return const Success(null);
+  }
+
+  Future<void> _refreshSheetFor(String patientId) async {
+    final historyResult = await history(patientId);
+    if (historyResult is! Success<List<PatientHistoryEntry>>) return;
+    final entries = historyResult.value;
+
+    // L'historique lui-même doit survivre à l'absence de réseau : lui seul
+    // porte la date et le motif des séances passées, que `CachedReports` ne
+    // porte pas et que la fenêtre d'agenda en cache ne couvre plus.
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.cachedPatientHistoryEntries,
+      )..where((h) => h.patientId.equals(patientId))).go();
+      for (final entry in entries) {
+        await _db.into(_db.cachedPatientHistoryEntries).insert(
+              CachedPatientHistoryEntriesCompanion.insert(
+                appointmentId: entry.appointmentId,
+                patientId: patientId,
+                beginAt: entry.beginAt,
+                reportId: Value(entry.reportId),
+                reportStatus: Value(
+                  entry.reportStatus != null
+                      ? reportStatusToApi(entry.reportStatus!)
+                      : null,
+                ),
+                consultationReason: entry.consultationReason,
+              ),
+              mode: InsertMode.insertOrReplace,
+            );
+      }
+    });
+
+    final lastFinalized = entries.firstWhereOrNull(
+      (entry) => entry.hasFinalizedReport,
+    );
+    if (lastFinalized == null) return;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/mobile/v1/reports/${lastFinalized.reportId}/proposals',
+      );
+      final data = response.data!;
+      await _db.transaction(() async {
+        // Un seul compte rendu en cache par animal : si celui qui était
+        // « le dernier finalisé » a changé depuis la dernière synchronisation,
+        // l'ancien ne doit pas traîner indéfiniment.
+        await (_db.delete(
+          _db.cachedReports,
+        )..where((r) => r.patientId.equals(patientId))).go();
+        await _db.into(_db.cachedReports).insert(
+              CachedReportsCompanion.insert(
+                reportId: lastFinalized.reportId!,
+                patientId: patientId,
+                appointmentId: Value(lastFinalized.appointmentId),
+                status: data['status'] as String,
+                payload: jsonEncode(data),
+                cachedAt: DateTime.now(),
+              ),
+              mode: InsertMode.insertOrReplace,
+            );
+      });
+    } on DioException {
+      // Ce compte rendu restera indisponible hors ligne pour cet animal,
+      // sans bloquer les suivants.
+    }
   }
 
   Patient _rowToPatient(CachedPatient r) => Patient(
@@ -197,6 +236,17 @@ class PatientRepositoryImpl implements PatientRepository {
             ? reportStatusFrom(item['reportStatus'] as String)
             : null,
         consultationReason: item['consultationReason'] as String? ?? '',
+      );
+
+  PatientHistoryEntry _rowToHistoryEntry(CachedPatientHistoryEntry row) =>
+      PatientHistoryEntry(
+        appointmentId: row.appointmentId,
+        beginAt: row.beginAt,
+        reportId: row.reportId,
+        reportStatus: row.reportStatus != null
+            ? reportStatusFrom(row.reportStatus!)
+            : null,
+        consultationReason: row.consultationReason,
       );
 
   DateTime? _parseDate(dynamic value) =>

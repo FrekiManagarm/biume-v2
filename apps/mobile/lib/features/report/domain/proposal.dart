@@ -13,6 +13,15 @@ ReportStatus reportStatusFrom(String value) => switch (value) {
   _ => ReportStatus.draft,
 };
 
+/// L'inverse de `reportStatusFrom` : sert à ranger un statut dans le cache
+/// local (`CachedPatientHistoryEntries`) sous la même forme que le contrat
+/// serveur, pour le relire sans ambiguïté.
+String reportStatusToApi(ReportStatus status) => switch (status) {
+  ReportStatus.draft => 'draft',
+  ReportStatus.finalized => 'finalized',
+  ReportStatus.sent => 'sent',
+};
+
 SectionState sectionStateFrom(String value) => switch (value) {
   'proposed' => SectionState.proposed,
   'needs_confirmation' => SectionState.needsConfirmation,
