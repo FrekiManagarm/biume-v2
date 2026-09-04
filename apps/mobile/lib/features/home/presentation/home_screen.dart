@@ -37,6 +37,19 @@ class HomeScreen extends StatelessWidget {
           title: const Text('Biume'),
           actions: [
             PopupMenuButton<String>(
+              tooltip: 'Ajouter',
+              icon: const Icon(Icons.add),
+              // « Nouveau client » arrive à la tâche suivante : ce menu ne
+              // propose que ce que l'application sait déjà faire.
+              onSelected: (value) => switch (value) {
+                'seance' => context.push('/seances/nouvelle'),
+                _ => null,
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'seance', child: Text('Nouvelle séance')),
+              ],
+            ),
+            PopupMenuButton<String>(
               tooltip: 'Compte',
               icon: const Icon(Icons.account_circle_outlined),
               onSelected: (value) => switch (value) {

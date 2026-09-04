@@ -256,9 +256,30 @@ class _AppointmentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              DateFormat.Hm('fr_FR').format(appointment.beginAt.toLocal()),
-              style: TextStyle(color: palette.inkSubtle),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat.Hm('fr_FR').format(appointment.beginAt.toLocal()),
+                  style: TextStyle(color: palette.inkSubtle),
+                ),
+                // Annulée, une séance ne se déplace plus : il n'y a plus de
+                // créneau à lui trouver.
+                PopupMenuButton<String>(
+                  tooltip: 'Options',
+                  enabled: !appointment.isCancelled,
+                  onSelected: (value) => switch (value) {
+                    'deplacer' => context.push(
+                      '/seances/${appointment.id}/deplacer',
+                      extra: appointment,
+                    ),
+                    _ => null,
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'deplacer', child: Text('Déplacer')),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/agenda/domain/appointment.dart';
+import '../features/agenda/presentation/appointment_form_screen.dart';
 import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
@@ -53,6 +55,26 @@ GoRouter buildAppRouter(AuthCubit auth) {
       GoRoute(
         path: '/animaux/choisir',
         builder: (_, _) => const PatientPickerPage(),
+      ),
+      GoRoute(
+        path: '/seances/nouvelle',
+        builder: (_, state) => AppointmentFormPage(
+          patientId: state.uri.queryParameters['animal'],
+        ),
+      ),
+      GoRoute(
+        path: '/seances/:appointmentId/deplacer',
+        builder: (_, state) {
+          final appointment = state.extra as Appointment?;
+          if (appointment == null) {
+            // Arrivée sans la séance à déplacer — un lien direct malformé,
+            // jamais produit par la navigation interne de l'application.
+            return const Scaffold(
+              body: Center(child: Text('Séance introuvable.')),
+            );
+          }
+          return AppointmentFormPage(existing: appointment);
+        },
       ),
       GoRoute(
         path: '/dictees/:captureId/transcription',

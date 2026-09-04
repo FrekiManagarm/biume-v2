@@ -1,5 +1,6 @@
 import 'package:biume_mobile/core/result.dart';
 import 'package:biume_mobile/features/agenda/domain/agenda_repository.dart';
+import 'package:biume_mobile/features/agenda/domain/appointment.dart';
 import 'package:biume_mobile/features/auth/domain/auth_repository.dart';
 import 'package:biume_mobile/features/auth/domain/session.dart';
 import 'package:biume_mobile/features/auth/presentation/auth_cubit.dart';
@@ -84,6 +85,17 @@ void main() {
           builder: (_, _) => const ChooseCompanyScreen(),
         ),
         GoRoute(path: '/dicter', builder: (_, _) => const SizedBox.shrink()),
+        GoRoute(
+          path: '/seances/nouvelle',
+          builder: (_, _) => const Text('nouvelle-seance'),
+        ),
+        GoRoute(
+          path: '/seances/:appointmentId/deplacer',
+          builder: (_, state) {
+            final appointment = state.extra as Appointment?;
+            return Text('deplacer-${appointment?.id}');
+          },
+        ),
       ],
     );
 
@@ -158,6 +170,48 @@ void main() {
       expect(find.text('Votre entreprise'), findsNothing);
       expect(find.text('À traiter'), findsOneWidget);
       expect(find.text('Vos séances'), findsOneWidget);
+    },
+  );
+
+  testWidgets('le menu « + » propose « Nouvelle séance » et y navigue', (
+    tester,
+  ) async {
+    await monter(tester);
+
+    await tester.tap(find.byTooltip('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nouvelle séance'), findsOneWidget);
+
+    await tester.tap(find.text('Nouvelle séance'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('nouvelle-seance'), findsOneWidget);
+  });
+
+  testWidgets(
+    'une carte de séance propose de la déplacer, avec la séance en extra',
+    (tester) async {
+      final appointment = Appointment(
+        id: 'appointment-1',
+        patientId: 'pet-1',
+        patientName: 'Filou',
+        species: 'DOG',
+        beginAt: DateTime.now().add(const Duration(hours: 2)),
+        endAt: DateTime.now().add(const Duration(hours: 3)),
+        status: 'CONFIRMED',
+      );
+      when(() => agendaRepository.watchWindow(any(), any()))
+          .thenAnswer((_) => Stream.value([appointment]));
+
+      await monter(tester);
+      await tester.pump();
+
+      await tester.tap(find.byTooltip('Options'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Déplacer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('deplacer-appointment-1'), findsOneWidget);
     },
   );
 }

@@ -11,7 +11,9 @@ import 'core/database/app_database.dart';
 import 'core/network/dio_client.dart';
 import 'core/telemetry/telemetry.dart';
 import 'features/agenda/data/agenda_repository_impl.dart';
+import 'features/agenda/data/http_appointment_write_repository.dart';
 import 'features/agenda/domain/agenda_repository.dart';
+import 'features/agenda/domain/appointment_write_repository.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/data/auth_repository_impl.dart';
 import 'features/auth/domain/auth_repository.dart';
@@ -72,6 +74,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<AgendaRepository>(
       () => AgendaRepositoryImpl(getIt(), getIt()),
+    )
+    ..registerLazySingleton<AppointmentWriteRepository>(
+      () => HttpAppointmentWriteRepository(getIt(), getIt()),
     )
     ..registerLazySingleton<PatientRepository>(
       () => PatientRepositoryImpl(getIt(), getIt()),
