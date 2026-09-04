@@ -591,5 +591,59 @@ void main() {
         expect(cached.single.reportId, 'report-9');
       },
     );
+
+    /// Vingt animaux en file indienne, sur un réseau de campagne, retardent
+    /// tout ce que `refreshForeground` fait par ailleurs : les historiques
+    /// doivent partir en parallèle, avec une limite de front raisonnable.
+    test(
+      'traite les historiques des animaux par lots concurrents, jamais un par un',
+      () async {
+        final patientIds = List.generate(8, (i) => 'pet-$i');
+        var enCours = 0;
+        var maxEnCours = 0;
+
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) async {
+              if (options.path == '/api/mobile/v1/owners') {
+                handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: {'items': <dynamic>[], 'nextCursor': null},
+                  ),
+                );
+                return;
+              }
+              enCours++;
+              maxEnCours = enCours > maxEnCours ? enCours : maxEnCours;
+              await Future<void>.delayed(const Duration(milliseconds: 20));
+              enCours--;
+              handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: historyResponse(const []),
+                ),
+              );
+            },
+          ),
+        );
+
+        final result = await repository.refreshSheetsFor(patientIds);
+
+        expect(result.isSuccess, isTrue);
+        expect(
+          maxEnCours,
+          greaterThan(1),
+          reason: 'les historiques ne doivent pas partir un par un',
+        );
+        expect(
+          maxEnCours,
+          lessThan(patientIds.length),
+          reason: 'la concurrence doit rester bornée, pas tout d\'un coup',
+        );
+      },
+    );
   });
 }

@@ -12,6 +12,11 @@ import '../domain/patient.dart';
 import '../domain/patient_history.dart';
 import '../domain/patient_repository.dart';
 
+/// Combien d'animaux `refreshSheetsFor` traite à la fois. Quelques requêtes
+/// de front — pas quarante d'un coup sur un réseau de campagne, pas une
+/// seule à la fois qui mettrait des minutes pour la fenêtre d'une semaine.
+const _sheetsConcurrency = 4;
+
 class PatientRepositoryImpl implements PatientRepository {
   const PatientRepositoryImpl(this._db, this._dio);
 
@@ -141,12 +146,16 @@ class PatientRepositoryImpl implements PatientRepository {
       }
     });
 
-    // Le dernier compte rendu finalisé de chaque animal, un par un : un échec
-    // isolé — réseau coupé en cours de route, animal sans historique — ne doit
-    // pas priver les autres animaux de leur fiche hors ligne.
-    for (final patientId in patientIds) {
-      await _refreshSheetFor(patientId);
-    }
+    // Le dernier compte rendu finalisé de chaque animal, par lots concurrents
+    // bornés : vingt animaux en file indienne, sur un réseau de campagne,
+    // retarderaient tout ce que `refreshForeground` fait par ailleurs. Un
+    // échec isolé — réseau coupé en cours de route, animal sans historique —
+    // ne doit pas priver les autres animaux de leur fiche hors ligne.
+    await _forEachWithConcurrency(
+      patientIds,
+      _sheetsConcurrency,
+      _refreshSheetFor,
+    );
 
     return const Success(null);
   }
@@ -215,6 +224,26 @@ class PatientRepositoryImpl implements PatientRepository {
       // Ce compte rendu restera indisponible hors ligne pour cet animal,
       // sans bloquer les suivants.
     }
+  }
+
+  /// Un petit bassin de travailleurs plutôt qu'un `Future.wait` sur toute la
+  /// liste : `limit` tâches tirent chacune le prochain animal d'une file
+  /// partagée, sans jamais dépasser cette concurrence, et sans attendre
+  /// qu'un lot entier se termine avant d'entamer le suivant.
+  Future<void> _forEachWithConcurrency<T>(
+    Iterable<T> items,
+    int limit,
+    Future<void> Function(T item) action,
+  ) async {
+    final iterator = items.iterator;
+
+    Future<void> worker() async {
+      while (iterator.moveNext()) {
+        await action(iterator.current);
+      }
+    }
+
+    await Future.wait(List.generate(limit, (_) => worker()));
   }
 
   Patient _rowToPatient(CachedPatient r) => Patient(
