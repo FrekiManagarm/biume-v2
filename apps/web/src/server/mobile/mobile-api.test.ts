@@ -99,6 +99,7 @@ function createPorts(overrides: Partial<MobileApiPorts> = {}): MobileApiPorts {
     updateOwnerEmail: vi.fn(),
     createPatient: vi.fn(),
     moveAppointment: vi.fn(),
+    createAppointment: vi.fn(),
     getTranscript: vi.fn(async () => null),
     correctTranscript: vi.fn(),
     getReportProposals: vi.fn(async () => null),

@@ -73,6 +73,7 @@ import { sendNewReportEmail } from "./report-email";
 import { deriveSectionStates } from "#/server/extraction/extraction.service";
 import { createProposalRepository } from "#/server/extraction/proposal.repository";
 import { findAppointmentConflicts } from "#/lib/dashboard/appointment-conflicts";
+import { dayBounds } from "./appointment-write.service";
 import {
   createCaptureRepository,
   type CaptureDatabase,
@@ -372,6 +373,65 @@ async function readFollowUp(
     alertReasons: alerts.map((alert) => alert.reason as AlertReason),
     handledAt: row.handledAt?.toISOString() ?? null,
   };
+}
+
+/**
+ * Le même prédicat que le web (`findAppointmentConflicts`) : les deux
+ * surfaces signalent exactement les mêmes chevauchements, par construction.
+ * La fenêtre de lecture est bornée à la journée concernée : détecter un
+ * chevauchement ne justifie jamais de charger tout l'agenda.
+ */
+async function conflictsOn(
+  actor: CaptureActor,
+  beginAt: Date,
+  endAt: Date,
+  excludeAppointmentId?: string,
+) {
+  const { dayStart, dayEnd } = dayBounds(beginAt);
+
+  const candidates = await db
+    .select({
+      id: appointments.id,
+      beginAt: appointments.beginAt,
+      endAt: appointments.endAt,
+      status: appointments.status,
+      patientName: pets.name,
+    })
+    .from(appointments)
+    .leftJoin(pets, eq(appointments.patientId, pets.id))
+    .where(
+      and(
+        eq(appointments.organizationId, actor.organizationId),
+        gte(appointments.beginAt, dayStart),
+        lte(appointments.beginAt, dayEnd),
+      ),
+    );
+
+  return findAppointmentConflicts({
+    beginAt,
+    endAt,
+    excludeAppointmentId,
+    candidates,
+  });
+}
+
+/** Le brouillon lié à la séance, s'il en existe un. */
+async function linkedReportId(reportScope: {
+  organizationId: string;
+  appointmentId: string;
+}): Promise<string | null> {
+  const [report] = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.appointmentId, reportScope.appointmentId),
+        eq(advancedReport.createdBy, reportScope.organizationId),
+      ),
+    )
+    .limit(1);
+
+  return report?.id ?? null;
 }
 
 export async function createProductionMobileApiPorts(
@@ -961,31 +1021,6 @@ export async function createProductionMobileApiPorts(
 
       if (!target) throw new MobileRequestError("not_found");
 
-      // La fenêtre de lecture est bornée à la journée concernée : détecter un
-      // chevauchement ne justifie jamais de charger tout l'agenda.
-      const dayStart = new Date(beginAt);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(beginAt);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const candidates = await db
-        .select({
-          id: appointments.id,
-          beginAt: appointments.beginAt,
-          endAt: appointments.endAt,
-          status: appointments.status,
-          patientName: pets.name,
-        })
-        .from(appointments)
-        .leftJoin(pets, eq(appointments.patientId, pets.id))
-        .where(
-          and(
-            eq(appointments.organizationId, actor.organizationId),
-            gte(appointments.beginAt, dayStart),
-            lte(appointments.beginAt, dayEnd),
-          ),
-        );
-
       await db
         .update(appointments)
         .set({ beginAt, endAt, updatedAt: new Date() })
@@ -996,17 +1031,91 @@ export async function createProductionMobileApiPorts(
           ),
         );
 
-      // Le même prédicat que le web : les deux surfaces signalent exactement
-      // les mêmes chevauchements, par construction.
-      const conflicts = findAppointmentConflicts({
-        beginAt,
-        endAt,
-        excludeAppointmentId: appointmentId,
-        candidates,
-      });
+      const [conflicts, reportId] = await Promise.all([
+        conflictsOn(actor, beginAt, endAt, appointmentId),
+        linkedReportId({ organizationId: actor.organizationId, appointmentId }),
+      ]);
 
       return {
         appointmentId,
+        reportId,
+        beginAt: beginAt.toISOString(),
+        endAt: endAt.toISOString(),
+        conflicts: conflicts.map((conflict) => ({
+          appointmentId: conflict.id,
+          beginAt: new Date(conflict.beginAt).toISOString(),
+          patientName: conflict.patientName,
+        })),
+      };
+    },
+
+    /**
+     * L'ostéopathe animalier en tournée prend une séance entre deux portes.
+     * Le brouillon naît avec elle, comme sur le web : c'est lui que la
+     * dictée du rendez-vous alimentera. Un chevauchement n'empêche jamais
+     * l'écriture — il est signalé après coup, au praticien de trancher.
+     */
+    async createAppointment(actor, request) {
+      const beginAt = new Date(request.beginAt);
+      const endAt = new Date(request.endAt);
+
+      const [patient] = await db
+        .select({ id: pets.id })
+        .from(pets)
+        .where(
+          and(
+            eq(pets.id, request.patientId),
+            eq(pets.organizationId, actor.organizationId),
+          ),
+        )
+        .limit(1);
+      if (!patient) throw new MobileRequestError("not_found");
+
+      const appointmentId = crypto.randomUUID();
+      const reportId = crypto.randomUUID();
+      const now = new Date();
+
+      await db.batch([
+        db.insert(appointments).values({
+          id: appointmentId,
+          organizationId: actor.organizationId,
+          patientId: patient.id,
+          beginAt,
+          endAt,
+          atHome: request.atHome,
+          status: "CREATED",
+          createdAt: now,
+          updatedAt: now,
+        }),
+        db.insert(advancedReport).values({
+          id: reportId,
+          title: `Séance du ${new Intl.DateTimeFormat("fr-FR", {
+            dateStyle: "long",
+            timeZone: "Europe/Paris",
+          }).format(beginAt)}`,
+          consultationReason: "",
+          patientId: patient.id,
+          appointmentId,
+          notes: "",
+          status: "draft",
+          createdBy: actor.organizationId,
+          createdAt: now,
+        }),
+        db
+          .insert(reportSectionState)
+          .values(
+            buildReportSectionStateRows(
+              reportId,
+              createInitialReportSectionStates(),
+            ),
+          ),
+      ] as const);
+
+      const conflicts = await conflictsOn(actor, beginAt, endAt, appointmentId);
+
+      return {
+        appointmentId,
+        reportId,
         beginAt: beginAt.toISOString(),
         endAt: endAt.toISOString(),
         conflicts: conflicts.map((conflict) => ({
