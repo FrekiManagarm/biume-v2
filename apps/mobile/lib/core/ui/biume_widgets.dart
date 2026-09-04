@@ -175,6 +175,7 @@ class SurfaceCard extends StatelessWidget {
     this.emphasised = false,
     this.padding = const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     this.radius,
+    this.borderColor,
     super.key,
   });
 
@@ -190,6 +191,11 @@ class SurfaceCard extends StatelessWidget {
   /// Les grandes surfaces — récapitulatif, bloc de questions — s'arrondissent
   /// davantage que les cartes de liste.
   final double? radius;
+
+  /// La carte que la bordure seule désigne, sans teinter son fond : la
+  /// proposition en cours d'examen, qui doit rester lisible comme du texte à
+  /// relire, pas comme un encart décoré.
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -208,11 +214,13 @@ class SurfaceCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: corner,
             border: Border.all(
-              color: emphasised
-                  ? palette.primaryBorder
-                  : (dark
-                        ? AppDesign.cardBorderDark
-                        : AppDesign.cardBorderLight),
+              color:
+                  borderColor ??
+                  (emphasised
+                      ? palette.primaryBorder
+                      : (dark
+                            ? AppDesign.cardBorderDark
+                            : AppDesign.cardBorderLight)),
             ),
           ),
           child: child,

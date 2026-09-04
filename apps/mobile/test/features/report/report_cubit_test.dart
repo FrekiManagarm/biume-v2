@@ -301,7 +301,10 @@ void main() {
     build: () => ReportCubit(repository, pollInterval: Duration.zero),
     act: (cubit) async {
       await cubit.load('report-1');
-      await cubit.addOwnerEmailThenFinalize('camille@example.org');
+      // Écrire l'adresse ne finalise rien : l'irréversible reste un geste
+      // séparé, décidé après que le praticien a relu le destinataire.
+      await cubit.changeOwnerEmail('camille@example.org');
+      await cubit.finalize(sendToOwner: true);
     },
     verify: (_) => verifyInOrder([
       () => repository.updateOwnerEmail('owner-1', 'camille@example.org'),

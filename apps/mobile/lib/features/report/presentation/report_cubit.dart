@@ -192,9 +192,13 @@ class ReportCubit extends Cubit<ReportState> {
     }
   }
 
-  /// Le garde-fou e-mail : compléter la fiche, puis envoyer. Deux appels, un
-  /// seul geste pour le praticien.
-  Future<void> addOwnerEmailThenFinalize(String email) async {
+  /// Compléter ou corriger l'adresse du destinataire. C'est une fiche client,
+  /// pas le compte rendu : le mobile peut l'écrire sans jamais toucher au
+  /// contenu qu'il valide.
+  ///
+  /// L'écriture ne finalise rien. L'irréversible se décide à l'écran de
+  /// finalisation, après que le praticien a relu qui va recevoir quoi.
+  Future<void> changeOwnerEmail(String email) async {
     final current = state;
     if (current is! ReportLoaded) return;
     emit(ReportLoaded(current.data, busy: true));
@@ -202,15 +206,14 @@ class ReportCubit extends Cubit<ReportState> {
       current.data.owner.id,
       email,
     );
-    // Premier des deux appels enchaînés : la garde couvre celui-ci, `finalize`
-    // couvre le second par sa propre garde.
+    // Le praticien reste libre de quitter cet écran pendant l'attente :
+    // `BlocProvider` ferme alors le cubit avant que la requête ne revienne.
     if (isClosed) return;
     if (result case Err(:final failure)) {
       emit(ReportLoaded(current.data, message: failure.message));
       return;
     }
     emit(ReportLoaded(current.data.withOwnerEmail(email)));
-    await finalize(sendToOwner: true);
   }
 
   Future<void> _decide(String proposalId, SectionState decision) async {

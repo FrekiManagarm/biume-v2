@@ -37,7 +37,7 @@ Future<void> ouvrirLEcran(
             reportId: 'report-1',
             now: () => DateTime(2026, 9, 3, 10),
           ),
-          child: const FollowUpScheduleScreen(),
+          child: FollowUpScheduleScreen(now: DateTime(2026, 9, 3, 10)),
         ),
       ),
     ],
@@ -115,4 +115,29 @@ void main() {
       expect(accueilAtteint, isTrue);
     },
   );
+
+  /// Trois délais en un geste. Un sélecteur de date par défaut demanderait
+  /// trois tapes et une lecture de calendrier pour ce qui est, neuf fois sur
+  /// dix, « la semaine prochaine ».
+  testWidgets('offre trois délais, celui par défaut déjà retenu', (
+    tester,
+  ) async {
+    await ouvrirLEcran(tester, repository);
+
+    expect(find.text('J+5'), findsOneWidget);
+    expect(find.text('J+7'), findsOneWidget);
+    expect(find.text('J+10'), findsOneWidget);
+    // Le cubit part à J+7 : l'échéance se lit en toutes lettres, pas en
+    // nombre de jours à compter soi-même.
+    expect(find.text('Jeudi 10 septembre'), findsOneWidget);
+  });
+
+  testWidgets('choisir un délai déplace l\'échéance', (tester) async {
+    await ouvrirLEcran(tester, repository);
+
+    await tester.tap(find.text('J+10'));
+    await tester.pump();
+
+    expect(find.text('Dimanche 13 septembre'), findsOneWidget);
+  });
 }

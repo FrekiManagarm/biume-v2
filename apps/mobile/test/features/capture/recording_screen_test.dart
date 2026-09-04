@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:biume_mobile/features/capture/domain/audio_recorder.dart';
 import 'package:biume_mobile/features/capture/presentation/recording_bloc.dart';
 import 'package:biume_mobile/features/capture/presentation/recording_screen.dart';
@@ -56,6 +58,9 @@ void main() {
     when(() => recorder.cancel()).thenAnswer((_) async {});
     when(() => recorder.dispose()).thenAnswer((_) async {});
     when(() => recorder.isRecording()).thenAnswer((_) async => true);
+    // Les barres de niveau lisent le micro : sans flux, l'écran de dictée
+    // s'abonnerait à un appel non doublé.
+    when(() => recorder.amplitude()).thenAnswer((_) => const Stream.empty());
     when(() => files.pathFor(any())).thenAnswer((_) async => '/tmp/capture.m4a');
     when(() => files.sizeOf(any())).thenAnswer((_) async => 1048576);
     when(() => files.sha256Of(any())).thenAnswer((_) async => 'a' * 64);
@@ -106,8 +111,7 @@ void main() {
     (tester) async {
       await ouvrirLEcran(tester);
 
-      expect(find.text('Animal : non choisi'), findsOneWidget);
-      expect(find.text('Choisir'), findsOneWidget);
+      expect(find.text("Choisir l'animal"), findsOneWidget);
     },
   );
 
@@ -118,8 +122,7 @@ void main() {
   ) async {
     await ouvrirLEcran(tester, appointmentId: 'rdv-1');
 
-    expect(find.text('Animal : non choisi'), findsNothing);
-    expect(find.text('Choisir'), findsNothing);
+    expect(find.text("Choisir l'animal"), findsNothing);
   });
 
   testWidgets("porte le choix jusqu'à l'appelant, et l'affiche", (
@@ -127,11 +130,11 @@ void main() {
   ) async {
     final choisis = await ouvrirLEcran(tester);
 
-    await tester.tap(find.text('Choisir'));
+    await tester.tap(find.text("Choisir l'animal"));
     await tester.pumpAndSettle();
 
     expect(choisis, [filou]);
-    expect(find.text('Animal : Filou'), findsOneWidget);
+    expect(find.text('Filou'), findsOneWidget);
   });
 
   /// « Avant ou pendant » : le praticien qui a commencé à parler doit encore
@@ -139,11 +142,38 @@ void main() {
   testWidgets("reste offert pendant l'enregistrement", (tester) async {
     await ouvrirLEcran(tester);
 
-    await tester.tap(find.text('Commencer la dictée'));
+    // Le disque du socle n'écrit pas son rôle : il le dit à la synthèse
+    // vocale et à l'info-bulle, comme tous les magnétophones.
+    await tester.tap(find.byTooltip('Commencer la dictée'));
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Terminer'), findsOneWidget);
-    expect(find.text('Choisir'), findsOneWidget);
+    expect(find.byTooltip('Terminer'), findsOneWidget);
+    expect(find.text("Choisir l'animal"), findsOneWidget);
+  });
+
+  /// Les barres lisent le micro. Une animation décorative bougerait à
+  /// l'identique micro coupé : le praticien croirait enregistrer alors que
+  /// rien n'entre, et ne s'en apercevrait qu'au retour d'une transcription
+  /// vide.
+  testWidgets('les barres suivent le niveau capté', (tester) async {
+    final niveaux = StreamController<double>();
+    addTearDown(niveaux.close);
+    when(() => recorder.amplitude()).thenAnswer((_) => niveaux.stream);
+
+    await ouvrirLEcran(tester);
+    await tester.tap(find.byTooltip('Commencer la dictée'));
+    await tester.pump();
+    await tester.pump();
+
+    final barres = find.byType(AnimatedContainer);
+    expect(barres, findsWidgets);
+    final auRepos = tester.getSize(barres.last).height;
+
+    niveaux.add(1);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(tester.getSize(barres.last).height, greaterThan(auRepos));
   });
 }

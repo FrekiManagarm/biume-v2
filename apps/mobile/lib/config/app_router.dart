@@ -16,6 +16,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/records/presentation/new_client_screen.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
 import '../features/records/presentation/patient_sheet_screen.dart';
+import '../features/report/presentation/finalize_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/transcript/presentation/transcript_page.dart';
 
@@ -107,6 +108,11 @@ GoRouter buildAppRouter(AuthCubit auth) {
           reportId: state.pathParameters['reportId']!,
           fromPatientSheet: state.uri.queryParameters['source'] == 'fiche',
         ),
+      ),
+      GoRoute(
+        path: '/comptes-rendus/:reportId/finaliser',
+        builder: (_, state) =>
+            FinalizePage(reportId: state.pathParameters['reportId']!),
       ),
       GoRoute(
         path: '/suivis/:followUpId',

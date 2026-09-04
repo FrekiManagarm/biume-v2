@@ -19,6 +19,13 @@ abstract class AudioRecorder {
 
   Future<bool> isRecording();
 
+  /// Le niveau capté, entre 0 et 1, tant que l'enregistrement tourne.
+  ///
+  /// L'écran de dictée en fait des barres. Sans mesure réelle, elles
+  /// bougeraient de la même façon micro coupé : le praticien croirait
+  /// enregistrer alors que rien n'entre.
+  Stream<double> amplitude();
+
   Future<void> dispose();
 }
 
