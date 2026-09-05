@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 
 import "../styles.css";
 
+import { Providers } from "./providers";
+
 export const metadata: Metadata = {
   title: "Biume",
   description:
@@ -21,7 +23,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
