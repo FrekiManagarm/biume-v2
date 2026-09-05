@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
@@ -81,7 +81,7 @@ export function DashboardAgendaPreview({
           size="sm"
           className="w-full sm:w-auto"
         >
-          <Link to="/dashboard/agenda">
+          <Link href="/dashboard/agenda">
             Ouvrir l'agenda
             <ArrowRight className="size-4" data-icon="inline-end" />
           </Link>
@@ -201,7 +201,7 @@ function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   if (shouldEditReport) {
     return (
       <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
-        <Link to="/dashboard/reports/$id/edit" params={{ id: reportId }}>
+        <Link href={`/dashboard/reports/${reportId}/edit`}>
           {appointment.primaryAction.label}
         </Link>
       </Button>
@@ -211,7 +211,7 @@ function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   if (reportId && appointment.primaryAction.kind === "view_report") {
     return (
       <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
-        <Link to="/dashboard/reports/$id" params={{ id: reportId }}>
+        <Link href={`/dashboard/reports/${reportId}`}>
           {appointment.primaryAction.label}
         </Link>
       </Button>

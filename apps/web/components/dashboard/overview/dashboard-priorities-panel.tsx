@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import {
   AlertCircle,
   CheckCircle2,
@@ -87,12 +87,12 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
     return null;
   }
 
-  const to =
-    priority.actionKind === "view_report" && priority.reportId
-      ? "/dashboard/reports/$id"
-      : "/dashboard/reports/$id/edit";
-
   if (priority.reportId) {
+    const href =
+      priority.actionKind === "view_report"
+        ? `/dashboard/reports/${priority.reportId}`
+        : `/dashboard/reports/${priority.reportId}/edit`;
+
     return (
       <Button
         asChild
@@ -100,9 +100,7 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
         variant="outline"
         className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
       >
-        <Link to={to} params={{ id: priority.reportId }}>
-          {priority.actionLabel}
-        </Link>
+        <Link href={href}>{priority.actionLabel}</Link>
       </Button>
     );
   }
@@ -115,8 +113,7 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
       className="mt-3 h-8 w-full px-2 text-xs sm:w-auto"
     >
       <Link
-        to="/dashboard/agenda"
-        search={{ appointmentId: priority.appointmentId }}
+        href={`/dashboard/agenda?${new URLSearchParams({ appointmentId: priority.appointmentId }).toString()}`}
       >
         {priority.actionLabel}
       </Link>
