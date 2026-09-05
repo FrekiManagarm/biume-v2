@@ -198,15 +198,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
         petName,
         reportDate,
         reportUrl,
-        report: {
-          id: report.id,
-          title: report.title,
-          createdAt: report.createdAt || new Date(),
-          patient: report.patient,
-          organization: report.organization,
-          anatomicalIssues: report.anatomicalIssues,
-          recommendations: report.recommendations,
-        },
+        reportId: report.id,
       });
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'email:", error);

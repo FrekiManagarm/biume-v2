@@ -1,13 +1,11 @@
 "use server";
 
 import { render } from "@react-email/render";
-import { renderToBuffer } from "@react-pdf/renderer";
 import z from "zod";
 
 import NewReportClientEmail from "@biume/emails/NewReportClientEmail";
-import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
+import { renderOwnerReportPdf } from "#/lib/reports/owner-report-pdf";
 import { resend } from "#/lib/utils/resend";
-import type { AdvancedReportListItem } from "#/functions/reports.function";
 
 const sendNewReportClientEmailWithPDFSchema = z.object({
   to: z.string().email(),
@@ -15,45 +13,30 @@ const sendNewReportClientEmailWithPDFSchema = z.object({
   petName: z.string(),
   reportDate: z.string(),
   reportUrl: z.string(),
-  report: z.any(),
+  reportId: z.string(),
 });
 
+/**
+ * L'action reçoit l'identifiant du compte rendu, pas le compte rendu : c'est
+ * `renderOwnerReportPdf` qui le relit côté serveur. La liste des comptes
+ * rendus, d'où part cet envoi, ne porte ni le motif de consultation ni les
+ * `ownerContents` — le PDF construit depuis sa charge utile aurait envoyé au
+ * client une version amputée, avec la formulation clinique du praticien à la
+ * place du texte réécrit pour lui.
+ */
 export async function sendNewReportClientEmailWithPDF(
   input: z.infer<typeof sendNewReportClientEmailWithPDFSchema>,
 ) {
-  const params = sendNewReportClientEmailWithPDFSchema.parse(input);
-  const { to, clientName, petName, reportDate, reportUrl, report } =
-    params as z.infer<typeof sendNewReportClientEmailWithPDFSchema> & {
-      report: Pick<
-        AdvancedReportListItem,
-        | "id"
-        | "title"
-        | "createdAt"
-        | "patient"
-        | "organization"
-        | "anatomicalIssues"
-        | "recommendations"
-      >;
-    };
+  const { to, clientName, petName, reportDate, reportUrl, reportId } =
+    sendNewReportClientEmailWithPDFSchema.parse(input);
 
   try {
+    const pdfBuffer = await renderOwnerReportPdf(reportId);
+
+    if (!pdfBuffer) throw new Error("Compte rendu introuvable");
+
     const html = await render(
       NewReportClientEmail({ clientName, petName, reportDate, reportUrl }),
-    );
-
-    const pdfBuffer = await renderToBuffer(
-      ReportPDF({
-        report: {
-          id: report.id,
-          title: report.title,
-          createdAt: report.createdAt || new Date(),
-          patient: report.patient,
-          organization: report.organization,
-          anatomicalIssues: report.anatomicalIssues,
-          recommendations: report.recommendations,
-        },
-        type: "advanced_report",
-      }),
     );
 
     const { data, error } = await resend.emails.send({
@@ -63,7 +46,7 @@ export async function sendNewReportClientEmailWithPDF(
       html,
       attachments: [
         {
-          filename: `rapport-${report.id}.pdf`,
+          filename: `rapport-${reportId}.pdf`,
           content: pdfBuffer,
         },
       ],

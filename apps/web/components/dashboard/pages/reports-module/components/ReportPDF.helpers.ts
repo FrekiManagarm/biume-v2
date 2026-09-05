@@ -66,88 +66,6 @@ export type ReportPdfReport = {
   ownerContents?: OwnerContentRecord[] | null;
 };
 
-export type ReportMetricTone = "accent" | "forest" | "ink" | "sand";
-
-export type ReportMetric = {
-  label: string;
-  value: string;
-  tone: ReportMetricTone;
-};
-
-export type SeverityTone = {
-  fill: string;
-  stroke: string;
-  soft: string;
-  label: string;
-};
-
-export const reportPalette = {
-  paper: "#FFFFFF",
-  surface: "#FFFFFF",
-  ink: "#0F172A",
-  muted: "#64748B",
-  faint: "#F1F5F9",
-  line: "#E2E8F0",
-  accent: "#A78BFA",
-  accentSoft: "#EDE9FE",
-  forest: "#10B981",
-  forestSoft: "#ECFDF5",
-  sand: "#F59E0B",
-  sandSoft: "#FFFBEB",
-  slate: "#334155",
-} as const;
-
-const severityTones: Record<number, SeverityTone> = {
-  1: {
-    fill: "#10B981",
-    stroke: "#059669",
-    soft: "#ECFDF5",
-    label: "Priorite 1",
-  },
-  2: {
-    fill: "#84CC16",
-    stroke: "#65A30D",
-    soft: "#F7FEE7",
-    label: "Priorite 2",
-  },
-  3: {
-    fill: "#F59E0B",
-    stroke: "#D97706",
-    soft: "#FFFBEB",
-    label: "Priorite 3",
-  },
-  4: {
-    fill: "#F43F5E",
-    stroke: "#E11D48",
-    soft: "#FFF1F2",
-    label: "Priorite 4",
-  },
-  5: {
-    fill: "#B91C1C",
-    stroke: "#991B1B",
-    soft: "#FEF2F2",
-    label: "Priorite 5",
-  },
-};
-
-export function getSeverityTone(severity?: number | null): SeverityTone {
-  return severityTones[severity ?? 2] ?? severityTones[2];
-}
-
-export function getIssueTypeLabel(type?: string | null): string {
-  if (type === "dysfunction") return "Dysfonction";
-  if (type === "anatomicalSuspicion") return "Suspicion";
-  if (type === "observation") return "Observation";
-  return "Point clinique";
-}
-
-export function getLateralityLabel(laterality?: string | null): string {
-  if (laterality === "left") return "Gauche";
-  if (laterality === "right") return "Droite";
-  if (laterality === "bilateral") return "Bilateral";
-  return "Non precisee";
-}
-
 export function getAnimalKind(report: ReportPdfReport): "cat" | "dog" | "horse" {
   const animalCode =
     report.patient?.animal?.code?.toLowerCase() ||
@@ -267,19 +185,5 @@ export function buildReportPdfViewModel(report: ReportPdfReport) {
     recommendations: resolvedRecommendations,
     animalKind: getAnimalKind(report),
     hasClinicalContent: issues.length > 0 || recommendations.length > 0,
-    metrics: [
-      { label: "Observations", value: String(observations.length), tone: "ink" },
-      {
-        label: "Dysfonctions",
-        value: String(dysfunctions.length),
-        tone: "accent",
-      },
-      { label: "Suspicions", value: String(suspicions.length), tone: "sand" },
-      {
-        label: "Recommandations",
-        value: String(recommendations.length),
-        tone: "forest",
-      },
-    ] satisfies ReportMetric[],
   };
 }

@@ -1,16 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { renderToBuffer } from "@react-pdf/renderer";
 
 import { buildOwnerSourceItems } from "../owner-content";
-import {
-  buildReportPdfViewModel,
-  getSeverityTone,
-  reportPalette,
-} from "./ReportPDF.helpers";
-import { ReportPDF } from "./ReportPDF";
+import { buildReportPdfViewModel } from "./ReportPDF.helpers";
 
 describe("buildReportPdfViewModel", () => {
-  test("builds owner-ready context and organic report metrics", () => {
+  test("builds owner-ready context from a practitioner report", () => {
     const model = buildReportPdfViewModel({
       id: "report_01",
       title: "Bilan locomoteur post-seance",
@@ -47,12 +41,6 @@ describe("buildReportPdfViewModel", () => {
     expect(model.patientName).toBe("Mistral");
     expect(model.patientDescriptor).toBe("Chien - Berger australien");
     expect(model.ownerLine).toBe("Amelie Roussel - +33 6 41 72 18 93");
-    expect(model.metrics).toEqual([
-      { label: "Observations", value: "1", tone: "ink" },
-      { label: "Dysfonctions", value: "1", tone: "accent" },
-      { label: "Suspicions", value: "1", tone: "sand" },
-      { label: "Recommandations", value: "2", tone: "forest" },
-    ]);
   });
 
   test("prefers current owner text and falls back to professional text", () => {
@@ -233,91 +221,5 @@ describe("buildReportPdfViewModel", () => {
     expect(model.issues[0]?.notes).toBe(
       "Le bassin gauche manque légèrement de mobilité.",
     );
-  });
-});
-
-describe("getSeverityTone", () => {
-  test("uses the same clinical status colors as the report workspace", () => {
-    expect(getSeverityTone(1).fill).toBe("#10B981");
-    expect(getSeverityTone(2).fill).toBe("#84CC16");
-    expect(getSeverityTone(3).fill).toBe("#F59E0B");
-    expect(getSeverityTone(4).fill).toBe("#F43F5E");
-    expect(getSeverityTone(5)).toMatchObject({
-      fill: "#B91C1C",
-      label: "Priorite 5",
-    });
-  });
-});
-
-describe("reportPalette", () => {
-  test("uses the workspace's white and slate base instead of an editorial paper tone", () => {
-    expect(reportPalette).toMatchObject({
-      paper: "#FFFFFF",
-      ink: "#0F172A",
-      muted: "#64748B",
-      accent: "#A78BFA",
-    });
-  });
-});
-
-describe("ReportPDF", () => {
-  test("restores Buffer before browser PDF image resolution", async () => {
-    const originalBuffer = globalThis.Buffer;
-
-    Reflect.deleteProperty(globalThis, "Buffer");
-
-    try {
-      const document = ReportPDF({
-        report: {
-          id: "report_browser_01",
-          title: "Bilan navigateur",
-          createdAt: new Date("2026-07-14T09:30:00.000Z"),
-          patient: {
-            name: "Mistral",
-            animal: { code: "dog", name: "Chien" },
-          },
-        },
-        type: "advanced_report",
-      });
-
-      expect(globalThis.Buffer).toBeDefined();
-
-      const buffer = await renderToBuffer(document);
-
-      expect(buffer.byteLength).toBeGreaterThan(1_000);
-    } finally {
-      globalThis.Buffer = originalBuffer;
-    }
-  });
-
-  test("renders anatomical paths when a region has no SVG transform", async () => {
-    const buffer = await renderToBuffer(
-      ReportPDF({
-        report: {
-          id: "report_render_01",
-          title: "Bilan clinique",
-          createdAt: new Date("2026-07-10T09:30:00.000Z"),
-          patient: {
-            name: "Mistral",
-            animal: { code: "dog", name: "Chien" },
-          },
-          anatomicalIssues: [
-            {
-              id: "issue_01",
-              type: "observation",
-              severity: 2,
-              anatomicalPart: {
-                name: "Epaule",
-                pathLeft: "M150 110 h60 v45 h-60 z",
-                pathRight: "M280 110 h60 v45 h-60 z",
-              },
-            },
-          ],
-        },
-        type: "advanced_report",
-      }),
-    );
-
-    expect(buffer.byteLength).toBeGreaterThan(1_000);
   });
 });

@@ -47,7 +47,10 @@ describe("GET /api/reports/[id]/pdf", () => {
     // serveur (renderToBuffer + illustrations) fonctionne bout en bout.
     const buffer = Buffer.from(await response.arrayBuffer());
     expect(buffer.byteLength).toBeGreaterThan(1_000);
-  });
+    // Le compte rendu propriétaire rend deux pages avec ses illustrations :
+    // environ deux secondes, soit plus que le défaut de 5 s de vitest une
+    // fois le reste de la suite en parallèle.
+  }, 30_000);
 
   it("répond 404, pas 200, quand le compte rendu appartient à une autre entreprise", async () => {
     getReportById.mockReset();

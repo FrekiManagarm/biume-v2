@@ -55,3 +55,7 @@ ds-bundle/
 .design-sync/learnings/
 .design-sync/node_modules
 packages/ui/.ds-generated/
+
+# La vidéo de présentation est servie par UploadThing en production.
+# Une copie locale peut vivre ici pour le développement, sans être versionnée.
+apps/web/public/onboarding/*.mp4

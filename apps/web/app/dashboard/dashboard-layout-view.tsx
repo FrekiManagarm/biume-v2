@@ -10,8 +10,6 @@ import { cn } from "@biume/ui/lib/utils";
 import type { Organization } from "@biume/db/schema/organization";
 import type { AuthSession } from "@biume/auth";
 
-const WIDE_CONTENT_PATHNAMES = new Set(["/dashboard/agenda", "/dashboard/reports"]);
-
 /**
  * Frontière client du shell dashboard.
  *
@@ -79,7 +77,6 @@ export function DashboardLayoutView({
 }) {
   const pathname = usePathname();
   const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
-  const wideContent = WIDE_CONTENT_PATHNAMES.has(pathname);
 
   const pageContent = (
     <>
@@ -112,7 +109,7 @@ export function DashboardLayoutView({
               // contenu se centre déjà sur une largeur de bulle de chat).
               pageContent
             ) : (
-              <div className={cn("mx-auto w-full", !wideContent && "max-w-7xl")}>
+              <div className={cn("mx-auto w-full")}>
                 {pageContent}
               </div>
             )}

@@ -8,6 +8,10 @@ import { DashboardAgendaPreview } from "./dashboard-agenda-preview";
 import { DashboardPrioritiesPanel } from "./dashboard-priorities-panel";
 import { DashboardRecentActivity } from "./dashboard-recent-activity";
 import { DashboardSummaryStrip } from "./dashboard-summary-strip";
+import {
+  OnboardingReplayLink,
+  OnboardingVideoCard,
+} from "./onboarding-video-card";
 
 export type DashboardOverviewViewProps = {
   appointments: AgendaAppointmentInput[];
@@ -38,6 +42,11 @@ export function DashboardOverviewView({
 
   return (
     <div className="grid w-full gap-5 pb-8 text-slate-950">
+      {/* La présentation passe avant les indicateurs : quelqu'un qui découvre
+          l'outil a un tableau de bord vide, où la carte est la seule chose à
+          faire. Elle s'efface d'elle-même une fois la vidéo vue ou écartée. */}
+      <OnboardingVideoCard />
+
       <DashboardSummaryStrip items={model.summary} />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -56,6 +65,8 @@ export function DashboardOverviewView({
         emptyLabel={model.emptyStates.recentActivity}
         recentActivity={model.recentActivity}
       />
+
+      <OnboardingReplayLink />
     </div>
   );
 }
