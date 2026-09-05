@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 const getAllClients = vi.fn();
 
@@ -41,5 +42,26 @@ describe("GET /api/internal/clients", () => {
     const response = await GET(new Request("http://localhost:3001/api/internal/clients"));
 
     expect(response.status).toBe(401);
+  });
+
+  it("répond 400 quand un paramètre est malformé (page non numérique)", async () => {
+    getAllClients.mockReset();
+    // `?page=abc` devient `Number("abc")` = `NaN` avant d'atteindre
+    // `getAllClients` ; c'est là, dans la vraie fonction, que le schéma Zod
+    // rejette `NaN`. Ici on simule directement ce rejet pour vérifier que le
+    // handler le distingue d'un 500 : une faute du client n'est pas une
+    // panne serveur.
+    const result = z.object({ page: z.number() }).safeParse({ page: NaN });
+    if (result.success) {
+      throw new Error("le safeParse aurait dû échouer");
+    }
+    getAllClients.mockRejectedValue(result.error);
+    const { GET } = await import("./route");
+
+    const response = await GET(
+      new Request("http://localhost:3001/api/internal/clients?page=abc"),
+    );
+
+    expect(response.status).toBe(400);
   });
 });

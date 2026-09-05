@@ -4,9 +4,64 @@
  * Ces endpoints servent le cache client de cette application et n'ont pas de
  * consommateur externe, contrairement à `/api/mobile/v1` et `/api/owner/v1`.
  *
- * `credentials: "include"` est indispensable : la session vit dans un cookie
- * et le handler résout l'organisation à partir de lui. Sans ce réglage, toute
- * lecture répondrait 401.
+ * `credentials: "include"` est défensif plutôt qu'indispensable : sur une URL
+ * relative same-origin, le défaut `same-origin` de `fetch` enverrait déjà le
+ * cookie de session. On le fixe explicitement pour ne pas dépendre de ce
+ * défaut si un jour un de ces appels traverse une origine différente.
+ */
+export class InternalFetchError extends Error {
+  constructor(
+    readonly status: number,
+    readonly path: string,
+    statusText: string,
+  ) {
+    super(`Lecture ${path} : ${status} ${statusText}`);
+    this.name = "InternalFetchError";
+  }
+}
+
+const ISO_DATE_WITH_MILLISECONDS =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/**
+ * `Response.json()` ne prend pas de reviver ; on repasse donc par `text()` +
+ * `JSON.parse(text, reviver)`.
+ *
+ * `getAllClients` traverse maintenant `JSON.stringify` (fait par
+ * `Response.json()` côté route handler) puis ce `fetch` côté client, alors
+ * qu'avant cette tâche `createServerFn` de TanStack préservait les `Date` au
+ * travers de la sérialisation. Sans ce reviver, chaque horodatage redevient
+ * une chaîne côté appelant alors que son type déclaré dit `Date` — un
+ * mensonge de typage que rien ne signale à l'exécution (voir le type
+ * `ClientWithRelations` de `clients.action.ts`).
+ *
+ * Borné à la forme stricte que produit `Date.prototype.toJSON()`
+ * (`AAAA-MM-JJTHH:mm:ss.sssZ`) et à rien d'autre : pas de reconnaissance de
+ * date approximative. Compromis assumé : une chaîne saisie par un
+ * utilisateur qui aurait exactement cette forme deviendrait une `Date`.
+ * Dans un logiciel vétérinaire, aucun champ libre ne porte un horodatage ISO
+ * à la milliseconde — le risque est nul en pratique.
+ */
+function reviveDates(_key: string, value: unknown): unknown {
+  if (typeof value === "string" && ISO_DATE_WITH_MILLISECONDS.test(value)) {
+    return new Date(value);
+  }
+
+  return value;
+}
+
+/**
+ * Deux limites à connaître avant d'appeler ceci sur une nouvelle ressource :
+ *
+ * - `params` ne sait porter ni tableau ni `Date` — seulement
+ *   `string | number | boolean | undefined`. Un paramètre de ce genre doit
+ *   être sérialisé par l'appelant avant l'appel.
+ * - La signature n'accepte `params` que parce que le type appelant
+ *   (`GetAllClientsParams`, `z.infer<...>`) est un **alias de type** ; un
+ *   alias d'objet se voit inférer une signature d'index compatible avec
+ *   `Record<string, ...>`. Une ressource qui déclarerait ses paramètres par
+ *   une `interface` échouerait à l'appel pour une raison très obscure : les
+ *   `interface` ne portent pas cette signature d'index implicite.
  */
 export async function internalGet<T>(
   path: string,
@@ -29,8 +84,12 @@ export async function internalGet<T>(
   if (!response.ok) {
     // Le message porte le chemin : une erreur de lecture remonte jusqu'à un
     // toast dans l'interface, et « 500 » seul n'aide personne à diagnostiquer.
-    throw new Error(`Lecture ${path} : ${response.status} ${response.statusText}`);
+    // Le statut est aussi exposé en propriété : un appelant (le lot C, pour
+    // rediriger sur 401 plutôt que réessayer) peut brancher sur
+    // `error instanceof InternalFetchError` sans parser le message.
+    throw new InternalFetchError(response.status, path, response.statusText);
   }
 
-  return response.json() as Promise<T>;
+  const text = await response.text();
+  return JSON.parse(text, reviveDates) as T;
 }

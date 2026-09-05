@@ -1,4 +1,5 @@
 import { getAllClients } from "#/functions/clients.function";
+import { toInternalRouteErrorResponse } from "#/lib/http/internal-route";
 
 export const runtime = "nodejs";
 
@@ -17,13 +18,6 @@ export async function GET(request: Request) {
       }),
     );
   } catch (error) {
-    // `requireOrganizationId` lève quand la session n'a pas d'organisation
-    // active. C'est un défaut d'autorisation, pas une panne : le client doit
-    // pouvoir le distinguer d'un 500 pour rediriger plutôt que réessayer.
-    if (error instanceof Error && error.message === "Organization not found") {
-      return Response.json({ error: "Organization not found" }, { status: 401 });
-    }
-
-    throw error;
+    return toInternalRouteErrorResponse(error);
   }
 }
