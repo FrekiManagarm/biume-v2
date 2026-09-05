@@ -183,10 +183,12 @@ Next est installé **à côté** du code TanStack existant, qui reste sur disque
 ```bash
 cd /Users/mathieuchambaud/Documents/Perso-Projects/biume-v2
 bun add --filter @biume/web next@16.2.9
-bun add --filter @biume/web --dev eslint-config-next@16.2.9
+bun add --filter @biume/web --dev eslint-config-next@16.2.9 @tailwindcss/postcss@^4
 bun remove --filter @biume/web nitro vite-plugin-neon-new @tailwindcss/vite
 bun remove --filter @biume/web --dev @vitejs/plugin-react
 ```
+
+`@tailwindcss/postcss` est indispensable : `postcss.config.mjs` (étape 3) réexporte `@biume/ui/postcss.config`, qui déclare ce plugin. Il n'était ni dans `apps/web` (qui n'avait que `@tailwindcss/vite`, retiré ci-dessus) ni dans `packages/ui` ; `apps/marketing` le porte dans ses propres devDeps, c'est la convention du dépôt. Sans lui, la page se sert **sans aucun style**, et le build ne dit rien.
 
 `vite` et `vitest` restent : Vitest en dépend et les 623 tests tournent dessus.
 
