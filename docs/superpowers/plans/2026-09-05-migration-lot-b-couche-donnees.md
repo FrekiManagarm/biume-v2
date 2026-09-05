@@ -119,12 +119,16 @@ Fondation du lot : tout le reste appelle `requireOrganizationId`. Petite, isolé
 
 - [ ] **Étape 1 : écrire le test qui échoue**
 
-Le comportement à garantir est la mémoïsation par requête : `server/auth/organization-scope.ts` existe uniquement pour qu'une même requête HTTP ne relise pas la session douze fois (le commentaire du fichier documente le coût mesuré : ~170 ms contre ~50 ms). Un remplacement qui perdrait la mémoïsation passerait tous les autres tests en silence et rendrait la page Animaux douze fois plus lente.
+**Ce que ce test ne peut pas couvrir, et pourquoi.** La raison d'être de ce fichier est la mémoïsation par requête : sans elle, la page Animaux relit la session douze fois (le commentaire du fichier documente le coût mesuré, ~170 ms contre ~50 ms). Or `cache()` de React **ne mémoïse pas hors d'un contexte de requête React**, et Vitest n'en fournit pas — vérifié empiriquement avant l'écriture de ce plan : trois appels à une fonction `cache()`-ée y produisent trois exécutions, pas une.
+
+La mémoïsation est donc le contrat de React, garanti par les tests de React, et **non couverte par nos tests**. Ne cherche pas à l'assertion : tu écrirais un test qui échoue pour une raison étrangère à ton code. Le garde-fou est ailleurs — le commentaire du fichier, à l'étape 3, dit explicitement pourquoi `cache()` ne doit pas être retiré.
+
+Le test couvre ce qui est testable : la résolution, et le rejet.
 
 Créer `apps/web/server/auth/organization-scope.test.ts` :
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSession = vi.fn();
 
@@ -132,25 +136,40 @@ vi.mock("@biume/auth", () => ({ auth: { api: { get getSession() { return getSess
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ cookie: "session=x" }) }));
 
 describe("requireOrganizationId", () => {
-  it("ne lit la session qu'une fois pour plusieurs appels dans la même requête", async () => {
+  beforeEach(() => {
+    vi.resetModules();
     getSession.mockReset();
+  });
+
+  it("rend l'organisation active portée par la session", async () => {
     getSession.mockResolvedValue({ session: { activeOrganizationId: "org_1" } });
     const { requireOrganizationId } = await import("./organization-scope");
 
-    const [a, b, c] = await Promise.all([
-      requireOrganizationId(),
-      requireOrganizationId(),
-      requireOrganizationId(),
-    ]);
+    await expect(requireOrganizationId()).resolves.toBe("org_1");
+  });
 
-    expect([a, b, c]).toEqual(["org_1", "org_1", "org_1"]);
-    expect(getSession).toHaveBeenCalledTimes(1);
+  it("transmet les en-têtes de la requête à la lecture de session", async () => {
+    getSession.mockResolvedValue({ session: { activeOrganizationId: "org_1" } });
+    const { requireOrganizationId } = await import("./organization-scope");
+
+    await requireOrganizationId();
+
+    // Sans les en-têtes, better-auth ne voit pas le cookie et toute lecture
+    // deviendrait anonyme : chaque appelant recevrait un rejet plutôt que
+    // ses données.
+    const [call] = getSession.mock.calls;
+    expect(call[0].headers.get("cookie")).toBe("session=x");
   });
 
   it("lève quand la session ne porte pas d'organisation active", async () => {
-    getSession.mockReset();
     getSession.mockResolvedValue({ session: { activeOrganizationId: null } });
-    vi.resetModules();
+    const { requireOrganizationId } = await import("./organization-scope");
+
+    await expect(requireOrganizationId()).rejects.toThrow("Organization not found");
+  });
+
+  it("lève quand il n'y a pas de session du tout", async () => {
+    getSession.mockResolvedValue(null);
     const { requireOrganizationId } = await import("./organization-scope");
 
     await expect(requireOrganizationId()).rejects.toThrow("Organization not found");
@@ -190,6 +209,12 @@ import { headers } from "next/headers";
  * requête — douze sur la page Animaux. `cache()` de React ramène ça à une
  * seule lecture de session, et couvre en plus les Server Actions de la même
  * requête, ce que la `WeakMap<Request>` précédente ne savait pas faire.
+ *
+ * NE PAS retirer `cache()` en le croyant décoratif : aucun test ne protège
+ * cette mémoïsation. Elle n'opère que dans un contexte de requête React, que
+ * Vitest ne fournit pas — une fonction `cache()`-ée y est appelée autant de
+ * fois qu'on l'invoque. La suite resterait donc verte en perdant douze fois
+ * la performance de la page Animaux.
  */
 export const requireOrganizationId = cache(async (): Promise<string> => {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -211,7 +236,7 @@ Note : `cache()` ne mémoïse pas les rejets au-delà de la requête courante, c
 bun --filter @biume/web test server/auth
 ```
 
-Attendu : `2 passed`.
+Attendu : `4 passed`.
 
 - [ ] **Étape 5 : convertir les trois autres consommateurs du contexte**
 
@@ -231,7 +256,7 @@ bun --filter @biume/web test 2>&1 | tail -5
 grep -rn "@tanstack/react-start/server" apps/web --include="*.ts" --include="*.tsx"
 ```
 
-Attendu : `check-types` en code 0, au moins `629 passed | 12 skipped`, et **aucun résultat** au `grep` : plus personne n'importe le contexte de requête de TanStack.
+Attendu : `check-types` en code 0, au moins `631 passed | 12 skipped`, et **aucun résultat** au `grep` : plus personne n'importe le contexte de requête de TanStack.
 
 - [ ] **Étape 7 : commit**
 
@@ -513,7 +538,7 @@ bun --filter @biume/web check-types
 bun --filter @biume/web test 2>&1 | tail -5
 ```
 
-Attendu : `3 passed` sur le handler, `check-types` en code 0, et au moins `632 passed | 12 skipped`.
+Attendu : `3 passed` sur le handler, `check-types` en code 0, et au moins `634 passed | 12 skipped`.
 
 Si `check-types` signale une erreur dans `lib/api/queries/clients.query.ts` ou dans un composant, **arrête-toi** : la signature a changé, ce que les contraintes globales interdisent.
 
@@ -659,7 +684,7 @@ bun --filter @biume/web check-types
 bun --filter @biume/web test 2>&1 | tail -5
 ```
 
-Attendu : `check-types` en code 0, et au moins `634 passed | 12 skipped`.
+Attendu : `check-types` en code 0, et au moins `636 passed | 12 skipped`.
 
 - [ ] **Étape 8 : commit**
 
@@ -797,7 +822,7 @@ bun --filter @biume/web check-types
 bun --filter @biume/web test 2>&1 | tail -5
 ```
 
-Attendu : `check-types` en code 0, au moins `636 passed | 12 skipped`, et **tous les tests de comptes rendus verts**.
+Attendu : `check-types` en code 0, au moins `638 passed | 12 skipped`, et **tous les tests de comptes rendus verts**.
 
 - [ ] **Étape 8 : commit**
 
@@ -996,7 +1021,7 @@ bun --filter @biume/web check-types
 bun --filter @biume/web test 2>&1 | tail -5
 ```
 
-Attendu : `check-types` en code 0, au moins `638 passed | 12 skipped`, et `components/dashboard/overview/dashboard-overview-view.test.tsx` **vert sans avoir été modifié** — c'est lui qui prouve que la forme du résultat n'a pas bougé.
+Attendu : `check-types` en code 0, au moins `640 passed | 12 skipped`, et `components/dashboard/overview/dashboard-overview-view.test.tsx` **vert sans avoir été modifié** — c'est lui qui prouve que la forme du résultat n'a pas bougé.
 
 - [ ] **Étape 7 : commit**
 
@@ -1078,7 +1103,7 @@ bun --filter @biume/web test 2>&1 | tail -5
 bun --filter @biume/web build 2>&1 | tail -25
 ```
 
-Attendu : `check-types` en code 0, au moins `638 passed | 12 skipped`, et un build qui liste les **15 routes** sous `/api` (les 7 du lot A plus les 8 nouvelles).
+Attendu : `check-types` en code 0, au moins `640 passed | 12 skipped`, et un build qui liste les **15 routes** sous `/api` (les 7 du lot A plus les 8 nouvelles).
 
 - [ ] **Étape 6 : commit**
 
@@ -1109,7 +1134,7 @@ Claude-Session: https://claude.ai/code/session_01LgueajX3wogo4r7ays5nCu"
 - Les 11 lectures que consomme le cache client passent par 8 route handlers ; l'aperçu du tableau de bord est composé côté serveur, un aller-retour au lieu de cinq.
 - Les mutations sont des Server Actions.
 - **Aucune signature publique n'a changé** : les 173 composants et 5 des 6 fichiers `queries/` n'ont pas été touchés.
-- La suite de tests est passée de 627 à au moins 638.
+- La suite de tests est passée de 627 à au moins 640.
 
 Ce que le lot B ne fait pas : aucune page n'est encore servie. C'est le lot C qui écrit `app/layout.tsx`, le shell d'authentification et le layout dashboard, et qui commence enfin à rendre l'application utilisable.
 
