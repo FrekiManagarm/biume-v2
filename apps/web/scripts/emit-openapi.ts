@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-import { buildOpenApiDocument } from "../src/server/mobile/openapi-document";
+import { buildOpenApiDocument } from "../server/mobile/openapi-document";
 
 /**
  * `node:fs` plutôt que `Bun.write`, contrairement à la préférence habituelle du

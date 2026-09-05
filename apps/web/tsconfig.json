@@ -4,7 +4,9 @@
     "**/*.tsx",
     "eslint.config.js",
     "prettier.config.js",
-    "vite.config.js",
+    "next-env.d.ts",
+    "next.config.ts",
+    ".next/types/**/*.ts",
     "../../packages/transactional/emails/UpgradeSubscription.tsx",
     "../../packages/transactional/emails/index.ts",
     "../../packages/transactional/emails/TrialEndingOrg.tsx",
@@ -23,25 +25,39 @@
     "../../packages/transactional/emails/TrialEndingReminderEmail.tsx",
     "../../packages/transactional/emails/ReportReminderEmail.tsx",
     "../../packages/transactional/emails/WelcomeBiumeEmail.tsx",
+    ".next/dev/types/**/*.ts"
   ],
-
   "compilerOptions": {
     "target": "ES2022",
+    /* Next rewrites this to "react-jsx" on its own if you set anything else here.
+       It also lets esbuild transform JSX under Vitest, which is why
+       @vitejs/plugin-react is unnecessary — do not "align" this with
+       apps/marketing's "jsx": "preserve", that will break the Vitest suite. */
     "jsx": "react-jsx",
     "module": "ESNext",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "#/*": ["./src/*"],
-      "@/*": ["./src/*"],
+      "#/*": [
+        "./*"
+      ],
+      "@/*": [
+        "./*"
+      ]
     },
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-
     /* Linting */
     "skipLibCheck": true,
     "strict": true,
@@ -49,5 +65,12 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "allowJs": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   },
+  "exclude": [
+    "node_modules"
+  ]
 }

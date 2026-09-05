@@ -11,8 +11,8 @@ import { defineConfig } from "vitest/config";
  *
  * `resolve.dedupe` ne suffit pas ici : les deux copies sont physiquement
  * présentes et chacune est une résolution légitime. On pointe donc
- * explicitement vers celle de la racine, la même que `vite.config.ts`
- * dédoublonne pour l'application.
+ * explicitement vers celle de la racine, pour que tout le monde (composants
+ * et renderer) partage la même instance de React.
  */
 const rootModule = (specifier: string) =>
   fileURLToPath(new URL(`../../node_modules/${specifier}`, import.meta.url));

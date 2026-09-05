@@ -45,9 +45,8 @@ For package-scoped work, prefer Turbo filters through the existing root scripts 
 
 The primary product frontend is `apps/web`.
 
-- Use TanStack Start and TanStack Router conventions for routes.
-- Add routes under `apps/web/src/routes`.
-- Do not edit `apps/web/src/routeTree.gen.ts` manually. Regenerate routes with `bun --filter @biume/web generate-routes` when needed.
+- Add routes under `apps/web/app`, following Next.js App Router conventions.
+- `apps/web/routes/` and `apps/web/routeTree.gen.ts` are leftover TanStack code, kept on disk only for the duration of the migration and removed in lot E. Do not add to them and do not use them as a model for new code.
 - Use TanStack Query for server/client data fetching state where it fits existing patterns.
 - Keep route-level components focused. Move reusable UI into shared components.
 - Prefer path imports already configured by the app, such as `#/*` inside `apps/web`.

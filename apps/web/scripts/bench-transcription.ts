@@ -26,8 +26,8 @@ import { mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { osteopathyLexicon } from "../src/server/transcription/lexicon";
-import { buildTranscriptionPrompt } from "../src/server/transcription/transcription.service";
+import { osteopathyLexicon } from "../server/transcription/lexicon";
+import { buildTranscriptionPrompt } from "../server/transcription/transcription.service";
 
 // --- Entrées ----------------------------------------------------------------
 

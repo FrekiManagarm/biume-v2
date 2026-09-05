@@ -17,11 +17,11 @@ import { Autumn } from "autumn-js";
 import { and, eq } from "drizzle-orm";
 
 import { env } from "@biume/env/server";
-import { db } from "../src/lib/utils/db";
+import { db } from "../lib/utils/db";
 import { member } from "@biume/db/schema/index";
-import { hasActiveOrTrialingSubscription } from "../src/server/billing/subscription-gate";
-import { startOrganizationTrial } from "../src/server/billing/start-trial";
-import { createProductionStartTrialDeps } from "../src/server/billing/start-trial.deps";
+import { hasActiveOrTrialingSubscription } from "../server/billing/subscription-gate";
+import { startOrganizationTrial } from "../server/billing/start-trial";
+import { createProductionStartTrialDeps } from "../server/billing/start-trial.deps";
 
 const isDryRun = process.argv.includes("--dry-run");
 
