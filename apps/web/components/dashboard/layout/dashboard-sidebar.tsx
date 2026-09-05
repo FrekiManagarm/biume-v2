@@ -1,6 +1,7 @@
 "use client";
 
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useActiveOrganization } from "#/lib/auth-client";
 import { switchActiveOrganization } from "#/lib/api/actions/auth.action";
 import { proMenuList, type Menu, type Submenu } from "#/lib/menu-list";
@@ -62,8 +63,8 @@ export function DashboardSidebar({
   session,
   organizations,
 }: DashboardSidebarProps) {
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const { data: activeOrganization } = useActiveOrganization();
   const { state, isMobile } = useSidebar();
   const [switchingOrg, setSwitchingOrg] = useState<string | null>(null);
@@ -88,27 +89,31 @@ export function DashboardSidebar({
     setIsLoading(true);
     setShowProfessionalDialog(true);
 
-    try {
-      await switchActiveOrganization({
-        organizationId: orgId,
-      });
+    // Le nouveau contrat des mutations résout avec `{ success, error }` au
+    // lieu de rejeter : un `catch` ici ne se déclencherait plus jamais, et
+    // une bascule échouée continuerait comme si elle avait réussi. Le
+    // résultat doit donc être déballé explicitement.
+    const result = await switchActiveOrganization({
+      organizationId: orgId,
+    });
 
+    if (!result.success) {
       setIsLoading(false);
-      await new Promise((resolve) =>
-        setTimeout(resolve, ACCOUNT_SWITCH_SUCCESS_DELAY_MS),
-      );
-      window.location.replace("/dashboard");
-    } catch (error) {
-      console.error("Error changing organization:", error);
-      setIsLoading(false);
-      toast.error("Erreur lors du changement de compte", {
+      toast.error(result.error, {
         description: "Veuillez réessayer",
         icon: <AlertCircle className="h-5 w-5 text-white" />,
       });
       setShowProfessionalDialog(false);
-    } finally {
       setSwitchingOrg(null);
+      return;
     }
+
+    setIsLoading(false);
+    await new Promise((resolve) =>
+      setTimeout(resolve, ACCOUNT_SWITCH_SUCCESS_DELAY_MS),
+    );
+    window.location.replace("/dashboard");
+    setSwitchingOrg(null);
   };
 
   const OrganizationMark = ({ className }: { className?: string }) => (
@@ -143,7 +148,7 @@ export function DashboardSidebar({
 
     return (
       <Link
-        to={menu.href}
+        href={menu.href}
         title={isCollapsed ? menu.label : undefined}
         data-active={menu.active ? true : undefined}
         className={cn(
@@ -167,7 +172,7 @@ export function DashboardSidebar({
 
     return (
       <Link
-        to={menu.href}
+        href={menu.href}
         title={isCollapsed ? menu.label : undefined}
         data-active={menu.active ? true : undefined}
         className={cn(
@@ -224,7 +229,7 @@ export function DashboardSidebar({
                 key={submenu.href}
                 render={
                   <Link
-                    to={submenu.href}
+                    href={submenu.href}
                     className={cn(
                       "flex items-center gap-2",
                       submenu.active &&
@@ -402,7 +407,7 @@ export function DashboardSidebar({
                     <DropdownMenuItem
                       render={
                         <Link
-                          to="/create-organization"
+                          href="/create-organization"
                           className="group flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all duration-200 hover:bg-sidebar-accent hover:translate-x-1 hover:shadow-sm"
                         >
                           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/15 transition-colors duration-300 hover:bg-sidebar-primary/20">
@@ -521,7 +526,7 @@ export function DashboardSidebar({
                     await signOut({
                       fetchOptions: {
                         onSuccess: () => {
-                          void navigate({ to: "/signin" });
+                          router.push("/signin");
                         },
                       },
                     });

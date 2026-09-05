@@ -1,4 +1,4 @@
-import { useLocation } from "@tanstack/react-router";
+import { usePathname } from "next/navigation";
 
 type PageBannerCopy = {
   eyebrow: string;
@@ -84,7 +84,7 @@ const pageCopy: Array<{
 ];
 
 export function DashboardPageBanner() {
-  const pathname = useLocation({ select: (location) => location.pathname });
+  const pathname = usePathname();
   const copy =
     pageCopy.find((item) => item.match(pathname))?.copy ?? defaultPageCopy;
 

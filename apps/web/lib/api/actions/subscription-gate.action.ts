@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Autumn, AutumnError } from "autumn-js";
 import { z } from "zod";
 

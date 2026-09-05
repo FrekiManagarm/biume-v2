@@ -1,3 +1,5 @@
+import "server-only";
+
 import { auth } from "@biume/auth";
 import { headers } from "next/headers";
 import { z } from "zod";

@@ -11,37 +11,17 @@ import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header"
 import { DashboardPageBanner } from "#/components/dashboard/layout/dashboard-page-banner";
 import { cn } from "@biume/ui/lib/utils";
 import { getDashboardShellFn } from "#/lib/api/actions/dashboard-shell.action";
-import { getBillingGateRedirectTarget } from "#/server/billing/subscription-gate";
+import {
+  getDashboardRedirectTarget,
+  resolveDashboardBillingRedirect,
+} from "#/lib/dashboard-guards";
 import type { Organization } from "@biume/db/schema/organization";
-import type { AuthSession } from "@biume/auth";
 
-type DashboardRedirectTarget = "/signin" | "/select-organization" | null;
-type DashboardSessionState =
-  | Pick<AuthSession, "session">
-  | { session?: { activeOrganizationId?: string | null } }
-  | null;
-type DashboardCurrentOrganizationState = { id?: string | null } | null;
-
-export function getDashboardRedirectTarget(
-  session: DashboardSessionState,
-  currentOrganization: DashboardCurrentOrganizationState = null,
-): DashboardRedirectTarget {
-  if (!session) {
-    return "/signin";
-  }
-
-  if (!session.session?.activeOrganizationId) {
-    return "/select-organization";
-  }
-
-  if (currentOrganization?.id !== session.session.activeOrganizationId) {
-    return "/select-organization";
-  }
-
-  return null;
-}
-
-export const resolveDashboardBillingRedirect = getBillingGateRedirectTarget;
+// Les deux fonctions pures ont quitté ce fichier pour `#/lib/dashboard-guards`
+// (tâche 5 de la migration Next) : c'est là que vit désormais leur test.
+// Réexportées ici pour que `routes/dashboard_.reports_.$id_.edit.tsx`, qui
+// les importe depuis `./dashboard`, continue de compiler sans changement.
+export { getDashboardRedirectTarget, resolveDashboardBillingRedirect };
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({

@@ -1,9 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-vi.mock("@biume/auth", () => ({ auth: { api: {} } }));
-vi.mock("@biume/env/server", () => ({ env: {} }));
-
-import { resolveDashboardBillingRedirect } from "./dashboard";
+import { resolveDashboardBillingRedirect } from "./dashboard-guards";
 
 describe("resolveDashboardBillingRedirect", () => {
   it("ne redirige pas avec un abonnement actif", () => {
@@ -18,7 +15,7 @@ describe("resolveDashboardBillingRedirect", () => {
     );
   });
 
-  it("exempte /dashboard/settings", () => {
+  it("exempte /dashboard/settings (anti-boucle : le layout ne connaît le chemin que via l'en-tête du middleware, sans cette exemption la redirection s'y répéterait indéfiniment)", () => {
     expect(
       resolveDashboardBillingRedirect("/dashboard/settings", false),
     ).toBeNull();

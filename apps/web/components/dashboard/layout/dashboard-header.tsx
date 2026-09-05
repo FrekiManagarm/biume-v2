@@ -1,5 +1,6 @@
 import { useMemo, Fragment } from "react";
-import { Link, useLocation, useParams } from "@tanstack/react-router";
+import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 import { useSidebar } from "#/components/ui/sidebar";
@@ -16,9 +17,18 @@ import { Separator } from "@biume/ui/components/separator";
 
 export function DashboardHeader() {
   const { toggleSidebar } = useSidebar();
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const params = useParams({ strict: false });
+  const pathname = usePathname();
+  const params = useParams();
 
+  // `useParams()` de `next/navigation` rend `Record<string, string | string[]>`
+  // (contre un objet typé selon la route sous TanStack) : un segment
+  // catch-all (`[...id]`) donnerait un tableau ici, et `breadcrumbProList`
+  // recevrait silencieusement `undefined`. Les deux seules routes qui
+  // fournissent ce paramètre (`dashboard/reports/[id]` et
+  // `dashboard/reports/[id]/edit`, `$id` sous TanStack) sont des segments
+  // dynamiques simples, jamais un catch-all : `params.id` y est toujours une
+  // chaîne, jamais un tableau. Le garde `typeof … === "string"` reste donc
+  // suffisant et n'a pas besoin d'un cast.
   const breadcrumb = breadcrumbProList(
     typeof params.id === "string" ? params.id : undefined,
   );
@@ -84,7 +94,7 @@ export function DashboardHeader() {
                       <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink
-                        render={<Link to={crumb.href}>{crumb.title}</Link>}
+                        render={<Link href={crumb.href}>{crumb.title}</Link>}
                       />
                     )}
                   </BreadcrumbItem>
