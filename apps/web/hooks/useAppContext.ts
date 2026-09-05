@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "@tanstack/react-router";
+import { usePathname, useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useActiveOrganization } from "#/lib/auth-client";
@@ -8,8 +8,8 @@ import {
 } from "#/lib/ai/context-builder";
 
 export function useAppContext(): AppContext {
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const params = useParams({ strict: false });
+  const pathname = usePathname();
+  const params = useParams();
   const { data: organization } = useActiveOrganization();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,

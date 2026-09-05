@@ -8,7 +8,7 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@/components/ui/empty";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 
 export function ReportsEmpty() {
   return (
@@ -27,7 +27,7 @@ export function ReportsEmpty() {
           </EmptyHeader>
           <EmptyContent>
             <Button asChild variant="default" className="h-10">
-              <Link to="/dashboard/reports">
+              <Link href="/dashboard/reports">
                 Créer votre premier rapport
                 <Plus className="size-4" data-icon="inline-end" />
               </Link>

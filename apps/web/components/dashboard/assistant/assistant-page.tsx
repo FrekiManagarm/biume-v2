@@ -1,3 +1,5 @@
+"use client";
+
 import { AssistantChatWorkspace } from "./assistant-chat-workspace";
 
 export function AssistantPage() {

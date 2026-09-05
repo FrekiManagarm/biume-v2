@@ -1,9 +1,11 @@
+"use client";
+
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import {
   CalendarDays,
   CalendarX2,
@@ -64,7 +66,7 @@ type AgendaPageProps = {
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const appointmentsQuery = appointmentsQueryOptions(appointmentWindow);
   const { data: appointments } = useSuspenseQuery(appointmentsQuery);
@@ -169,15 +171,9 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
 
     if (primaryAction.reportId) {
       if (primaryAction.kind === "view_report") {
-        navigate({
-          to: "/dashboard/reports/$id",
-          params: { id: primaryAction.reportId },
-        });
+        router.push(`/dashboard/reports/${primaryAction.reportId}`);
       } else {
-        navigate({
-          to: "/dashboard/reports/$id/edit",
-          params: { id: primaryAction.reportId },
-        });
+        router.push(`/dashboard/reports/${primaryAction.reportId}/edit`);
       }
 
       return;
@@ -193,10 +189,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
 
     createReportMutation.mutate(reportCreationInput, {
       onSuccess: (result) => {
-        navigate({
-          to: "/dashboard/reports/$id/edit",
-          params: { id: result.reportId },
-        });
+        router.push(`/dashboard/reports/${result.reportId}/edit`);
       },
     });
   }
