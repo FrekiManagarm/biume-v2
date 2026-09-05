@@ -451,7 +451,7 @@ function getAnimalImage(kind: "cat" | "dog" | "horse", side: "left" | "right") {
 
   if (typeof window !== "undefined") return assetPath;
 
-  return new URL(`../../../../../../public${assetPath}`, import.meta.url)
+  return new URL(`../../../../../public${assetPath}`, import.meta.url)
     .pathname;
 }
 

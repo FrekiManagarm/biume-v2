@@ -15,7 +15,7 @@ const overlaySource = readFileSync(
 );
 const anatomicalPartSchemaSource = readFileSync(
   new URL(
-    "../../../../../../../../packages/db/src/schema/anatomicalPart.ts",
+    "../../../../../../../packages/db/src/schema/anatomicalPart.ts",
     import.meta.url,
   ),
   "utf8",

@@ -17,7 +17,7 @@ describe("contrat openapi commité", () => {
     // globales de Bun n'existent pas.
     const committed = JSON.parse(
       readFileSync(
-        fileURLToPath(new URL("../../../openapi.json", import.meta.url)),
+        fileURLToPath(new URL("../../openapi.json", import.meta.url)),
         "utf8",
       ),
     );

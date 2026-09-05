@@ -5,4 +5,4 @@
    qu'il ne faut donc pas modifier à la source. */
 @import "@biume/ui/product.css";
 @source "./**/*.{ts,tsx}";
-@source "../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../packages/ui/src/**/*.{ts,tsx}";
