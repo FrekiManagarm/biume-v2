@@ -56,7 +56,9 @@ Every resource that reads or writes data follows the same three-file split. Foll
 
 - `functions/*.function.ts` — pure server logic (Drizzle queries, business rules). Starts with `import "server-only"` so a stray client import fails the build instead of shipping `db` to the browser.
 - `lib/api/actions/*.mutations.ts` — starts with `"use server"`. **Mutations only.** This directive applies to the whole file: every export becomes a public network entry point, so nothing that isn't meant to be callable from outside goes in this file.
-- `lib/api/actions/*.action.ts` — the public contract client code imports. It re-exports types and wraps reads for the client. **Every import from a `*.function.ts` file in this file must stay in type position** (`import type`, or `typeof import(...)`) — a value import here pulls Drizzle and other server-only dependencies into the client bundle, and no test catches that regression.
+- `lib/api/actions/*.action.ts` — the public contract client code imports. It re-exports types and wraps reads for the client. **In a `*.action.ts` that carries no directive, every import from a `*.function.ts` file must stay in type position** (`import type`, or `typeof import(...)`) — a value import there pulls Drizzle and other server-only dependencies into the client bundle, and no test catches that regression. The rule is about reachability from the browser, not about the filename: a `*.action.ts` that starts with `"use server"` or `import "server-only"` never reaches a client bundle, and several do import functions in value position on purpose (`report-reminder.action.ts`, `subscription-gate.action.ts`, `trial.action.ts`).
+
+The `.mutations.ts` suffix is the convention for new mutation files, not a rule the repo already satisfies: `report-reminder.action.ts`, `trial.action.ts` and `email.action.ts` are `"use server"` mutation files that predate it. Read the first line of a file, not its name, to know what it is.
 
 A server read (a Server Component, a route handler, a job) **imports the function directly from `functions/*.function.ts`, never the `*.action.ts` wrapper.** That wrapper calls `internalGet`, which does a `fetch` on a relative URL — that only resolves in a browser, where a relative URL completes implicitly against `location`. Called from Node, it throws `TypeError: Failed to parse URL`.
 
@@ -66,7 +68,9 @@ Mutations follow the same three-file shape, but with a different contract: they 
 
 ### Dashboard pages and billing
 
-Every dashboard page's Server Component calls `requireActiveBilling()` (from `#/lib/dashboard-billing-guard`) as its first statement. A Next.js layout is not re-run on client-side navigation between the pages it wraps, unlike a page — so the layout's own billing check is not enough to catch a practitioner whose subscription lapses mid-session. A test fails if a dashboard page is missing this call.
+Every dashboard page's Server Component calls `requireActiveBilling()` (from `#/lib/dashboard-billing-guard`) before it reads any data. A Next.js layout is not re-run on client-side navigation between the pages it wraps, unlike a page — so the layout's own billing check is not enough to catch a practitioner whose subscription lapses mid-session. A test fails if a dashboard page is missing this call.
+
+It is usually the page's first statement, but not always, and not by accident: `app/(fullscreen)/dashboard/reports/[id]/edit/page.tsx` runs its session and organisation guards first, because `requireActiveBilling()` leans on `requireOrganizationId()`, which **throws a raw error rather than redirecting** when the session or the active organisation is missing. Hoisting the call to the top of that page turns a redirect to `/signin` into an error screen.
 
 ### `cache()` from React
 
