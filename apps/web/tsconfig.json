@@ -29,6 +29,10 @@
   ],
   "compilerOptions": {
     "target": "ES2022",
+    /* Next rewrites this to "react-jsx" on its own if you set anything else here.
+       It also lets esbuild transform JSX under Vitest, which is why
+       @vitejs/plugin-react is unnecessary — do not "align" this with
+       apps/marketing's "jsx": "preserve", that will break the Vitest suite. */
     "jsx": "react-jsx",
     "module": "ESNext",
     "plugins": [

@@ -15,7 +15,7 @@
 Reprises de la spec, elles s'appliquent implicitement à toutes les tâches.
 
 - **Aucune URL ne change.** Le tableau du § 7 de la spec fait foi.
-- **`/api/mobile/v1` ne change pas d'un octet.** L'application Expo en production consomme ce contrat. `openapi-drift.test.ts` est le garde-fou.
+- **`/api/mobile/v1` ne change pas d'un octet.** L'application mobile Flutter en production consomme ce contrat. `openapi-drift.test.ts` est le garde-fou.
 - **Aucun changement visuel.** Toute différence d'apparence est un bug de migration.
 - **Next est figé à `16.2.9`**, la version exacte de `apps/marketing`. Pas de `latest`, pas de plage.
 - **Bun uniquement.** `bun install`, `bun run <script>`, `bun --filter <pkg> <script>`. Ne pas créer de lockfile npm, Yarn ou pnpm.
@@ -573,7 +573,7 @@ intacte, URL et méthode comprises."
 
 ### Tâche 4 : porter les deux API Hono
 
-`/api/mobile/v1` est le point le plus sensible du lot : l'application Expo en production le consomme. Les deux applications Hono appellent `.basePath()` et routent elles-mêmes sur l'URL complète — elles reçoivent donc la `Request` sans aucune transformation.
+`/api/mobile/v1` est le point le plus sensible du lot : l'application mobile Flutter en production le consomme. Les deux applications Hono appellent `.basePath()` et routent elles-mêmes sur l'URL complète — elles reçoivent donc la `Request` sans aucune transformation.
 
 Le segment mobile est `[[...path]]` (attrape-tout **optionnel**) et non `[...path]` : l'optionnel fait aussi correspondre `/api/mobile/v1` sans suffixe, que le `[...path]` seul laisserait en 404.
 
@@ -683,7 +683,7 @@ bun --filter @biume/web test 2>&1 | tail -5
 
 Attendu : les fichiers `mobile-api.*.test.ts` et `openapi-drift.test.ts` verts, et au moins `627 passed` sur la suite complète.
 
-**Si `openapi-drift.test.ts` échoue, arrêtez-vous.** Le contrat consommé par l'application Expo en production a bougé ; c'est un échec de migration, jamais un test à mettre à jour.
+**Si `openapi-drift.test.ts` échoue, arrêtez-vous.** Le contrat consommé par l'application mobile Flutter en production a bougé ; c'est un échec de migration, jamais un test à mettre à jour.
 
 - [ ] **Étape 6 : vérifier le service réel**
 
@@ -711,7 +711,7 @@ Le segment mobile est [[...path]] et non [...path] : l'attrape-tout
 optionnel fait aussi correspondre /api/mobile/v1 sans suffixe.
 
 openapi-drift.test.ts reste vert, donc le contrat consommé par
-l'application Expo en production est inchangé."
+l'application mobile Flutter en production est inchangé."
 ```
 
 ---
@@ -726,6 +726,6 @@ l'application Expo en production est inchangé."
 - La suite de tests est passée de 623 à au moins 627 tests verts.
 - Le code TanStack est encore sur disque et compile ; rien n'a été supprimé.
 
-Ce que le lot A ne fait pas : aucune page de l'application n'est utilisable par un praticien. C'est attendu — l'application est à ce stade un serveur d'API correct, vérifiable par l'application Expo pointée sur la preview, et par les 627 tests.
+Ce que le lot A ne fait pas : aucune page de l'application n'est utilisable par un praticien. C'est attendu — l'application est à ce stade un serveur d'API correct, vérifiable par l'application mobile Flutter pointée sur la preview (`flutter run --dart-define=BIUME_API_URL=<url-preview>`), et par les 627 tests.
 
 **Suite :** le lot B (tranche 2 de la spec) porte le contexte de requête et la couche données. Son plan est écrit à la fin du lot A, contre l'état réel du code plutôt que contre une prédiction.

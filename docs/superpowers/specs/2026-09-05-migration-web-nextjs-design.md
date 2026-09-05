@@ -249,6 +249,8 @@ Traité en tranche 6, comme livrable et non comme chantier annexe.
 
 Vérification : le PDF produit est comparé à la sortie actuelle, et la taille du bundle de la page détail est mesurée avant et après.
 
+**Avertissement pour le lot D :** `apps/web/components/dashboard/pages/reports-module/components/ReportPDF.tsx:454` résout ses images par `new URL("../../../../../public/...", import.meta.url)`. Ce chemin est correct aujourd'hui, mais une fois ce module tiré dans le route handler ci-dessus, `import.meta.url` désignera un chunk sous `.next/server/` et `apps/web/public` ne sera pas tracé dans le bundle de la fonction. `serverExternalPackages: ["@react-pdf/renderer"]` ne couvre pas ce cas : `ReportPDF.tsx` est du code applicatif, il est bundlé comme le reste. Le lot D devra lire ces images depuis `process.cwd()` ou les embarquer.
+
 ## 10. Découpage en tranches
 
 Huit tranches, chacune vérifiable et déployable en preview Vercel.
@@ -256,7 +258,7 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 | # | Tranche | Contenu | Vérification |
 | --- | --- | --- | --- |
 | 0 | **Socle** | branche `migrate/next`, suppression de `src/`, alias, Next 16.2.9, `next.config.ts`, Tailwind v4 via postcss, vitest adapté. `routes/` exclu du tsconfig, encore sur disque | `dev` démarre, `check-types` vert, les 623 tests verts |
-| 1 | **Routes API** | les 7 handlers. Le plus risqué à régresser, le moins cher à porter, et il débloque tout le reste | `openapi-drift.test.ts` et les 10 fichiers `mobile-api.*.test.ts` verts ; app Expo pointée sur la preview |
+| 1 | **Routes API** | les 7 handlers. Le plus risqué à régresser, le moins cher à porter, et il débloque tout le reste | `openapi-drift.test.ts` et les 10 fichiers `mobile-api.*.test.ts` verts ; application mobile Flutter pointée sur la preview (`flutter run --dart-define=BIUME_API_URL=<url-preview>`) |
 | 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` ré-implémenté à signature identique ; 6 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié |
 | 3 | **Shell auth** | `app/layout.tsx` complet (QueryClient, Autumn, Tooltip, Toaster), les 4 pages `(auth)`, `/`, `select-organization`, `create-organization` | parcours connexion → choix d'organisation → redirection, sur preview |
 | 4 | **Shell dashboard** | `dashboard/layout.tsx` RSC avec les deux gardes, sidebar, header, bannière, `dashboard/page.tsx`, `loading.tsx`, `error.tsx` | `getDashboardRedirectTarget` et `getBillingGateRedirectTarget` restent verts ; navigation sur preview |
@@ -267,7 +269,7 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 ## 11. Contraintes dures
 
 1. **Aucune URL ne change.** Des liens de comptes rendus sont partis par email, l'application mobile a des liens profonds, les praticiens ont des signets. Le tableau du § 7 fait foi.
-2. **`/api/mobile/v1` ne change pas d'un octet.** L'application Expo en production consomme ce contrat. `openapi-drift.test.ts` est le garde-fou et doit rester vert à chaque tranche.
+2. **`/api/mobile/v1` ne change pas d'un octet.** L'application mobile Flutter en production consomme ce contrat. `openapi-drift.test.ts` est le garde-fou et doit rester vert à chaque tranche.
 3. **Aucun changement visuel.** Toute différence d'apparence constatée est un bug de migration, pas une amélioration.
 
 ## 12. Vérification
@@ -299,11 +301,12 @@ Par ordre de gravité.
 ## 14. Ce qui est supprimé
 
 - `routes/`, `router.tsx`, `routeTree.gen.ts`, `polyfills/`, `vite.config.ts`
-- `@tanstack/react-start`, `@tanstack/react-router`, `@tanstack/react-router-ssr-query`, `@tanstack/router-plugin`, `@tanstack/router-cli`, `@tanstack/react-router-devtools`, `@tanstack/devtools-vite`, `@tanstack/react-devtools`, `@tanstack/devtools-event-client`
+- `@tanstack/react-start`, `@tanstack/react-router`, `@tanstack/react-router-ssr-query`, `@tanstack/router-plugin`, `@tanstack/router-cli`, `@tanstack/react-router-devtools`, `@tanstack/devtools-vite`, `@tanstack/react-devtools`, `@tanstack/devtools-event-client`, `@tanstack/eslint-config` (le nouveau `eslint.config.mjs` ne l'utilise pas)
 - les 7 paquets `@tanstack/ai*` (§ 2.4)
 - `nitro` (`nitro-nightly`), `vite`, `@vitejs/plugin-react`, `@tailwindcss/vite`, `vite-plugin-neon-new`
 - `@react-pdf/renderer` du bundle **client** (la dépendance reste, pour le serveur)
 - toutes les versions `latest` du `package.json`
+- `NITRO_PRESET` dans `turbo.json`, inerte depuis la désinstallation de Nitro, à retirer au lot E avec les `VITE_POSTHOG_*` déjà cités (plan du lot A, § contraintes)
 
 Conservés : `@tanstack/react-query`, `@tanstack/react-form`, `@tanstack/react-table`, `@tanstack/react-store`, `@tanstack/match-sorter-utils` — tous agnostiques du framework.
 
