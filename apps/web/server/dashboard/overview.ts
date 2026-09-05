@@ -24,12 +24,11 @@ export type DashboardOverview = {
 };
 
 /**
- * Composition partagée par `app/api/internal/dashboard/overview/route.ts`
- * (qui la sert au client existant) et `app/dashboard/page.tsx` (qui l'appelle
- * directement pour son premier rendu, sans passer par le réseau).
- *
- * Recopier ces cinq lectures dans la page les aurait fait diverger au
- * premier changement ; elles vivent donc ici, une seule fois.
+ * Composition lue directement par `app/dashboard/(overview)/page.tsx` pour
+ * son premier rendu, sans passer par le réseau. Elle a porté un second
+ * appelant, `app/api/internal/dashboard/overview/route.ts`, retiré au lot E
+ * une fois établi que plus rien ne l'appelait (la page ne l'a jamais fait :
+ * elle lit cette fonction en direct depuis le lot D).
  *
  * Les fenêtres 90 / 90 / 30 / 5 sont celles que le praticien voit déjà en
  * production : les changer modifierait silencieusement les chiffres
@@ -38,8 +37,7 @@ export type DashboardOverview = {
  *
  * `generatedAt` est un vrai `Date`, pas une chaîne : cette fonction est un
  * appel direct (pas un aller-retour réseau), donc rien ne la sérialise en
- * JSON avant que l'appelant ne la lise. Le route handler, qui répond à un
- * client HTTP, est responsable de la convertir en chaîne ISO à la sortie.
+ * JSON avant que l'appelant ne la lise.
  */
 export async function buildDashboardOverview(
   selectedDate: string,

@@ -33,7 +33,7 @@ export default function DashboardError({
   return (
     <div className="grid gap-5 pb-8">
       <Alert variant="destructive">
-        <AlertTitle>Impossible de charger la vue d'ensemble</AlertTitle>
+        <AlertTitle>Impossible de charger la vue d&apos;ensemble</AlertTitle>
         <AlertDescription>
           Les données de votre activité ne sont pas disponibles pour le
           moment. Rechargez la page ou réessayez dans quelques instants.

@@ -36,7 +36,7 @@ vi.mock("#/functions/dashboard-agenda.function", () => ({
 }));
 
 describe("buildDashboardOverview", () => {
-  it("compose les cinq lectures, avec les mêmes fenêtres que le route handler", async () => {
+  it("compose les cinq lectures, avec les fenêtres 90/90/30/5", async () => {
     getNewClientsMetric.mockResolvedValue({ value: 1 });
     getNewPatientsMetric.mockResolvedValue({ value: 2 });
     getSentReportsMetric.mockResolvedValue({ value: 3 });
@@ -50,8 +50,9 @@ describe("buildDashboardOverview", () => {
 
     const overview = await buildDashboardOverview("2026-09-05");
 
-    // Les fenêtres 90/90/30/5 sont celles de dashboard.query.ts : les changer
-    // modifierait silencieusement les chiffres affichés aux praticiens.
+    // Les fenêtres 90/90/30/5 sont celles que voit déjà le praticien en
+    // production : les changer modifierait silencieusement les chiffres
+    // affichés.
     expect(getNewClientsMetric).toHaveBeenCalledWith(90);
     expect(getNewPatientsMetric).toHaveBeenCalledWith(90);
     expect(getSentReportsMetric).toHaveBeenCalledWith(30);
@@ -67,7 +68,7 @@ describe("buildDashboardOverview", () => {
     });
     expect(overview.recentActivity).toEqual([{ id: "a1" }]);
     // Appel direct (pas de réseau, pas de JSON) : `generatedAt` est un vrai
-    // `Date`, pas une chaîne comme le rendrait le route handler.
+    // `Date`, pas une chaîne.
     expect(overview.generatedAt).toBeInstanceOf(Date);
   });
 

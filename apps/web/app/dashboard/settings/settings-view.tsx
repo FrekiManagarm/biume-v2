@@ -463,7 +463,7 @@ function OrganizationTab({
               Informations principales
             </p>
             <h3 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-              Coordonnées de l'activité.
+              Coordonnées de l&apos;activité.
             </h3>
           </div>
 
@@ -876,7 +876,7 @@ function BillingTab({
           role="alert"
           className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
         >
-          Votre période d'essai est terminée. Choisissez un plan ci-dessous pour
+          Votre période d&apos;essai est terminée. Choisissez un plan ci-dessous pour
           continuer à utiliser Biume.
         </div>
       ) : null}
@@ -895,7 +895,7 @@ function BillingTab({
                   Abonnement actuel.
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Consultez l'état du plan et gérez la montée en gamme. Vos
+                  Consultez l&apos;état du plan et gérez la montée en gamme. Vos
                   factures sont listées juste en dessous.
                 </p>
               </div>

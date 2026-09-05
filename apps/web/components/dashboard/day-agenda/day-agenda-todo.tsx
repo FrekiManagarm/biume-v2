@@ -14,7 +14,7 @@ export function DayAgendaTodo({ todo }: DayAgendaTodoProps) {
     <aside className="grid gap-5 self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.45)]">
       <div>
         <p className="text-sm font-medium text-emerald-700">
-          À faire aujourd'hui
+          À faire aujourd&apos;hui
         </p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
           Actions utiles.

@@ -95,7 +95,7 @@ export function NewAppointmentDialog({
               Créer un rendez-vous
             </DialogTitle>
             <DialogDescription>
-              Planifiez une séance depuis l'agenda, avec le patient et les
+              Planifiez une séance depuis l&apos;agenda, avec le patient et les
               informations utiles au suivi.
             </DialogDescription>
           </DialogHeader>

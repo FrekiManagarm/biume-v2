@@ -219,7 +219,7 @@ export function AgendaPage({ appointmentWindow }: AgendaPageProps) {
                   <span className="sr-only">Mois précédent</span>
                 </Button>
                 <Button variant="outline" onClick={goToToday}>
-                  Aujourd'hui
+                  Aujourd&apos;hui
                 </Button>
                 <Button variant="outline" size="icon" onClick={goToNextMonth}>
                   <ChevronRight className="size-4" />

@@ -249,7 +249,7 @@ export function CreateOrganizationView({
               <div className="grid gap-5">
                 <div className="grid gap-2">
                   <Label htmlFor="organization-name" className="gap-1">
-                    Nom de l'entreprise
+                    Nom de l&apos;entreprise
                     <span className="text-destructive" aria-hidden="true">
                       *
                     </span>
@@ -288,7 +288,7 @@ export function CreateOrganizationView({
                   </div>
                   <p className="text-xs leading-5 text-muted-foreground">
                     Le slug doit être unique. Il est généré depuis le nom, mais
-                    vous pouvez l'ajuster.
+                    vous pouvez l&apos;ajuster.
                   </p>
                 </div>
 
@@ -383,7 +383,7 @@ export function CreateOrganizationView({
             <div className="mt-5 grid grid-cols-[auto_1fr] items-start gap-3 rounded-card border border-border bg-card px-4 py-3 text-sm leading-6 text-ink-muted">
               <IconTile icon={Building2} tone="done" size="sm" />
               <p>
-                Après création, cette entreprise devient l'espace actif de la
+                Après création, cette entreprise devient l&apos;espace actif de la
                 session et vous serez redirigé vers le dashboard.
               </p>
             </div>

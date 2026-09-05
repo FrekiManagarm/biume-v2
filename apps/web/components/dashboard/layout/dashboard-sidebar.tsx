@@ -59,6 +59,35 @@ const iconClassName =
 
 const ACCOUNT_SWITCH_SUCCESS_DELAY_MS = 2200;
 
+function OrganizationMark({
+  className,
+  activeOrganization,
+}: {
+  className?: string;
+  activeOrganization: ReturnType<typeof useActiveOrganization>["data"];
+}) {
+  return (
+    <div
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground shadow-sm",
+        className,
+      )}
+    >
+      {activeOrganization?.logo ? (
+        <img
+          src={activeOrganization.logo}
+          alt={activeOrganization.name ?? ""}
+          width={36}
+          height={36}
+          className="size-full object-cover"
+        />
+      ) : (
+        <Building className="size-4" />
+      )}
+    </div>
+  );
+}
+
 export function DashboardSidebar({
   session,
   organizations,
@@ -131,27 +160,6 @@ export function DashboardSidebar({
     window.location.replace("/dashboard");
     setSwitchingOrg(null);
   };
-
-  const OrganizationMark = ({ className }: { className?: string }) => (
-    <div
-      className={cn(
-        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground shadow-sm",
-        className,
-      )}
-    >
-      {activeOrganization?.logo ? (
-        <img
-          src={activeOrganization.logo}
-          alt={activeOrganization.name ?? ""}
-          width={36}
-          height={36}
-          className="size-full object-cover"
-        />
-      ) : (
-        <Building className="size-4" />
-      )}
-    </div>
-  );
 
   const NavLink = ({
     menu,
@@ -335,7 +343,10 @@ export function DashboardSidebar({
                   title={isCollapsed ? activeOrganization?.name : undefined}
                   className="flex h-14 w-full items-center gap-3 rounded-md border border-sidebar-border/80 bg-sidebar-accent/45 px-2.5 text-left shadow-sm shadow-foreground/5 outline-none transition-colors duration-200 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring/50 group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
                 >
-                  <OrganizationMark className="group-data-[collapsible=icon]:size-9" />
+                  <OrganizationMark
+                    className="group-data-[collapsible=icon]:size-9"
+                    activeOrganization={activeOrganization}
+                  />
                   <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                     <span className="block truncate text-sm font-semibold text-sidebar-foreground">
                       {activeOrganization?.name}

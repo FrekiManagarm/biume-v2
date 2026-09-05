@@ -60,7 +60,7 @@ export function AuthShell({ children }: AuthShellProps) {
             </h1>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Accédez à vos dossiers, propriétaires et rapports depuis un point
-              d'entrée clair, rapide et protégé.
+              d&apos;entrée clair, rapide et protégé.
             </p>
           </div>
 

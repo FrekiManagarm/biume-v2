@@ -69,7 +69,7 @@ export function DayAgendaView({
             variant="outline"
             onClick={() => onDateChange(startOfDay(new Date()))}
           >
-            Aujourd'hui
+            Aujourd&apos;hui
           </Button>
           <Button
             type="button"

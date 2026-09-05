@@ -6,11 +6,12 @@ export type {
 } from "#/functions/dashboard.function";
 
 // `getNewClientsMetric`, `getNewPatientsMetric`, `getSentReportsMetric` et
-// `getRecentActivity` n'ont plus d'appelant dans ce fichier : le `queryFn`
-// de `dashboard.query.ts` compose désormais ces lectures côté serveur, via
-// le route handler `/api/internal/dashboard/overview`, sans repasser par
-// cette couche d'adaptation. `getDraftReportsMetric`, `getClienteleBySpecies`
-// et `getRecentReports` n'avaient déjà aucun appelant avant cette tâche.
+// `getRecentActivity` n'ont plus d'appelant dans ce fichier :
+// `buildDashboardOverview` (`server/dashboard/overview.ts`) compose
+// désormais ces lectures côté serveur, appelée en direct par
+// `app/dashboard/(overview)/page.tsx`, sans repasser par cette couche
+// d'adaptation. `getDraftReportsMetric`, `getClienteleBySpecies` et
+// `getRecentReports` n'avaient déjà aucun appelant avant cette tâche.
 //
 // Comme pour `getTodayAppointments`/`getAppointmentsWithoutReport` dans
 // `appointments.action.ts`, elles restent de simples fonctions exportées

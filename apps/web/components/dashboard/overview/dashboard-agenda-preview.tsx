@@ -72,7 +72,7 @@ export function DashboardAgendaPreview({
             <h2>Agenda du jour</h2>
           </div>
           <p className="mt-1 text-sm leading-5 text-slate-600">
-            Les prochaines séances et l'action utile pour chacune.
+            Les prochaines séances et l&apos;action utile pour chacune.
           </p>
         </div>
         <Button
@@ -82,7 +82,7 @@ export function DashboardAgendaPreview({
           className="w-full sm:w-auto"
         >
           <Link href="/dashboard/agenda">
-            Ouvrir l'agenda
+            Ouvrir l&apos;agenda
             <ArrowRight className="size-4" data-icon="inline-end" />
           </Link>
         </Button>

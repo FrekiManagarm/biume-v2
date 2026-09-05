@@ -76,7 +76,7 @@ export default async function Page({
   return (
     <AdvancedReportEditor
       reportId={id}
-      orgId={currentOrganization?.id!}
+      orgId={session.session.activeOrganizationId}
       initialData={result.data}
     />
   );

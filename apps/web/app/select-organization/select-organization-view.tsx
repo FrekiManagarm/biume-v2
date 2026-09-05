@@ -143,11 +143,11 @@ export function SelectOrganizationView({
                 </StatusPill>
               </div>
               <h1 className="text-4xl font-semibold leading-none tracking-tight text-foreground md:text-6xl">
-                Choisissez l'espace à ouvrir.
+                Choisissez l&apos;espace à ouvrir.
               </h1>
               <p className="mt-5 max-w-120 text-base leading-7 text-ink-muted">
                 Chaque entreprise possède ses propriétaires, rapports et
-                paramètres. Sélectionnez le bon espace avant d'entrer dans le
+                paramètres. Sélectionnez le bon espace avant d&apos;entrer dans le
                 dashboard.
               </p>
 

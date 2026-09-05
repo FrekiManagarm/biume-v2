@@ -13,7 +13,7 @@ beforeEach(() => {
 // condition de résolution `react-server` que Next applique en production,
 // donc le vrai module lèverait "This module cannot be imported from a Client
 // Component module" au chargement (même motif que
-// `app/api/internal/dashboard/overview/route.test.ts`).
+// `server/dashboard/overview.test.ts`).
 vi.mock("server-only", () => ({}));
 
 vi.mock("#/lib/dashboard-billing-guard", () => ({
