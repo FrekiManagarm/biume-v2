@@ -90,12 +90,28 @@ export function DashboardSidebar({
     setShowProfessionalDialog(true);
 
     // Le nouveau contrat des mutations résout avec `{ success, error }` au
-    // lieu de rejeter : un `catch` ici ne se déclencherait plus jamais, et
-    // une bascule échouée continuerait comme si elle avait réussi. Le
-    // résultat doit donc être déballé explicitement.
-    const result = await switchActiveOrganization({
-      organizationId: orgId,
-    });
+    // lieu de rejeter : un `catch` ici ne se déclencherait plus jamais pour
+    // une erreur applicative, et une bascule échouée continuerait comme si
+    // elle avait réussi. Le résultat doit donc être déballé explicitement.
+    // Mais un échec de transport (réseau coupé, serveur injoignable) rejette
+    // toujours la promesse avant même d'atteindre ce contrat — d'où ce
+    // filet, voir create-organization-view.tsx.
+    let result: Awaited<ReturnType<typeof switchActiveOrganization>>;
+
+    try {
+      result = await switchActiveOrganization({
+        organizationId: orgId,
+      });
+    } catch {
+      setIsLoading(false);
+      toast.error("Erreur lors du changement de compte", {
+        description: "Veuillez réessayer",
+        icon: <AlertCircle className="h-5 w-5 text-white" />,
+      });
+      setShowProfessionalDialog(false);
+      setSwitchingOrg(null);
+      return;
+    }
 
     if (!result.success) {
       setIsLoading(false);

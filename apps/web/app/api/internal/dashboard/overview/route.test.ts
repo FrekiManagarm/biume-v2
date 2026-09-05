@@ -6,6 +6,13 @@ const getSentReportsMetric = vi.fn();
 const getRecentActivity = vi.fn();
 const getDashboardAgendaDay = vi.fn();
 
+// `overview.ts` (composé par ce handler via `buildDashboardOverview`) porte
+// désormais `import "server-only"` (correction de revue). Vitest ne pose pas
+// la condition de résolution `react-server` que Next applique en
+// production : sans ce mock, le vrai module lèverait "This module cannot be
+// imported from a Client Component module" au chargement.
+vi.mock("server-only", () => ({}));
+
 vi.mock("#/functions/dashboard.function", () => ({
   get getNewClientsMetric() { return getNewClientsMetric; },
   get getNewPatientsMetric() { return getNewPatientsMetric; },

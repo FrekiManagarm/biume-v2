@@ -16,22 +16,10 @@ export default async function DashboardPage() {
   // pages qu'il partage : `app/dashboard/layout.tsx` ne protège donc que le
   // premier chargement de document. Chaque page du dashboard rejoue la garde
   // à chaque navigation — cette page est la première à le faire (voir
-  // lib/dashboard-billing-guard.ts). `/dashboard` est un segment statique,
-  // sans paramètre : son chemin est connu ici sans passer par l'en-tête que
-  // lit le layout.
-  //
-  // Une page à segment dynamique (ex. `/dashboard/reports/[id]/edit`) ne
-  // peut pas se permettre ce raccourci : `requireActiveBilling` ne compare le
-  // chemin qu'à `/dashboard/settings` (pour ne pas boucler dessus), donc
-  // n'importe quelle valeur distincte de ce chemin redirige à l'identique —
-  // mais un littéral construit à la main resterait fragile si cette logique
-  // s'enrichissait un jour. Ces pages devraient plutôt lire l'en-tête que
-  // `proxy.ts` pose déjà sur toute requête `/dashboard/:path*`, exactement
-  // comme `app/dashboard/layout.tsx` le fait via `PATHNAME_HEADER`
-  // (`(await headers()).get(PATHNAME_HEADER)`), plutôt que reconstruire le
-  // chemin depuis leurs `params`. Le lot D choisira concrètement au moment
-  // d'écrire sa première page à paramètre.
-  await requireActiveBilling("/dashboard");
+  // lib/dashboard-billing-guard.ts). `requireActiveBilling` lit elle-même le
+  // chemin depuis l'en-tête posé par `proxy.ts` : aucun littéral à recopier
+  // ici, donc rien à faire diverger sur les pages que le lot D ajoutera.
+  await requireActiveBilling();
 
   const selectedDate = getDashboardOverviewDate();
   const overview = await buildDashboardOverview(selectedDate);

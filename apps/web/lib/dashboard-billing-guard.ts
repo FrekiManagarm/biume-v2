@@ -1,9 +1,11 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getOrganizationSubscriptionGateFn } from "#/lib/api/actions/subscription-gate.action";
 import { resolveDashboardBillingRedirect } from "#/lib/dashboard-guards";
+import { PATHNAME_HEADER } from "#/lib/pathname-header";
 import { requireOrganizationId } from "#/server/auth/organization-scope";
 import { shouldCheckBillingGate } from "#/server/billing/subscription-gate";
 
@@ -28,8 +30,29 @@ import { shouldCheckBillingGate } from "#/server/billing/subscription-gate";
  * lève si la session ou l'organisation active manquent, comme dans toute
  * fonction de données du dashboard — c'est le filet déjà en place depuis le
  * lot B, pas quelque chose que ce helper doit dupliquer.
+ *
+ * Le chemin n'est pas un paramètre : il est lu depuis `PATHNAME_HEADER`, que
+ * le proxy (`proxy.ts`, matcher `/dashboard/:path*`) pose sur toute requête
+ * dashboard — exactement comme `app/dashboard/layout.tsx` le fait. Un
+ * littéral fourni par l'appelant serait sans risque partout... sauf recopié
+ * tel quel sur `/dashboard/settings`, où il ferait boucler la garde sur
+ * elle-même : exactement ce que ce mécanisme existe pour empêcher.
  */
-export async function requireActiveBilling(pathname: string): Promise<void> {
+export async function requireActiveBilling(): Promise<void> {
+  const pathnameHeader = (await headers()).get(PATHNAME_HEADER);
+
+  if (!pathnameHeader) {
+    // Le proxy pose toujours cet en-tête sur une requête `/dashboard/:path*`
+    // réelle : son absence ici signale une panne (proxy non exécuté, ou
+    // en-tête filtré en amont), pas un cas nominal à dégrader silencieusement
+    // — voir le même choix dans `app/dashboard/layout.tsx`.
+    throw new Error(
+      "En-tête pathname absent : le proxy dashboard ne s'est pas exécuté pour cette requête.",
+    );
+  }
+
+  const pathname = pathnameHeader;
+
   if (!shouldCheckBillingGate({ preload: false, pathname })) {
     return;
   }

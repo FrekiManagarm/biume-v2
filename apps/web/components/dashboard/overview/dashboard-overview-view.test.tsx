@@ -1,36 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen, within } from "@testing-library/react";
-import type { ReactNode } from "react";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { DashboardOverviewView } from "./dashboard-overview-view";
-
-vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    children,
-    params,
-    search,
-    to,
-    ...props
-  }: {
-    children: ReactNode;
-    params?: Record<string, string>;
-    search?: Record<string, string>;
-    to: string;
-  }) => {
-    const base = params?.id ? to.replace("$id", params.id) : to;
-    const query = search
-      ? `?${new URLSearchParams(search).toString()}`
-      : "";
-
-    return (
-      <a href={`${base}${query}`} {...props}>
-        {children}
-      </a>
-    );
-  },
-}));
 
 describe("DashboardOverviewView", () => {
   test("renders a compact overview with agenda, priorities, and activity", () => {

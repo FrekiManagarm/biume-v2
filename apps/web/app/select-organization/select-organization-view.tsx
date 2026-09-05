@@ -84,9 +84,26 @@ export function SelectOrganizationView({
     setError(null);
     setPendingOrganizationId(organizationId);
 
-    const result = await switchActiveOrganization({
-      organizationId,
-    });
+    let result: Awaited<ReturnType<typeof switchActiveOrganization>>;
+
+    // Le contrat ActionResult ne rejette plus pour une erreur applicative
+    // (elle résout en { success: false }, déballée ci-dessous), mais un échec
+    // de transport (réseau coupé, serveur injoignable) rejette toujours la
+    // promesse avant même d'atteindre ce contrat — d'où ce filet, voir
+    // create-organization-view.tsx.
+    try {
+      result = await switchActiveOrganization({
+        organizationId,
+      });
+    } catch (switchError) {
+      setError(
+        switchError instanceof Error
+          ? switchError.message
+          : "Impossible d'ouvrir cette entreprise pour le moment.",
+      );
+      setPendingOrganizationId(null);
+      return;
+    }
 
     if (!result.success) {
       setError(result.error);

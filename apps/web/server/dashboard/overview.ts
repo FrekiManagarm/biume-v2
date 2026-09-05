@@ -1,3 +1,5 @@
+import "server-only";
+
 import { getDashboardAgendaDay } from "#/functions/dashboard-agenda.function";
 import {
   getNewClientsMetric,
