@@ -1,6 +1,7 @@
+"use server";
+
 import { render } from "@react-email/render";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
 import NewReportClientEmail from "@biume/emails/NewReportClientEmail";
@@ -17,70 +18,65 @@ const sendNewReportClientEmailWithPDFSchema = z.object({
   report: z.any(),
 });
 
-const sendNewReportClientEmailWithPDFFn = createServerFn({ method: "POST" })
-  .validator(sendNewReportClientEmailWithPDFSchema)
-  .handler(async ({ data: params }) => {
-    const { to, clientName, petName, reportDate, reportUrl, report } =
-      params as z.infer<typeof sendNewReportClientEmailWithPDFSchema> & {
-        report: Pick<
-          AdvancedReportListItem,
-          | "id"
-          | "title"
-          | "createdAt"
-          | "patient"
-          | "organization"
-          | "anatomicalIssues"
-          | "recommendations"
-        >;
-      };
+export async function sendNewReportClientEmailWithPDF(
+  input: z.infer<typeof sendNewReportClientEmailWithPDFSchema>,
+) {
+  const params = sendNewReportClientEmailWithPDFSchema.parse(input);
+  const { to, clientName, petName, reportDate, reportUrl, report } =
+    params as z.infer<typeof sendNewReportClientEmailWithPDFSchema> & {
+      report: Pick<
+        AdvancedReportListItem,
+        | "id"
+        | "title"
+        | "createdAt"
+        | "patient"
+        | "organization"
+        | "anatomicalIssues"
+        | "recommendations"
+      >;
+    };
 
-    try {
-      const html = await render(
-        NewReportClientEmail({ clientName, petName, reportDate, reportUrl }),
-      );
+  try {
+    const html = await render(
+      NewReportClientEmail({ clientName, petName, reportDate, reportUrl }),
+    );
 
-      const pdfBuffer = await renderToBuffer(
-        ReportPDF({
-          report: {
-            id: report.id,
-            title: report.title,
-            createdAt: report.createdAt || new Date(),
-            patient: report.patient,
-            organization: report.organization,
-            anatomicalIssues: report.anatomicalIssues,
-            recommendations: report.recommendations,
-          },
-          type: "advanced_report",
-        }),
-      );
+    const pdfBuffer = await renderToBuffer(
+      ReportPDF({
+        report: {
+          id: report.id,
+          title: report.title,
+          createdAt: report.createdAt || new Date(),
+          patient: report.patient,
+          organization: report.organization,
+          anatomicalIssues: report.anatomicalIssues,
+          recommendations: report.recommendations,
+        },
+        type: "advanced_report",
+      }),
+    );
 
-      const { data, error } = await resend.emails.send({
-        from: "Biume <noreply@biume.com>",
-        to,
-        subject: `Nouveau rapport disponible pour ${petName}`,
-        html,
-        attachments: [
-          {
-            filename: `rapport-${report.id}.pdf`,
-            content: pdfBuffer,
-          },
-        ],
-      });
+    const { data, error } = await resend.emails.send({
+      from: "Biume <noreply@biume.com>",
+      to,
+      subject: `Nouveau rapport disponible pour ${petName}`,
+      html,
+      attachments: [
+        {
+          filename: `rapport-${report.id}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
 
-      if (error) {
-        console.error(error, "error");
-        throw new Error("Erreur lors de l'envoi de l'email");
-      }
-
-      return { success: true, data };
-    } catch (error) {
+    if (error) {
       console.error(error, "error");
       throw new Error("Erreur lors de l'envoi de l'email");
     }
-  });
 
-export function sendNewReportClientEmailWithPDF(
-  params: z.infer<typeof sendNewReportClientEmailWithPDFSchema>,
-) {
-  return sendNewReportClientEmailWithPDFFn({ data: params });
+    return { success: true, data };
+  } catch (error) {
+    console.error(error, "error");
+    throw new Error("Erreur lors de l'envoi de l'email");
+  }
 }

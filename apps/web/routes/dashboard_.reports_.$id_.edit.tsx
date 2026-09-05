@@ -53,7 +53,7 @@ export const Route = createFileRoute("/dashboard_/reports_/$id_/edit")({
     if (shouldCheckBillingGate({ preload, pathname: location.pathname })) {
       const { hasActiveOrTrialingSubscription } =
         await getOrganizationSubscriptionGateFn({
-          data: { organizationId: session.session.activeOrganizationId },
+          organizationId: session.session.activeOrganizationId,
         });
 
       const billingRedirectTarget = resolveDashboardBillingRedirect(

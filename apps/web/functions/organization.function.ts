@@ -1,6 +1,5 @@
 import { db } from "@biume/db";
 import { organization as organizationSchema } from "@biume/db/schema/index";
-import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -16,9 +15,9 @@ export const updateOrganizationSchema = z.object({
   logo: z.union([z.url("L'URL du logo est invalide."), z.literal("")]),
 });
 
-export const getOrganizationSettings = createServerFn({
-  method: "GET",
-}).handler(async () => {
+export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
+
+export async function getOrganizationSettings() {
   const organization = await getCurrentOrganization();
   const settings = await db.query.organization.findFirst({
     where: eq(organizationSchema.id, organization.id),
@@ -29,31 +28,30 @@ export const getOrganizationSettings = createServerFn({
   }
 
   return settings;
-});
+}
 
-export const updateOrganization = createServerFn({ method: "POST" })
-  .validator(updateOrganizationSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
+export async function updateOrganization(input: UpdateOrganizationInput) {
+  const data = updateOrganizationSchema.parse(input);
+  const organization = await getCurrentOrganization();
 
-    const [updatedOrganization] = await db
-      .update(organizationSchema)
-      .set({
-        name: data.name.trim(),
-        slug: data.slug.trim(),
-        email: data.email?.trim() || null,
-        description: data.description?.trim() || null,
-        lang: data.lang,
-        ai: data.ai,
-        logo: data.logo?.trim() || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(organizationSchema.id, organization.id))
-      .returning();
+  const [updatedOrganization] = await db
+    .update(organizationSchema)
+    .set({
+      name: data.name.trim(),
+      slug: data.slug.trim(),
+      email: data.email?.trim() || null,
+      description: data.description?.trim() || null,
+      lang: data.lang,
+      ai: data.ai,
+      logo: data.logo?.trim() || null,
+      updatedAt: new Date(),
+    })
+    .where(eq(organizationSchema.id, organization.id))
+    .returning();
 
-    if (!updatedOrganization) {
-      throw new Error("Impossible de mettre à jour l'organisation.");
-    }
+  if (!updatedOrganization) {
+    throw new Error("Impossible de mettre à jour l'organisation.");
+  }
 
-    return updatedOrganization;
-  });
+  return updatedOrganization;
+}

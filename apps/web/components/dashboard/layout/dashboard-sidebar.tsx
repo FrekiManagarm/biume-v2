@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { signOut, useActiveOrganization } from "#/lib/auth-client";
-import { switchActiveOrganization } from "#/functions/auth.function";
+import { switchActiveOrganization } from "#/lib/api/actions/auth.action";
 import { proMenuList, type Menu, type Submenu } from "#/lib/menu-list";
 import {
   AlertCircle,
@@ -90,9 +90,7 @@ export function DashboardSidebar({
 
     try {
       await switchActiveOrganization({
-        data: {
-          organizationId: orgId,
-        },
+        organizationId: orgId,
       });
 
       setIsLoading(false);

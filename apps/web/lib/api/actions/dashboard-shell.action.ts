@@ -1,4 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
 import { headers } from "next/headers";
 import { z } from "zod";
 
@@ -22,6 +21,8 @@ const dashboardShellSchema = z.object({
   preload: z.boolean().default(false),
 });
 
+export type GetDashboardShellInput = z.input<typeof dashboardShellSchema>;
+
 /**
  * Tout ce dont le layout `/dashboard` a besoin, en un seul aller-retour.
  *
@@ -35,49 +36,46 @@ const dashboardShellSchema = z.object({
  * Depuis le serveur, ces mêmes appels sont des invocations directes : plus
  * de HTTP entre eux, et ce qui est indépendant part en parallèle.
  */
-export const getDashboardShellFn = createServerFn({ method: "GET" })
-  .validator(dashboardShellSchema)
-  .handler(async ({ data }) => {
-    const session = await getSession();
-    const activeOrganizationId = session?.session.activeOrganizationId ?? null;
+export async function getDashboardShellFn(input: GetDashboardShellInput) {
+  const data = dashboardShellSchema.parse(input);
+  const session = await getSession();
+  const activeOrganizationId = session?.session.activeOrganizationId ?? null;
 
-    if (!session || !activeOrganizationId) {
-      return {
-        session,
-        currentOrganizationId: null,
-        organizations: [],
-        sidebarDefaultOpen: true,
-        hasActiveOrTrialingSubscription: true,
-      };
-    }
-
-    const checkBilling =
-      !data.preload &&
-      shouldCheckBillingGate({ preload: false, pathname: data.pathname });
-
-    const [currentOrganization, organizations, gate] = await Promise.all([
-      // `getFullOrganization` échoue quand la session pointe une
-      // organisation devenue inaccessible : `getDashboardRedirectTarget`
-      // traite ce `null` comme une invitation à re-choisir un espace.
-      getCurrentOrganization().catch(() => null),
-      getOrganizations(),
-      checkBilling
-        ? getOrganizationSubscriptionGateFn({
-            data: { organizationId: activeOrganizationId },
-          })
-        : Promise.resolve({ hasActiveOrTrialingSubscription: true }),
-    ]);
-
+  if (!session || !activeOrganizationId) {
     return {
       session,
-      // Seul l'identifiant est utilisé côté route (comparaison avec la
-      // session) : inutile de sérialiser l'organisation complète, membres
-      // et invitations compris.
-      currentOrganizationId: currentOrganization?.id ?? null,
-      organizations,
-      sidebarDefaultOpen: readSidebarDefaultOpen(
-        (await headers()).get("cookie"),
-      ),
-      hasActiveOrTrialingSubscription: gate.hasActiveOrTrialingSubscription,
+      currentOrganizationId: null,
+      organizations: [],
+      sidebarDefaultOpen: true,
+      hasActiveOrTrialingSubscription: true,
     };
-  });
+  }
+
+  const checkBilling =
+    !data.preload &&
+    shouldCheckBillingGate({ preload: false, pathname: data.pathname });
+
+  const [currentOrganization, organizations, gate] = await Promise.all([
+    // `getFullOrganization` échoue quand la session pointe une
+    // organisation devenue inaccessible : `getDashboardRedirectTarget`
+    // traite ce `null` comme une invitation à re-choisir un espace.
+    getCurrentOrganization().catch(() => null),
+    getOrganizations(),
+    checkBilling
+      ? getOrganizationSubscriptionGateFn({
+          organizationId: activeOrganizationId,
+        })
+      : Promise.resolve({ hasActiveOrTrialingSubscription: true }),
+  ]);
+
+  return {
+    session,
+    // Seul l'identifiant est utilisé côté route (comparaison avec la
+    // session) : inutile de sérialiser l'organisation complète, membres
+    // et invitations compris.
+    currentOrganizationId: currentOrganization?.id ?? null,
+    organizations,
+    sidebarDefaultOpen: readSidebarDefaultOpen((await headers()).get("cookie")),
+    hasActiveOrTrialingSubscription: gate.hasActiveOrTrialingSubscription,
+  };
+}

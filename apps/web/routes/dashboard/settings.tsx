@@ -169,9 +169,7 @@ function SettingsPage() {
       onSubmit: organizationSettingsSchema,
     },
     onSubmit: async ({ value }) => {
-      await updateOrganization({
-        data: organizationSettingsSchema.parse(value),
-      });
+      await updateOrganization(organizationSettingsSchema.parse(value));
       await router.invalidate();
       toast.success("Entreprise mise à jour.");
     },
@@ -185,9 +183,7 @@ function SettingsPage() {
       onSubmit: notificationSettingsSchema,
     },
     onSubmit: async ({ value }) => {
-      await updateUserNotifications({
-        data: notificationSettingsSchema.parse(value),
-      });
+      await updateUserNotifications(notificationSettingsSchema.parse(value));
       await router.invalidate();
       toast.success("Préférences enregistrées.");
     },

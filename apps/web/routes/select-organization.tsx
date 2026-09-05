@@ -106,9 +106,7 @@ function SelectOrganization() {
 
     try {
       await switchActiveOrganization({
-        data: {
-          organizationId,
-        },
+        organizationId,
       });
     } catch (switchError) {
       setError(

@@ -1,4 +1,5 @@
-import { createServerFn } from "@tanstack/react-start";
+"use server";
+
 import { z } from "zod";
 
 import { getSession } from "#/functions/auth.function";
@@ -10,34 +11,39 @@ const startOrganizationTrialSchema = z.object({
   organizationName: z.string().min(1),
 });
 
-export const startOrganizationTrialFn = createServerFn({ method: "POST" })
-  .validator(startOrganizationTrialSchema)
-  .handler(async ({ data }) => {
-    const session = await getSession();
+export type StartOrganizationTrialInput = z.infer<
+  typeof startOrganizationTrialSchema
+>;
 
-    if (!session) {
-      throw new Error("Unauthorized");
-    }
+export async function startOrganizationTrialFn(
+  input: StartOrganizationTrialInput,
+) {
+  const data = startOrganizationTrialSchema.parse(input);
+  const session = await getSession();
 
-    if (data.organizationId !== session.session.activeOrganizationId) {
-      throw new Error("Forbidden");
-    }
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
 
-    try {
-      await startOrganizationTrial(createProductionStartTrialDeps(), {
-        organizationId: data.organizationId,
-        organizationName: data.organizationName,
-        ownerEmail: session.user.email,
-        ownerUserId: session.user.id,
-      });
-    } catch (error) {
-      // Non bloquant : l'organisation existe déjà côté better-auth. Le
-      // paywall (Task 6/7) rattrape au prochain accès dashboard.
-      console.error(
-        `[Autumn] Impossible de démarrer l'essai pour l'organisation ${data.organizationId}`,
-        error,
-      );
-    }
+  if (data.organizationId !== session.session.activeOrganizationId) {
+    throw new Error("Forbidden");
+  }
 
-    return { started: true };
-  });
+  try {
+    await startOrganizationTrial(createProductionStartTrialDeps(), {
+      organizationId: data.organizationId,
+      organizationName: data.organizationName,
+      ownerEmail: session.user.email,
+      ownerUserId: session.user.id,
+    });
+  } catch (error) {
+    // Non bloquant : l'organisation existe déjà côté better-auth. Le
+    // paywall (Task 6/7) rattrape au prochain accès dashboard.
+    console.error(
+      `[Autumn] Impossible de démarrer l'essai pour l'organisation ${data.organizationId}`,
+      error,
+    );
+  }
+
+  return { started: true };
+}

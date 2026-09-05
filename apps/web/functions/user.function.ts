@@ -1,6 +1,5 @@
 import { db } from "@biume/db";
 import { user as userSchema } from "@biume/db/schema/index";
-import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -10,23 +9,28 @@ export const updateUserNotificationsSchema = z.object({
   emailNotifications: z.boolean(),
 });
 
-export const updateUserNotifications = createServerFn({ method: "POST" })
-  .validator(updateUserNotificationsSchema)
-  .handler(async ({ data }) => {
-    const session = await ensureSession();
+export type UpdateUserNotificationsInput = z.infer<
+  typeof updateUserNotificationsSchema
+>;
 
-    const [updatedUser] = await db
-      .update(userSchema)
-      .set({
-        emailNotifications: data.emailNotifications,
-        updatedAt: new Date(),
-      })
-      .where(eq(userSchema.id, session.user.id))
-      .returning();
+export async function updateUserNotifications(
+  input: UpdateUserNotificationsInput,
+) {
+  const data = updateUserNotificationsSchema.parse(input);
+  const session = await ensureSession();
 
-    if (!updatedUser) {
-      throw new Error("Impossible de mettre à jour les notifications.");
-    }
+  const [updatedUser] = await db
+    .update(userSchema)
+    .set({
+      emailNotifications: data.emailNotifications,
+      updatedAt: new Date(),
+    })
+    .where(eq(userSchema.id, session.user.id))
+    .returning();
 
-    return updatedUser;
-  });
+  if (!updatedUser) {
+    throw new Error("Impossible de mettre à jour les notifications.");
+  }
+
+  return updatedUser;
+}

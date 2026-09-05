@@ -58,7 +58,8 @@ export const Route = createFileRoute("/dashboard")({
     // Un seul aller-retour pour tout le contexte du shell (voir
     // `getDashboardShellFn`), au lieu des cinq appels sérialisés d'avant.
     const shell = await getDashboardShellFn({
-      data: { pathname: location.pathname, preload },
+      pathname: location.pathname,
+      preload,
     });
 
     const redirectTarget = getDashboardRedirectTarget(shell.session, {
