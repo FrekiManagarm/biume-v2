@@ -15,7 +15,7 @@
 La migration est rendue tenable par trois faits constatés dans le code :
 
 1. **`lib/api/actions/*.action.ts` est déjà une couche anti-corruption.** Sa signature publique ne dépend d'aucun framework. On garde la signature, on change l'implémentation — les 6 fichiers `lib/api/queries/*` et les 173 composants ne bougent pas.
-2. **76 des 78 fichiers de test ignorent le framework.** Ils testent les services, la persistance, l'isolation multi-tenant et le contrat OpenAPI. Ils servent de filet à chaque tranche.
+2. **83 des 85 fichiers de test ignorent le framework.** Ils testent les services, la persistance, l'isolation multi-tenant et le contrat OpenAPI. Ils servent de filet à chaque tranche.
 3. **`server/` (61 fichiers) et `trigger/` sont déjà agnostiques.** L'API mobile, l'extraction, la transcription, le billing et l'accès propriétaire ne sont pas réécrits.
 
 Environ **85 % du code ne change pas**.
@@ -30,7 +30,7 @@ Environ **85 % du code ne change pas**.
 | Lignes | ~64 000 |
 | Fichiers de routes | 25 : 1 racine, 17 pages, 7 routes API (plus 2 tests colocalisés) |
 | Composants | 173 |
-| Fichiers de test | 78, dont **2 seulement** importent TanStack |
+| Fichiers de test | 85, dont **2 seulement** importent TanStack (623 tests verts, 12 skippés) |
 | Fichiers important `@tanstack/react-router` | 40 |
 | `createServerFn` | 77 occurrences, 12 fichiers `*.function.ts` |
 | Couche `lib/api/actions/` | 14 fichiers, 677 lignes |
@@ -255,9 +255,9 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 
 | # | Tranche | Contenu | Vérification |
 | --- | --- | --- | --- |
-| 0 | **Socle** | branche `migrate/next`, suppression de `src/`, alias, Next 16.2.9, `next.config.ts`, Tailwind v4 via postcss, vitest adapté. `routes/` exclu du tsconfig, encore sur disque | `dev` démarre, `check-types` vert, les 76 tests agnostiques verts |
+| 0 | **Socle** | branche `migrate/next`, suppression de `src/`, alias, Next 16.2.9, `next.config.ts`, Tailwind v4 via postcss, vitest adapté. `routes/` exclu du tsconfig, encore sur disque | `dev` démarre, `check-types` vert, les 623 tests verts |
 | 1 | **Routes API** | les 7 handlers. Le plus risqué à régresser, le moins cher à porter, et il débloque tout le reste | `openapi-drift.test.ts` et les 10 fichiers `mobile-api.*.test.ts` verts ; app Expo pointée sur la preview |
-| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` ré-implémenté à signature identique ; 6 handlers de lecture | le gros des 78 tests reste vert ; `lib/api/queries/*` non modifié |
+| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` ré-implémenté à signature identique ; 6 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié |
 | 3 | **Shell auth** | `app/layout.tsx` complet (QueryClient, Autumn, Tooltip, Toaster), les 4 pages `(auth)`, `/`, `select-organization`, `create-organization` | parcours connexion → choix d'organisation → redirection, sur preview |
 | 4 | **Shell dashboard** | `dashboard/layout.tsx` RSC avec les deux gardes, sidebar, header, bannière, `dashboard/page.tsx`, `loading.tsx`, `error.tsx` | `getDashboardRedirectTarget` et `getBillingGateRedirectTarget` restent verts ; navigation sur preview |
 | 5 | **Pages listes** | clients, patients, agenda : page RSC, `initialData`, `searchParams` | recherche, pagination, filtres, invalidation après mutation, retour arrière navigateur |
@@ -272,7 +272,7 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 
 ## 12. Vérification
 
-Le filet est la suite de tests existante : **76 des 78 fichiers ne connaissent pas le framework**. Ils doivent rester verts **à chaque tranche**, pas seulement à la fin. C'est ce qui rend une migration de 64 000 lignes tenable : on déplace du code dont le comportement est déjà sous contrat.
+Le filet est la suite de tests existante : **83 des 85 fichiers ne connaissent pas le framework**. La ligne de base mesurée le 5 septembre 2026 est de **623 tests verts et 12 skippés, 84 fichiers passants sur 86, en 6,9 s**. Ils doivent rester verts **à chaque tranche**, pas seulement à la fin. C'est ce qui rend une migration de 64 000 lignes tenable : on déplace du code dont le comportement est déjà sous contrat.
 
 À chaque tranche :
 
