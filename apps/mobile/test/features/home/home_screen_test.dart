@@ -1,4 +1,5 @@
 import 'package:biume_mobile/core/result.dart';
+import 'package:biume_mobile/core/ui/biume_widgets.dart';
 import 'package:biume_mobile/features/agenda/domain/agenda_repository.dart';
 import 'package:biume_mobile/features/agenda/domain/appointment.dart';
 import 'package:biume_mobile/features/auth/domain/auth_repository.dart';
@@ -115,6 +116,7 @@ void main() {
           builder: (_, state) =>
               Text('fiche-${state.pathParameters['patientId']}'),
         ),
+        GoRoute(path: '/agenda', builder: (_, _) => const Text('agenda')),
       ],
     );
 
@@ -128,14 +130,17 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('empile À traiter puis l\'agenda, avec Dicter seul en bas', (
+  testWidgets('empile À traiter puis le jour, avec Dicter seul dans le socle', (
     tester,
   ) async {
     await monter(tester);
 
     expect(find.text('À traiter'), findsOneWidget);
-    expect(find.text('Vos séances'), findsOneWidget);
-    expect(find.widgetWithText(FloatingActionButton, 'Dicter'), findsOneWidget);
+    expect(find.text("Aujourd'hui"), findsOneWidget);
+    // Le seul geste de l'écran, dans le socle fixe — pas un bouton flottant
+    // posé par-dessus la liste.
+    expect(find.widgetWithText(BrandAction, 'Dicter une séance'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
     expect(find.byType(BottomNavigationBar), findsNothing);
   });
 
@@ -188,7 +193,7 @@ void main() {
       // écran intermédiaire.
       expect(find.text('Votre entreprise'), findsNothing);
       expect(find.text('À traiter'), findsOneWidget);
-      expect(find.text('Vos séances'), findsOneWidget);
+      expect(find.text("Aujourd'hui"), findsOneWidget);
     },
   );
 
@@ -242,7 +247,9 @@ void main() {
       await monter(tester);
       await tester.pump();
 
-      await tester.tap(find.byTooltip('Options'));
+      // Les gestes d'une séance sont nommés dans une feuille, pas cachés
+      // derrière une icône de débordement.
+      await tester.tap(find.text('Filou · Chien'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Déplacer'));
       await tester.pumpAndSettle();
@@ -252,7 +259,7 @@ void main() {
   );
 
   testWidgets(
-    "le nom de l'animal sur la carte ouvre sa fiche",
+    "une séance ouvre la fiche de son animal",
     (tester) async {
       final appointment = Appointment(
         id: 'appointment-1',
@@ -271,10 +278,43 @@ void main() {
       await monter(tester);
       await tester.pump();
 
-      await tester.tap(find.text('Filou'));
+      await tester.tap(find.text('Filou · Chien'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Voir la fiche animal'));
       await tester.pumpAndSettle();
 
       expect(find.text('fiche-pet-1'), findsOneWidget);
     },
   );
+
+  testWidgets('la séance en cours porte « Maintenant »', (tester) async {
+    final now = DateTime.now();
+    final appointment = Appointment(
+      id: 'appointment-1',
+      patientId: 'pet-1',
+      patientName: 'Iron',
+      species: 'DOG',
+      beginAt: now.subtract(const Duration(minutes: 20)),
+      endAt: now.add(const Duration(minutes: 40)),
+      status: 'CONFIRMED',
+    );
+    when(() => agendaRepository.watchWindow(any(), any()))
+        .thenAnswer((_) => Stream.value([appointment]));
+
+    await monter(tester);
+    await tester.pump();
+
+    // Sur la ligne du titre, pas sous l'heure : c'est le rendez-vous qui est
+    // en cours, pas l'heure qui a une propriété.
+    expect(find.text('MAINTENANT'), findsOneWidget);
+  });
+
+  testWidgets("« 8 jours » ouvre la fenêtre complète", (tester) async {
+    await monter(tester);
+
+    await tester.tap(find.text('8 jours'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('agenda'), findsOneWidget);
+  });
 }

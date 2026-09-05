@@ -88,18 +88,21 @@ void main() {
         .thenAnswer((_) async {});
   });
 
-  testWidgets('affiche le texte dans un champ et un seul bouton plein', (
-    tester,
-  ) async {
+  /// Le praticien relit avant de corriger : le texte se pose comme un
+  /// document, pas comme un formulaire. Un champ ouvert par défaut invite à
+  /// réécrire ce qui n'a pas besoin de l'être, et fait manquer la relecture.
+  testWidgets('pose le texte à relire, sans champ ouvert', (tester) async {
     when(() => repository.load(any())).thenAnswer((_) async => Success(prete));
 
     await ouvrirLEcran(tester, repository, store);
 
-    expect(find.widgetWithText(TextField, prete.text), findsOneWidget);
+    expect(find.text(prete.text), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
     expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.text('Corriger le texte'), findsOneWidget);
   });
 
-  testWidgets('taper le bouton valide avec le texte du champ', (tester) async {
+  testWidgets('corriger puis valider envoie le texte corrigé', (tester) async {
     when(() => repository.load(any())).thenAnswer((_) async => Success(prete));
     when(() => repository.correct('capture-1', 'Texte modifié.')).thenAnswer(
       (_) async => const Success(
@@ -115,6 +118,8 @@ void main() {
 
     await ouvrirLEcran(tester, repository, store);
 
+    await tester.tap(find.text('Corriger le texte'));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Texte modifié.');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();

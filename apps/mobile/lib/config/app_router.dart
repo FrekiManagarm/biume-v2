@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/agenda/domain/appointment.dart';
+import '../features/agenda/presentation/agenda_screen.dart';
 import '../features/agenda/presentation/appointment_form_screen.dart';
 import '../features/auth/presentation/auth_cubit.dart';
 import '../features/auth/presentation/choose_company_screen.dart';
@@ -15,6 +16,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/records/presentation/new_client_screen.dart';
 import '../features/records/presentation/patient_picker_screen.dart';
 import '../features/records/presentation/patient_sheet_screen.dart';
+import '../features/report/presentation/finalize_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/transcript/presentation/transcript_page.dart';
 
@@ -50,6 +52,7 @@ GoRouter buildAppRouter(AuthCubit auth) {
         path: '/entreprise',
         builder: (_, _) => const ChooseCompanyScreen(),
       ),
+      GoRoute(path: '/agenda', builder: (_, _) => const AgendaPage()),
       GoRoute(
         path: '/dicter',
         builder: (_, state) =>
@@ -105,6 +108,11 @@ GoRouter buildAppRouter(AuthCubit auth) {
           reportId: state.pathParameters['reportId']!,
           fromPatientSheet: state.uri.queryParameters['source'] == 'fiche',
         ),
+      ),
+      GoRoute(
+        path: '/comptes-rendus/:reportId/finaliser',
+        builder: (_, state) =>
+            FinalizePage(reportId: state.pathParameters['reportId']!),
       ),
       GoRoute(
         path: '/suivis/:followUpId',

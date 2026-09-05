@@ -38,6 +38,13 @@ class RecordAudioRecorder implements AudioRecorder {
   @override
   Future<bool> isRecording() => _recorder.isRecording();
 
+  /// `record` donne des décibels pleine échelle, donc négatifs. Le plancher à
+  /// -50 dB est celui d'une pièce calme : en dessous, il n'y a rien à montrer.
+  @override
+  Stream<double> amplitude() => _recorder
+      .onAmplitudeChanged(const Duration(milliseconds: 120))
+      .map((mesure) => ((mesure.current + 50) / 50).clamp(0.0, 1.0));
+
   @override
   Future<void> dispose() => _recorder.dispose();
 }

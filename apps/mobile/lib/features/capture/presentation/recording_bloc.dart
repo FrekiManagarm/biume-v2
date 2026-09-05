@@ -168,6 +168,12 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
   String? _appointmentId;
   DateTime? _startedAt;
 
+  /// Le niveau capté, tel quel. Il ne passe pas par un état : à dix mesures
+  /// par seconde, il ferait reconstruire tout l'écran pour animer vingt-sept
+  /// barres, et rendrait la machine à états illisible pour ce qu'elle a de
+  /// vraiment concurrent.
+  Stream<double> get amplitude => _recorder.amplitude();
+
   Future<void> _onStarted(
     RecordingStarted event,
     Emitter<RecordingState> emit,

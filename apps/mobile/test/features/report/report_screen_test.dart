@@ -8,6 +8,7 @@ import 'package:biume_mobile/features/report/presentation/report_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockReportRepository extends Mock implements ReportRepository {}
@@ -70,6 +71,13 @@ Future<void> monter(WidgetTester tester, MockReportRepository repository) async 
 void main() {
   late MockReportRepository repository;
 
+  // `any(named: 'section')` a besoin d'une valeur de repli : mocktail ne
+  // l'interroge jamais, il la fait seulement circuler.
+  setUpAll(() {
+    registerFallbackValue(ReportSection.clinical);
+    registerFallbackValue(SectionState.proposed);
+  });
+
   setUp(() {
     repository = MockReportRepository();
     when(() => repository.load(any()))
@@ -111,10 +119,19 @@ void main() {
     await tester.pump();
 
     expect(find.text('proposed'), findsNothing);
-    expect(find.text('À vérifier'), findsWidgets);
+    expect(find.text('empty'), findsNothing);
+    // La pastille crie en capitales et parle normalement à la synthèse
+    // vocale.
+    expect(find.text('À VÉRIFIER'), findsWidgets);
+    expect(
+      tester.widget<Text>(find.text('À VÉRIFIER').first).semanticsLabel,
+      'À vérifier',
+    );
   });
 
-  testWidgets('interdit de finaliser tant que tout n\'est pas décidé', (
+  /// Éteint, le bouton garde sa place et dit ce qui manque : une proposition
+  /// à trancher, plus trois sections que rien ne viendra remplir.
+  testWidgets("le bouton final reste éteint et dit ce qui manque", (
     tester,
   ) async {
     await monter(tester, repository);
@@ -122,10 +139,113 @@ void main() {
     await tester.pump();
 
     final bouton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Finaliser et partager'),
+      find.widgetWithText(FilledButton, 'Terminer — 4 à vérifier'),
     );
 
     expect(bouton.onPressed, isNull);
+  });
+
+  /// Sept cartes dépliées se lisent comme un formulaire à remplir ; une seule
+  /// se lit comme une question posée.
+  testWidgets("n'ouvre qu'une proposition à la fois", (tester) async {
+    when(() => repository.load(any())).thenAnswer(
+      (_) async => Success(
+        fabriquer(
+          proposals: const [
+            Proposal(
+              id: 'proposal-1',
+              section: ReportSection.clinical,
+              text: 'Tension lombaire droite',
+              state: SectionState.proposed,
+              anchor: ancre,
+            ),
+            Proposal(
+              id: 'proposal-2',
+              section: ReportSection.clinical,
+              text: 'Bassin équilibré',
+              state: SectionState.proposed,
+              anchor: ancre,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await monter(tester, repository);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Tension lombaire droite'), findsOneWidget);
+    expect(find.text('Bassin équilibré'), findsNothing);
+    expect(
+      find.text('1 proposition restante dans cette section'),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(FilledButton, 'Valider'), findsOneWidget);
+  });
+
+  /// Ce qui est tranché se replie : le travail fait doit se voir sans
+  /// reprendre la place du travail restant.
+  testWidgets('replie ce qui est décidé', (tester) async {
+    when(() => repository.load(any())).thenAnswer(
+      (_) async => Success(
+        fabriquer(
+          proposals: const [
+            Proposal(
+              id: 'proposal-1',
+              section: ReportSection.clinical,
+              text: 'Tension lombaire droite',
+              state: SectionState.confirmed,
+              anchor: ancre,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await monter(tester, repository);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Tension lombaire droite'), findsOneWidget);
+    expect(find.text('Validé'), findsOneWidget);
+    // Repliée, la proposition ne montre plus ni sa source ni ses gestes.
+    expect(find.textContaining('tension lombaire à droite'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Valider'), findsNothing);
+  });
+
+  /// Sans ce geste, une section que rien ne remplit resterait indécise pour
+  /// toujours et le compte rendu ne se fermerait jamais.
+  testWidgets('permet de clore une section vide', (tester) async {
+    when(() => repository.decideSection(
+          reportId: any(named: 'reportId'),
+          section: any(named: 'section'),
+          decision: any(named: 'decision'),
+        )).thenAnswer((_) async => Success(donnees));
+
+    await monter(tester, repository);
+    await tester.pump();
+    await tester.pump();
+
+    // Une par section vide : recommandations et notes. La première suffit à
+    // vérifier le geste.
+    // Les sections vides ferment la liste, qui construit ses éléments à la
+    // demande : il faut les amener à l'écran avant de les viser.
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
+
+    // Une par section vide — recommandations et notes ; la première suffit à
+    // vérifier le geste.
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, 'Sans objet pour cette séance').first,
+    );
+    await tester.pump();
+
+    verify(() => repository.decideSection(
+          reportId: 'report-1',
+          section: any(named: 'section'),
+          decision: SectionState.notApplicable,
+        )).called(1);
   });
 
   testWidgets("n'affiche aucun bouton sur un rapport finalisé", (
@@ -160,80 +280,8 @@ void main() {
 
     expect(find.widgetWithText(FilledButton, 'Valider'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Sans objet'), findsNothing);
-    expect(
-      find.widgetWithText(FilledButton, 'Finaliser et partager'),
-      findsNothing,
-    );
+    expect(find.byType(FilledButton), findsNothing);
     expect(find.textContaining('Compte rendu finalisé'), findsOneWidget);
-  });
-
-  testWidgets("propose d'ajouter l'e-mail quand le propriétaire n'en a pas", (
-    tester,
-  ) async {
-    when(() => repository.load(any())).thenAnswer(
-      (_) async => Success(
-        fabriquer(
-          proposals: const [
-            Proposal(
-              id: 'proposal-1',
-              section: ReportSection.clinical,
-              text: 'Tension lombaire droite',
-              state: SectionState.confirmed,
-              anchor: ancre,
-            ),
-          ],
-          sections: const {
-            ReportSection.clinical: SectionState.confirmed,
-            ReportSection.anatomical: SectionState.notApplicable,
-            ReportSection.recommendations: SectionState.notApplicable,
-            ReportSection.notes: SectionState.notApplicable,
-          },
-          owner: const ReportOwner(
-            id: 'owner-1',
-            name: 'Camille Roux',
-            email: null,
-          ),
-        ),
-      ),
-    );
-
-    await monter(tester, repository);
-    await tester.pump();
-    await tester.pump();
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Finaliser et partager'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(TextField), findsOneWidget);
-    expect(
-      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(TextButton, 'Finaliser sans envoyer'),
-      findsOneWidget,
-    );
-
-    // Une adresse vide ou malformée est refusée sur place, avec ce qu'il faut
-    // corriger : un aller-retour serveur pour revenir en message générique
-    // ferait perdre le geste au praticien.
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      find.text("Indiquez l'adresse e-mail du propriétaire."),
-      findsOneWidget,
-    );
-    expect(find.byType(TextField), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'camille');
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Enregistrer et envoyer'),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
-    verifyNever(() => repository.updateOwnerEmail(any(), any()));
   });
 
   testWidgets(
@@ -272,4 +320,67 @@ void main() {
       await tester.pump();
     },
   );
+
+  /// Tout est tranché : le bouton s'allume et mène à la finalisation, qui
+  /// est l'écran où l'irréversible se décide — jamais ici.
+  testWidgets('tout décidé, « Terminer » mène à la finalisation', (
+    tester,
+  ) async {
+    when(() => repository.load(any())).thenAnswer(
+      (_) async => Success(
+        fabriquer(
+          proposals: const [
+            Proposal(
+              id: 'proposal-1',
+              section: ReportSection.clinical,
+              text: 'Tension lombaire droite',
+              state: SectionState.confirmed,
+              anchor: ancre,
+            ),
+          ],
+          sections: const {
+            ReportSection.clinical: SectionState.confirmed,
+            ReportSection.anatomical: SectionState.notApplicable,
+            ReportSection.recommendations: SectionState.notApplicable,
+            ReportSection.notes: SectionState.notApplicable,
+          },
+        ),
+      ),
+    );
+
+    final visites = <String>[];
+    final router = GoRouter(
+      initialLocation: '/comptes-rendus/report-1',
+      routes: [
+        GoRoute(
+          path: '/comptes-rendus/:reportId',
+          builder: (_, _) => BlocProvider(
+            create: (_) => ReportCubit(repository)..load('report-1'),
+            child: const ReportScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/comptes-rendus/:reportId/finaliser',
+          builder: (_, state) {
+            visites.add(state.uri.toString());
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: buildAppTheme(AppPalette.light, Brightness.light),
+        routerConfig: router,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Terminer'));
+    await tester.pumpAndSettle();
+
+    expect(visites, ['/comptes-rendus/report-1/finaliser']);
+  });
 }
