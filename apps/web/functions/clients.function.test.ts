@@ -38,7 +38,7 @@ describe("client mutation authorization", () => {
       source.match(/eq\(clients\.organizationId, organizationId\)/g) ?? []
     ).length;
     const deleteSource = source.slice(
-      source.indexOf("export const deleteClient"),
+      source.indexOf("export async function deleteClient"),
     );
 
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);
