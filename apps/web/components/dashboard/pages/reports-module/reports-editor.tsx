@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPatientById } from "@/lib/api/actions/patients.action";
 import { updateReport } from "@/lib/api/actions/reports.action";
@@ -105,7 +107,7 @@ export function AdvancedReportEditor({
   reportId,
   initialData,
 }: AdvancedReportEditorProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // Fonction helper pour charger les observations
@@ -666,10 +668,7 @@ export function AdvancedReportEditor({
           currentDraftRevisionRef.current !== submittedRevision,
         );
         if (result.status === "finalized") {
-          navigate({
-            to: "/dashboard/reports/$id",
-            params: { id: reportId },
-          });
+          router.push(`/dashboard/reports/${reportId}`);
         }
         return true;
       } catch (error) {

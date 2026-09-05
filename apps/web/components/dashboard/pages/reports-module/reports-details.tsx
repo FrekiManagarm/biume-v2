@@ -1,5 +1,8 @@
+"use client";
+
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -146,7 +149,7 @@ const formatReportDate = (date: Date | string | null | undefined) => {
 };
 
 const ReportDetails = ({ report }: ReportDetailsProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [isAnimalCredenzaOpen, setIsAnimalCredenzaOpen] = useState(false);
 
@@ -238,11 +241,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
   }>;
 
   const handlePrint = () => window.print();
-  const handleEdit = () =>
-    navigate({
-      to: "/dashboard/reports/$id/edit",
-      params: { id: report.id },
-    });
+  const handleEdit = () => router.push(`/dashboard/reports/${report.id}/edit`);
 
   return (
     <>
@@ -255,7 +254,7 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               asChild
               className="-ml-2 mb-2 h-8 text-slate-600 active:scale-[0.98]"
             >
-              <Link to="/dashboard/reports">
+              <Link href="/dashboard/reports">
                 <ArrowLeft className="size-4" />
                 Rapports
               </Link>

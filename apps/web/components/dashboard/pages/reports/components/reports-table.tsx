@@ -186,22 +186,31 @@ export function ReportsTable({ reports }: ReportsTableProps) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
     const reportUrl = `${baseUrl}/dashboard/reports/${report.id}`;
 
-    await emailMutation.mutateAsync({
-      to,
-      clientName,
-      petName,
-      reportDate,
-      reportUrl,
-      report: {
-        id: report.id,
-        title: report.title,
-        createdAt: report.createdAt || new Date(),
-        patient: report.patient,
-        organization: report.organization,
-        anatomicalIssues: report.anatomicalIssues,
-        recommendations: report.recommendations,
-      },
-    });
+    // Garde de transport (règle 5) : `handleSendReportByEmail` est appelé
+    // depuis un `onClick` non-awaité (menu déroulant ci-dessous). Sans ce
+    // `try/catch`, un échec de transport de `emailMutation.mutateAsync`
+    // (qui rejette toujours, `onError` ne l'empêche pas) deviendrait une
+    // unhandled rejection silencieuse.
+    try {
+      await emailMutation.mutateAsync({
+        to,
+        clientName,
+        petName,
+        reportDate,
+        reportUrl,
+        report: {
+          id: report.id,
+          title: report.title,
+          createdAt: report.createdAt || new Date(),
+          patient: report.patient,
+          organization: report.organization,
+          anatomicalIssues: report.anatomicalIssues,
+          recommendations: report.recommendations,
+        },
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email:", error);
+    }
   };
 
   const handleConfirmDelete = async () => {

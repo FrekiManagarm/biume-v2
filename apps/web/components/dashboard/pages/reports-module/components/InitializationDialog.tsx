@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronRightIcon, Loader2Icon, Search } from "lucide-react";
@@ -65,7 +65,7 @@ export function InitializationDialog({
   showInitDialog,
   setShowInitDialog,
 }: InitializationDialogProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isAnimalCredenzaOpen, setIsAnimalCredenzaOpen] = useState(false);
   const [petSearchTerm, setPetSearchTerm] = useState("");
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
@@ -156,10 +156,7 @@ export function InitializationDialog({
             });
       if (result.success) {
         toast.success("Rapport créé avec succès");
-        navigate({
-          to: "/dashboard/reports/$id/edit",
-          params: { id: result.reportId },
-        });
+        router.push(`/dashboard/reports/${result.reportId}/edit`);
       }
     } catch (error) {
       console.error(error);
