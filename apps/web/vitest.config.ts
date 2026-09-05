@@ -1,6 +1,5 @@
 import { fileURLToPath } from "node:url";
 
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 /**
@@ -12,19 +11,13 @@ import { defineConfig } from "vitest/config";
  *
  * `resolve.dedupe` ne suffit pas ici : les deux copies sont physiquement
  * présentes et chacune est une résolution légitime. On pointe donc
- * explicitement vers celle de la racine, la même que `vite.config.ts`
- * dédoublonne pour l'application.
+ * explicitement vers celle de la racine, pour que tout le monde (composants
+ * et renderer) partage la même instance de React.
  */
 const rootModule = (specifier: string) =>
   fileURLToPath(new URL(`../../node_modules/${specifier}`, import.meta.url));
 
 export default defineConfig({
-  // `tsconfig.json` porte "jsx": "preserve" pour que Next (SWC) transforme
-  // lui-même le JSX. Vite refuse de traiter du JSX non transformé venant du
-  // tsconfig ("make sure to not set jsx to preserve") : il faut donc un
-  // plugin qui transforme le JSX lui-même, en amont, indépendamment du
-  // réglage de tsconfig destiné à Next.
-  plugins: [react()],
   resolve: {
     tsconfigPaths: true,
     dedupe: ["react", "react-dom"],
