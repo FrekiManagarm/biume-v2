@@ -5,6 +5,8 @@ import {
   type SwitchOrganizationInput,
 } from "#/functions/auth.function";
 
-export async function switchActiveOrganization(input: SwitchOrganizationInput) {
-  return switchActiveOrganizationFn(input);
-}
+import { toActionResult } from "./action-result";
+
+export const switchActiveOrganization = toActionResult(
+  (input: SwitchOrganizationInput) => switchActiveOrganizationFn(input),
+);

@@ -5,8 +5,8 @@ import {
   type UpdateUserNotificationsInput,
 } from "#/functions/user.function";
 
-export async function updateUserNotifications(
-  input: UpdateUserNotificationsInput,
-) {
-  return updateUserNotificationsFn(input);
-}
+import { toActionResult } from "./action-result";
+
+export const updateUserNotifications = toActionResult(
+  (input: UpdateUserNotificationsInput) => updateUserNotificationsFn(input),
+);

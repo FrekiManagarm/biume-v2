@@ -5,6 +5,8 @@ import {
   type UpdateOrganizationInput,
 } from "#/functions/organization.function";
 
-export async function updateOrganization(input: UpdateOrganizationInput) {
-  return updateOrganizationFn(input);
-}
+import { toActionResult } from "./action-result";
+
+export const updateOrganization = toActionResult(
+  (input: UpdateOrganizationInput) => updateOrganizationFn(input),
+);
