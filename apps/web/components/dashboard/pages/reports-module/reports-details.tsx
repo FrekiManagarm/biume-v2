@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { ClientOnly, Link, useNavigate } from "@tanstack/react-router";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -28,7 +27,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientCard } from "./components/PatientCard";
 import { AnatomicalVisualization } from "./components/AnatomicalVisualization";
-import { ReportPDF } from "./components/ReportPDF";
 import { AnimalCredenza } from "@/components/animal-folder";
 
 interface ReportDetailsProps {
@@ -305,50 +303,19 @@ const ReportDetails = ({ report }: ReportDetailsProps) => {
               <Printer className="size-4" />
               Imprimer
             </Button>
-            <ClientOnly
-              fallback={
-                <Button
-                  variant="outline"
-                  disabled
-                  className="h-10 w-full rounded-lg border-slate-200 bg-white"
-                >
-                  <Download className="size-4" />
-                  Préparation
-                </Button>
-              }
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 w-full rounded-lg border-slate-200 bg-white active:scale-[0.98]"
             >
-              <PDFDownloadLink
-                document={
-                  <ReportPDF
-                    report={{
-                      id: report.id,
-                      title: report.title,
-                      createdAt: report.createdAt || new Date(),
-                      consultationReason: report.consultationReason,
-                      notes: report.notes,
-                      patient: report.patient,
-                      organization: report.organization,
-                      anatomicalIssues: report.anatomicalIssues,
-                      recommendations: report.recommendations,
-                      ownerContents: report.ownerContents,
-                    }}
-                    type="advanced_report"
-                  />
-                }
-                fileName={`rapport-${report.id}.pdf`}
+              <a
+                href={`/api/reports/${report.id}/pdf`}
+                download={`rapport-${report.id}.pdf`}
               >
-                {({ loading }) => (
-                  <Button
-                    variant="outline"
-                    disabled={loading}
-                    className="h-10 w-full rounded-lg border-slate-200 bg-white active:scale-[0.98]"
-                  >
-                    <Download className="size-4" />
-                    {loading ? "Préparation" : "PDF"}
-                  </Button>
-                )}
-              </PDFDownloadLink>
-            </ClientOnly>
+                <Download className="size-4" />
+                PDF
+              </a>
+            </Button>
           </div>
         </header>
 

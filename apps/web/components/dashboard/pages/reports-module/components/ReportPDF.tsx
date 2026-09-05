@@ -12,6 +12,7 @@ import {
 import { Buffer as BrowserBuffer } from "buffer";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { join } from "node:path";
 
 import {
   buildReportPdfViewModel,
@@ -451,8 +452,11 @@ function getAnimalImage(kind: "cat" | "dog" | "horse", side: "left" | "right") {
 
   if (typeof window !== "undefined") return assetPath;
 
-  return new URL(`../../../../../public${assetPath}`, import.meta.url)
-    .pathname;
+  // `import.meta.url` désignerait le chunk `.next/server/` de ce composant
+  // une fois bundlé par Next, pas le fichier source : le chemin résolu ne
+  // pointerait nulle part. `process.cwd()` reste stable côté serveur, dev
+  // comme production, et pointe vers la racine de l'app Next où vit `public/`.
+  return join(process.cwd(), "public", assetPath);
 }
 
 function MetricBlock({

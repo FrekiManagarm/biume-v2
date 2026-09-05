@@ -41,12 +41,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { AdvancedReportListItem } from "@/lib/api/actions/reports.action";
-import { ClientOnly, useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { deleteReport } from "@/lib/api/actions/reports.action";
 import { toast } from "sonner";
 import { sendNewReportClientEmailWithPDF } from "@/lib/api/actions/email.action";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { ReportPDF } from "#/components/dashboard/pages/reports-module/components/ReportPDF";
 import { cn } from "#/lib/utils";
 
 type ReportStatus = "préparé" | "brouillon" | "finalisé" | "envoyé";
@@ -129,7 +127,7 @@ const formatDate = (date: Date) => {
 };
 
 export function ReportsTable({ reports }: ReportsTableProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] =
     useState<AdvancedReportListItem | null>(null);
@@ -153,11 +151,11 @@ export function ReportsTable({ reports }: ReportsTableProps) {
   });
 
   const handleViewReport = (reportId: string) => {
-    navigate({ to: "/dashboard/reports/$id", params: { id: reportId } });
+    router.push(`/dashboard/reports/${reportId}`);
   };
 
   const handleEditReport = (reportId: string) => {
-    navigate({ to: "/dashboard/reports/$id/edit", params: { id: reportId } });
+    router.push(`/dashboard/reports/${reportId}/edit`);
   };
 
   const handleDeleteReport = (report: AdvancedReportListItem) => {
@@ -165,7 +163,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
     setIsDeleteDialogOpen(true);
   };
 
-  // Téléchargement PDF désormais géré via React-PDF (PDFDownloadLink) dans le menu
+  // Téléchargement PDF désormais géré par un lien vers /api/reports/[id]/pdf dans le menu
 
   const emailMutation = useMutation({
     mutationFn: sendNewReportClientEmailWithPDF,
@@ -256,7 +254,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                 <div className="font-semibold text-slate-950">
                   {report.title}
                 </div>
-                <div className="mt-1 max-w-[240px] truncate text-sm text-slate-500">
+                <div className="mt-1 max-w-60 truncate text-sm text-slate-500">
                   {report.notes || "Aucune note"}
                 </div>
               </TableCell>
@@ -281,7 +279,7 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                   <span>{report.patient?.owner?.name || "N/A"}</span>
                 </div>
               </TableCell>
-              <TableCell className="max-w-[220px] truncate py-4 text-sm text-slate-500">
+              <TableCell className="max-w-55 truncate py-4 text-sm text-slate-500">
                 {report.consultationReason || "Non spécifié"}
               </TableCell>
               <TableCell className="py-4">
@@ -340,44 +338,15 @@ export function ReportsTable({ reports }: ReportsTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         render={
-                          <ClientOnly
-                            fallback={
-                              <div className="flex items-center gap-2">
-                                <Download className="size-4" />
-                                Génération...
-                              </div>
-                            }
+                          <a
+                            href={`/api/reports/${report.id}/pdf`}
+                            download={`rapport-${report.id}.pdf`}
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <PDFDownloadLink
-                              document={
-                                <ReportPDF
-                                  report={{
-                                    id: report.id,
-                                    title: report.title,
-                                    createdAt: report.createdAt || new Date(),
-                                    patient: report.patient,
-                                    organization: report.organization,
-                                    anatomicalIssues: report.anatomicalIssues,
-                                    recommendations: report.recommendations,
-                                  }}
-                                  type="advanced_report"
-                                />
-                              }
-                              fileName={`rapport-${report.id}.pdf`}
-                            >
-                              {({ loading }) => (
-                                <div
-                                  className="flex items-center gap-2"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Download className="size-4" />
-                                  {loading
-                                    ? "Génération..."
-                                    : "Télécharger le PDF"}
-                                </div>
-                              )}
-                            </PDFDownloadLink>
-                          </ClientOnly>
+                            <Download className="size-4" />
+                            Télécharger le PDF
+                          </a>
                         }
                       />
                       <DropdownMenuItem
