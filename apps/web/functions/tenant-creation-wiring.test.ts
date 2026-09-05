@@ -20,8 +20,8 @@ describe("tenant-isolated creation wiring", () => {
       "utf8",
     );
     const createSource = source.slice(
-      source.indexOf("export const createAppointment"),
-      source.indexOf("export const updateAppointment"),
+      source.indexOf("export async function createAppointment"),
+      source.indexOf("export async function updateAppointment"),
     );
 
     expect(createSource).toContain("createAppointmentWithPatientIsolation");
@@ -81,8 +81,8 @@ describe("tenant-isolated update wiring", () => {
       "utf8",
     );
     const updateSource = source.slice(
-      source.indexOf("export const updateAppointment"),
-      source.indexOf("export const deleteAppointment"),
+      source.indexOf("export async function updateAppointment"),
+      source.indexOf("export async function deleteAppointment"),
     );
 
     expect(updateSource).toContain("updateAppointmentWithTenantIsolation");

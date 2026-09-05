@@ -5,7 +5,6 @@ import {
   medicalDocuments,
   pets,
 } from "@biume/db/schema/index";
-import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -38,106 +37,114 @@ const updateMedicalDocumentSchema = z.object({
   }),
 });
 
-export const getMedicalDocumentsByPetId = createServerFn({ method: "GET" })
-  .validator(petIdSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+export type PetIdInput = z.infer<typeof petIdSchema>;
 
-    const pet = await db.query.pets.findFirst({
-      where: and(eq(pets.id, data.petId), eq(pets.organizationId, organization.id)),
-    });
+export async function getMedicalDocumentsByPetId(input: PetIdInput) {
+  const data = petIdSchema.parse(input);
+  const organization = await getCurrentOrganization();
+  if (!organization) throw new Error("Organization not found");
 
-    if (!pet) {
-      throw new Error("Pet not found or access denied");
-    }
-
-    return db.query.medicalDocuments.findMany({
-      where: eq(medicalDocuments.petId, data.petId),
-      orderBy: [desc(medicalDocuments.createdAt)],
-      with: {
-        uploader: true,
-      },
-    });
+  const pet = await db.query.pets.findFirst({
+    where: and(eq(pets.id, data.petId), eq(pets.organizationId, organization.id)),
   });
 
-export const createMedicalDocument = createServerFn({ method: "POST" })
-  .validator(createMedicalDocumentSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+  if (!pet) {
+    throw new Error("Pet not found or access denied");
+  }
 
-    const pet = await db.query.pets.findFirst({
-      where: and(eq(pets.id, data.petId), eq(pets.organizationId, organization.id)),
-    });
+  return db.query.medicalDocuments.findMany({
+    where: eq(medicalDocuments.petId, data.petId),
+    orderBy: [desc(medicalDocuments.createdAt)],
+    with: {
+      uploader: true,
+    },
+  });
+}
 
-    if (!pet) {
-      throw new Error("Pet not found or access denied");
-    }
+export type CreateMedicalDocumentInput = z.infer<
+  typeof createMedicalDocumentSchema
+>;
 
-    const [document] = await db
-      .insert(medicalDocuments)
-      .values({
-        ...(data as Omit<CreateMedicalDocument, "uploadedBy">),
-        uploadedBy: organization.id,
-        updatedAt: new Date(),
-      })
-      .returning();
+export async function createMedicalDocument(input: CreateMedicalDocumentInput) {
+  const data = createMedicalDocumentSchema.parse(input);
+  const organization = await getCurrentOrganization();
+  if (!organization) throw new Error("Organization not found");
 
-    return document;
+  const pet = await db.query.pets.findFirst({
+    where: and(eq(pets.id, data.petId), eq(pets.organizationId, organization.id)),
   });
 
-export const deleteMedicalDocument = createServerFn({ method: "POST" })
-  .validator(documentIdSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+  if (!pet) {
+    throw new Error("Pet not found or access denied");
+  }
 
-    const document = await db.query.medicalDocuments.findFirst({
-      where: eq(medicalDocuments.id, data.documentId),
-      with: {
-        pet: true,
-      },
-    });
+  const [document] = await db
+    .insert(medicalDocuments)
+    .values({
+      ...(data as Omit<CreateMedicalDocument, "uploadedBy">),
+      uploadedBy: organization.id,
+      updatedAt: new Date(),
+    })
+    .returning();
 
-    if (!document || document.pet?.organizationId !== organization.id) {
-      throw new Error("Document not found or access denied");
-    }
+  return document;
+}
 
-    await db
-      .delete(medicalDocuments)
-      .where(eq(medicalDocuments.id, data.documentId));
+export type DocumentIdInput = z.infer<typeof documentIdSchema>;
 
-    return { success: true };
+export async function deleteMedicalDocument(input: DocumentIdInput) {
+  const data = documentIdSchema.parse(input);
+  const organization = await getCurrentOrganization();
+  if (!organization) throw new Error("Organization not found");
+
+  const document = await db.query.medicalDocuments.findFirst({
+    where: eq(medicalDocuments.id, data.documentId),
+    with: {
+      pet: true,
+    },
   });
 
-export const updateMedicalDocument = createServerFn({ method: "POST" })
-  .validator(updateMedicalDocumentSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+  if (!document || document.pet?.organizationId !== organization.id) {
+    throw new Error("Document not found or access denied");
+  }
 
-    const document = await db.query.medicalDocuments.findFirst({
-      where: eq(medicalDocuments.id, data.documentId),
-      with: {
-        pet: true,
-      },
-    });
+  await db
+    .delete(medicalDocuments)
+    .where(eq(medicalDocuments.id, data.documentId));
 
-    if (!document || document.pet?.organizationId !== organization.id) {
-      throw new Error("Document not found or access denied");
-    }
+  return { success: true };
+}
 
-    const [updated] = await db
-      .update(medicalDocuments)
-      .set({
-        ...(data.data as Partial<
-          Pick<MedicalDocument, "title" | "description" | "fileType">
-        >),
-        updatedAt: new Date(),
-      })
-      .where(eq(medicalDocuments.id, data.documentId))
-      .returning();
+export type UpdateMedicalDocumentInput = z.infer<
+  typeof updateMedicalDocumentSchema
+>;
 
-    return updated;
+export async function updateMedicalDocument(input: UpdateMedicalDocumentInput) {
+  const data = updateMedicalDocumentSchema.parse(input);
+  const organization = await getCurrentOrganization();
+  if (!organization) throw new Error("Organization not found");
+
+  const document = await db.query.medicalDocuments.findFirst({
+    where: eq(medicalDocuments.id, data.documentId),
+    with: {
+      pet: true,
+    },
   });
+
+  if (!document || document.pet?.organizationId !== organization.id) {
+    throw new Error("Document not found or access denied");
+  }
+
+  const [updated] = await db
+    .update(medicalDocuments)
+    .set({
+      ...(data.data as Partial<
+        Pick<MedicalDocument, "title" | "description" | "fileType">
+      >),
+      updatedAt: new Date(),
+    })
+    .where(eq(medicalDocuments.id, data.documentId))
+    .returning();
+
+  return updated;
+}

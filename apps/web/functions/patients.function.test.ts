@@ -113,16 +113,16 @@ describe("patient mutation authorization", () => {
       source.match(/eq\(pets\.organizationId, organizationId\)/g) ?? []
     ).length;
     const updateSource = source.slice(
-      source.indexOf("export const updatePatient"),
-      source.indexOf("export const deletePatient"),
+      source.indexOf("export async function updatePatient"),
+      source.indexOf("export async function deletePatient"),
     );
     const createSource = source.slice(
-      source.indexOf("export const createPatient"),
-      source.indexOf("export const updatePatient"),
+      source.indexOf("export async function createPatient"),
+      source.indexOf("export async function updatePatient"),
     );
     const deleteSource = source.slice(
-      source.indexOf("export const deletePatient"),
-      source.indexOf("export const getPatientById"),
+      source.indexOf("export async function deletePatient"),
+      source.indexOf("export async function getPatientById"),
     );
 
     expect(organizationScopeCount).toBeGreaterThanOrEqual(3);

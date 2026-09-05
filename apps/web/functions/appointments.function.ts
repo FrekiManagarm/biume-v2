@@ -13,7 +13,6 @@ import {
   reportSectionState,
 } from "@biume/db/schema/index";
 import { createInitialReportSectionStates } from "@biume/contracts/report";
-import { createServerFn } from "@tanstack/react-start";
 import { endOfDay, startOfDay } from "date-fns";
 import z from "zod";
 
@@ -66,64 +65,65 @@ const patientIdSchema = z.object({
   patientId: z.string(),
 });
 
-export const getAppointments = createServerFn({ method: "GET" })
-  .validator(appointmentWindowSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export type AppointmentWindowInput = z.infer<typeof appointmentWindowSchema>;
 
-    const results = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        gte(appointments.beginAt, new Date(data.fromISO)),
-        lte(appointments.beginAt, new Date(data.toISO)),
-      ),
-      with: {
-        patient: {
-          with: {
-            owner: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                phone: true,
-              },
+export async function getAppointments(input: AppointmentWindowInput) {
+  const data = appointmentWindowSchema.parse(input);
+  const organizationId = await requireOrganizationId();
+
+  const results = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      gte(appointments.beginAt, new Date(data.fromISO)),
+      lte(appointments.beginAt, new Date(data.toISO)),
+    ),
+    with: {
+      patient: {
+        with: {
+          owner: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              phone: true,
             },
-            animal: { columns: { code: true, name: true } },
           },
-        },
-        organization: true,
-        // Assez pour appliquer `isReportEmpty` sans ramener le contenu :
-        // seuls les identifiants des lignes filles sont comptés.
-        reports: {
-          columns: {
-            id: true,
-            status: true,
-            updatedAt: true,
-            consultationReason: true,
-            notes: true,
-          },
-          with: {
-            anatomicalIssues: { columns: { id: true } },
-            recommendations: { columns: { id: true } },
-          },
+          animal: { columns: { code: true, name: true } },
         },
       },
-    });
-
-    return results.map((appointment) => ({
-      ...appointment,
-      reports: appointment.reports.map((report) => ({
-        id: report.id,
-        status: report.status,
-        updatedAt: report.updatedAt,
-        consultationReason: report.consultationReason,
-        notes: report.notes,
-        anatomicalIssueCount: report.anatomicalIssues.length,
-        recommendationCount: report.recommendations.length,
-      })),
-    }));
+      organization: true,
+      // Assez pour appliquer `isReportEmpty` sans ramener le contenu :
+      // seuls les identifiants des lignes filles sont comptés.
+      reports: {
+        columns: {
+          id: true,
+          status: true,
+          updatedAt: true,
+          consultationReason: true,
+          notes: true,
+        },
+        with: {
+          anatomicalIssues: { columns: { id: true } },
+          recommendations: { columns: { id: true } },
+        },
+      },
+    },
   });
+
+  return results.map((appointment) => ({
+    ...appointment,
+    reports: appointment.reports.map((report) => ({
+      id: report.id,
+      status: report.status,
+      updatedAt: report.updatedAt,
+      consultationReason: report.consultationReason,
+      notes: report.notes,
+      anatomicalIssueCount: report.anatomicalIssues.length,
+      recommendationCount: report.recommendations.length,
+    })),
+  }));
+}
 
 /**
  * Vérifie si un créneau horaire chevauche des rendez-vous existants
@@ -132,381 +132,398 @@ export const getAppointments = createServerFn({ method: "GET" })
  * @param excludeAppointmentId ID du rendez-vous à exclure de la vérification (utile pour les modifications)
  * @returns Liste des rendez-vous en conflit
  */
-export const checkAppointmentConflicts = createServerFn({ method: "GET" })
-  .validator(appointmentDateRangeSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export type AppointmentDateRangeInput = z.infer<
+  typeof appointmentDateRangeSchema
+>;
 
-    // Un rendez-vous est en conflit si :
-    // - Il commence avant la fin du nouveau rendez-vous ET
-    // - Il se termine après le début du nouveau rendez-vous
-    const conflicts = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        // Une séance annulée libère son créneau : la compter comme un conflit
-        // empêcherait le praticien de réutiliser une heure qu'il vient de
-        // libérer lui-même.
-        ne(appointments.status, "CANCELLED"),
-        // Exclure le rendez-vous en cours de modification
-        data.excludeAppointmentId
-          ? ne(appointments.id, data.excludeAppointmentId)
-          : undefined,
-        // Vérifier le chevauchement
-        or(
-          // Le rendez-vous existant commence pendant le nouveau créneau
-          and(
-            gte(appointments.beginAt, data.beginAt),
-            lte(appointments.beginAt, data.endAt),
-          ),
-          // Le rendez-vous existant se termine pendant le nouveau créneau
-          and(
-            gte(appointments.endAt, data.beginAt),
-            lte(appointments.endAt, data.endAt),
-          ),
-          // Le rendez-vous existant englobe complètement le nouveau créneau
-          and(
-            lte(appointments.beginAt, data.beginAt),
-            gte(appointments.endAt, data.endAt),
-          ),
+export async function checkAppointmentConflicts(
+  input: AppointmentDateRangeInput,
+) {
+  const data = appointmentDateRangeSchema.parse(input);
+  const organizationId = await requireOrganizationId();
+
+  // Un rendez-vous est en conflit si :
+  // - Il commence avant la fin du nouveau rendez-vous ET
+  // - Il se termine après le début du nouveau rendez-vous
+  const conflicts = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      // Une séance annulée libère son créneau : la compter comme un conflit
+      // empêcherait le praticien de réutiliser une heure qu'il vient de
+      // libérer lui-même.
+      ne(appointments.status, "CANCELLED"),
+      // Exclure le rendez-vous en cours de modification
+      data.excludeAppointmentId
+        ? ne(appointments.id, data.excludeAppointmentId)
+        : undefined,
+      // Vérifier le chevauchement
+      or(
+        // Le rendez-vous existant commence pendant le nouveau créneau
+        and(
+          gte(appointments.beginAt, data.beginAt),
+          lte(appointments.beginAt, data.endAt),
+        ),
+        // Le rendez-vous existant se termine pendant le nouveau créneau
+        and(
+          gte(appointments.endAt, data.beginAt),
+          lte(appointments.endAt, data.endAt),
+        ),
+        // Le rendez-vous existant englobe complètement le nouveau créneau
+        and(
+          lte(appointments.beginAt, data.beginAt),
+          gte(appointments.endAt, data.endAt),
         ),
       ),
-      with: {
-        patient: true,
-      },
-    });
-
-    return conflicts as Appointment[];
+    ),
+    with: {
+      patient: true,
+    },
   });
+
+  return conflicts as Appointment[];
+}
 
 /**
  * Crée un nouveau rendez-vous
  */
-export const createAppointment = createServerFn({ method: "POST" })
-  .validator(createAppointmentSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+// `z.input`, pas `z.infer` : `withReport` porte un `.default(true)`, donc
+// `z.infer` (le type de sortie, après application du défaut) le rendrait
+// obligatoire — ce qui romprait la signature publique existante où ce champ
+// est optionnel. Même principe que `z.input<typeof quickReportSchema>` dans
+// `reports.action.ts`.
+export type CreateAppointmentInput = z.input<typeof createAppointmentSchema>;
 
-    return createAppointmentWithPatientIsolation({
-      findPatient: () =>
-        db.query.pets.findFirst({
-          where: and(
-            eq(pets.id, data.patientId),
-            eq(pets.organizationId, organizationId),
-          ),
-          columns: { id: true },
-        }),
-      insertAppointment: async () => {
-        const [newAppointment] = await db
-          .insert(appointments)
-          .values({
-            patientId: data.patientId,
-            beginAt: data.beginAt,
-            endAt: data.endAt,
-            organizationId,
-            atHome: data.atHome || false,
-            note: data.note,
-            status: "CREATED",
-            createdAt: new Date(),
-          })
-          .returning();
+export async function createAppointment(input: CreateAppointmentInput) {
+  const data = createAppointmentSchema.parse(input);
+  const organizationId = await requireOrganizationId();
 
-        const animal = await db.query.pets.findFirst({
-          where: eq(pets.id, data.patientId),
-          columns: { name: true },
-        });
+  return createAppointmentWithPatientIsolation({
+    findPatient: () =>
+      db.query.pets.findFirst({
+        where: and(
+          eq(pets.id, data.patientId),
+          eq(pets.organizationId, organizationId),
+        ),
+        columns: { id: true },
+      }),
+    insertAppointment: async () => {
+      const [newAppointment] = await db
+        .insert(appointments)
+        .values({
+          patientId: data.patientId,
+          beginAt: data.beginAt,
+          endAt: data.endAt,
+          organizationId,
+          atHome: data.atHome || false,
+          note: data.note,
+          status: "CREATED",
+          createdAt: new Date(),
+        })
+        .returning();
 
-        await createSessionReport(
-          {
-            insertReport: async (values) => {
-              const reportId = crypto.randomUUID();
-              await db.batch([
-                db.insert(advancedReport).values({
-                  id: reportId,
-                  title: values.title,
-                  consultationReason: values.consultationReason,
-                  patientId: values.patientId,
-                  appointmentId: values.appointmentId,
-                  notes: "",
-                  status: "draft",
-                  createdBy: organizationId,
-                  createdAt: new Date(),
-                }),
-                db
-                  .insert(reportSectionState)
-                  .values(
-                    buildReportSectionStateRows(
-                      reportId,
-                      createInitialReportSectionStates(),
-                    ),
+      const animal = await db.query.pets.findFirst({
+        where: eq(pets.id, data.patientId),
+        columns: { name: true },
+      });
+
+      await createSessionReport(
+        {
+          insertReport: async (values) => {
+            const reportId = crypto.randomUUID();
+            await db.batch([
+              db.insert(advancedReport).values({
+                id: reportId,
+                title: values.title,
+                consultationReason: values.consultationReason,
+                patientId: values.patientId,
+                appointmentId: values.appointmentId,
+                notes: "",
+                status: "draft",
+                createdBy: organizationId,
+                createdAt: new Date(),
+              }),
+              db
+                .insert(reportSectionState)
+                .values(
+                  buildReportSectionStateRows(
+                    reportId,
+                    createInitialReportSectionStates(),
                   ),
-              ]);
+                ),
+            ]);
 
-              return reportId;
-            },
+            return reportId;
           },
-          {
-            appointmentId: newAppointment.id,
-            patientId: data.patientId,
-            animalName: animal?.name ?? null,
-            beginAt: data.beginAt,
-            note: data.note ?? null,
-            withReport: data.withReport,
-          },
-        );
+        },
+        {
+          appointmentId: newAppointment.id,
+          patientId: data.patientId,
+          animalName: animal?.name ?? null,
+          beginAt: data.beginAt,
+          note: data.note ?? null,
+          withReport: data.withReport,
+        },
+      );
 
-        return newAppointment;
-      },
-    });
+      return newAppointment;
+    },
   });
+}
 
 /**
  * Modifie un rendez-vous existant
  */
-export const updateAppointment = createServerFn({ method: "POST" })
-  .validator(updateAppointmentSchema)
-  .handler(async ({ data }) => {
-    const { appointmentId, ...values } = data;
-    const patientId = values.patientId;
-    const organizationId = await requireOrganizationId();
+export type UpdateAppointmentInput = z.infer<typeof updateAppointmentSchema>;
 
-    return updateAppointmentWithTenantIsolation({
-      findAppointment: () =>
-        db.query.appointments.findFirst({
-          where: and(
-            eq(appointments.id, appointmentId),
-            eq(appointments.organizationId, organizationId),
-          ),
-          columns: { id: true },
-        }),
-      findPatient:
-        patientId !== undefined
-          ? () =>
-              db.query.pets.findFirst({
-                where: and(
-                  eq(pets.id, patientId),
-                  eq(pets.organizationId, organizationId),
-                ),
-                columns: { id: true },
-              })
-          : undefined,
-      updateAppointment: async () => {
-        const [updatedAppointment] = await db
-          .update(appointments)
-          .set({
-            ...values,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(appointments.id, appointmentId),
-              eq(appointments.organizationId, organizationId),
-            ),
-          )
-          .returning();
+export async function updateAppointment(input: UpdateAppointmentInput) {
+  const data = updateAppointmentSchema.parse(input);
+  const { appointmentId, ...values } = data;
+  const patientId = values.patientId;
+  const organizationId = await requireOrganizationId();
 
-        if (!updatedAppointment) {
-          throw new Error("Rendez-vous non trouvé ou non autorisé");
-        }
-
-        return updatedAppointment;
-      },
-    });
-  });
-
-export const deleteAppointment = createServerFn({ method: "POST" })
-  .validator(appointmentIdSchema)
-  .handler(async ({ data }) => {
-    try {
-      const organizationId = await requireOrganizationId();
-
-      const linkedReports = await db.query.advancedReport.findMany({
+  return updateAppointmentWithTenantIsolation({
+    findAppointment: () =>
+      db.query.appointments.findFirst({
         where: and(
-          eq(advancedReport.appointmentId, data.appointmentId),
-          eq(advancedReport.createdBy, organizationId),
+          eq(appointments.id, appointmentId),
+          eq(appointments.organizationId, organizationId),
         ),
-        columns: {
-          id: true,
-          consultationReason: true,
-          notes: true,
-        },
-        with: {
-          anatomicalIssues: { columns: { id: true } },
-          recommendations: { columns: { id: true } },
-        },
-      });
-
-      const { deleteIds } = resolveReportsOnAppointmentDeletion(
-        linkedReports.map((report) => ({
-          id: report.id,
-          consultationReason: report.consultationReason,
-          notes: report.notes,
-          anatomicalIssueCount: report.anatomicalIssues.length,
-          recommendationCount: report.recommendations.length,
-        })),
-      );
-
-      // Les comptes rendus non vides sont détachés par la contrainte
-      // `ON DELETE set null` posée à la tâche 4.
-      if (deleteIds.length > 0) {
-        await db
-          .delete(advancedReport)
-          .where(inArray(advancedReport.id, deleteIds));
-      }
-
-      const [deletedAppointment] = await db
-        .delete(appointments)
+        columns: { id: true },
+      }),
+    findPatient:
+      patientId !== undefined
+        ? () =>
+            db.query.pets.findFirst({
+              where: and(
+                eq(pets.id, patientId),
+                eq(pets.organizationId, organizationId),
+              ),
+              columns: { id: true },
+            })
+        : undefined,
+    updateAppointment: async () => {
+      const [updatedAppointment] = await db
+        .update(appointments)
+        .set({
+          ...values,
+          updatedAt: new Date(),
+        })
         .where(
           and(
-            eq(appointments.id, data.appointmentId),
+            eq(appointments.id, appointmentId),
             eq(appointments.organizationId, organizationId),
           ),
         )
         .returning();
 
-      return deletedAppointment;
-    } catch (error) {
-      console.error("Error deleting appointment", error);
-      throw new Error("Error deleting appointment");
-    }
+      if (!updatedAppointment) {
+        throw new Error("Rendez-vous non trouvé ou non autorisé");
+      }
+
+      return updatedAppointment;
+    },
   });
+}
+
+export type AppointmentIdInput = z.infer<typeof appointmentIdSchema>;
+
+export async function deleteAppointment(input: AppointmentIdInput) {
+  const data = appointmentIdSchema.parse(input);
+  try {
+    const organizationId = await requireOrganizationId();
+
+    const linkedReports = await db.query.advancedReport.findMany({
+      where: and(
+        eq(advancedReport.appointmentId, data.appointmentId),
+        eq(advancedReport.createdBy, organizationId),
+      ),
+      columns: {
+        id: true,
+        consultationReason: true,
+        notes: true,
+      },
+      with: {
+        anatomicalIssues: { columns: { id: true } },
+        recommendations: { columns: { id: true } },
+      },
+    });
+
+    const { deleteIds } = resolveReportsOnAppointmentDeletion(
+      linkedReports.map((report) => ({
+        id: report.id,
+        consultationReason: report.consultationReason,
+        notes: report.notes,
+        anatomicalIssueCount: report.anatomicalIssues.length,
+        recommendationCount: report.recommendations.length,
+      })),
+    );
+
+    // Les comptes rendus non vides sont détachés par la contrainte
+    // `ON DELETE set null` posée à la tâche 4.
+    if (deleteIds.length > 0) {
+      await db
+        .delete(advancedReport)
+        .where(inArray(advancedReport.id, deleteIds));
+    }
+
+    const [deletedAppointment] = await db
+      .delete(appointments)
+      .where(
+        and(
+          eq(appointments.id, data.appointmentId),
+          eq(appointments.organizationId, organizationId),
+        ),
+      )
+      .returning();
+
+    return deletedAppointment;
+  } catch (error) {
+    console.error("Error deleting appointment", error);
+    throw new Error("Error deleting appointment");
+  }
+}
 
 /**
  * Récupère les rendez-vous du jour actuel
  */
-export const getTodayAppointments = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const organizationId = await requireOrganizationId();
+export async function getTodayAppointments() {
+  const organizationId = await requireOrganizationId();
 
-    const today = new Date();
-    const dayStart = startOfDay(today);
-    const dayEnd = endOfDay(today);
+  const today = new Date();
+  const dayStart = startOfDay(today);
+  const dayEnd = endOfDay(today);
 
-    const results = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        gte(appointments.beginAt, dayStart),
-        lte(appointments.beginAt, dayEnd),
-      ),
-      orderBy: (appointments, { asc }) => [asc(appointments.beginAt)],
-      with: {
-        patient: {
-          with: {
-            owner: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                phone: true,
-              },
+  const results = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      gte(appointments.beginAt, dayStart),
+      lte(appointments.beginAt, dayEnd),
+    ),
+    orderBy: (appointments, { asc }) => [asc(appointments.beginAt)],
+    with: {
+      patient: {
+        with: {
+          owner: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              phone: true,
             },
-            animal: {
-              columns: {
-                code: true,
-                name: true,
-              },
+          },
+          animal: {
+            columns: {
+              code: true,
+              name: true,
             },
           },
         },
-        organization: true,
       },
-    });
+      organization: true,
+    },
+  });
 
-    return results as Appointment[];
-  },
-);
+  return results as Appointment[];
+}
 
 /**
  * Récupère les rendez-vous complétés qui n'ont pas de rapport associé
  * @param daysBack Nombre de jours en arrière à vérifier (par défaut 30)
  * @returns Liste des rendez-vous sans rapport
  */
-export const getAppointmentsWithoutReport = createServerFn({ method: "GET" })
-  .validator(daysBackSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+// `z.input`, pas `z.infer`, pour la même raison qu'au-dessus : `daysBack`
+// porte un `.default(30)`.
+export type DaysBackInput = z.input<typeof daysBackSchema>;
 
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - data.daysBack);
+export async function getAppointmentsWithoutReport(input: DaysBackInput) {
+  const data = daysBackSchema.parse(input);
+  const organizationId = await requireOrganizationId();
 
-    // Récupérer tous les rendez-vous complétés depuis cutoffDate
-    const completedAppointments = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        eq(appointments.status, "COMPLETED"),
-        gte(appointments.beginAt, cutoffDate),
-      ),
-      with: {
-        patient: {
-          with: {
-            owner: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            animal: {
-              columns: {
-                name: true,
-              },
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - data.daysBack);
+
+  // Récupérer tous les rendez-vous complétés depuis cutoffDate
+  const completedAppointments = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      eq(appointments.status, "COMPLETED"),
+      gte(appointments.beginAt, cutoffDate),
+    ),
+    with: {
+      patient: {
+        with: {
+          owner: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
             },
           },
-        },
-        organization: true,
-        reports: {
-          columns: {
-            id: true,
+          animal: {
+            columns: {
+              name: true,
+            },
           },
         },
       },
-    });
-
-    // Filtrer ceux qui n'ont pas de rapport
-    const appointmentsWithoutReport = completedAppointments.filter(
-      (apt) => !apt.reports || apt.reports.length === 0,
-    );
-
-    return appointmentsWithoutReport;
+      organization: true,
+      reports: {
+        columns: {
+          id: true,
+        },
+      },
+    },
   });
+
+  // Filtrer ceux qui n'ont pas de rapport
+  const appointmentsWithoutReport = completedAppointments.filter(
+    (apt) => !apt.reports || apt.reports.length === 0,
+  );
+
+  return appointmentsWithoutReport;
+}
 
 /**
  * Récupère les rendez-vous d'un patient spécifique
  * @param patientId ID du patient
  * @returns Liste des rendez-vous du patient
  */
-export const getAppointmentsByPatientId = createServerFn({ method: "GET" })
-  .validator(patientIdSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export type AppointmentsByPatientIdInput = z.infer<typeof patientIdSchema>;
 
-    const results = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        eq(appointments.patientId, data.patientId),
-      ),
-      orderBy: (appointments, { desc }) => [desc(appointments.beginAt)],
-      with: {
-        patient: {
-          with: {
-            owner: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-              },
+export async function getAppointmentsByPatientId(
+  input: AppointmentsByPatientIdInput,
+) {
+  const data = patientIdSchema.parse(input);
+  const organizationId = await requireOrganizationId();
+
+  const results = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      eq(appointments.patientId, data.patientId),
+    ),
+    orderBy: (appointments, { desc }) => [desc(appointments.beginAt)],
+    with: {
+      patient: {
+        with: {
+          owner: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
             },
-            animal: {
-              columns: {
-                code: true,
-                name: true,
-              },
+          },
+          animal: {
+            columns: {
+              code: true,
+              name: true,
             },
           },
         },
-        organization: true,
       },
-    });
-
-    return results as Appointment[];
+      organization: true,
+    },
   });
+
+  return results as Appointment[];
+}
