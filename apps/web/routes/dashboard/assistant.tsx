@@ -14,7 +14,7 @@ export const Route = createFileRoute("/dashboard/assistant")({
     ],
   }),
   beforeLoad: () => {
-    if (!import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "production") {
       throw notFound();
     }
   },

@@ -35,7 +35,7 @@ export function ReportsHeader({ disabled = false }: ReportsHeaderProps) {
 
   return (
     <>
-      {import.meta.env.DEV ? (
+      {process.env.NODE_ENV !== "production" ? (
         <Button
           type="button"
           variant="outline"

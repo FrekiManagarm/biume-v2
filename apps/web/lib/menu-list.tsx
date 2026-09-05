@@ -52,7 +52,7 @@ export function proMenuList(pathname: string): Group[] {
           active: pathname === `/dashboard/agenda`,
           icon: CalendarDays,
         },
-        ...(import.meta.env.DEV
+        ...(process.env.NODE_ENV !== "production"
           ? [
               {
                 href: `/dashboard/assistant`,
