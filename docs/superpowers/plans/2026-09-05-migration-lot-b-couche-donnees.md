@@ -108,7 +108,9 @@ grep -rn 'indexOf("export const' apps/web --include="*.test.ts"
 
 ## Les huit route handlers de lecture
 
-Relevé depuis les 6 fichiers `queries/` : ils consomment **11 fonctions**, pas 6 comme l'estimait la spec.
+Relevé en deux temps. D'abord les 6 fichiers `queries/`, qui consomment **11 fonctions**. Puis — après que la tâche 3 a buté dessus — les composants eux-mêmes, qui appellent **cinq lectures de plus** directement dans un `useQuery`, sans passer par un fichier `queries/`. Mon premier relevé les avait manquées pour deux raisons cumulées : je n'avais inspecté que `lib/api/queries/`, et j'avais grepé l'alias `#/` en ignorant `@/`, qui pointe au même endroit.
+
+**Treize handlers, donc, pas huit.** Une lecture appelée depuis un composant client ne peut pas être un simple réexport : la fonction importe `db`, et l'importer en valeur depuis un composant ferait entrer Drizzle dans le bundle client sans qu'aucun test ne le signale.
 
 | Handler | Fonctions servies | Tâche |
 | --- | --- | --- |
@@ -116,8 +118,13 @@ Relevé depuis les 6 fichiers `queries/` : ils consomment **11 fonctions**, pas 
 | `GET /api/internal/patients` | `getAllPatients` | 3 |
 | `GET /api/internal/animals` | `getAllAnimals` | 3 |
 | `GET /api/internal/appointments` | `getAppointments` | 3 |
+| `GET /api/internal/patients/[id]` | `getPatientById` — 3 composants | 3 |
+| `GET /api/internal/patients/[id]/medical-documents` | `getMedicalDocumentsByPetId` — 1 composant | 3 |
+| `GET /api/internal/patients/[id]/appointments` | `getAppointmentsByPatientId` — 1 composant | 3 |
 | `GET /api/internal/reports` | `getAllReports` | 4 |
 | `GET /api/internal/reports/[id]` | `getReportById` | 4 |
+| `GET /api/internal/anatomical-parts` | `getAnatomicalParts` — 3 composants | 4 |
+| `GET /api/internal/patients/[id]/anatomical-history` | `getPatientAnatomicalHistory` — 2 composants | 4 |
 | `GET /api/internal/dashboard/agenda` | `getDashboardAgendaDay` | 5 |
 | `GET /api/internal/dashboard/overview` | `getNewClientsMetric`, `getNewPatientsMetric`, `getSentReportsMetric`, `getRecentActivity`, `getDashboardAgendaDay` | 5 |
 
@@ -618,9 +625,18 @@ Le motif de la tâche 2, appliqué à trois ressources. Traitement par lot : les
 - Consomme : `internalGet` de `#/lib/http/internal-fetch` et le motif à trois fichiers, tous deux produits par la tâche 2.
 - Produit : signatures publiques inchangées pour `getAllPatients`, `getPatientById`, `getAllAnimals`, `createPatient`, `updatePatient`, `deletePatient`, `getAppointments`, `getAppointmentsByPatientId`, `getAppointmentsWithoutReport`, `getTodayAppointments`, `createAppointment`, `updateAppointment`, `deleteAppointment`, `getMedicalDocumentsByPetId`, `createMedicalDocument`, `updateMedicalDocument`, `deleteMedicalDocument`.
 
-Seules trois lectures ont besoin d'un handler : `getAllPatients`, `getAllAnimals` et `getAppointments` sont les seules consommées par `lib/api/queries/`. Les autres lectures (`getPatientById`, `getTodayAppointments`, `getAppointmentsWithoutReport`, `getAppointmentsByPatientId`, `checkAppointmentConflicts`, `getMedicalDocumentsByPetId`) ne sont appelées que depuis le serveur ou depuis des composants qui passeront en RSC au lot C : **elles restent de simples fonctions, sans endpoint.** En ajouter un serait de la surface d'attaque gratuite.
+**Six lectures ont besoin d'un handler**, pas trois comme l'annonçait la première version de ce plan :
 
-Leurs enveloppes dans `*.action.ts` deviennent donc des réexports directs de la fonction, sans `internalGet`. Note-le dans ton rapport si l'une d'elles se révèle appelée depuis un composant client : ce serait une erreur de mon relevé, et il faudrait alors lui donner un handler.
+| Lecture | Pourquoi un handler | Handler |
+| --- | --- | --- |
+| `getAllPatients` | consommée par `patients.query.ts` | `/api/internal/patients` |
+| `getAllAnimals` | consommée par `patients.query.ts` | `/api/internal/animals` |
+| `getAppointments` | consommée par `appointments.query.ts` | `/api/internal/appointments` |
+| `getPatientById` | appelée en `useQuery` par `animal-folder/index.tsx`, `reports-editor.tsx`, `InitializationDialog.tsx` | `/api/internal/patients/[id]` |
+| `getMedicalDocumentsByPetId` | appelée en `useQuery` par `AnimalCredenza/MedicalFilesTab.tsx` | `/api/internal/patients/[id]/medical-documents` |
+| `getAppointmentsByPatientId` | appelée en `useQuery` par `InitializationDialog.tsx` | `/api/internal/patients/[id]/appointments` |
+
+Les trois restantes — `getTodayAppointments`, `getAppointmentsWithoutReport`, `checkAppointmentConflicts` — ne sont appelées ni par un fichier `queries/` ni par un composant. **Elles restent de simples fonctions, sans endpoint** ; leurs enveloppes dans `*.action.ts` sont des réexports directs. En leur donner un serait de la surface d'attaque gratuite.
 
 - [ ] **Étape 1 : écrire le test qui échoue**
 
@@ -741,7 +757,9 @@ La plus grosse ressource : 11 fonctions, et celle qui porte le domaine métier d
 - Consomme : `internalGet` et le motif à trois fichiers (tâche 2).
 - Produit : signatures publiques inchangées pour les 12 fonctions.
 
-Deux lectures seulement ont un handler : `getAllReports` et `getReportById`, les seules que `lib/api/queries/reports.query.ts` consomme.
+**Quatre lectures ont un handler**, pas deux comme l'annonçait la première version de ce plan : `getAllReports` et `getReportById` (consommées par `reports.query.ts`), plus `getAnatomicalParts` (appelée en `useQuery` par trois composants du module de comptes rendus) et `getPatientAnatomicalHistory` (deux composants).
+
+`getLatestReports` n'est appelée ni par une requête ni par un composant : elle reste une simple fonction, sans endpoint.
 
 **Attention particulière :** `reports.function.ts` est le fichier le plus dense du lot et il est couvert par de nombreux tests (`report-domain.test.ts`, `report-update.service.test.ts`, `reports-update-wiring.test.ts`, `report-shared-version.service.test.ts`, entre autres). Si l'un d'eux tombe pendant la conversion, **c'est que le corps d'un handler a été modifié** — reviens au corps d'origine plutôt que d'ajuster le test.
 
