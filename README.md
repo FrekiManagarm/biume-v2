@@ -28,7 +28,7 @@ Deux principes gouvernent le code : **Biume prépare, le praticien décide**, et
 
 ```
 apps/
-  web/         Application produit — TanStack Start, React, Tailwind v4
+  web/         Application produit — Next.js, React, Tailwind v4
   marketing/   Site vitrine — Next.js
   mobile/      Compagnon de terrain — Flutter, clean architecture
 packages/
@@ -46,7 +46,7 @@ docs/superpowers/
 
 ### Deux surfaces d'API, deux natures
 
-L'application web parle à son serveur par **server functions TanStack** — du RPC couplé au client React, inconsommable depuis Dart.
+L'application web parle à son serveur par les **Server Components et Server Actions de Next.js** — du rendu et du RPC couplés au client React, inconsommables depuis Dart.
 
 Le mobile a donc sa propre surface : **`/api/mobile/v1`**, une application Hono décrite par [`apps/web/openapi.json`](./apps/web/openapi.json). Ce fichier est le contrat que le client Flutter consomme, et un test échoue si le code s'en écarte sans le régénérer.
 

@@ -6,7 +6,7 @@ Instructions for AI agents working in this repository.
 
 Biume is a Bun workspace monorepo using Turbo.
 
-- `apps/web`: main application, built with TanStack Start, React, TanStack Router, TanStack Query, Tailwind CSS v4, and Shadcn-style UI.
+- `apps/web`: main application, built with Next.js 16 (App Router), React, TanStack Query, Tailwind CSS v4, and Shadcn-style UI.
 - `apps/marketing`: marketing site, built with Next.js.
 - `packages/ui`: shared UI components and Tailwind globals.
 - `packages/db`: Drizzle schema, migrations, and database utilities.
@@ -26,7 +26,7 @@ Default to Bun.
 - Use `bun test` when adding Bun-native tests.
 - Keep the existing package manager as Bun. Do not add npm, Yarn, or pnpm lockfiles.
 
-This repo currently has scripts that call framework CLIs internally, such as `vite` for TanStack Start and `next` for the marketing app. Run them through Bun scripts rather than replacing them:
+This repo currently has scripts that call framework CLIs internally, such as `next` for both `apps/web` and `apps/marketing`, and `vitest` (which still runs on Vite) for `apps/web` tests. Run them through Bun scripts rather than replacing them:
 
 - `bun run dev`
 - `bun run build`
@@ -45,11 +45,32 @@ For package-scoped work, prefer Turbo filters through the existing root scripts 
 
 The primary product frontend is `apps/web`.
 
-- Add routes under `apps/web/app`, following Next.js App Router conventions.
-- `apps/web/routes/` and `apps/web/routeTree.gen.ts` are leftover TanStack code, kept on disk only for the duration of the migration and removed in lot E. Do not add to them and do not use them as a model for new code.
-- Use TanStack Query for server/client data fetching state where it fits existing patterns.
+- Add pages under `apps/web/app`, following Next.js App Router conventions.
+- Use TanStack Query for client-side data fetching state where it fits existing patterns. TanStack Router is gone; only the framework-agnostic TanStack packages remain — `react-query`, `react-form`, `react-table`, `react-store`, and `match-sorter-utils`. Treat them like any other library, not as a routing layer.
 - Keep route-level components focused. Move reusable UI into shared components.
 - Prefer path imports already configured by the app, such as `#/*` inside `apps/web`.
+
+### The three-file pattern for `apps/web` data access
+
+Every resource that reads or writes data follows the same three-file split. Follow it for new resources; don't introduce a fourth shape.
+
+- `functions/*.function.ts` — pure server logic (Drizzle queries, business rules). Starts with `import "server-only"` so a stray client import fails the build instead of shipping `db` to the browser.
+- `lib/api/actions/*.mutations.ts` — starts with `"use server"`. **Mutations only.** This directive applies to the whole file: every export becomes a public network entry point, so nothing that isn't meant to be callable from outside goes in this file.
+- `lib/api/actions/*.action.ts` — the public contract client code imports. It re-exports types and wraps reads for the client. **Every import from a `*.function.ts` file in this file must stay in type position** (`import type`, or `typeof import(...)`) — a value import here pulls Drizzle and other server-only dependencies into the client bundle, and no test catches that regression.
+
+A server read (a Server Component, a route handler, a job) **imports the function directly from `functions/*.function.ts`, never the `*.action.ts` wrapper.** That wrapper calls `internalGet`, which does a `fetch` on a relative URL — that only resolves in a browser, where a relative URL completes implicitly against `location`. Called from Node, it throws `TypeError: Failed to parse URL`.
+
+Mutations follow the same three-file shape, but with a different contract: they return `{ success, error }` and don't throw. A Next.js Server Action strips error messages down to a generic string in production, and this codebase has many `throw new Error("<message for the practitioner>")` calls that would otherwise become unreadable. Wrap mutation logic with the `toActionResult` helper (`lib/api/actions/action-result.ts`) rather than reinventing this.
+
+**A transport failure still rejects, though** — network errors, and Next's own control-flow throws (`redirect()`, `notFound()`) aren't converted to `{ success: false }`. Any mutation called from a handler that doesn't `await` it (a fire-and-forget click handler, for instance) needs its own `try/catch`; otherwise that rejection is silent and the UI is left stuck with no feedback.
+
+### Dashboard pages and billing
+
+Every dashboard page's Server Component calls `requireActiveBilling()` (from `#/lib/dashboard-billing-guard`) as its first statement. A Next.js layout is not re-run on client-side navigation between the pages it wraps, unlike a page — so the layout's own billing check is not enough to catch a practitioner whose subscription lapses mid-session. A test fails if a dashboard page is missing this call.
+
+### `cache()` from React
+
+`cache()` only memoizes inside a Server Component's request scope — not in a route handler, and not under Vitest. It also compares arguments **by reference**: passing an object literal defeats memoization even when two call sites want the same result, because each literal is a distinct reference. A memoized function should take a primitive argument (e.g. an id string), not an object, so repeated calls in the same request actually share one cache entry. See `lib/api/actions/subscription-gate.action.ts` for a worked example.
 
 The marketing site is `apps/marketing`.
 
@@ -72,7 +93,7 @@ When building product interfaces, prioritize dense, clear, operational UI over m
 
 ## API, Server, and Runtime
 
-- Prefer existing TanStack Start server patterns in `apps/web`.
+- Prefer existing Next.js App Router server patterns in `apps/web` — Server Components, Server Actions, and route handlers under `app/api`. See the three-file pattern above for how data access is structured.
 - Do not introduce Express.
 - Prefer Bun-native APIs for standalone scripts when practical:
   - `Bun.file` over `node:fs` helpers for simple file reads/writes.
@@ -104,7 +125,7 @@ Use the smallest verification command that covers the change.
 
 - For type-level or cross-package changes, run `bun run check-types`.
 - For package tests, run the package's existing test script with Bun, for example `bun --filter @biume/db test`.
-- For route changes, regenerate route types if required and verify the relevant app builds or type-checks.
+- For page or route changes in `apps/web`, verify the app builds or type-checks; regenerate `apps/web/openapi.json` (`bun --filter @biume/web emit-openapi`) if the mobile-facing `/api/mobile/v1` contract changed.
 - For UI changes, run the relevant dev server when useful and inspect the result.
 
 Do not claim tests passed unless you actually ran them.
@@ -123,14 +144,14 @@ Do not claim tests passed unless you actually ran them.
 
 - The worktree may already contain user changes. Do not revert or overwrite unrelated changes.
 - Do not delete generated files or public assets unless the task explicitly requires it.
-- Do not manually edit generated route trees, lockfile internals, or build output.
+- Do not manually edit lockfile internals or build output (`.next/**`, generated OpenAPI types).
 - If dependency changes are required, update `bun.lock` by running Bun rather than editing it by hand.
 
 ## User Preferences
 
 The project owner primarily uses:
 
-- TanStack Start for frontend application work.
+- Next.js (App Router) for frontend application work.
 - Tailwind CSS and Shadcn-style components for UX/UI.
 - Bun as the default JavaScript runtime and package manager.
 
