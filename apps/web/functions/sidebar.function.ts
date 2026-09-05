@@ -1,11 +1,11 @@
 import { readSidebarDefaultOpen } from "#/lib/sidebar-cookie";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { headers } from "next/headers";
 
 export const getSidebarDefaultOpen = createServerFn({ method: "GET" }).handler(
   async () => {
-    const headers = getRequestHeaders();
+    const requestHeaders = await headers();
 
-    return readSidebarDefaultOpen(headers.get("cookie"));
+    return readSidebarDefaultOpen(requestHeaders.get("cookie"));
   },
 );

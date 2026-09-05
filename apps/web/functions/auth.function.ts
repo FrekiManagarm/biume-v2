@@ -1,6 +1,6 @@
 import { auth } from "@biume/auth";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 const switchOrganizationSchema = z.object({
@@ -9,8 +9,8 @@ const switchOrganizationSchema = z.object({
 
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
-    const headers = getRequestHeaders();
-    const session = await auth.api.getSession({ headers });
+    const requestHeaders = await headers();
+    const session = await auth.api.getSession({ headers: requestHeaders });
 
     return session;
   },
@@ -18,8 +18,8 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 
 export const ensureSession = createServerFn({ method: "GET" }).handler(
   async () => {
-    const headers = getRequestHeaders();
-    const session = await auth.api.getSession({ headers });
+    const requestHeaders = await headers();
+    const session = await auth.api.getSession({ headers: requestHeaders });
 
     if (!session) {
       throw new Error("Unauthorized");
@@ -31,8 +31,8 @@ export const ensureSession = createServerFn({ method: "GET" }).handler(
 
 export const getOrganizations = createServerFn({ method: "GET" }).handler(
   async () => {
-    const headers = getRequestHeaders();
-    const organizations = await auth.api.listOrganizations({ headers });
+    const requestHeaders = await headers();
+    const organizations = await auth.api.listOrganizations({ headers: requestHeaders });
 
     return organizations;
   },
@@ -40,8 +40,8 @@ export const getOrganizations = createServerFn({ method: "GET" }).handler(
 
 export const getCurrentOrganization = createServerFn({ method: "GET" }).handler(
   async () => {
-    const headers = getRequestHeaders();
-    const organization = await auth.api.getFullOrganization({ headers });
+    const requestHeaders = await headers();
+    const organization = await auth.api.getFullOrganization({ headers: requestHeaders });
 
     if (!organization) {
       throw new Error("Unauthorized");
@@ -54,9 +54,9 @@ export const getCurrentOrganization = createServerFn({ method: "GET" }).handler(
 export const switchActiveOrganization = createServerFn({ method: "POST" })
   .validator(switchOrganizationSchema)
   .handler(async ({ data }) => {
-    const headers = getRequestHeaders();
+    const requestHeaders = await headers();
     const organization = await auth.api.setActiveOrganization({
-      headers,
+      headers: requestHeaders,
       body: {
         organizationId: data.organizationId,
       },

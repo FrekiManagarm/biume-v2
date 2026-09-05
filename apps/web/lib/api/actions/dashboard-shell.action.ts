@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 import {
@@ -76,7 +76,7 @@ export const getDashboardShellFn = createServerFn({ method: "GET" })
       currentOrganizationId: currentOrganization?.id ?? null,
       organizations,
       sidebarDefaultOpen: readSidebarDefaultOpen(
-        getRequestHeaders().get("cookie"),
+        (await headers()).get("cookie"),
       ),
       hasActiveOrTrialingSubscription: gate.hasActiveOrTrialingSubscription,
     };

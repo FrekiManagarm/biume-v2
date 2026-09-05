@@ -1,5 +1,7 @@
+import { cache } from "react";
+
 import { auth } from "@biume/auth";
-import { getRequest, getRequestHeaders } from "@tanstack/react-start/server";
+import { headers } from "next/headers";
 
 /**
  * Une résolution d'organisation par requête HTTP, et une seule.
@@ -10,37 +12,24 @@ import { getRequest, getRequestHeaders } from "@tanstack/react-start/server";
  * ~50 ms pour la session seule. Or ces fonctions n'ont besoin que de
  * l'identifiant, que la session porte déjà dans `activeOrganizationId`.
  *
- * Le rendu serveur d'une page exécute plusieurs de ces fonctions dans la
- * même requête — douze sur la page Animaux. La mémoïsation par `Request`
- * ramène ça à une seule lecture de session. En navigation client chaque
- * fonction reste une requête distincte, donc une lecture chacune : le gain
- * y vient de `getFullOrganization` qu'on n'appelle plus.
+ * Le rendu d'une page exécute plusieurs de ces fonctions dans la même
+ * requête — douze sur la page Animaux. `cache()` de React ramène ça à une
+ * seule lecture de session, et couvre en plus les Server Actions de la même
+ * requête, ce que la `WeakMap<Request>` précédente ne savait pas faire.
+ *
+ * NE PAS retirer `cache()` en le croyant décoratif : aucun test ne protège
+ * cette mémoïsation. Elle n'opère que dans un contexte de requête React, que
+ * Vitest ne fournit pas — une fonction `cache()`-ée y est appelée autant de
+ * fois qu'on l'invoque. La suite resterait donc verte en perdant douze fois
+ * la performance de la page Animaux.
  */
-const organizationIdByRequest = new WeakMap<Request, Promise<string>>();
+export const requireOrganizationId = cache(async (): Promise<string> => {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const organizationId = session?.session.activeOrganizationId;
 
-export function requireOrganizationId(): Promise<string> {
-  const request = getRequest();
-  const cached = organizationIdByRequest.get(request);
-
-  if (cached) {
-    return cached;
+  if (!organizationId) {
+    throw new Error("Organization not found");
   }
 
-  const resolved = (async () => {
-    const session = await auth.api.getSession({ headers: getRequestHeaders() });
-    const organizationId = session?.session.activeOrganizationId;
-
-    if (!organizationId) {
-      throw new Error("Organization not found");
-    }
-
-    return organizationId;
-  })();
-
-  // Une résolution qui échoue ne doit pas rester en cache : la requête
-  // suivante sur le même objet `Request` doit pouvoir réessayer.
-  resolved.catch(() => organizationIdByRequest.delete(request));
-  organizationIdByRequest.set(request, resolved);
-
-  return resolved;
-}
+  return organizationId;
+});
