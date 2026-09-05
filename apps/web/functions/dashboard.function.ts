@@ -1,3 +1,5 @@
+import "server-only";
+
 import { and, eq, gte, desc } from "drizzle-orm";
 import { db } from "@biume/db";
 import { clients, pets, animals, advancedReport } from "@biume/db/schema/index";

@@ -8,6 +8,25 @@
  * relative same-origin, le défaut `same-origin` de `fetch` enverrait déjà le
  * cookie de session. On le fixe explicitement pour ne pas dépendre de ce
  * défaut si un jour un de ces appels traverse une origine différente.
+ *
+ * RÈGLE (revue finale du lot B) — `internalGet` (donc toute enveloppe de
+ * `lib/api/actions/*.action.ts` qui l'appelle) est réservé au client. Il fait
+ * un `fetch` sur une URL **relative** (`path` ci-dessous, ex. `/api/internal/
+ * clients`) : cela ne résout que dans un navigateur, où une URL relative se
+ * complète implicitement contre `location`. Appelé depuis un Server Component,
+ * une route handler ou un job — où Node exécute ce `fetch` sans page ni
+ * origine implicite — cela lève `TypeError: Failed to parse URL`.
+ *
+ * Une lecture serveur doit donc toujours importer la fonction directement
+ * depuis `functions/*.function.ts` (ex. `getAllClients`), jamais l'enveloppe
+ * `*.action.ts` qui l'entoure pour le client. C'est aussi le seul moyen
+ * d'honorer le chemin « page RSC → fonction → Drizzle, aucun RPC » du § 5.3
+ * de la spec : passer par `internalGet` introduirait précisément le
+ * aller-retour HTTP que ce paragraphe interdit.
+ *
+ * Sans consommateur aujourd'hui (aucun fichier sous `app/`, `server/` ou
+ * `trigger/` n'importe `lib/api/actions`), donc aucun risque immédiat — mais
+ * le lot C écrira ses pages RSC contre cette règle.
  */
 export class InternalFetchError extends Error {
   constructor(

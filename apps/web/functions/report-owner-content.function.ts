@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@biume/db";
 import { ownerSourceKindSchema } from "@biume/contracts/report";
 import { advancedReport, reportOwnerContent } from "@biume/db/schema/index";

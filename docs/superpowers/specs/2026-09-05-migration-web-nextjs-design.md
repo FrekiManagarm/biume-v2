@@ -127,7 +127,7 @@ La signature `getAllClients(params) => Promise<Client[]>` est indépendante du f
 
 **Les lectures client passent par des route handlers, pas par des Server Actions.** Next sérialise les Server Actions côté client, une seule à la fois. Le dashboard émet plusieurs lectures en parallèle ; les passer en Server Actions les mettrait en file d'attente et rendrait les pages **plus lentes qu'aujourd'hui**. Les route handlers restent parallèles et cacheables.
 
-Le nombre de handlers nécessaires est faible : seules les fonctions consommées par les 6 fichiers `queries/*` en ont besoin. Relevé au lot B : ces 6 fichiers consomment **11 fonctions**, servies par **8 handlers de lecture** — l'un d'eux compose à lui seul les cinq appels que `dashboardOverviewQueryOptions` lançait en parallèle depuis le navigateur. Huit, donc, pas 32.
+Le nombre de handlers nécessaires est faible : seules les fonctions consommées par les 6 fichiers `queries/*` en ont besoin. Relevé au lot B : ces 6 fichiers consomment des fonctions servies par **13 handlers de lecture** — l'un d'eux compose à lui seul les cinq appels que `dashboardOverviewQueryOptions` lançait en parallèle depuis le navigateur. Treize, donc, pas 32. (Corrigé à la revue finale du lot B : le lot B en a livré 13, pas 8 comme annoncé ici avant vérification.)
 
 ### 5.4 Contexte de requête
 
@@ -185,7 +185,7 @@ apps/web/
       uploadthing/route.ts
       vulgarisation/route.ts
       reports/[id]/pdf/route.ts                nouveau — § 9
-      …8 handlers de lecture                   § 5.3
+      …13 handlers de lecture                  § 5.3
   components/   173 fichiers, inchangés hors Link/useNavigate
   functions/    createServerFn retiré ; mutations en Server Actions
   lib/          queries inchangées ; actions ré-implémentées à signature identique
@@ -259,7 +259,7 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 | --- | --- | --- | --- |
 | 0 | **Socle** | branche `migrate/next`, suppression de `src/`, alias, Next 16.2.9, `next.config.ts`, Tailwind v4 via postcss, vitest adapté. `routes/` exclu du tsconfig, encore sur disque | `dev` démarre, `check-types` vert, les 623 tests verts |
 | 1 | **Routes API** | les 7 handlers. Le plus risqué à régresser, le moins cher à porter, et il débloque tout le reste | `openapi-drift.test.ts` et les 10 fichiers `mobile-api.*.test.ts` verts ; application mobile Flutter pointée sur la preview (`flutter run --dart-define=BIUME_API_URL=<url-preview>`) |
-| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` scindé en lectures/mutations à signature identique ; 8 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié, à l'exception du `queryFn` de `dashboard.query.ts` dont la signature et la clé restent identiques |
+| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` scindé en lectures/mutations à signature identique ; 13 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié, à l'exception du `queryFn` de `dashboard.query.ts` dont la signature et la clé restent identiques |
 | 3 | **Shell auth** | `app/layout.tsx` complet (QueryClient, Autumn, Tooltip, Toaster), les 4 pages `(auth)`, `/`, `select-organization`, `create-organization` | parcours connexion → choix d'organisation → redirection, sur preview |
 | 4 | **Shell dashboard** | `dashboard/layout.tsx` RSC avec les deux gardes, sidebar, header, bannière, `dashboard/page.tsx`, `loading.tsx`, `error.tsx` | `getDashboardRedirectTarget` et `getBillingGateRedirectTarget` restent verts ; navigation sur preview |
 | 5 | **Pages listes** | clients, patients, agenda : page RSC, `initialData`, `searchParams` | recherche, pagination, filtres, invalidation après mutation, retour arrière navigateur |
@@ -297,6 +297,8 @@ Par ordre de gravité.
 3. **Les 4 pages ex-`ssr: false`.** Elles appellent better-auth côté client. En `"use client"` le comportement est attendu identique, mais le premier rendu doit être vérifié : pas de clignotement d'état non authentifié.
 4. **Autumn et uploadthing.** Deux intégrations tierces montées sur des routes attrape-tout. Portage direct attendu ; ce sont les deux endroits où une surprise de configuration est la plus probable.
 5. **`@react-pdf/renderer` côté serveur sur Vercel.** `renderToBuffer` fonctionne déjà en production via `email.action.ts`, donc le risque est faible, mais le nouveau handler doit être vérifié sur le runtime Node et non Edge.
+6. **Les messages d'erreur sont censurés en production, sous Next, pas sous TanStack.** (Constaté à la revue finale du lot B.) `createServerFn` propageait jusqu'au client le message exact d'une erreur serveur. Une Server Action de Next, elle, remplace ce message par un texte générique en production. `apps/web/functions/` contient 26 `throw new Error("<message en français destiné à l'utilisateur>")`, et deux composants les affichent tels quels sans distinguer la censure : `reports-editor.tsx:604-607` et `reports-header.tsx:26-31`, tous deux en `error instanceof Error ? error.message : "<repli>"`. En production, l'utilisateur ne verra ni le message ni le repli — la branche `instanceof Error` reste vraie, seul son contenu change. **Invisible en développement**, où Next ne censure pas ; invisible aussi aux tests et au compilateur, qui ne distinguent pas les deux environnements. Le motif correct existe déjà dans le dépôt : `lib/api/actions/report-reminder.action.ts:94-98` renvoie `{ success: false, error }` au lieu de lever. Le lot C devra trancher cette forme pour les 22 mutations.
+7. **`cache()` de React ne mémoïse pas dans un route handler.** (Constaté à la revue finale du lot B.) Il n'opère que là où React installe une portée de cache — les Server Components — pas dans un route handler, qui n'en installe pas. Conséquence concrète : le handler `app/api/internal/dashboard/overview/route.ts` fait **cinq** lectures de session, pas une, malgré l'appel à `cache()` en amont dans `requireOrganizationId`. Le gain reste réel — un aller-retour réseau au lieu de cinq côté navigateur — mais pas celui qu'annonçait le commentaire du fichier avant correction (une session résolue une seule fois). Piège symétrique du précédent : un mécanisme qui portait la charge sous TanStack (la mémoïsation par requête via `WeakMap`, § 5.4) devient inerte sous Next dans ce contexte précis, sans qu'aucun test ni le compilateur ne le signale.
 
 ## 14. Ce qui est supprimé
 

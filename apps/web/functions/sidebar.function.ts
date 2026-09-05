@@ -1,3 +1,5 @@
+import "server-only";
+
 import { readSidebarDefaultOpen } from "#/lib/sidebar-cookie";
 import { headers } from "next/headers";
 

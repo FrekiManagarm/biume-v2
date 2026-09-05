@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@biume/db";
 import { and, eq, or, lte, gte, ne, inArray } from "drizzle-orm";
 import { requireOrganizationId } from "#/server/auth/organization-scope";

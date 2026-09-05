@@ -1144,7 +1144,7 @@ bun --filter @biume/web test 2>&1 | tail -5
 bun --filter @biume/web build 2>&1 | tail -25
 ```
 
-Attendu : `check-types` en code 0, au moins `640 passed | 12 skipped`, et un build qui liste les **15 routes** sous `/api` (les 7 du lot A plus les 8 nouvelles).
+Attendu : `check-types` en code 0, au moins `640 passed | 12 skipped`, et un build qui liste les **20 routes** sous `/api` (les 7 du lot A plus les 13 nouvelles).
 
 - [ ] **Étape 6 : commit**
 

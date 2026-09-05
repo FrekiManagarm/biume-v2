@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@biume/db";
 import { user as userSchema } from "@biume/db/schema/index";
 import { eq } from "drizzle-orm";

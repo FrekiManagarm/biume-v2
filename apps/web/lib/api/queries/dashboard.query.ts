@@ -18,8 +18,14 @@ export function getDashboardOverviewDate(date = new Date()) {
 // Forme exacte de ce que le `queryFn` renvoyait quand il composait ses cinq
 // lectures depuis le navigateur : la préserver à l'identique évite de
 // toucher les composants qui consomment `dashboardOverviewQueryOptions`.
+//
+// `generatedAt` est typé `Date`, pas `string` (revue finale du lot B) : le
+// route handler émet `new Date().toISOString()`, forme exacte que produit
+// `Date.prototype.toJSON()`, et `reviveDates` (lib/http/internal-fetch.ts)
+// la reconvertit systématiquement en `Date` avant que ce type ne soit lu.
+// Déclarer `string` ici mentirait sur ce que reçoit réellement l'appelant.
 type DashboardOverview = {
-  generatedAt: string;
+  generatedAt: Date;
   selectedDate: string;
   appointments: AgendaAppointmentInput[];
   metrics: {

@@ -15,8 +15,12 @@ export async function GET(request: Request) {
 
   try {
     // Cinq lectures en parallèle, mais côté serveur : le navigateur les
-    // lançait une par une sur le réseau, ici elles partagent la requête et
-    // la session résolue une seule fois par `cache()`.
+    // lançait une par une sur le réseau, ici elles partagent la même requête
+    // HTTP. Le gain est réel — un aller-retour réseau au lieu de cinq — mais
+    // ce n'est PAS une session résolue une seule fois : `cache()` de React
+    // ne mémoïse que dans une portée de Server Component, qu'un route
+    // handler n'installe pas. Les cinq appels ci-dessous relisent donc
+    // chacun la session (cinq lectures, pas une). Voir spec § 13, risque 7.
     const [newClients, newPatients, sentReports, recentActivity, agendaDay] =
       await Promise.all([
         getNewClientsMetric(90),

@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@biume/db";
 import { organization as organizationSchema } from "@biume/db/schema/index";
 import { eq } from "drizzle-orm";

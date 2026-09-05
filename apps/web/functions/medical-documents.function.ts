@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@biume/db";
 import {
   type CreateMedicalDocument,

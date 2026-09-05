@@ -33,4 +33,18 @@ describe("GET /api/internal/patients/[id]", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("répond 404 quand le patient est introuvable", async () => {
+    getPatientById.mockReset();
+    getPatientById.mockResolvedValue(undefined);
+    const { GET } = await import("./route");
+
+    const response = await GET(
+      new Request("http://localhost:3001/api/internal/patients/patient-inconnu"),
+      { params: Promise.resolve({ id: "patient-inconnu" }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Patient not found" });
+  });
 });

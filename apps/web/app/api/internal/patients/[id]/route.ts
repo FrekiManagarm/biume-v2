@@ -10,7 +10,13 @@ export async function GET(
   const { id } = await params;
 
   try {
-    return Response.json(await getPatientById({ id }));
+    const patient = await getPatientById({ id });
+
+    if (!patient) {
+      return Response.json({ error: "Patient not found" }, { status: 404 });
+    }
+
+    return Response.json(patient);
   } catch (error) {
     return toInternalRouteErrorResponse(error);
   }
