@@ -52,6 +52,34 @@ Elle est donc extraite dans une fonction ordinaire que les deux appellent. Le ha
 
 `getDashboardShellFn` prend un `preload` qui vaut `true` quand TanStack précharge une route au survol d'un lien. Next n'a pas cet équivalent : un layout s'exécute sur une navigation réelle. **Passez toujours `preload: false`.** Le paramètre reste dans la signature tant que `routes/` compile ; le lot E le retirera.
 
+## Les quatre sites d'appel que le contrat d'erreur rend muets
+
+La tâche 1 change le contrat des mutations : elles ne **rejettent plus** pour une erreur applicative, elles **résolvent** avec `{ success: false, error }`. Les appelants existants comptaient tous sur le rejet. Leur gestion d'erreur devient donc du code mort — et **TypeScript ne peut pas le voir**, puisqu'ils n'inspectent pas la valeur de retour.
+
+C'est la même classe de piège que celle du § 13 de la spec : un mécanisme porteur qui devient inerte. Sauf qu'ici, c'est notre propre contrat qui le crée.
+
+| Site d'appel | Comportement aujourd'hui | Après la tâche 1, sans correction | Tâche qui le corrige |
+| --- | --- | --- | --- |
+| `routes/select-organization.tsx:108` | `try { await … } catch (switchError)` | Le `catch` ne se déclenche plus : un échec de bascule passe pour un succès | **4** |
+| `components/dashboard/layout/dashboard-sidebar.tsx:92` | `await …` puis poursuite | Une bascule échouée poursuit comme si elle avait réussi | **5** |
+| `routes/dashboard/settings.tsx:172` | `await …` puis `toast.success("Entreprise mise à jour.")` | **Un échec affiche « Entreprise mise à jour. »** | hors lot (lot D) |
+| `routes/create-organization.tsx:180` | `.catch(() => {})`, best-effort délibéré | Inchangé — le `catch` ne faisait rien | **4**, à confirmer |
+
+Rien de tout cela n'est servi aujourd'hui : `routes/` n'est plus atteignable depuis le lot A, et `dashboard-sidebar.tsx` n'est monté que par `routes/dashboard.tsx`. **Le danger est que les tâches 3 à 5 recopient ces corps tels quels.**
+
+**C'est donc une exception explicite à la règle « recopie le corps tel quel ».** Partout où une tâche porte l'un de ces sites, elle doit déballer le résultat :
+
+```ts
+const result = await switchActiveOrganization({ organizationId });
+
+if (!result.success) {
+  toast.error(result.error);
+  return;
+}
+```
+
+Chaque tâche concernée doit **nommer dans son rapport les sites qu'elle a déballés**. Le site de `settings.tsx` sort du périmètre de ce lot — la page des réglages arrive au lot D — mais il est le plus visible des quatre : il est consigné ici pour que le lot D le traite en portant sa page.
+
 ## Structure des fichiers
 
 | Fichier | Responsabilité | Tâche |
