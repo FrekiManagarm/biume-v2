@@ -201,7 +201,7 @@ function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   if (shouldEditReport) {
     return (
       <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
-        <Link href={`/dashboard/reports/${reportId}/edit`}>
+        <Link href={`/dashboard/reports/${encodeURIComponent(reportId)}/edit`}>
           {appointment.primaryAction.label}
         </Link>
       </Button>
@@ -211,7 +211,7 @@ function AgendaAction({ appointment }: { appointment: DayAgendaAppointment }) {
   if (reportId && appointment.primaryAction.kind === "view_report") {
     return (
       <Button asChild size="sm" variant="outline" className="w-full md:w-auto">
-        <Link href={`/dashboard/reports/${reportId}`}>
+        <Link href={`/dashboard/reports/${encodeURIComponent(reportId)}`}>
           {appointment.primaryAction.label}
         </Link>
       </Button>

@@ -1,11 +1,19 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { internalGet } from "#/lib/http/internal-fetch";
-import type { AgendaAppointmentInput } from "#/lib/dashboard/day-agenda";
-import type {
-  MetricResult,
-  RecentActivityItem,
-} from "#/functions/dashboard.function";
+// Importé depuis le serveur plutôt que redéclaré ici : une seconde
+// déclaration structurellement identique aurait recréé exactement la
+// divergence que `buildDashboardOverview` a été extraite pour éviter (tâche
+// 6) — rien ne les aurait tenues synchronisées si l'une changeait sans
+// l'autre.
+//
+// `generatedAt` reste typé `Date`, pas `string`, bien que ce module consomme
+// une réponse JSON : le route handler émet `overview.generatedAt.toISOString()`
+// (forme exacte que produit `Date.prototype.toJSON()`), et `reviveDates`
+// (lib/http/internal-fetch.ts) la reconvertit systématiquement en `Date`
+// avant que ce type ne soit lu. Déclarer `string` ici mentirait sur ce que
+// reçoit réellement l'appelant.
+import type { DashboardOverview } from "#/server/dashboard/overview";
 
 export function getDashboardOverviewDate(date = new Date()) {
   const year = date.getFullYear();
@@ -14,27 +22,6 @@ export function getDashboardOverviewDate(date = new Date()) {
 
   return `${year}-${month}-${day}`;
 }
-
-// Forme exacte de ce que le `queryFn` renvoyait quand il composait ses cinq
-// lectures depuis le navigateur : la préserver à l'identique évite de
-// toucher les composants qui consomment `dashboardOverviewQueryOptions`.
-//
-// `generatedAt` est typé `Date`, pas `string` (revue finale du lot B) : le
-// route handler émet `new Date().toISOString()`, forme exacte que produit
-// `Date.prototype.toJSON()`, et `reviveDates` (lib/http/internal-fetch.ts)
-// la reconvertit systématiquement en `Date` avant que ce type ne soit lu.
-// Déclarer `string` ici mentirait sur ce que reçoit réellement l'appelant.
-type DashboardOverview = {
-  generatedAt: Date;
-  selectedDate: string;
-  appointments: AgendaAppointmentInput[];
-  metrics: {
-    newClients: MetricResult;
-    newPatients: MetricResult;
-    sentReports: MetricResult;
-  };
-  recentActivity: RecentActivityItem[];
-};
 
 export const dashboardOverviewQueryOptions = (selectedDate: string) =>
   queryOptions({

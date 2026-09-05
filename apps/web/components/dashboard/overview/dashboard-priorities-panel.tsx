@@ -88,10 +88,11 @@ function PriorityAction({ priority }: { priority: DashboardPriorityItem }) {
   }
 
   if (priority.reportId) {
+    const encodedReportId = encodeURIComponent(priority.reportId);
     const href =
       priority.actionKind === "view_report"
-        ? `/dashboard/reports/${priority.reportId}`
-        : `/dashboard/reports/${priority.reportId}/edit`;
+        ? `/dashboard/reports/${encodedReportId}`
+        : `/dashboard/reports/${encodedReportId}/edit`;
 
     return (
       <Button

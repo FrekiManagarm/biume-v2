@@ -15,8 +15,9 @@ export async function GET(request: Request) {
     //
     // Ce n'est PAS une session résolue une seule fois : `cache()` de React
     // ne mémoïse que dans une portée de Server Component, qu'un route
-    // handler n'installe pas. Les cinq appels ci-dessous relisent donc
-    // chacun la session (cinq lectures, pas une). Voir spec § 13, risque 7.
+    // handler n'installe pas. Les cinq appels faits par `buildDashboardOverview`
+    // relisent donc chacun la session (cinq lectures, pas une). Voir spec
+    // § 13, risque 7.
     const overview = await buildDashboardOverview(selectedDate);
 
     return Response.json({
