@@ -79,13 +79,12 @@ export default async function DashboardLayout({
   // La largeur de lecture (`wideContent`) venait de `useMatches()` côté
   // TanStack : la route active déclarait `staticData.wideContent` et le
   // shell lisait la metadata de la route montée. Next ne donne pas cette
-  // information à un layout — il n'y a pas d'équivalent direct. Aucune page
-  // de ce lot n'en a besoin (seules `/dashboard/reports` et
-  // `/dashboard/agenda`, non portées ici, la déclaraient) : le mécanisme est
-  // donc laissé de côté pour l'instant plutôt que recréé sur une seule
-  // supposition. La tâche qui portera ces deux pages devra réintroduire un
-  // moyen pour elles de le signaler au layout (par exemple un test sur le
-  // pathname, à l'image d'`isBillingSettingsPath`).
+  // information à un layout — il n'y a pas d'équivalent direct. Rétabli
+  // côté client dans `dashboard-layout-view.tsx` (voir sa JSDoc) via un test
+  // sur le pathname, à l'image d'`isAssistantRoute` : pas ici, ce Server
+  // Component ne reçoit le pathname qu'au premier chargement de document
+  // (l'en-tête ci-dessus), pas à la navigation cliente entre deux pages
+  // qu'il partage.
 
   return (
     <DashboardLayoutView

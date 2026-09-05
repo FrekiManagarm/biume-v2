@@ -2,8 +2,19 @@ import { Skeleton } from "#/components/ui/skeleton";
 
 // Reprend telle quelle la JSX de l'ancien `pendingComponent` TanStack
 // (`routes/dashboard/index.tsx`, `DashboardOverviewPending`) : Next affiche
-// ce fichier pendant que `app/dashboard/page.tsx` (Server Component) résout
-// ses données, sans autre câblage requis.
+// ce fichier pendant que `page.tsx` du même dossier (Server Component)
+// résout ses données, sans autre câblage requis.
+//
+// Vit dans `(overview)` — groupe de routes sans effet sur l'URL — plutôt
+// que directement sous `app/dashboard/` : un `loading.tsx` Next s'applique
+// à tout le sous-arbre de son dossier. Posé au niveau `app/dashboard/`, ce
+// squelette (sections calibrées sur les cartes de la vue d'ensemble)
+// s'affichait pour la navigation vers n'importe quelle page du dashboard.
+// Sous TanStack, seul `routes/dashboard/index.tsx` déclarait un
+// `pendingComponent` — les six autres routes n'en avaient pas — donc cette
+// portée page-only est celle d'origine, pas une nouveauté. Contrairement à
+// `error.tsx`, pas de filet générique laissé à `app/dashboard/` : aucune
+// route parente n'en définissait, il n'y a donc rien à généraliser.
 export default function DashboardLoading() {
   return (
     <div className="grid gap-5 pb-8">

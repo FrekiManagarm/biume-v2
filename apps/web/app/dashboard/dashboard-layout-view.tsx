@@ -10,6 +10,8 @@ import { cn } from "@biume/ui/lib/utils";
 import type { Organization } from "@biume/db/schema/organization";
 import type { AuthSession } from "@biume/auth";
 
+const WIDE_CONTENT_PATHNAMES = new Set(["/dashboard/agenda", "/dashboard/reports"]);
+
 /**
  * Frontière client du shell dashboard.
  *
@@ -33,15 +35,36 @@ import type { AuthSession } from "@biume/auth";
  * `children` reste un Server Component (la page dashboard, lot suivant) :
  * passé en prop, il n'a pas besoin d'être lui-même client.
  *
- * `isAssistantRoute` est calculé ici, via `usePathname()`, plutôt que reçu
- * en prop depuis le Server Component parent : un layout Next ne se
- * ré-exécute pas à la navigation cliente entre deux pages qu'il partage, un
- * drapeau calculé côté serveur y resterait donc figé sur la valeur du
- * premier chargement de document (un clic sur « Assistant » depuis la
- * sidebar rendrait alors la mauvaise branche de mise en page). Ce composant
- * est déjà client et déjà réactif via ses hooks `usePathname()`
- * (`DashboardSidebar`, `DashboardHeader`, `DashboardPageBanner`) : autant y
- * garder ce calcul plutôt que de le geler.
+ * `isAssistantRoute` et `wideContent` sont calculés ici, via `usePathname()`,
+ * plutôt que reçus en prop depuis le Server Component parent : un layout
+ * Next ne se ré-exécute pas à la navigation cliente entre deux pages qu'il
+ * partage, un drapeau calculé côté serveur y resterait donc figé sur la
+ * valeur du premier chargement de document (un clic sur « Assistant » ou
+ * « Agenda » depuis la sidebar rendrait alors la mauvaise branche de mise
+ * en page). Ce composant est déjà client et déjà réactif via ses hooks
+ * `usePathname()` (`DashboardSidebar`, `DashboardHeader`,
+ * `DashboardPageBanner`) : autant y garder ce calcul plutôt que de le geler.
+ *
+ * `wideContent` reprend le rôle de `staticData.wideContent` +
+ * `useMatches()` sous TanStack (`routes/dashboard.tsx`) : la route active
+ * déclarait elle-même son besoin de largeur, et le shell se contentait de
+ * lire cette metadata. Next n'offre pas d'équivalent — une page n'a aucun
+ * moyen de signaler quoi que ce soit à son layout parent. Décider la
+ * largeur dans la page elle-même ne suffirait de toute façon pas ici : la
+ * bannière (`DashboardPageBanner`) est rendue par CE composant, pas par la
+ * page, et sous TanStack banner et contenu partageaient toujours le même
+ * conteneur de largeur (une page large élargissait aussi sa bannière). Une
+ * page ne pourrait élargir que son propre contenu, pas la bannière rendue
+ * au-dessus d'elle — ce qui désaligne les deux dès qu'un viewport dépasse
+ * 80rem. La liste ci-dessous fait donc jouer au shell le même rôle que pour
+ * `isAssistantRoute` (déjà un test sur le pathname) et que pour les libellés
+ * de `DashboardPageBanner` (déjà une table de correspondance pathname →
+ * copie) : c'est le shell qui sait déjà quelles routes sont spéciales,
+ * `wideContent` ne fait que s'ajouter à ce savoir existant plutôt que d'en
+ * introduire un nouveau canal. Seules `/dashboard/agenda` et
+ * `/dashboard/reports` (la liste, pas `/dashboard/reports/:id`) déclaraient
+ * `wideContent` sous TanStack — comparaison exacte, pas `startsWith`, pour
+ * ne pas élargir par erreur la page de détail d'un rapport.
  */
 export function DashboardLayoutView({
   session,
@@ -56,6 +79,7 @@ export function DashboardLayoutView({
 }) {
   const pathname = usePathname();
   const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
+  const wideContent = WIDE_CONTENT_PATHNAMES.has(pathname);
 
   const pageContent = (
     <>
@@ -88,7 +112,9 @@ export function DashboardLayoutView({
               // contenu se centre déjà sur une largeur de bulle de chat).
               pageContent
             ) : (
-              <div className="mx-auto w-full max-w-7xl">{pageContent}</div>
+              <div className={cn("mx-auto w-full", !wideContent && "max-w-7xl")}>
+                {pageContent}
+              </div>
             )}
           </div>
         </SidebarInset>
