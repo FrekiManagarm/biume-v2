@@ -63,6 +63,7 @@ C'est la même classe de piège que celle du § 13 de la spec : un mécanisme po
 | `routes/select-organization.tsx:108` | `try { await … } catch (switchError)` | Le `catch` ne se déclenche plus : un échec de bascule passe pour un succès | **4** |
 | `components/dashboard/layout/dashboard-sidebar.tsx:92` | `await …` puis poursuite | Une bascule échouée poursuit comme si elle avait réussi | **5** |
 | `routes/dashboard/settings.tsx:172` | `await …` puis `toast.success("Entreprise mise à jour.")` | **Un échec affiche « Entreprise mise à jour. »** | hors lot (lot D) |
+| `routes/dashboard/settings.tsx:186` | `await updateUserNotifications(…)` puis `toast.success(…)` | Idem : un échec affiche un succès | hors lot (lot D) |
 | `routes/create-organization.tsx:180` | `.catch(() => {})`, best-effort délibéré | Inchangé — le `catch` ne faisait rien | **4**, à confirmer |
 
 Rien de tout cela n'est servi aujourd'hui : `routes/` n'est plus atteignable depuis le lot A, et `dashboard-sidebar.tsx` n'est monté que par `routes/dashboard.tsx`. **Le danger est que les tâches 3 à 5 recopient ces corps tels quels.**
