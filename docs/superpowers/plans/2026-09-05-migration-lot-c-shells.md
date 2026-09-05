@@ -84,12 +84,14 @@ Le motif correct existe déjà dans le dépôt : `lib/api/actions/report-reminde
 
 **Fichiers :**
 - Créer : `apps/web/lib/api/actions/action-result.ts` et `action-result.test.ts`
-- Modifier : `apps/web/lib/api/actions/auth.mutations.ts`, `organization.mutations.ts`, `user.mutations.ts`
+- Modifier : `apps/web/lib/api/actions/auth.mutations.ts`, `organization.mutations.ts`, `user.mutations.ts`, `trial.action.ts`
 
 **Interfaces :**
 - Produit : `type ActionResult<T>`, et `toActionResult(fn)` qui enveloppe une mutation. Les tâches 3 à 6 les consomment.
 
-**Périmètre volontairement étroit.** Ce lot n'applique le contrat qu'aux **trois** modules de mutations que ses pages exercent : `auth` (`switchActiveOrganization`), `organization` (`updateOrganization`), `user` (`updateUserNotifications`). Les six autres modules — clients, patients, appointments, medicalDocuments, reports, reportOwnerContent — sont exercés par les pages des lots D et suivants, qui les convertiront en même temps que leur page. **Convertir les 22 mutations ici serait toucher du code qu'aucune page de ce lot n'appelle**, sans pouvoir le vérifier au clic.
+**Périmètre volontairement étroit.** Ce lot n'applique le contrat qu'aux **quatre** modules de mutations que ses pages exercent : `auth` (`switchActiveOrganization`, tâche 4), `organization` (`updateOrganization`), `user` (`updateUserNotifications`), et `trial` (`startOrganizationTrialFn`, tâche 4). `trial.action.ts` porte sa propre directive `"use server"` au lieu d'un fichier `.mutations.ts` séparé — c'est le motif retenu au lot B pour les fichiers d'actions ne contenant que des mutations ; enveloppez ses exports sur place.
+
+Les cinq autres modules — clients, patients, appointments, medicalDocuments, reports, reportOwnerContent — sont exercés par les pages des lots D et suivants, qui les convertiront en même temps que leur page. **Convertir les 22 mutations ici serait toucher du code qu'aucune page de ce lot n'appelle**, sans pouvoir le vérifier au clic.
 
 - [ ] **Étape 1 : écrire le test qui échoue**
 
