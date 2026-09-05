@@ -163,11 +163,18 @@ export function CreateOrganizationView({
 
     // Best-effort : un échec ne doit pas empêcher l'accès à l'organisation
     // fraîchement créée, le paywall du dashboard rattrape sinon. Le contrat
-    // ActionResult ne lève plus — on ignore délibérément son résultat.
-    await startOrganizationTrialFn({
-      organizationId: result.data.id,
-      organizationName: result.data.name,
-    });
+    // ActionResult ne lève plus pour une erreur applicative (elle résout en
+    // { success: false }, ignoré ici délibérément), mais un échec de
+    // transport (réseau coupé, serveur injoignable) rejette toujours la
+    // promesse avant même d'atteindre ce contrat — d'où ce filet général.
+    try {
+      await startOrganizationTrialFn({
+        organizationId: result.data.id,
+        organizationName: result.data.name,
+      });
+    } catch {
+      // Ignoré : voir commentaire ci-dessus.
+    }
 
     window.location.replace("/dashboard");
   }
