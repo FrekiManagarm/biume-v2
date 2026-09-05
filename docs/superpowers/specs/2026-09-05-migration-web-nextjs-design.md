@@ -127,7 +127,7 @@ La signature `getAllClients(params) => Promise<Client[]>` est indépendante du f
 
 **Les lectures client passent par des route handlers, pas par des Server Actions.** Next sérialise les Server Actions côté client, une seule à la fois. Le dashboard émet plusieurs lectures en parallèle ; les passer en Server Actions les mettrait en file d'attente et rendrait les pages **plus lentes qu'aujourd'hui**. Les route handlers restent parallèles et cacheables.
 
-Le nombre de handlers nécessaires est faible : seules les fonctions consommées par les 6 fichiers `queries/*` en ont besoin, soit environ **6 handlers de lecture**, pas 32.
+Le nombre de handlers nécessaires est faible : seules les fonctions consommées par les 6 fichiers `queries/*` en ont besoin. Relevé au lot B : ces 6 fichiers consomment **11 fonctions**, servies par **8 handlers de lecture** — l'un d'eux compose à lui seul les cinq appels que `dashboardOverviewQueryOptions` lançait en parallèle depuis le navigateur. Huit, donc, pas 32.
 
 ### 5.4 Contexte de requête
 
@@ -185,7 +185,7 @@ apps/web/
       uploadthing/route.ts
       vulgarisation/route.ts
       reports/[id]/pdf/route.ts                nouveau — § 9
-      …6 handlers de lecture                   § 5.3
+      …8 handlers de lecture                   § 5.3
   components/   173 fichiers, inchangés hors Link/useNavigate
   functions/    createServerFn retiré ; mutations en Server Actions
   lib/          queries inchangées ; actions ré-implémentées à signature identique
@@ -259,7 +259,7 @@ Huit tranches, chacune vérifiable et déployable en preview Vercel.
 | --- | --- | --- | --- |
 | 0 | **Socle** | branche `migrate/next`, suppression de `src/`, alias, Next 16.2.9, `next.config.ts`, Tailwind v4 via postcss, vitest adapté. `routes/` exclu du tsconfig, encore sur disque | `dev` démarre, `check-types` vert, les 623 tests verts |
 | 1 | **Routes API** | les 7 handlers. Le plus risqué à régresser, le moins cher à porter, et il débloque tout le reste | `openapi-drift.test.ts` et les 10 fichiers `mobile-api.*.test.ts` verts ; application mobile Flutter pointée sur la preview (`flutter run --dart-define=BIUME_API_URL=<url-preview>`) |
-| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` ré-implémenté à signature identique ; 6 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié |
+| 2 | **Contexte + données** | `requireOrganizationId` → `cache()` + `headers()` ; `createServerFn` retiré des 12 `*.function.ts` ; `lib/api/actions/*` scindé en lectures/mutations à signature identique ; 8 handlers de lecture | le gros des 623 tests reste vert ; `lib/api/queries/*` non modifié, à l'exception du `queryFn` de `dashboard.query.ts` dont la signature et la clé restent identiques |
 | 3 | **Shell auth** | `app/layout.tsx` complet (QueryClient, Autumn, Tooltip, Toaster), les 4 pages `(auth)`, `/`, `select-organization`, `create-organization` | parcours connexion → choix d'organisation → redirection, sur preview |
 | 4 | **Shell dashboard** | `dashboard/layout.tsx` RSC avec les deux gardes, sidebar, header, bannière, `dashboard/page.tsx`, `loading.tsx`, `error.tsx` | `getDashboardRedirectTarget` et `getBillingGateRedirectTarget` restent verts ; navigation sur preview |
 | 5 | **Pages listes** | clients, patients, agenda : page RSC, `initialData`, `searchParams` | recherche, pagination, filtres, invalidation après mutation, retour arrière navigateur |
