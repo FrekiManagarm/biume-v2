@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import { DashboardHeader } from "#/components/dashboard/layout/dashboard-header";
 import { DashboardPageBanner } from "#/components/dashboard/layout/dashboard-page-banner";
 import { DashboardSidebar } from "#/components/dashboard/layout/dashboard-sidebar";
@@ -30,20 +32,31 @@ import type { AuthSession } from "@biume/auth";
  *
  * `children` reste un Server Component (la page dashboard, lot suivant) :
  * passé en prop, il n'a pas besoin d'être lui-même client.
+ *
+ * `isAssistantRoute` est calculé ici, via `usePathname()`, plutôt que reçu
+ * en prop depuis le Server Component parent : un layout Next ne se
+ * ré-exécute pas à la navigation cliente entre deux pages qu'il partage, un
+ * drapeau calculé côté serveur y resterait donc figé sur la valeur du
+ * premier chargement de document (un clic sur « Assistant » depuis la
+ * sidebar rendrait alors la mauvaise branche de mise en page). Ce composant
+ * est déjà client et déjà réactif via ses hooks `usePathname()`
+ * (`DashboardSidebar`, `DashboardHeader`, `DashboardPageBanner`) : autant y
+ * garder ce calcul plutôt que de le geler.
  */
 export function DashboardLayoutView({
   session,
   organizations,
   sidebarDefaultOpen,
-  isAssistantRoute,
   children,
 }: {
   session: AuthSession;
   organizations: Organization[];
   sidebarDefaultOpen: boolean;
-  isAssistantRoute: boolean;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isAssistantRoute = pathname.startsWith("/dashboard/assistant");
+
   const pageContent = (
     <>
       <DashboardPageBanner />
