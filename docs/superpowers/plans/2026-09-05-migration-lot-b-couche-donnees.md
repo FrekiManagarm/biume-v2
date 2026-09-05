@@ -65,6 +65,29 @@ export function createClient(input: CreateClientInput) {
 }
 ```
 
+## Les tests qui inspectent le texte source
+
+Quatre fichiers de test lisent le source des fonctions avec `readFileSync` et le découpent par `indexOf("export const <nom>")`, pour vérifier que les mutations portent bien leurs gardes d'isolation multi-tenant. **La conversion change ces ancres** : `export const createReport` devient `export async function createReport`.
+
+| Fichier de test | Source inspecté | Ancres |
+| --- | --- | --- |
+| `functions/clients.function.test.ts` | `clients.function.ts` | 1 (traité à la tâche 2) |
+| `functions/patients.function.test.ts` | `patients.function.ts` | 6 — tâche 3 |
+| `functions/tenant-creation-wiring.test.ts` | `appointments.function.ts`, `reports.function.ts` | 11 — tâches 3 et 4 |
+| `functions/reports-update-wiring.test.ts` | `reports.function.ts` | 2 — tâche 4 |
+
+**Pourquoi c'est plus dangereux qu'il n'y paraît.** La plupart de ces ancres délimitent un *intervalle* — `source.slice(indexOf(début), indexOf(fin))`. Quand `indexOf` ne trouve pas son ancre, il rend `-1`, et `slice` interprète `-1` comme « un caractère avant la fin ». Le test continue alors de s'exécuter sur une tranche de source arbitraire, et ses assertions peuvent passer. Ce sont précisément les tests qui garantissent qu'une mutation ne peut pas toucher les données d'une autre entreprise : les laisser passer à vide reviendrait à retirer le filet sans que rien ne l'annonce.
+
+**Ce qu'il faut faire :** mettre à jour chaque ancre, `export const <nom>` → `export async function <nom>`, **et rien d'autre**. Les assertions ne changent pas. C'est le seul cas du lot où toucher à un test préexistant est légitime : le test porte sur la syntaxe du fichier, et la syntaxe a changé pour une raison assumée.
+
+**Ce qu'il ne faut pas faire :** ajuster une assertion parce qu'elle échoue. Une assertion qui tombe après la seule mise à jour des ancres signale que le corps d'un `handler` a été modifié pendant la recopie — reviens au corps d'origine.
+
+Après la conversion de chacun de ces fichiers, vérifie qu'aucune ancre ne subsiste :
+
+```bash
+grep -rn 'indexOf("export const' apps/web --include="*.test.ts"
+```
+
 ## Structure des fichiers
 
 | Fichier | Responsabilité | Tâche |
