@@ -4,13 +4,16 @@ import type { AppointmentWindowInput } from "#/functions/appointments.function";
 import {
   createAppointment as createAppointmentFn,
   deleteAppointment as deleteAppointmentFn,
-  getAppointmentsWithoutReport as getAppointmentsWithoutReportFn,
   updateAppointment as updateAppointmentFn,
 } from "./appointments.mutations";
 
-// Les mutations sont des Server Actions ; les réexporter d'ici garde le
-// contrat que les composants consomment déjà.
-export { getTodayAppointments } from "./appointments.mutations";
+// `getTodayAppointments` et `getAppointmentsWithoutReport` n'ont aucun
+// appelant dans le dépôt (ni requête, ni composant, ni code serveur) : elles
+// restent de simples fonctions exportées par `appointments.function.ts`,
+// sans surface publique ici. Leur donner une entrée dans ce fichier — même
+// via `appointments.mutations.ts` — leur donnerait un identifiant de Server
+// Action appelable depuis le réseau pour du code mort, ce que le brief
+// voulait justement éviter en leur refusant un endpoint REST.
 
 // Règle à respecter dans ce fichier : tout import venant de `*.function.ts`
 // y reste en position de type (`import type`, ou `typeof import(...)`
@@ -63,8 +66,4 @@ export function getAppointmentsByPatientId(patientId: string) {
   return internalGet<AppointmentDetail[]>(
     `/api/internal/patients/${encodeURIComponent(patientId)}/appointments`,
   );
-}
-
-export function getAppointmentsWithoutReport(daysBack = 30) {
-  return getAppointmentsWithoutReportFn({ daysBack });
 }

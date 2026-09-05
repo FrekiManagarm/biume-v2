@@ -232,7 +232,9 @@ export async function deletePatient(input: DeletePatientInput) {
   });
 }
 
-export async function getPatientById(input: z.infer<typeof patientIdSchema>) {
+export type PatientIdInput = z.infer<typeof patientIdSchema>;
+
+export async function getPatientById(input: PatientIdInput) {
   const data = patientIdSchema.parse(input);
   const organizationId = await requireOrganizationId();
 
