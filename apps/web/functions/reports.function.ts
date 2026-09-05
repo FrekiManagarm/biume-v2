@@ -1,5 +1,3 @@
-"use server";
-
 import { db } from "@biume/db";
 import {
   createInitialReportSectionStates,
