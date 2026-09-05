@@ -1,12 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getDashboardAgendaDay } from "#/lib/api/actions/dashboard-agenda.action";
-import {
-  getNewClientsMetric,
-  getNewPatientsMetric,
-  getRecentActivity,
-  getSentReportsMetric,
-} from "#/lib/api/actions/dashboard.action";
+import { internalGet } from "#/lib/http/internal-fetch";
+import type { AgendaAppointmentInput } from "#/lib/dashboard/day-agenda";
+import type {
+  MetricResult,
+  RecentActivityItem,
+} from "#/functions/dashboard.function";
 
 export function getDashboardOverviewDate(date = new Date()) {
   const year = date.getFullYear();
@@ -16,34 +15,26 @@ export function getDashboardOverviewDate(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+// Forme exacte de ce que le `queryFn` renvoyait quand il composait ses cinq
+// lectures depuis le navigateur : la préserver à l'identique évite de
+// toucher les composants qui consomment `dashboardOverviewQueryOptions`.
+type DashboardOverview = {
+  generatedAt: string;
+  selectedDate: string;
+  appointments: AgendaAppointmentInput[];
+  metrics: {
+    newClients: MetricResult;
+    newPatients: MetricResult;
+    sentReports: MetricResult;
+  };
+  recentActivity: RecentActivityItem[];
+};
+
 export const dashboardOverviewQueryOptions = (selectedDate: string) =>
   queryOptions({
     queryKey: ["dashboard", "overview", selectedDate] as const,
-    queryFn: async () => {
-      const [
-        newClients,
-        newPatients,
-        sentReports,
-        recentActivity,
-        agendaDay,
-      ] = await Promise.all([
-        getNewClientsMetric(90),
-        getNewPatientsMetric(90),
-        getSentReportsMetric(30),
-        getRecentActivity(5),
-        getDashboardAgendaDay(selectedDate),
-      ]);
-
-      return {
-        generatedAt: new Date().toISOString(),
-        selectedDate: agendaDay.selectedDate,
-        appointments: agendaDay.appointments,
-        metrics: {
-          newClients,
-          newPatients,
-          sentReports,
-        },
-        recentActivity,
-      };
-    },
+    queryFn: () =>
+      internalGet<DashboardOverview>("/api/internal/dashboard/overview", {
+        date: selectedDate,
+      }),
   });

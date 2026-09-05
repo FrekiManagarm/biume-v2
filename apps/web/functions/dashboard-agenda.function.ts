@@ -1,5 +1,4 @@
 import { and, eq, gte, lte } from "drizzle-orm";
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { db } from "@biume/db";
@@ -16,109 +15,110 @@ export type DashboardAgendaDayResult = {
   appointments: AgendaAppointmentInput[];
 };
 
-export const getDashboardAgendaDay = createServerFn({ method: "GET" })
-  .validator(dashboardAgendaDaySchema)
-  .handler(async ({ data }): Promise<DashboardAgendaDayResult> => {
-    const organizationId = await requireOrganizationId();
+export async function getDashboardAgendaDay(
+  date: string,
+): Promise<DashboardAgendaDayResult> {
+  const data = dashboardAgendaDaySchema.parse({ date });
+  const organizationId = await requireOrganizationId();
 
-    const dayStart = startOfLocalDay(data.date);
-    const dayEnd = endOfLocalDay(data.date);
+  const dayStart = startOfLocalDay(data.date);
+  const dayEnd = endOfLocalDay(data.date);
 
-    const rows = await db.query.appointments.findMany({
-      where: and(
-        eq(appointments.organizationId, organizationId),
-        gte(appointments.beginAt, dayStart),
-        lte(appointments.beginAt, dayEnd),
-      ),
-      orderBy: (appointments, { asc }) => [asc(appointments.beginAt)],
-      with: {
-        patient: {
-          columns: {
-            id: true,
-            name: true,
-            breed: true,
-          },
-          with: {
-            owner: {
-              columns: {
-                id: true,
-                name: true,
-              },
-            },
-            animal: {
-              columns: {
-                code: true,
-                name: true,
-              },
-            },
-          },
+  const rows = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.organizationId, organizationId),
+      gte(appointments.beginAt, dayStart),
+      lte(appointments.beginAt, dayEnd),
+    ),
+    orderBy: (appointments, { asc }) => [asc(appointments.beginAt)],
+    with: {
+      patient: {
+        columns: {
+          id: true,
+          name: true,
+          breed: true,
         },
-        reports: {
-          columns: {
-            id: true,
-            status: true,
-            updatedAt: true,
-            consultationReason: true,
-            notes: true,
-          },
-          with: {
-            anatomicalIssues: {
-              columns: {
-                id: true,
-              },
+        with: {
+          owner: {
+            columns: {
+              id: true,
+              name: true,
             },
-            recommendations: {
-              columns: {
-                id: true,
-              },
+          },
+          animal: {
+            columns: {
+              code: true,
+              name: true,
             },
           },
         },
       },
-    });
-
-    return {
-      selectedDate: data.date,
-      appointments: rows.map((row) => ({
-        id: row.id,
-        beginAt: row.beginAt,
-        endAt: row.endAt,
-        status: row.status,
-        atHome: row.atHome,
-        note: row.note,
-        reports: row.reports
-          .map((report) => ({
-            id: report.id,
-            status: report.status,
-            updatedAt: report.updatedAt,
-            consultationReason: report.consultationReason,
-            notes: report.notes,
-            anatomicalIssueCount: report.anatomicalIssues.length,
-            recommendationCount: report.recommendations.length,
-          }))
-          .sort(compareAgendaReports),
-        patient: row.patient
-          ? {
-              id: row.patient.id,
-              name: row.patient.name,
-              breed: row.patient.breed,
-              animal: row.patient.animal
-                ? {
-                    code: row.patient.animal.code,
-                    name: row.patient.animal.name,
-                  }
-                : null,
-              owner: row.patient.owner
-                ? {
-                    id: row.patient.owner.id,
-                    name: row.patient.owner.name,
-                  }
-                : null,
-            }
-          : null,
-      })),
-    };
+      reports: {
+        columns: {
+          id: true,
+          status: true,
+          updatedAt: true,
+          consultationReason: true,
+          notes: true,
+        },
+        with: {
+          anatomicalIssues: {
+            columns: {
+              id: true,
+            },
+          },
+          recommendations: {
+            columns: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
   });
+
+  return {
+    selectedDate: data.date,
+    appointments: rows.map((row) => ({
+      id: row.id,
+      beginAt: row.beginAt,
+      endAt: row.endAt,
+      status: row.status,
+      atHome: row.atHome,
+      note: row.note,
+      reports: row.reports
+        .map((report) => ({
+          id: report.id,
+          status: report.status,
+          updatedAt: report.updatedAt,
+          consultationReason: report.consultationReason,
+          notes: report.notes,
+          anatomicalIssueCount: report.anatomicalIssues.length,
+          recommendationCount: report.recommendations.length,
+        }))
+        .sort(compareAgendaReports),
+      patient: row.patient
+        ? {
+            id: row.patient.id,
+            name: row.patient.name,
+            breed: row.patient.breed,
+            animal: row.patient.animal
+              ? {
+                  code: row.patient.animal.code,
+                  name: row.patient.animal.name,
+                }
+              : null,
+            owner: row.patient.owner
+              ? {
+                  id: row.patient.owner.id,
+                  name: row.patient.owner.name,
+                }
+              : null,
+          }
+        : null,
+    })),
+  };
+}
 
 function startOfLocalDay(date: string) {
   const [year, month, day] = date.split("-").map(Number);

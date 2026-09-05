@@ -2,24 +2,27 @@ import { and, eq, gte, desc } from "drizzle-orm";
 import { db } from "@biume/db";
 import { clients, pets, animals, advancedReport } from "@biume/db/schema/index";
 import { requireOrganizationId } from "#/server/auth/organization-scope";
-import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
 const daysInputSchema = z.object({
   days: z.number().optional().default(30),
 });
+type DaysInput = z.input<typeof daysInputSchema>;
 
 const newClientsDaysInputSchema = z.object({
   days: z.number().optional().default(90),
 });
+type NewClientsDaysInput = z.input<typeof newClientsDaysInputSchema>;
 
 const limitInputSchema = z.object({
   limit: z.number().optional().default(8),
 });
+type LimitInput = z.input<typeof limitInputSchema>;
 
 const recentReportsLimitInputSchema = z.object({
   limit: z.number().optional().default(5),
 });
+type RecentReportsLimitInput = z.input<typeof recentReportsLimitInputSchema>;
 
 // Calcule une date de début sur N jours glissants
 function getStartDateFromDaysAgo(days: number): Date {
@@ -30,64 +33,62 @@ function getStartDateFromDaysAgo(days: number): Date {
   return d;
 }
 
-export const countNewClientsLastNDays = createServerFn({ method: "GET" })
-  .validator(newClientsDaysInputSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export async function countNewClientsLastNDays(
+  days?: NewClientsDaysInput["days"],
+) {
+  const data = newClientsDaysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
 
-    const start = getStartDateFromDaysAgo(data.days);
+  const start = getStartDateFromDaysAgo(data.days);
 
-    const rows = await db
-      .select({ id: clients.id })
-      .from(clients)
-      .where(
-        and(
-          eq(clients.organizationId, organizationId),
-          gte(clients.createdAt, start),
-        ),
-      );
+  const rows = await db
+    .select({ id: clients.id })
+    .from(clients)
+    .where(
+      and(
+        eq(clients.organizationId, organizationId),
+        gte(clients.createdAt, start),
+      ),
+    );
 
-    return rows.length;
-  });
+  return rows.length;
+}
 
-export const countSentReportsLastNDays = createServerFn({ method: "GET" })
-  .validator(daysInputSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export async function countSentReportsLastNDays(days?: DaysInput["days"]) {
+  const data = daysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
 
-    const start = getStartDateFromDaysAgo(data.days);
+  const start = getStartDateFromDaysAgo(data.days);
 
-    const rows = await db
-      .select({ id: advancedReport.id })
-      .from(advancedReport)
-      .where(
-        and(
-          eq(advancedReport.createdBy, organizationId),
-          eq(advancedReport.status, "sent"),
-          gte(advancedReport.createdAt, start),
-        ),
-      );
+  const rows = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.createdBy, organizationId),
+        eq(advancedReport.status, "sent"),
+        gte(advancedReport.createdAt, start),
+      ),
+    );
 
-    return rows.length;
-  });
+  return rows.length;
+}
 
-export const countDraftReports = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const organizationId = await requireOrganizationId();
+export async function countDraftReports() {
+  const organizationId = await requireOrganizationId();
 
-    const rows = await db
-      .select({ id: advancedReport.id })
-      .from(advancedReport)
-      .where(
-        and(
-          eq(advancedReport.createdBy, organizationId),
-          eq(advancedReport.status, "draft"),
-        ),
-      );
+  const rows = await db
+    .select({ id: advancedReport.id })
+    .from(advancedReport)
+    .where(
+      and(
+        eq(advancedReport.createdBy, organizationId),
+        eq(advancedReport.status, "draft"),
+      ),
+    );
 
-    return rows.length;
-  },
-);
+  return rows.length;
+}
 
 // Helpers de delta
 type Trend = "up" | "down";
@@ -112,153 +113,157 @@ function toAbsoluteDelta(current: number, previous: number): MetricDelta {
 }
 
 // Nouveaux clients: période courante vs période précédente (même durée)
-export const getNewClientsMetric = createServerFn({ method: "GET" })
-  .validator(newClientsDaysInputSchema)
-  .handler(async ({ data }): Promise<MetricResult> => {
-    const organizationId = await requireOrganizationId();
-    const start = getStartDateFromDaysAgo(data.days);
-    const prevStart = getStartDateFromDaysAgo(data.days * 2);
+export async function getNewClientsMetric(
+  days?: NewClientsDaysInput["days"],
+): Promise<MetricResult> {
+  const data = newClientsDaysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
+  const start = getStartDateFromDaysAgo(data.days);
+  const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
-    const [currentRows, previousRows] = await Promise.all([
-      db
-        .select({ id: clients.id })
-        .from(clients)
-        .where(
-          and(
-            eq(clients.organizationId, organizationId),
-            gte(clients.createdAt, start),
-          ),
+  const [currentRows, previousRows] = await Promise.all([
+    db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(
+        and(
+          eq(clients.organizationId, organizationId),
+          gte(clients.createdAt, start),
         ),
-      db
-        .select({ id: clients.id })
-        .from(clients)
-        .where(
-          and(
-            eq(clients.organizationId, organizationId),
-            gte(clients.createdAt, prevStart),
-          ),
+      ),
+    db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(
+        and(
+          eq(clients.organizationId, organizationId),
+          gte(clients.createdAt, prevStart),
         ),
-    ]);
+      ),
+  ]);
 
-    const current = currentRows.length;
-    const previous =
-      previousRows.filter(() => {
-        // previous period = [prevStart, start)
-        return true; // approximation car on ne sélectionne que par >= prevStart; on affine ci-dessous côté base si besoin
-      }).length - current; // retrait de la période courante
+  const current = currentRows.length;
+  const previous =
+    previousRows.filter(() => {
+      // previous period = [prevStart, start)
+      return true; // approximation car on ne sélectionne que par >= prevStart; on affine ci-dessous côté base si besoin
+    }).length - current; // retrait de la période courante
 
-    const safePrevious = Math.max(previous, 0);
-    return { value: current, delta: toPercentDelta(current, safePrevious) };
-  });
+  const safePrevious = Math.max(previous, 0);
+  return { value: current, delta: toPercentDelta(current, safePrevious) };
+}
 
 // Nouveaux patients: même logique que clients (sur N jours)
-export const getNewPatientsMetric = createServerFn({ method: "GET" })
-  .validator(newClientsDaysInputSchema)
-  .handler(async ({ data }): Promise<MetricResult> => {
-    const organizationId = await requireOrganizationId();
-    const start = getStartDateFromDaysAgo(data.days);
-    const prevStart = getStartDateFromDaysAgo(data.days * 2);
+export async function getNewPatientsMetric(
+  days?: NewClientsDaysInput["days"],
+): Promise<MetricResult> {
+  const data = newClientsDaysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
+  const start = getStartDateFromDaysAgo(data.days);
+  const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
-    const [currentRows, previousRows] = await Promise.all([
-      db
-        .select({ id: pets.id })
-        .from(pets)
-        .where(
-          and(
-            eq(pets.organizationId, organizationId),
-            gte(pets.createdAt, start),
-          ),
+  const [currentRows, previousRows] = await Promise.all([
+    db
+      .select({ id: pets.id })
+      .from(pets)
+      .where(
+        and(
+          eq(pets.organizationId, organizationId),
+          gte(pets.createdAt, start),
         ),
-      db
-        .select({ id: pets.id })
-        .from(pets)
-        .where(
-          and(
-            eq(pets.organizationId, organizationId),
-            gte(pets.createdAt, prevStart),
-          ),
+      ),
+    db
+      .select({ id: pets.id })
+      .from(pets)
+      .where(
+        and(
+          eq(pets.organizationId, organizationId),
+          gte(pets.createdAt, prevStart),
         ),
-    ]);
+      ),
+  ]);
 
-    const current = currentRows.length;
-    const previous = previousRows.length - current;
-    const safePrevious = Math.max(previous, 0);
-    return { value: current, delta: toPercentDelta(current, safePrevious) };
-  });
+  const current = currentRows.length;
+  const previous = previousRows.length - current;
+  const safePrevious = Math.max(previous, 0);
+  return { value: current, delta: toPercentDelta(current, safePrevious) };
+}
 
 // Rapports envoyés: sur N jours vs période précédente
-export const getSentReportsMetric = createServerFn({ method: "GET" })
-  .validator(daysInputSchema)
-  .handler(async ({ data }): Promise<MetricResult> => {
-    const organizationId = await requireOrganizationId();
-    const start = getStartDateFromDaysAgo(data.days);
-    const prevStart = getStartDateFromDaysAgo(data.days * 2);
+export async function getSentReportsMetric(
+  days?: DaysInput["days"],
+): Promise<MetricResult> {
+  const data = daysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
+  const start = getStartDateFromDaysAgo(data.days);
+  const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
-    const [currentRows, previousRows] = await Promise.all([
-      db
-        .select({ id: advancedReport.id })
-        .from(advancedReport)
-        .where(
-          and(
-            eq(advancedReport.createdBy, organizationId),
-            eq(advancedReport.status, "sent"),
-            gte(advancedReport.createdAt, start),
-          ),
+  const [currentRows, previousRows] = await Promise.all([
+    db
+      .select({ id: advancedReport.id })
+      .from(advancedReport)
+      .where(
+        and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.status, "sent"),
+          gte(advancedReport.createdAt, start),
         ),
-      db
-        .select({ id: advancedReport.id })
-        .from(advancedReport)
-        .where(
-          and(
-            eq(advancedReport.createdBy, organizationId),
-            eq(advancedReport.status, "sent"),
-            gte(advancedReport.createdAt, prevStart),
-          ),
+      ),
+    db
+      .select({ id: advancedReport.id })
+      .from(advancedReport)
+      .where(
+        and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.status, "sent"),
+          gte(advancedReport.createdAt, prevStart),
         ),
-    ]);
+      ),
+  ]);
 
-    const current = currentRows.length;
-    const previous = previousRows.length - current;
-    const safePrevious = Math.max(previous, 0);
-    return { value: current, delta: toPercentDelta(current, safePrevious) };
-  });
+  const current = currentRows.length;
+  const previous = previousRows.length - current;
+  const safePrevious = Math.max(previous, 0);
+  return { value: current, delta: toPercentDelta(current, safePrevious) };
+}
 
 // Brouillons: nombre sur N jours vs période précédente (delta absolu)
-export const getDraftReportsMetric = createServerFn({ method: "GET" })
-  .validator(daysInputSchema)
-  .handler(async ({ data }): Promise<MetricResult> => {
-    const organizationId = await requireOrganizationId();
-    const start = getStartDateFromDaysAgo(data.days);
-    const prevStart = getStartDateFromDaysAgo(data.days * 2);
+export async function getDraftReportsMetric(
+  days?: DaysInput["days"],
+): Promise<MetricResult> {
+  const data = daysInputSchema.parse({ days });
+  const organizationId = await requireOrganizationId();
+  const start = getStartDateFromDaysAgo(data.days);
+  const prevStart = getStartDateFromDaysAgo(data.days * 2);
 
-    const [currentRows, previousRows] = await Promise.all([
-      db
-        .select({ id: advancedReport.id })
-        .from(advancedReport)
-        .where(
-          and(
-            eq(advancedReport.createdBy, organizationId),
-            eq(advancedReport.status, "draft"),
-            gte(advancedReport.createdAt, start),
-          ),
+  const [currentRows, previousRows] = await Promise.all([
+    db
+      .select({ id: advancedReport.id })
+      .from(advancedReport)
+      .where(
+        and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.status, "draft"),
+          gte(advancedReport.createdAt, start),
         ),
-      db
-        .select({ id: advancedReport.id })
-        .from(advancedReport)
-        .where(
-          and(
-            eq(advancedReport.createdBy, organizationId),
-            eq(advancedReport.status, "draft"),
-            gte(advancedReport.createdAt, prevStart),
-          ),
+      ),
+    db
+      .select({ id: advancedReport.id })
+      .from(advancedReport)
+      .where(
+        and(
+          eq(advancedReport.createdBy, organizationId),
+          eq(advancedReport.status, "draft"),
+          gte(advancedReport.createdAt, prevStart),
         ),
-    ]);
+      ),
+  ]);
 
-    const current = currentRows.length;
-    const previous = previousRows.length - current;
-    const safePrevious = Math.max(previous, 0);
-    return { value: current, delta: toAbsoluteDelta(current, safePrevious) };
-  });
+  const current = currentRows.length;
+  const previous = previousRows.length - current;
+  const safePrevious = Math.max(previous, 0);
+  return { value: current, delta: toAbsoluteDelta(current, safePrevious) };
+}
 
 // Répartition clientèle par espèce (Chiens/Chats/Chevaux/Autres) basée sur pets
 export type SpeciesItem = {
@@ -268,87 +273,85 @@ export type SpeciesItem = {
   color: string; // classe Tailwind pour cohérence UI
 };
 
-export const getClienteleBySpecies = createServerFn({ method: "GET" }).handler(
-  async (): Promise<SpeciesItem[]> => {
-    const organizationId = await requireOrganizationId();
+export async function getClienteleBySpecies(): Promise<SpeciesItem[]> {
+  const organizationId = await requireOrganizationId();
 
-    // Récupérer tous les pets de l'organisation avec leur animal pour catégorisation
-    const rows = await db
-      .select({
-        id: pets.id,
-        animalName: animals.name,
-      })
-      .from(pets)
-      .leftJoin(animals, eq(pets.type, animals.id))
-      .where(eq(pets.organizationId, organizationId));
+  // Récupérer tous les pets de l'organisation avec leur animal pour catégorisation
+  const rows = await db
+    .select({
+      id: pets.id,
+      animalName: animals.name,
+    })
+    .from(pets)
+    .leftJoin(animals, eq(pets.type, animals.id))
+    .where(eq(pets.organizationId, organizationId));
 
-    const buckets = {
-      Chiens: 0,
-      Chats: 0,
-      Chevaux: 0,
-      Autres: 0,
-    } as Record<SpeciesItem["status"], number>;
+  const buckets = {
+    Chiens: 0,
+    Chats: 0,
+    Chevaux: 0,
+    Autres: 0,
+  } as Record<SpeciesItem["status"], number>;
 
-    for (const row of rows) {
-      const name = (row.animalName || "").toLowerCase();
-      if (
-        name === "dog" ||
-        name === "chien" ||
-        name === "dogs" ||
-        name === "chiens"
-      ) {
-        buckets.Chiens += 1;
-      } else if (
-        name === "cat" ||
-        name === "chat" ||
-        name === "cats" ||
-        name === "chats"
-      ) {
-        buckets.Chats += 1;
-      } else if (
-        name === "horse" ||
-        name === "cheval" ||
-        name === "horses" ||
-        name === "chevaux"
-      ) {
-        buckets.Chevaux += 1;
-      } else {
-        buckets.Autres += 1;
-      }
+  for (const row of rows) {
+    const name = (row.animalName || "").toLowerCase();
+    if (
+      name === "dog" ||
+      name === "chien" ||
+      name === "dogs" ||
+      name === "chiens"
+    ) {
+      buckets.Chiens += 1;
+    } else if (
+      name === "cat" ||
+      name === "chat" ||
+      name === "cats" ||
+      name === "chats"
+    ) {
+      buckets.Chats += 1;
+    } else if (
+      name === "horse" ||
+      name === "cheval" ||
+      name === "horses" ||
+      name === "chevaux"
+    ) {
+      buckets.Chevaux += 1;
+    } else {
+      buckets.Autres += 1;
     }
+  }
 
-    const total = Object.values(buckets).reduce((s, v) => s + v, 0) || 1;
+  const total = Object.values(buckets).reduce((s, v) => s + v, 0) || 1;
 
-    const items: SpeciesItem[] = [
-      {
-        status: "Chiens",
-        count: buckets.Chiens,
-        percentage: Math.round((buckets.Chiens / total) * 100),
-        color: "bg-blue-500",
-      },
-      {
-        status: "Chats",
-        count: buckets.Chats,
-        percentage: Math.round((buckets.Chats / total) * 100),
-        color: "bg-purple-500",
-      },
-      {
-        status: "Chevaux",
-        count: buckets.Chevaux,
-        percentage: Math.round((buckets.Chevaux / total) * 100),
-        color: "bg-amber-500",
-      },
-      {
-        status: "Autres",
-        count: buckets.Autres,
-        percentage: Math.round((buckets.Autres / total) * 100),
-        color: "bg-emerald-500",
-      },
-    ];
+  const items: SpeciesItem[] = [
+    {
+      status: "Chiens",
+      count: buckets.Chiens,
+      percentage: Math.round((buckets.Chiens / total) * 100),
+      color: "bg-blue-500",
+    },
+    {
+      status: "Chats",
+      count: buckets.Chats,
+      percentage: Math.round((buckets.Chats / total) * 100),
+      color: "bg-purple-500",
+    },
+    {
+      status: "Chevaux",
+      count: buckets.Chevaux,
+      percentage: Math.round((buckets.Chevaux / total) * 100),
+      color: "bg-amber-500",
+    },
+    {
+      status: "Autres",
+      count: buckets.Autres,
+      percentage: Math.round((buckets.Autres / total) * 100),
+      color: "bg-emerald-500",
+    },
+  ];
 
-    return items;
-  },
-);
+  return items;
+}
 
 // Activité récente: compose événements depuis rapports et nouveaux patients
 export type RecentActivityItem = {
@@ -378,71 +381,72 @@ function formatRelativeTime(date: Date): string {
   }
 }
 
-export const getRecentActivity = createServerFn({ method: "GET" })
-  .validator(limitInputSchema)
-  .handler(async ({ data }): Promise<RecentActivityItem[]> => {
-    const organizationId = await requireOrganizationId();
+export async function getRecentActivity(
+  limit?: LimitInput["limit"],
+): Promise<RecentActivityItem[]> {
+  const data = limitInputSchema.parse({ limit });
+  const organizationId = await requireOrganizationId();
 
-    // Rapports envoyés ou finalisés récents
-    const reports = await db
-      .select({
-        id: advancedReport.id,
-        title: advancedReport.title,
-        status: advancedReport.status,
-        createdAt: advancedReport.createdAt,
-      })
-      .from(advancedReport)
-      .where(and(eq(advancedReport.createdBy, organizationId)))
-      .orderBy(advancedReport.createdAt);
-    // Neon/Drizzle ne supporte pas tous les modifs ici: on limitera après merge
-    // Nouveaux patients récents
-    const recentPets = await db
-      .select({ id: pets.id, name: pets.name, createdAt: pets.createdAt })
-      .from(pets)
-      .where(eq(pets.organizationId, organizationId))
-      .orderBy(pets.createdAt);
-    const reportEvents: RecentActivityItem[] = reports
-      .filter((r) => r.createdAt)
-      .map((r) => {
-        const occurredAt = new Date(r.createdAt as unknown as string);
-        const isSent = r.status === "sent";
-        const isFinalized = r.status === "finalized";
-        const title = isSent
-          ? "Rapport envoyé"
-          : isFinalized
-            ? "Rapport finalisé"
-            : "Rapport mis à jour";
-        const description = r.title ?? "Rapport";
-        return {
-          id: `rep_${r.id}`,
-          type: "report",
-          title,
-          description,
-          timestamp: formatRelativeTime(occurredAt),
-          occurredAt,
-        } satisfies RecentActivityItem;
-      });
+  // Rapports envoyés ou finalisés récents
+  const reports = await db
+    .select({
+      id: advancedReport.id,
+      title: advancedReport.title,
+      status: advancedReport.status,
+      createdAt: advancedReport.createdAt,
+    })
+    .from(advancedReport)
+    .where(and(eq(advancedReport.createdBy, organizationId)))
+    .orderBy(advancedReport.createdAt);
+  // Neon/Drizzle ne supporte pas tous les modifs ici: on limitera après merge
+  // Nouveaux patients récents
+  const recentPets = await db
+    .select({ id: pets.id, name: pets.name, createdAt: pets.createdAt })
+    .from(pets)
+    .where(eq(pets.organizationId, organizationId))
+    .orderBy(pets.createdAt);
+  const reportEvents: RecentActivityItem[] = reports
+    .filter((r) => r.createdAt)
+    .map((r) => {
+      const occurredAt = new Date(r.createdAt as unknown as string);
+      const isSent = r.status === "sent";
+      const isFinalized = r.status === "finalized";
+      const title = isSent
+        ? "Rapport envoyé"
+        : isFinalized
+          ? "Rapport finalisé"
+          : "Rapport mis à jour";
+      const description = r.title ?? "Rapport";
+      return {
+        id: `rep_${r.id}`,
+        type: "report",
+        title,
+        description,
+        timestamp: formatRelativeTime(occurredAt),
+        occurredAt,
+      } satisfies RecentActivityItem;
+    });
 
-    const petEvents: RecentActivityItem[] = recentPets
-      .filter((p) => p.createdAt)
-      .map((p) => {
-        const occurredAt = new Date(p.createdAt as unknown as string);
-        return {
-          id: `pet_${p.id}`,
-          type: "new_patient",
-          title: "Nouveau patient",
-          description: p.name ?? "Patient",
-          timestamp: formatRelativeTime(occurredAt),
-          occurredAt,
-        } satisfies RecentActivityItem;
-      });
+  const petEvents: RecentActivityItem[] = recentPets
+    .filter((p) => p.createdAt)
+    .map((p) => {
+      const occurredAt = new Date(p.createdAt as unknown as string);
+      return {
+        id: `pet_${p.id}`,
+        type: "new_patient",
+        title: "Nouveau patient",
+        description: p.name ?? "Patient",
+        timestamp: formatRelativeTime(occurredAt),
+        occurredAt,
+      } satisfies RecentActivityItem;
+    });
 
-    const merged = [...reportEvents, ...petEvents]
-      .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
-      .slice(0, data.limit);
+  const merged = [...reportEvents, ...petEvents]
+    .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
+    .slice(0, data.limit);
 
-    return merged;
-  });
+  return merged;
+}
 
 // Derniers rapports pour l'organisation
 export type RecentReport = {
@@ -454,37 +458,38 @@ export type RecentReport = {
   createdAt: string;
 };
 
-export const getRecentReports = createServerFn({ method: "GET" })
-  .validator(recentReportsLimitInputSchema)
-  .handler(async ({ data }): Promise<RecentReport[]> => {
-    const organizationId = await requireOrganizationId();
+export async function getRecentReports(
+  limit?: RecentReportsLimitInput["limit"],
+): Promise<RecentReport[]> {
+  const data = recentReportsLimitInputSchema.parse({ limit });
+  const organizationId = await requireOrganizationId();
 
-    const rows = await db
-      .select({
-        id: advancedReport.id,
-        title: advancedReport.title,
-        consultationReason: advancedReport.consultationReason,
-        createdAt: advancedReport.createdAt,
-        petName: pets.name,
-        petBreed: pets.breed,
-      })
-      .from(advancedReport)
-      .leftJoin(pets, eq(advancedReport.patientId, pets.id))
-      .where(eq(advancedReport.createdBy, organizationId))
-      .orderBy(desc(advancedReport.createdAt))
-      .limit(data.limit);
+  const rows = await db
+    .select({
+      id: advancedReport.id,
+      title: advancedReport.title,
+      consultationReason: advancedReport.consultationReason,
+      createdAt: advancedReport.createdAt,
+      petName: pets.name,
+      petBreed: pets.breed,
+    })
+    .from(advancedReport)
+    .leftJoin(pets, eq(advancedReport.patientId, pets.id))
+    .where(eq(advancedReport.createdBy, organizationId))
+    .orderBy(desc(advancedReport.createdAt))
+    .limit(data.limit);
 
-    return rows.map((r) => ({
-      id: r.id,
-      title: r.title ?? "Rapport",
-      type: "advanced",
-      patientName:
-        r.petName && r.petBreed
-          ? `${r.petName} (${r.petBreed})`
-          : (r.petName ?? "Patient"),
-      consultationReason: r.consultationReason ?? undefined,
-      createdAt:
-        (r.createdAt as unknown as Date)?.toISOString?.() ??
-        new Date().toISOString(),
-    }));
-  });
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title ?? "Rapport",
+    type: "advanced",
+    patientName:
+      r.petName && r.petBreed
+        ? `${r.petName} (${r.petBreed})`
+        : (r.petName ?? "Patient"),
+    consultationReason: r.consultationReason ?? undefined,
+    createdAt:
+      (r.createdAt as unknown as Date)?.toISOString?.() ??
+      new Date().toISOString(),
+  }));
+}
