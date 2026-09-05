@@ -4,7 +4,9 @@
     "**/*.tsx",
     "eslint.config.js",
     "prettier.config.js",
-    "vite.config.js",
+    "next-env.d.ts",
+    "next.config.ts",
+    ".next/types/**/*.ts",
     "../../packages/transactional/emails/UpgradeSubscription.tsx",
     "../../packages/transactional/emails/index.ts",
     "../../packages/transactional/emails/TrialEndingOrg.tsx",
@@ -27,14 +29,14 @@
 
   "compilerOptions": {
     "target": "ES2022",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "module": "ESNext",
+    "plugins": [{ "name": "next" }],
     "paths": {
       "#/*": ["./*"],
       "@/*": ["./*"],
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
