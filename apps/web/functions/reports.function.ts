@@ -41,7 +41,6 @@ import {
 } from "#/components/dashboard/pages/reports-module/reports.persistence";
 // import { anatomicalRegions } from "#/components/dashboard/pages/reports-module/data/dog/typesDog";
 // import { anatomicalRegionPaths } from "#/components/dashboard/pages/reports-module/data/dog/dataDog";
-import { createServerFn } from "@tanstack/react-start";
 import {
   buildQuickReportRows,
   buildReportSectionStateRows,
@@ -166,10 +165,13 @@ export type NormalizedAdvancedReport = Omit<
   sectionStates: ReportSectionStates;
 };
 
-export const getLatestReports = createServerFn({ method: "GET" })
-  .validator(z.object({ limit: z.number() }))
-  .handler(async ({ data }) => {
-    const { limit } = data;
+const getLatestReportsSchema = z.object({ limit: z.number() });
+
+export async function getLatestReports(
+  input: z.infer<typeof getLatestReportsSchema>,
+) {
+  const data = getLatestReportsSchema.parse(input);
+  const { limit } = data;
 
     const organizationId = await requireOrganizationId();
     // Récupérer les rapports simples
@@ -206,7 +208,7 @@ export const getLatestReports = createServerFn({ method: "GET" })
 
     // Retourner seulement le nombre demandé
     return allReports.slice(0, limit) as ReportItem[];
-  });
+}
 
 export const getAllReportsParams = z.object({
   search: z.string().optional(),
@@ -215,35 +217,35 @@ export const getAllReportsParams = z.object({
 
 export type GetAllReportsParams = z.infer<typeof getAllReportsParams>;
 
-export const getAllReports = createServerFn({ method: "GET" })
-  .validator(getAllReportsParams)
-  .handler(async ({ data }) => {
-    try {
-      const organizationId = await requireOrganizationId();
+export async function getAllReports(input: GetAllReportsParams) {
+  const data = getAllReportsParams.parse(input);
+  try {
+    const organizationId = await requireOrganizationId();
 
-      const { search = "", status = "tous" } = data;
+    const { search = "", status = "tous" } = data;
 
-      return loadAllReportRows({
-        organizationId,
-        search,
-        status,
-      });
-    } catch (error) {
-      console.error("Error getting all reports", error);
-      throw new Error("Error getting all reports");
-    }
-  });
+    return loadAllReportRows({
+      organizationId,
+      search,
+      status,
+    });
+  } catch (error) {
+    console.error("Error getting all reports", error);
+    throw new Error("Error getting all reports");
+  }
+}
 
-export const createReport = createServerFn({ method: "POST" })
-  .validator(createReportSchema)
-  .handler(async ({ data }) => {
-    const { title, petId, appointmentId, consultationReason, notes } = data;
-    const patientId = petId ?? "";
+export type CreateReportInput = z.input<typeof createReportSchema>;
 
-    try {
-      const organizationId = await requireOrganizationId();
+export async function createReport(input: CreateReportInput) {
+  const data = createReportSchema.parse(input);
+  const { title, petId, appointmentId, consultationReason, notes } = data;
+  const patientId = petId ?? "";
 
-      return createReportWithTenantIsolation({
+  try {
+    const organizationId = await requireOrganizationId();
+
+    return createReportWithTenantIsolation({
         findPatient: () =>
           db.query.pets.findFirst({
             where: and(
@@ -294,12 +296,13 @@ export const createReport = createServerFn({ method: "POST" })
       console.error("Error creating report", error);
       throw new Error("Error creating report");
     }
-  });
+}
 
-export const createQuickReport = createServerFn({ method: "POST" })
-  .validator(quickReportSchema)
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+export type CreateQuickReportInput = z.input<typeof quickReportSchema>;
+
+export async function createQuickReport(input: CreateQuickReportInput) {
+  const data = quickReportSchema.parse(input);
+  const organizationId = await requireOrganizationId();
 
     const findByKey = async ({
       organizationId,
@@ -363,60 +366,71 @@ export const createQuickReport = createServerFn({ method: "POST" })
       success: true as const,
       ...result,
     };
-  });
+}
 
-export const getReportById = createServerFn({ method: "GET" })
-  .validator(
-    z.object({
-      reportId: z.string(),
-    }),
-  )
-  .handler(async ({ data }) => {
-    try {
-      const organizationId = await requireOrganizationId();
+const getReportByIdSchema = z.object({
+  reportId: z.string(),
+});
 
-      const report = await loadReportDetailRow(organizationId, data.reportId);
+export async function getReportById(
+  input: z.infer<typeof getReportByIdSchema>,
+) {
+  const data = getReportByIdSchema.parse(input);
+  try {
+    const organizationId = await requireOrganizationId();
 
-      if (!report) throw new Error("Report not found");
+    const report = await loadReportDetailRow(organizationId, data.reportId);
 
-      const normalizedReport: NormalizedAdvancedReport = {
-        ...report,
-        sectionStates: normalizeReportSectionStates(report.sectionStates),
-      };
+    if (!report) throw new Error("Report not found");
 
-      return {
-        success: true,
-        data: normalizedReport,
-      };
-    } catch (error) {
-      console.error("Error getting report by id", error);
-      return { success: false, data: null };
-    }
-  });
+    const normalizedReport: NormalizedAdvancedReport = {
+      ...report,
+      sectionStates: normalizeReportSectionStates(report.sectionStates),
+    };
 
-export const updateReport = createServerFn({ method: "POST" })
-  .validator(updateReportSchema)
-  .handler(async ({ data }) => {
-    const {
-      reportId,
-      expectedRevision,
-      title,
-      petId,
-      appointmentId,
-      consultationReason,
-      notes,
-      status,
-      sectionStates,
-      observations = [],
-      anatomicalIssues = [],
-      recommendations = [],
-    } = data;
-    const patientId = petId ?? "";
+    return {
+      success: true,
+      data: normalizedReport,
+    };
+  } catch (error) {
+    console.error("Error getting report by id", error);
+    return { success: false, data: null };
+  }
+}
 
-    try {
-      const organizationId = await requireOrganizationId();
+export type UpdateReportInput = z.input<typeof updateReportSchema>;
 
-      return updateReportWithTenantIsolation({
+// Annotation de retour ajoutée par la conversion : sans elle, TypeScript
+// perd la discrimination littérale entre les deux branches (`success: true`
+// vs `success: false`) une fois sortie de `createServerFn`, et les
+// consommateurs (ex. `reports-editor.tsx`) ne peuvent plus étroitir `result`
+// après un simple `if (!result.success)`. Purement additif : aucune ligne du
+// corps n'est modifiée.
+export async function updateReport(input: UpdateReportInput): Promise<
+  | { success: true; status: z.infer<typeof updateReportSchema>["status"]; revision: number }
+  | { success: false; data: null; error: string }
+> {
+  const data = updateReportSchema.parse(input);
+  const {
+    reportId,
+    expectedRevision,
+    title,
+    petId,
+    appointmentId,
+    consultationReason,
+    notes,
+    status,
+    sectionStates,
+    observations = [],
+    anatomicalIssues = [],
+    recommendations = [],
+  } = data;
+  const patientId = petId ?? "";
+
+  try {
+    const organizationId = await requireOrganizationId();
+
+    return updateReportWithTenantIsolation({
         findReport: async () => {
           const [ownedReport] = await db
             .select({
@@ -580,54 +594,59 @@ export const updateReport = createServerFn({ method: "POST" })
           };
         },
       });
-    } catch (error) {
-      console.error("Error updating report", error);
-      return {
-        success: false,
-        data: null,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erreur lors de la mise à jour du rapport",
-      };
-    }
+  } catch (error) {
+    console.error("Error updating report", error);
+    return {
+      success: false,
+      data: null,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la mise à jour du rapport",
+    };
+  }
+}
+
+const createReportSharedVersionSchema = z.object({
+  reportId: z.string().min(1),
+});
+
+export async function createReportSharedVersion(
+  input: z.infer<typeof createReportSharedVersionSchema>,
+) {
+  const data = createReportSharedVersionSchema.parse(input);
+  const organizationId = await requireOrganizationId();
+
+  const persisted = await createImmutableReportSharedVersion(
+    {
+      organizationId,
+      reportId: data.reportId,
+      createdAt: new Date(),
+    },
+    reportSharedVersionPorts,
+  );
+
+  return { success: true as const, data: persisted };
+}
+
+export async function getAnatomicalParts(
+  input: z.infer<typeof anatomicalIssueSchema>,
+) {
+  const data = anatomicalIssueSchema.parse(input);
+  const { animalType, zone } = data;
+
+  const parts = await db.query.anatomicalPart.findMany({
+    where: and(
+      eq(anatomicalPart.animalType, animalType),
+      eq(anatomicalPart.zone, zone),
+    ),
   });
 
-export const createReportSharedVersion = createServerFn({ method: "POST" })
-  .validator(z.object({ reportId: z.string().min(1) }))
-  .handler(async ({ data }) => {
-    const organizationId = await requireOrganizationId();
+  return parts as AnatomicalPart[];
+}
 
-    const persisted = await createImmutableReportSharedVersion(
-      {
-        organizationId,
-        reportId: data.reportId,
-        createdAt: new Date(),
-      },
-      reportSharedVersionPorts,
-    );
-
-    return { success: true as const, data: persisted };
-  });
-
-export const getAnatomicalParts = createServerFn({ method: "GET" })
-  .validator(anatomicalIssueSchema)
-  .handler(async ({ data }) => {
-    const { animalType, zone } = data;
-
-    const parts = await db.query.anatomicalPart.findMany({
-      where: and(
-        eq(anatomicalPart.animalType, animalType),
-        eq(anatomicalPart.zone, zone),
-      ),
-    });
-
-    return parts as AnatomicalPart[];
-  });
-
-export const seedAnatomicalParts = createServerFn({ method: "POST" }).handler(
-  async () => {
-    try {
+export async function seedAnatomicalParts() {
+  try {
       // Créer les données anatomiques pour chaque région
       console.log(
         "🔍 Création des données anatomiques pour chaque région",
@@ -675,52 +694,54 @@ export const seedAnatomicalParts = createServerFn({ method: "POST" }).handler(
       console.error("Erreur lors du seed:", error);
       throw new Error("Erreur lors du seed des données");
     }
-  },
-);
+}
 
-export const deleteReport = createServerFn({ method: "POST" })
-  .validator(z.object({ reportId: z.string() }))
-  .handler(async ({ data }) => {
-    try {
-      const organizationId = await requireOrganizationId();
+const deleteReportSchema = z.object({ reportId: z.string() });
 
-      // Vérifier que le rapport existe et appartient à l'organisation
-      const report = await db.query.advancedReport.findFirst({
-        where: and(
-          eq(advancedReport.id, data.reportId),
-          eq(advancedReport.createdBy, organizationId),
-        ),
-      });
+export async function deleteReport(
+  input: z.infer<typeof deleteReportSchema>,
+) {
+  const data = deleteReportSchema.parse(input);
+  try {
+    const organizationId = await requireOrganizationId();
 
-      if (!report) throw new Error("Report not found or unauthorized");
+    // Vérifier que le rapport existe et appartient à l'organisation
+    const report = await db.query.advancedReport.findFirst({
+      where: and(
+        eq(advancedReport.id, data.reportId),
+        eq(advancedReport.createdBy, organizationId),
+      ),
+    });
 
-      // Supprimer les données liées
-      await db
-        .delete(anatomicalIssue)
-        .where(eq(anatomicalIssue.advancedReportId, data.reportId))
-        .execute();
+    if (!report) throw new Error("Report not found or unauthorized");
 
-      await db
-        .delete(advancedReportRecommendations)
-        .where(
-          eq(advancedReportRecommendations.advancedReportId, data.reportId),
-        )
-        .execute();
+    // Supprimer les données liées
+    await db
+      .delete(anatomicalIssue)
+      .where(eq(anatomicalIssue.advancedReportId, data.reportId))
+      .execute();
 
-      await db
-        .delete(advancedReport)
-        .where(eq(advancedReport.id, data.reportId))
-        .execute();
+    await db
+      .delete(advancedReportRecommendations)
+      .where(
+        eq(advancedReportRecommendations.advancedReportId, data.reportId),
+      )
+      .execute();
 
-      return { success: true };
-    } catch (error) {
-      console.error("Error deleting report", error);
-      return {
-        success: false,
-        error: "Erreur lors de la suppression du rapport",
-      };
-    }
-  });
+    await db
+      .delete(advancedReport)
+      .where(eq(advancedReport.id, data.reportId))
+      .execute();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting report", error);
+    return {
+      success: false,
+      error: "Erreur lors de la suppression du rapport",
+    };
+  }
+}
 
 export type AnatomicalHistoryItem = {
   id: string;
@@ -735,78 +756,79 @@ export type AnatomicalHistoryItem = {
   anatomicalPartZone: string;
 };
 
-export const getPatientAnatomicalHistory = createServerFn({ method: "GET" })
-  .validator(
-    z.object({
-      petId: z.string(),
-      anatomicalPartId: z.string(),
-      type: z
-        .enum(["dysfunction", "anatomicalSuspicion", "observation"])
-        .optional(),
-    }),
-  )
-  .handler(async ({ data }) => {
-    try {
-      const organizationId = await requireOrganizationId();
+const getPatientAnatomicalHistorySchema = z.object({
+  petId: z.string(),
+  anatomicalPartId: z.string(),
+  type: z
+    .enum(["dysfunction", "anatomicalSuspicion", "observation"])
+    .optional(),
+});
 
-      // Construire les conditions de filtrage
-      const conditions = [
-        eq(advancedReport.patientId, data.petId),
-        eq(advancedReport.status, "finalized"),
-        eq(advancedReport.createdBy, organizationId),
-        eq(anatomicalIssue.anatomicalPartId, data.anatomicalPartId),
-      ];
+export async function getPatientAnatomicalHistory(
+  input: z.infer<typeof getPatientAnatomicalHistorySchema>,
+) {
+  const data = getPatientAnatomicalHistorySchema.parse(input);
+  try {
+    const organizationId = await requireOrganizationId();
 
-      // Filtrer par type si fourni
-      if (data.type) {
-        conditions.push(eq(anatomicalIssue.type, data.type));
-      }
+    // Construire les conditions de filtrage
+    const conditions = [
+      eq(advancedReport.patientId, data.petId),
+      eq(advancedReport.status, "finalized"),
+      eq(advancedReport.createdBy, organizationId),
+      eq(anatomicalIssue.anatomicalPartId, data.anatomicalPartId),
+    ];
 
-      // Récupérer les issues avec les informations du rapport et de la partie anatomique
-      const issues = await db
-        .select({
-          issueId: anatomicalIssue.id,
-          issueType: anatomicalIssue.type,
-          severity: anatomicalIssue.severity,
-          laterality: anatomicalIssue.laterality,
-          notes: anatomicalIssue.notes,
-          createdAt: anatomicalIssue.createdAt,
-          reportId: advancedReport.id,
-          reportTitle: advancedReport.title,
-          reportDate: advancedReport.createdAt,
-          anatomicalPartName: anatomicalPart.name,
-          anatomicalPartZone: anatomicalPart.zone,
-        })
-        .from(anatomicalIssue)
-        .innerJoin(
-          advancedReport,
-          eq(anatomicalIssue.advancedReportId, advancedReport.id),
-        )
-        .innerJoin(
-          anatomicalPart,
-          eq(anatomicalIssue.anatomicalPartId, anatomicalPart.id),
-        )
-        .where(and(...conditions))
-        .orderBy(desc(advancedReport.createdAt));
-
-      // Formater les résultats
-      const history: AnatomicalHistoryItem[] = issues.map((issue) => ({
-        id: issue.issueId,
-        reportId: issue.reportId,
-        reportTitle: issue.reportTitle,
-        reportDate: issue.reportDate || new Date(),
-        type: issue.issueType as
-          "dysfunction" | "anatomicalSuspicion" | "observation",
-        severity: issue.severity,
-        laterality: issue.laterality as "left" | "right" | "bilateral",
-        notes: issue.notes,
-        anatomicalPartName: issue.anatomicalPartName,
-        anatomicalPartZone: issue.anatomicalPartZone,
-      }));
-
-      return { success: true, data: history };
-    } catch (error) {
-      console.error("Error getting patient anatomical history", error);
-      return { success: false, data: [] };
+    // Filtrer par type si fourni
+    if (data.type) {
+      conditions.push(eq(anatomicalIssue.type, data.type));
     }
-  });
+
+    // Récupérer les issues avec les informations du rapport et de la partie anatomique
+    const issues = await db
+      .select({
+        issueId: anatomicalIssue.id,
+        issueType: anatomicalIssue.type,
+        severity: anatomicalIssue.severity,
+        laterality: anatomicalIssue.laterality,
+        notes: anatomicalIssue.notes,
+        createdAt: anatomicalIssue.createdAt,
+        reportId: advancedReport.id,
+        reportTitle: advancedReport.title,
+        reportDate: advancedReport.createdAt,
+        anatomicalPartName: anatomicalPart.name,
+        anatomicalPartZone: anatomicalPart.zone,
+      })
+      .from(anatomicalIssue)
+      .innerJoin(
+        advancedReport,
+        eq(anatomicalIssue.advancedReportId, advancedReport.id),
+      )
+      .innerJoin(
+        anatomicalPart,
+        eq(anatomicalIssue.anatomicalPartId, anatomicalPart.id),
+      )
+      .where(and(...conditions))
+      .orderBy(desc(advancedReport.createdAt));
+
+    // Formater les résultats
+    const history: AnatomicalHistoryItem[] = issues.map((issue) => ({
+      id: issue.issueId,
+      reportId: issue.reportId,
+      reportTitle: issue.reportTitle,
+      reportDate: issue.reportDate || new Date(),
+      type: issue.issueType as
+        "dysfunction" | "anatomicalSuspicion" | "observation",
+      severity: issue.severity,
+      laterality: issue.laterality as "left" | "right" | "bilateral",
+      notes: issue.notes,
+      anatomicalPartName: issue.anatomicalPartName,
+      anatomicalPartZone: issue.anatomicalPartZone,
+    }));
+
+    return { success: true, data: history };
+  } catch (error) {
+    console.error("Error getting patient anatomical history", error);
+    return { success: false, data: [] };
+  }
+}

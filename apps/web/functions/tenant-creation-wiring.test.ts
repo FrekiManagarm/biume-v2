@@ -4,8 +4,12 @@ import { describe, expect, test } from "vitest";
 
 describe("tenant-isolated creation wiring", () => {
   test("quick report action accepts schema input before defaults are applied", () => {
+    // Cette signature vit désormais dans `reports.mutations.ts` : la
+    // conversion fait de `reports.action.ts` un simple ré-export depuis ce
+    // fichier (motif validé aux tâches 2 et 3), qui ne retape plus aucune
+    // signature en clair.
     const source = readFileSync(
-      new URL("../lib/api/actions/reports.action.ts", import.meta.url),
+      new URL("../lib/api/actions/reports.mutations.ts", import.meta.url),
       "utf8",
     );
 
@@ -35,8 +39,8 @@ describe("tenant-isolated creation wiring", () => {
       "utf8",
     );
     const createSource = source.slice(
-      source.indexOf("export const createReport"),
-      source.indexOf("export const getReportById"),
+      source.indexOf("export async function createReport"),
+      source.indexOf("export async function getReportById"),
     );
 
     expect(createSource).toContain("createReportWithTenantIsolation");
@@ -55,11 +59,16 @@ describe("tenant-isolated creation wiring", () => {
       "utf8",
     );
     const createSource = source.slice(
-      source.indexOf("export const createQuickReport"),
-      source.indexOf("export const getReportById"),
+      source.indexOf("export async function createQuickReport"),
+      source.indexOf("export async function getReportById"),
     );
 
-    expect(createSource).toContain(".validator(quickReportSchema)");
+    // La conversion hors de `createServerFn` déplace la garde de schéma de
+    // `.validator(quickReportSchema)` vers `quickReportSchema.parse(input)`,
+    // en première ligne du corps : la propriété testée (c'est bien CE
+    // schéma, pas un schéma générique, qui garde `createQuickReport`) survit
+    // sous la nouvelle syntaxe.
+    expect(createSource).toContain("quickReportSchema.parse(");
     // `organizationId` est désormais une variable locale, insérée en
     // raccourci : la présence de l'identifiant dans ce corps de fonction
     // reste la preuve que l'insert est bien cloisonné.
@@ -101,8 +110,8 @@ describe("tenant-isolated update wiring", () => {
       "utf8",
     );
     const updateSource = source.slice(
-      source.indexOf("export const updateReport"),
-      source.indexOf("export const getAnatomicalParts"),
+      source.indexOf("export async function updateReport"),
+      source.indexOf("export async function getAnatomicalParts"),
     );
 
     expect(updateSource).toContain("updateReportWithTenantIsolation");
@@ -136,8 +145,8 @@ test("shared versions are scoped, revision-bound, and never updated", () => {
     "utf8",
   );
   const handlerSource = source.slice(
-    source.indexOf("export const createReportSharedVersion"),
-    source.indexOf("export const getAnatomicalParts"),
+    source.indexOf("export async function createReportSharedVersion"),
+    source.indexOf("export async function getAnatomicalParts"),
   );
 
   expect(adapterSource).toContain(

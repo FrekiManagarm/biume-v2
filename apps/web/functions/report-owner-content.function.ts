@@ -3,7 +3,6 @@
 import { db } from "@biume/db";
 import { ownerSourceKindSchema } from "@biume/contracts/report";
 import { advancedReport, reportOwnerContent } from "@biume/db/schema/index";
-import { createServerFn } from "@tanstack/react-start";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -82,27 +81,32 @@ const ownerContentRevisionPort: OwnerContentRevisionPort = {
   },
 };
 
-export const upsertReportOwnerContent = createServerFn({ method: "POST" })
-  .validator(ownerContentUpsertSchema)
-  .handler(async ({ data }) => {
-    const organization = await getCurrentOrganization();
-    if (!organization) throw new Error("Organization not found");
+export type UpsertReportOwnerContentInput = z.infer<
+  typeof ownerContentUpsertSchema
+>;
 
-    const report = await loadOwnedReport(data.reportId, organization.id);
-    if (!report) throw new Error("Report not found or unauthorized");
+export async function upsertReportOwnerContent(
+  input: UpsertReportOwnerContentInput,
+) {
+  const data = ownerContentUpsertSchema.parse(input);
+  const organization = await getCurrentOrganization();
+  if (!organization) throw new Error("Organization not found");
 
-    const values = prepareOwnerContentUpsert({
-      ...data,
-      sources: buildPersistedOwnerSources(report),
-    });
-    const saved = await saveOwnerContentWithRevision(
-      {
-        organizationId: organization.id,
-        reportId: data.reportId,
-        ownerContent: values,
-      },
-      ownerContentRevisionPort,
-    );
+  const report = await loadOwnedReport(data.reportId, organization.id);
+  if (!report) throw new Error("Report not found or unauthorized");
 
-    return { success: true as const, data: saved };
+  const values = prepareOwnerContentUpsert({
+    ...data,
+    sources: buildPersistedOwnerSources(report),
   });
+  const saved = await saveOwnerContentWithRevision(
+    {
+      organizationId: organization.id,
+      reportId: data.reportId,
+      ownerContent: values,
+    },
+    ownerContentRevisionPort,
+  );
+
+  return { success: true as const, data: saved };
+}

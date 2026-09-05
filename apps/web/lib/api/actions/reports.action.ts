@@ -1,76 +1,68 @@
-export type {
+import { internalGet } from "#/lib/http/internal-fetch";
+import type {
   AdvancedReportListItem,
   GetAllReportsParams,
 } from "#/functions/reports.function";
-import {
-  createReportSharedVersion as createReportSharedVersionFn,
-  createQuickReport as createQuickReportFn,
-  createReport as createReportFn,
-  deleteReport as deleteReportFn,
-  getAllReports as getAllReportsFn,
-  getAnatomicalParts as getAnatomicalPartsFn,
-  getLatestReports as getLatestReportsFn,
-  getPatientAnatomicalHistory as getPatientAnatomicalHistoryFn,
-  getReportById as getReportByIdFn,
-  seedAnatomicalParts as seedAnatomicalPartsFn,
-  updateReport as updateReportFn,
-} from "#/functions/reports.function";
-import type { quickReportSchema } from "@biume/contracts/report";
-import type {
-  anatomicalIssueSchema,
-  createReportSchema,
-  updateReportSchema,
-} from "#/lib/utils/schemas";
+import type { anatomicalIssueSchema } from "#/lib/utils/schemas";
 import type { z } from "zod";
 
-export function getLatestReports(limit = 10) {
-  return getLatestReportsFn({ data: { limit } });
-}
+export type { AdvancedReportListItem, GetAllReportsParams } from "#/functions/reports.function";
 
+// Les mutations sont des Server Actions ; les réexporter d'ici garde le
+// contrat que les composants consomment déjà.
+export {
+  createQuickReport,
+  createReport,
+  createReportSharedVersion,
+  deleteReport,
+  seedAnatomicalParts,
+  updateReport,
+} from "./reports.mutations";
+
+// Règle à respecter dans ce fichier : tout import venant de `*.function.ts`
+// y reste en position de type (`import type`, ou `typeof import(...)`
+// ci-dessous). C'est ce qui garde `db`, `next/headers` et le reste des
+// dépendances serveur de la fonction pure hors du bundle client — un import
+// de valeur (`import { getAllReports } from "#/functions/reports.function"`)
+// romprait cette propriété sans qu'aucun test ne le signale. `reports.action.ts`
+// est importé par neuf composants client : c'est précisément ce qui est en jeu.
 export function getAllReports(
-  params: { search?: string; status?: string } = {},
-) {
-  return getAllReportsFn({ data: params });
+  params: GetAllReportsParams = {},
+): Promise<AdvancedReportListItem[]> {
+  return internalGet<AdvancedReportListItem[]>("/api/internal/reports", params);
 }
 
-export function createReport(report: z.input<typeof createReportSchema>) {
-  return createReportFn({ data: report });
-}
-
-export function createQuickReport(report: z.input<typeof quickReportSchema>) {
-  return createQuickReportFn({ data: report });
-}
-
-export function createReportSharedVersion(reportId: string) {
-  return createReportSharedVersionFn({ data: { reportId } });
-}
+type ReportDetailResult = Awaited<
+  ReturnType<typeof import("#/functions/reports.function").getReportById>
+>;
 
 export function getReportById({ reportId }: { reportId: string }) {
-  return getReportByIdFn({ data: { reportId } });
+  return internalGet<ReportDetailResult>(
+    `/api/internal/reports/${encodeURIComponent(reportId)}`,
+  );
 }
 
-export function updateReport(report: z.input<typeof updateReportSchema>) {
-  return updateReportFn({ data: report });
+type AnatomicalPartsResult = Awaited<
+  ReturnType<typeof import("#/functions/reports.function").getAnatomicalParts>
+>;
+
+export function getAnatomicalParts(data: z.infer<typeof anatomicalIssueSchema>) {
+  return internalGet<AnatomicalPartsResult>("/api/internal/anatomical-parts", data);
 }
 
-export function getAnatomicalParts(
-  data: z.infer<typeof anatomicalIssueSchema>,
-) {
-  return getAnatomicalPartsFn({ data });
-}
-
-export function deleteReport({ reportId }: { reportId: string }) {
-  return deleteReportFn({ data: { reportId } });
-}
+type AnatomicalHistoryResult = Awaited<
+  ReturnType<
+    typeof import("#/functions/reports.function").getPatientAnatomicalHistory
+  >
+>;
 
 export function getPatientAnatomicalHistory(data: {
   petId: string;
   anatomicalPartId: string;
   type?: "dysfunction" | "anatomicalSuspicion" | "observation";
 }) {
-  return getPatientAnatomicalHistoryFn({ data });
-}
-
-export function seedAnatomicalParts() {
-  return seedAnatomicalPartsFn();
+  return internalGet<AnatomicalHistoryResult>(
+    `/api/internal/patients/${encodeURIComponent(data.petId)}/anatomical-history`,
+    { anatomicalPartId: data.anatomicalPartId, type: data.type },
+  );
 }
